@@ -1,0 +1,9 @@
+:root { --cd-admin-navy:#102a43; --cd-admin-blue:#1769aa; }
+#wpadminbar { background:var(--cd-admin-navy); }
+#wpadminbar .ab-item:before, #wpadminbar a.ab-item { color:#f5f8fb; }
+#wpadminbar .ab-top-menu>li.hover>.ab-item, #wpadminbar .ab-top-menu>li:hover>.ab-item { background:#1769aa; color:#fff; }
+#adminmenu, #adminmenuwrap, #adminmenuback { background:var(--cd-admin-navy); }
+#adminmenu a { color:#d9e6f2; }
+#adminmenu .wp-has-current-submenu .wp-submenu, #adminmenu .wp-has-current-submenu .wp-submenu.sub-open, #adminmenu .wp-has-current-submenu>a.menu-top, #adminmenu a.wp-has-current-submenu:focus+.wp-submenu, #adminmenu a.wp-has-current-submenu:focus+.wp-submenu.sub-open, #adminmenu a.wp-has-current-submenu:focus+.wp-submenu-wrap, #adminmenu a.wp-has-current-submenu:hover+.wp-submenu, #adminmenu a.wp-has-current-submenu:hover+.wp-submenu.sub-open, #adminmenu a.wp-has-current-submenu:hover+.wp-submenu-wrap, #adminmenu li.current a.menu-top { background:#1769aa; color:#fff; }
+#adminmenu .wp-submenu { background:#0b2033; } #adminmenu .wp-submenu a { color:#c8d8e7; }
+#wpfooter { color:#60758a; } #wpfooter #footer-thankyou { font-style:normal; }

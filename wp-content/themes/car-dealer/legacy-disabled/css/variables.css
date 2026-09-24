@@ -1,0 +1,107 @@
+
+/*
+ * متغيرات CSS الرئيسية
+ * Car Dealer Theme - Design Tokens
+ */
+
+:root {
+	/* الألوان الرئيسية */
+	--primary-color: #1a3a52;
+	--primary-light: #2a5a7a;
+	--primary-dark: #0d2133;
+	--secondary-color: #ff6b35;
+	--secondary-light: #ff8c5a;
+	--secondary-dark: #e55a2b;
+	--accent-color: #00a8cc;
+	--accent-light: #33bdd9;
+	--accent-dark: #0088a3;
+
+	/* ألوان النص */
+	--text-color: #333333;
+	--text-light: #666666;
+	--text-muted: #999999;
+	--text-white: #ffffff;
+
+	/* ألوان الخلفية */
+	--bg-white: #ffffff;
+	--bg-light: #f8f9fa;
+	--bg-gray: #e9ecef;
+	--bg-dark: #212529;
+	--bg-darker: #111418;
+
+	/* ألوان الحدود */
+	--border-light: #dee2e6;
+	--border-medium: #ced4da;
+	--border-dark: #adb5bd;
+
+	/* ألوان الحالة */
+	--success-color: #28a745;
+	--warning-color: #ffc107;
+	--danger-color: #dc3545;
+	--info-color: #17a2b8;
+
+	/* الظلال */
+	--shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+	--shadow-md: 0 4px 15px rgba(0, 0, 0, 0.1);
+	--shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
+	--shadow-xl: 0 12px 35px rgba(0, 0, 0, 0.2);
+
+	/* نصف القطر */
+	--radius-sm: 4px;
+	--radius-md: 8px;
+	--radius-lg: 12px;
+	--radius-xl: 20px;
+	--radius-full: 50%;
+
+	/* المسافات */
+	--space-xs: 0.25rem;
+	--space-sm: 0.5rem;
+	--space-md: 1rem;
+	--space-lg: 1.5rem;
+	--space-xl: 2rem;
+	--space-2xl: 3rem;
+	--space-3xl: 4rem;
+	--space-4xl: 6rem;
+
+	/* الخطوط */
+	--font-primary: 'Tajawal', sans-serif;
+	--font-heading: 'Tajawal', sans-serif;
+	--font-mono: 'Courier New', monospace;
+
+	--font-size-xs: 0.75rem;
+	--font-size-sm: 0.875rem;
+	--font-size-md: 1rem;
+	--font-size-lg: 1.25rem;
+	--font-size-xl: 1.5rem;
+	--font-size-2xl: 1.75rem;
+	--font-size-3xl: 2rem;
+	--font-size-4xl: 2.5rem;
+	--font-size-5xl: 3rem;
+
+	--font-weight-light: 300;
+	--font-weight-normal: 400;
+	--font-weight-medium: 500;
+	--font-weight-bold: 700;
+	--font-weight-black: 900;
+
+	/* الانتقالات */
+	--transition-fast: all 0.2s ease;
+	--transition-normal: all 0.3s ease;
+	--transition-slow: all 0.5s ease;
+
+	/* الحاويات */
+	--container-sm: 576px;
+	--container-md: 768px;
+	--container-lg: 992px;
+	--container-xl: 1200px;
+	--container-xxl: 1400px;
+
+	/* طبقة z */
+	--z-dropdown: 100;
+	--z-sticky: 200;
+	--z-fixed: 300;
+	--z-modal-backdrop: 400;
+	--z-modal: 500;
+	--z-popover: 600;
+	--z-tooltip: 700;
+}
