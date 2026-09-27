@@ -1,0 +1,17 @@
+<?php
+namespace AutoDealership\Admin;
+
+use AutoDealership\Inventory\VehicleIssueService;
+use AutoDealership\Inventory\VehicleService;
+
+defined('ABSPATH')||exit;
+
+final class VehicleIssuePage {
+	public static function boot():void{add_action('admin_menu',array(self::class,'menu'));add_action('admin_post_adc_open_vehicle_issue',array(self::class,'open'));add_action('admin_post_adc_resolve_vehicle_issue',array(self::class,'resolve'));}
+	public static function menu():void{add_submenu_page('adc-workspace',__('Holds and maintenance','auto-dealership-core'),__('Holds and maintenance','auto-dealership-core'),'adc_manage_inventory','adc-vehicle-issues',array(self::class,'render'));}
+	public static function render():void{if(!current_user_can('adc_manage_inventory')){wp_die('', '',array('response'=>403));}$vehicles=VehicleService::list_for_current_user(1);$issues=VehicleIssueService::list_open();?>
+	<div class="wrap" dir="rtl"><h1>الاحتجاز والصيانة</h1><form method="post" action="<?php echo esc_url(admin_url('admin-post.php'));?>"><input type="hidden" name="action" value="adc_open_vehicle_issue"><?php wp_nonce_field('adc_open_vehicle_issue');?><select name="vehicle_id"><?php foreach($vehicles as $v):?><option value="<?php echo absint($v['id']);?>"><?php echo esc_html($v['stock_number'].' — '.$v['status']);?></option><?php endforeach;?></select><select name="type"><option value="hold">hold</option><option value="maintenance">maintenance</option></select><input name="reason" required maxlength="1000" placeholder="السبب"><input type="date" name="review_at"><button class="button button-primary">فتح الحالة</button></form><h2>الحالات المفتوحة</h2><?php foreach($issues as $issue):?><form class="card" method="post" action="<?php echo esc_url(admin_url('admin-post.php'));?>"><input type="hidden" name="action" value="adc_resolve_vehicle_issue"><input type="hidden" name="id" value="<?php echo absint($issue['id']);?>"><?php wp_nonce_field('adc_resolve_vehicle_issue_'.(int)$issue['id']);?><strong><?php echo esc_html($issue['stock_number'].' — '.$issue['issue_type']);?></strong><p><?php echo esc_html($issue['reason']);?></p><input name="resolution" required maxlength="2000" placeholder="الإجراء المنفذ والنتيجة"><button class="button">إغلاق وإعادة للفحص</button></form><?php endforeach;?></div><?php }
+	private static function redirect($result):void{wp_safe_redirect(add_query_arg(is_wp_error($result)?'error':'saved','1',admin_url('admin.php?page=adc-vehicle-issues')));exit;}
+	public static function open():void{check_admin_referer('adc_open_vehicle_issue');self::redirect(VehicleIssueService::open(absint($_POST['vehicle_id']??0),sanitize_key(wp_unslash($_POST['type']??'')),sanitize_textarea_field(wp_unslash($_POST['reason']??'')),0,sanitize_text_field(wp_unslash($_POST['review_at']??''))));}
+	public static function resolve():void{$id=absint($_POST['id']??0);check_admin_referer('adc_resolve_vehicle_issue_'.$id);self::redirect(VehicleIssueService::resolve($id,sanitize_textarea_field(wp_unslash($_POST['resolution']??''))));}
+}

@@ -14,14 +14,14 @@
 .cd-workspace-brand > .dashicons { display:grid; place-items:center; width:44px; height:44px; border-radius:12px; background:var(--cd-blue); color:white; font-size:25px; }
 .cd-workspace-brand small { display:block; margin-top:6px; color:var(--cd-muted); font-size:11px; font-weight:400; }
 .cd-workspace-date { color:var(--cd-muted); font-size:12px; }
-.cd-workspace-nav { display:flex; gap:6px; overflow-x:auto; padding:12px 24px; background:#fff; border-bottom:1px solid var(--cd-line); }
-.cd-workspace-nav a { display:flex; flex-shrink:0; align-items:center; gap:8px; padding:11px 15px; border-radius:8px; text-decoration:none; color:#56657a; font-size:12px; font-weight:600; }
-.cd-workspace-nav .dashicons { font-size:18px; width:18px; height:18px; }
-.cd-workspace-nav a:hover,.cd-workspace-nav a[aria-current] { color:#1d4ed8; background:var(--cd-blue-soft); }
 .car-dealer-admin-screen #adminmenu,.car-dealer-admin-screen #adminmenuwrap,.car-dealer-admin-screen #adminmenuback { background:#14243b; }
 .car-dealer-admin-screen #adminmenu .wp-submenu { background:#101e32; }
 .car-dealer-admin-screen #adminmenu a.menu-top { padding-block:5px; }
 .car-dealer-admin-screen #adminmenu .wp-has-current-submenu > a.menu-top,.car-dealer-admin-screen #adminmenu li.current a.menu-top { background:#2563eb; }
+#toplevel_page_car-dealer-dashboard .wp-submenu a { display:flex; align-items:center; gap:9px; min-height:30px; }
+#toplevel_page_car-dealer-dashboard .wp-submenu .cd-admin-menu-icon { display:inline-grid; flex:0 0 24px; place-items:center; width:24px; height:24px; border-radius:7px; background:#213654; color:#c8d8e7; font-size:15px; line-height:1; }
+#toplevel_page_car-dealer-dashboard .wp-submenu .current .cd-admin-menu-icon,#toplevel_page_car-dealer-dashboard .wp-submenu a:hover .cd-admin-menu-icon { background:#edf3ff; color:#2563eb; }
+#toplevel_page_car-dealer-dashboard .wp-submenu .cd-admin-menu-label { overflow:hidden; text-overflow:ellipsis; }
 .cd-admin-hero { min-height:180px; padding:30px 32px; background:linear-gradient(115deg,#203c60,#14243b); box-shadow:none; border:0; }
 .cd-admin-hero::before { background:radial-gradient(circle at 10% 50%,#6d9fe322,transparent 50%); }
 .cd-admin-hero::after { display:none; }
@@ -31,7 +31,7 @@
 .cd-admin-hero span::before,.cd-section-title span::before { display:none; }
 .car-dealer-dashboard .button-hero,.car-dealer-dashboard .button-primary.button-hero { border-radius:9px!important; background:#2563eb!important; box-shadow:none!important; font-weight:700!important; }
 .car-dealer-dashboard .button-ghost { border-radius:9px!important; font-weight:600!important; }
-.cd-stats-grid,.cd-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; margin:22px 0; }
+.cd-stats-grid,.cd-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:18px; margin:22px 0; }
 .cd-stat-card { background:#fff; padding:22px; min-height:140px; }
 .cd-stat-card::after { display:none; }
 .cd-stat-card .dashicons { float:inline-end; width:42px; height:42px; border-radius:12px; }
@@ -42,6 +42,7 @@
 .cd-stat-card:nth-child(4) .dashicons { color:#7853bc; background:#f2edfc; }
 .cd-section-title h2,.car-dealer-dashboard > h2 { font-size:19px; font-weight:700; }
 .cd-admin-card { min-height:108px; gap:14px; box-shadow:none; }
+.cd-admin-grid { grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
 .cd-admin-card::before { display:none; }
 .cd-admin-card > .dashicons { background:#f1f5fc; box-shadow:none; border-radius:12px; }
 .cd-admin-card strong { font-size:14px; font-weight:700; }
@@ -90,6 +91,9 @@
 .cd-status-active,.cd-status-confirmed,.cd-status-completed { background:#e7f6ee; color:#14734f; }
 .cd-status-cancelled,.cd-status-inactive { background:#fcecec; color:#a83434; }
 .cd-status-read { background:#edf0f4; color:#52627b; }
+.cd-status-available { background:#e7f6ee; color:#14734f; }
+.cd-status-reserved,.cd-status-pending { background:#fff4db; color:#865b0b; }
+.cd-status-sold { background:#fcecec; color:#a83434; }
 .car-dealer-admin-screen #car-offer-details .form-table :is(input,select) { min-height:42px; border-radius:8px; border-color:#ccd6e3; width:100%; max-width:400px; }
 .car-dealer-admin-screen .cd-table-toolbar [hidden],.car-dealer-admin-screen tr[hidden],.car-dealer-admin-screen .cd-table-no-results[hidden] { display:none; }
 .cd-panel-heading .dashicons { background:var(--cd-blue-soft); color:var(--cd-blue); box-shadow:none; border-radius:10px; }
@@ -97,6 +101,24 @@
 .cd-form-panel label,.cd-car-field-grid label { font-weight:600; }
 .cd-check:has(input:checked),.cd-feature-list label:has(input:checked) { background:var(--cd-blue-soft); border-color:#8bb1f9; }
 .cd-add-car-form .submit { padding:16px; border:1px solid var(--cd-line); border-radius:12px; background:#fffffff5; box-shadow:0 -4px 20px #14243b08; }
+.cd-add-car-page .cd-admin-hero-compact { display:flex; align-items:flex-end; min-height:150px; }
+.cd-add-car-page .cd-form-grid { grid-template-columns:minmax(0,1fr) 390px; gap:20px; }
+.cd-add-car-page .cd-form-panel { border-radius:12px; box-shadow:none; }
+.cd-add-car-page .cd-panel-heading { align-items:center; margin-bottom:18px; padding-bottom:14px; }
+.cd-add-car-page .cd-panel-heading p { max-width:760px; }
+.cd-add-car-page .cd-wide-field { grid-column:1/-1; }
+.cd-add-car-page .cd-fields-two,.cd-add-car-page .cd-fields-three,.cd-add-car-page .cd-compact-fields { display:grid; gap:14px; }
+.cd-add-car-page .cd-fields-two { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.cd-add-car-page .cd-fields-three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.cd-add-car-page .cd-compact-fields { grid-template-columns:1fr; padding-top:14px; margin-top:14px; border-top:1px solid var(--cd-line); }
+.cd-add-car-page .cd-form-panel label { margin-bottom:0; }
+.cd-add-car-page .cd-form-panel input:not([type=checkbox]),.cd-add-car-page .cd-form-panel select,.cd-add-car-page .cd-form-panel textarea { border-radius:9px; }
+.cd-add-car-page .cd-feature-list { grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); }
+.cd-add-car-page .cd-feature-list label,.cd-add-car-page .cd-check { min-height:44px; border-radius:9px; }
+.cd-add-car-page .cd-media-field { border-radius:12px; background:#f8fbff; }
+.cd-add-car-page .cd-media-preview { min-height:150px; border-radius:10px; background:#fff; }
+.cd-add-car-page .cd-media-preview img { max-width:100%; max-height:220px; object-fit:cover; }
+.cd-add-car-page .submit { display:flex; justify-content:flex-start; gap:10px; }
 .cd-form-jumps { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 20px; }
 .cd-form-jumps a { padding:10px 16px; border:1px solid var(--cd-line); border-radius:8px; background:white; color:#40536d; text-decoration:none; font-size:12px; }
 .cd-add-car-form .cd-form-panel { scroll-margin-top:60px; }
@@ -113,17 +135,181 @@
 .car-dealer-admin-screen .notice { border-radius:8px; box-shadow:none; }
 @media(min-width:1201px) { .cd-form-grid > aside { position:sticky; top:52px; } }
 @media(max-width:1100px) { .cd-stats-grid,.cd-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:1100px) { .cd-add-car-page .cd-form-grid,.cd-add-car-page .cd-fields-three { grid-template-columns:1fr; } }
 @media(max-width:782px) {
  .car-dealer-admin-screen #wpbody-content > .wrap { margin:18px 12px 0; }
  .cd-workspace-bar { padding:18px 12px; } .cd-workspace-date { display:none; }
- .cd-workspace-nav { padding:10px 12px; } .cd-workspace-nav a { padding:10px; }
  .cd-admin-hero { padding:24px; } .cd-admin-hero h1 { font-size:25px; }
  .cd-stats-grid,.cd-stats { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
  .cd-stat-card { padding:16px; } .cd-stat-card .dashicons { float:none; margin-bottom:8px; }
  .cd-stat-card strong { font-size:27px; }
  .cd-admin-grid,.cd-settings-grid { grid-template-columns:1fr; }
+ .cd-add-car-page .cd-fields-two,.cd-add-car-page .cd-fields-three { grid-template-columns:1fr; }
  .cd-recent-heading { padding:18px; align-items:flex-start; flex-direction:column; }
  .cd-admin .cd-panel { padding:18px; } .cd-form-panel { padding:18px; }
  .cd-table-toolbar label { flex-wrap:wrap; } .cd-table-toolbar input { width:100%; }
 }
+@media(max-width:520px) { .cd-stats-grid,.cd-stats { grid-template-columns:1fr; } }
 @media(prefers-reduced-motion:reduce) { .car-dealer-admin-screen * { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
+
+/* Unified dealership admin design layer. */
+.car-dealer-admin-screen {
+ --cd-blue:#2563eb; --cd-blue-strong:#1d4ed8; --cd-navy:#13233a;
+ --cd-surface:#ffffff; --cd-surface-soft:#f8fafc; --cd-field:#fbfdff;
+ --cd-line:#dfe7f2; --cd-ink:#18283f; --cd-muted:#66758c;
+ --cd-success:#14805d; --cd-warning:#a16207; --cd-danger:#b42318;
+ --cd-radius-lg:14px; --cd-radius-md:10px; --cd-radius-sm:8px;
+ --cd-shadow:0 12px 30px rgba(19,35,58,.07); --cd-shadow-soft:0 3px 12px rgba(19,35,58,.05);
+}
+.car-dealer-admin-screen #wpcontent { background:linear-gradient(180deg,#f5f7fb 0%,#eef3f9 100%); }
+.car-dealer-admin-screen #wpbody-content > .wrap,
+.car-dealer-admin-screen .car-dealer-dashboard,
+.car-dealer-admin-screen .cd-admin { width:auto; max-width:1480px; margin:24px 24px 0; color:var(--cd-ink); direction:rtl; }
+.cd-workspace-bar { margin:0; padding:18px 24px; background:#fff; border-bottom:1px solid var(--cd-line); box-shadow:0 1px 0 rgba(19,35,58,.02); }
+.cd-workspace-brand { color:var(--cd-ink); font-weight:800; }
+.cd-workspace-brand > .dashicons { width:42px; height:42px; border-radius:10px; background:var(--cd-blue); font-size:23px; box-shadow:none; }
+.cd-workspace-brand small,.cd-workspace-date { color:var(--cd-muted); }
+.cd-admin-hero {
+ min-height:164px; padding:28px 30px; border:1px solid #244263; border-radius:var(--cd-radius-lg);
+ background:linear-gradient(135deg,#1f3b5f 0%,#13233a 72%); box-shadow:var(--cd-shadow); overflow:hidden;
+}
+.cd-admin-hero::before { background:linear-gradient(90deg,rgba(255,255,255,.08),transparent 55%); opacity:1; }
+.cd-admin-hero h1 { margin:0 0 8px; font-size:28px; line-height:1.45; font-weight:800; letter-spacing:0; }
+.cd-admin-hero p { color:#d6e2ef; font-size:13px; line-height:1.8; }
+.cd-admin-hero span,.cd-section-title span,.cd-eyebrow,.cd-vehicles-eyebrow { color:#8fb5ff; font-size:11px; font-weight:800; letter-spacing:0; text-transform:none; }
+.cd-section-title { margin:28px 0 14px; }
+.cd-section-title h2,.car-dealer-dashboard > h2,.car-dealer-admin-screen .cd-admin > h1 { color:var(--cd-ink); font-size:20px; line-height:1.55; font-weight:800; }
+.car-dealer-admin-screen .cd-admin > h1 { margin:0 0 8px; }
+.car-dealer-admin-screen .cd-admin > p:not(.submit),.cd-page-description { max-width:780px; margin:0 0 20px; color:var(--cd-muted); line-height:1.8; }
+.car-dealer-admin-screen .button,
+.car-dealer-admin-screen .button-secondary,
+.car-dealer-admin-screen .button-primary,
+.car-dealer-dashboard .button-hero,
+.car-dealer-dashboard .button-primary.button-hero,
+.car-dealer-dashboard .button-ghost {
+ min-height:36px; border-radius:var(--cd-radius-sm)!important; padding-inline:15px!important; font-weight:700!important; box-shadow:none!important; text-shadow:none!important;
+}
+.car-dealer-admin-screen .button-primary,
+.car-dealer-dashboard .button-hero,
+.car-dealer-dashboard .button-primary.button-hero { background:var(--cd-blue)!important; border-color:var(--cd-blue)!important; color:#fff!important; }
+.car-dealer-admin-screen .button-primary:hover,
+.car-dealer-dashboard .button-hero:hover,
+.car-dealer-dashboard .button-primary.button-hero:hover { background:var(--cd-blue-strong)!important; border-color:var(--cd-blue-strong)!important; transform:none; }
+.car-dealer-dashboard .button-ghost { color:#fff!important; background:rgba(255,255,255,.1)!important; border-color:rgba(255,255,255,.28)!important; }
+.cd-stats-grid,.cd-stats { grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin:20px 0 26px; }
+.cd-stat-card,.cd-admin-card,.cd-form-panel,.cd-table-card,.cd-recent-panel,.cd-admin .cd-panel,.cd-crm-summary,.cd-crm-fields {
+ background:var(--cd-surface); border:1px solid var(--cd-line); border-radius:var(--cd-radius-lg); box-shadow:var(--cd-shadow-soft);
+}
+.cd-stat-card { min-height:118px; padding:20px; }
+.cd-stat-card .dashicons { display:grid; place-items:center; float:inline-end; width:40px; height:40px; border-radius:10px; background:#edf4ff; color:var(--cd-blue); }
+.cd-stat-card strong { padding-top:4px; margin-bottom:10px; color:var(--cd-ink); font-size:30px; font-weight:800; }
+.cd-stat-card p { color:var(--cd-muted); font-weight:600; }
+.cd-admin-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(265px,1fr)); gap:14px; }
+.cd-admin-card { min-height:102px; padding:18px; grid-template-columns:46px minmax(0,1fr); color:var(--cd-ink); }
+.cd-admin-card > .dashicons { width:46px; height:46px; border-radius:10px; color:var(--cd-blue); background:#edf4ff; }
+.cd-admin-card strong { color:var(--cd-ink); font-size:14px; font-weight:800; }
+.cd-admin-card small { color:var(--cd-muted); line-height:1.65; }
+.cd-admin-card:hover { color:var(--cd-blue); border-color:#b9cff5; box-shadow:var(--cd-shadow); transform:translateY(-1px); }
+.cd-form-panel,.cd-admin .cd-panel { padding:22px; }
+.cd-panel-heading { align-items:center; gap:12px; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--cd-line); }
+.cd-panel-heading .dashicons { flex:0 0 40px; width:40px; height:40px; border-radius:10px; background:#edf4ff; color:var(--cd-blue); box-shadow:none; }
+.cd-panel-heading h2 { color:var(--cd-ink); font-size:17px; font-weight:800; }
+.cd-panel-heading p { color:var(--cd-muted); font-size:12px; line-height:1.75; }
+.car-dealer-admin-screen label { color:var(--cd-ink); }
+.car-dealer-admin-screen :is(input:not([type=checkbox]):not([type=radio]),select,textarea) {
+ min-height:42px; border:1px solid #cbd6e5; border-radius:var(--cd-radius-sm); background:var(--cd-field); color:var(--cd-ink);
+}
+.car-dealer-admin-screen textarea { line-height:1.7; }
+.car-dealer-admin-screen :is(input:not([type=checkbox]):not([type=radio]),select,textarea):focus {
+ border-color:#8ab4f8; box-shadow:0 0 0 3px rgba(37,99,235,.12); outline:none;
+}
+.car-dealer-admin-screen .widefat,.cd-crm-table table,.cd-admin .cd-table-scroll {
+ border:1px solid var(--cd-line)!important; border-radius:var(--cd-radius-lg); box-shadow:none; overflow:hidden; background:#fff;
+}
+.car-dealer-admin-screen .widefat th { background:#f3f6fb; color:#52627a; font-weight:800; padding:14px 12px; }
+.car-dealer-admin-screen .widefat td { padding:15px 12px; border-bottom:1px solid #edf1f6; color:#31445e; }
+.car-dealer-admin-screen .widefat tbody tr:hover { background:#f8fbff; }
+.cd-table-toolbar,.cd-crm-toolbar { background:#fff; border:1px solid var(--cd-line); border-radius:var(--cd-radius-lg); padding:12px; box-shadow:var(--cd-shadow-soft); }
+.cd-status { border-radius:999px; padding:5px 11px; font-weight:700; }
+.car-dealer-admin-screen .notice { border-radius:var(--cd-radius-md); box-shadow:none; border-inline-start-width:4px; }
+.cd-settings-section { padding:0 0 24px; margin:0 0 24px; border-bottom:1px solid var(--cd-line); }
+.cd-settings-section legend { color:var(--cd-ink); font-size:16px; font-weight:800; }
+.cd-settings-section > p { color:var(--cd-muted); line-height:1.8; }
+.post-type-car_offer.car-dealer-admin-screen .postbox .handle-actions,
+.post-type-car_offer.car-dealer-admin-screen .postbox .handlediv,
+.post-type-car_offer.car-dealer-admin-screen .postbox .toggle-indicator { display:none!important; }
+.post-type-car_offer.car-dealer-admin-screen .postbox.closed .inside { display:block!important; }
+.post-type-car_offer.car-dealer-admin-screen .postbox-header { cursor:default; pointer-events:none; }
+.post-type-car_offer.car-dealer-admin-screen .postbox-header h2 { font-weight:800; }
+.post-type-car_offer.car-dealer-admin-screen #poststuff .postbox { border-radius:var(--cd-radius-lg); border-color:var(--cd-line); box-shadow:var(--cd-shadow-soft); }
+.post-type-car_offer.car-dealer-admin-screen #poststuff .inside { margin:0; }
+.car-dealer-admin-screen #car-offer-details .inside { padding:0; }
+.car-dealer-admin-screen #car-offer-details .postbox-header { display:none; }
+.cd-offer-builder { padding:0; color:var(--cd-ink); }
+.cd-offer-builder__intro {
+ display:flex; align-items:center; gap:14px; padding:20px 22px; border-bottom:1px solid var(--cd-line);
+ background:linear-gradient(135deg,#f8fbff 0%,#eef5ff 100%);
+}
+.cd-offer-builder__intro > .dashicons {
+ display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px; border-radius:12px;
+ background:var(--cd-blue); color:#fff; font-size:24px;
+}
+.cd-offer-builder h2,.cd-offer-builder h3,.cd-offer-builder p { margin:0; }
+.cd-offer-builder h2 { color:var(--cd-ink); font-size:18px; font-weight:800; line-height:1.5; }
+.cd-offer-builder__intro p,.cd-offer-section__head p,.cd-offer-field small,.cd-offer-help,.cd-offer-empty p {
+ color:var(--cd-muted); font-size:12px; line-height:1.8;
+}
+.cd-offer-layout { display:grid; grid-template-columns:minmax(280px,.9fr) minmax(360px,1.1fr); gap:18px; padding:22px; }
+.cd-offer-section {
+ min-width:0; padding:18px; border:1px solid var(--cd-line); border-radius:var(--cd-radius-lg);
+ background:#fff; box-shadow:var(--cd-shadow-soft);
+}
+.cd-offer-section__head { display:flex; gap:12px; align-items:flex-start; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid #edf1f6; }
+.cd-offer-section__head > .dashicons {
+ display:grid; place-items:center; flex:0 0 38px; width:38px; height:38px; border-radius:10px;
+ background:#edf4ff; color:var(--cd-blue); font-size:21px;
+}
+.cd-offer-section h3 { color:var(--cd-ink); font-size:15px; font-weight:800; line-height:1.5; }
+.cd-offer-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.cd-offer-field { display:grid; gap:8px; margin:0; color:var(--cd-ink); font-weight:800; }
+.cd-offer-field--wide { grid-column:1/-1; }
+.cd-offer-field > span:first-child { display:flex; align-items:center; gap:8px; min-height:24px; }
+.cd-offer-field > span:first-child .dashicons { color:var(--cd-blue); font-size:18px; }
+.cd-offer-field :is(input,select) { width:100%; max-width:none!important; min-height:44px!important; padding-inline:12px; }
+.cd-offer-selected-car {
+ display:grid; grid-template-columns:76px minmax(0,1fr); gap:14px; align-items:center; margin-top:16px; padding:14px;
+ border:1px solid #dfe8f4; border-radius:var(--cd-radius-md); background:#f8fbff;
+}
+.cd-offer-selected-car__image {
+ display:grid; place-items:center; width:76px; height:62px; overflow:hidden; border-radius:10px; background:#e8eef7; color:#7b8da6;
+}
+.cd-offer-selected-car__image img { width:100%; height:100%; object-fit:cover; }
+.cd-offer-selected-car__image .dashicons { width:auto; height:auto; font-size:30px; }
+.cd-offer-selected-car strong { display:block; margin-bottom:7px; color:var(--cd-ink); font-size:14px; line-height:1.5; }
+.cd-offer-selected-car ul { display:flex; flex-wrap:wrap; gap:8px 12px; margin:0; padding:0; list-style:none; color:var(--cd-muted); font-size:12px; }
+.cd-offer-selected-car li { margin:0; }
+.cd-offer-empty {
+ display:flex; gap:12px; align-items:flex-start; margin-top:16px; padding:14px; border:1px solid #f5d08a;
+ border-radius:var(--cd-radius-md); background:#fff8e8; color:#7a4f06;
+}
+.cd-offer-empty > .dashicons { flex:0 0 26px; width:26px; height:26px; font-size:24px; color:#a16207; }
+.cd-offer-empty strong { display:block; margin-bottom:5px; color:#7a4f06; }
+.cd-offer-help {
+ margin-top:14px!important; padding:12px 14px; border:1px dashed #cbd6e5; border-radius:var(--cd-radius-md); background:#fbfdff;
+}
+.cd-offer-builder .cd-offer-form-grid { grid-template-columns:minmax(0,1fr) minmax(320px,420px); gap:18px; padding:0; }
+.cd-offer-builder .cd-form-panel { box-shadow:none; }
+.cd-offer-builder .cd-panel-heading { align-items:center; }
+.cd-offer-builder .cd-panel-heading p { max-width:620px; }
+@media(max-width:782px) {
+ .car-dealer-admin-screen #wpbody-content > .wrap,
+ .car-dealer-admin-screen .car-dealer-dashboard,
+ .car-dealer-admin-screen .cd-admin { margin:18px 12px 0; }
+ .cd-admin-hero { padding:22px; }
+ .cd-admin-hero h1 { font-size:23px; }
+ .cd-stats-grid,.cd-stats,.cd-admin-grid,.cd-settings-grid { grid-template-columns:1fr; }
+ .cd-table-toolbar,.cd-crm-toolbar { align-items:stretch; flex-direction:column; }
+ .cd-offer-layout,.cd-offer-fields,.cd-offer-selected-car,.cd-offer-builder .cd-offer-form-grid { grid-template-columns:1fr; }
+ .cd-offer-layout { padding:14px; }
+ .cd-offer-builder__intro { align-items:flex-start; padding:16px; }
+}

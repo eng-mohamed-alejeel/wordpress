@@ -4,27 +4,8 @@ defined( 'ABSPATH' ) || exit;
 
 function car_dealer_workspace_navigation() {
 	$screen = get_current_screen();
-	if ( ! $screen || ( false === strpos( $screen->id, 'car-dealer' ) && ! in_array( $screen->post_type, array( 'car', 'car_offer' ), true ) ) ) { return; }
-	$items = array(
-		array( 'admin.php?page=car-dealer-dashboard', 'نظرة عامة', 'dashboard', 'manage_car_dealer' ),
-		array( 'admin.php?page=car-dealer-crm', 'إدارة العملاء CRM', 'groups', 'manage_car_dealer' ),
-		array( 'edit.php?post_type=car', 'السيارات', 'car', 'edit_cars' ),
-		array( 'edit.php?post_type=car_offer', 'العروض', 'megaphone', 'edit_posts' ),
-		array( 'admin.php?page=car-dealer-messages', 'الرسائل', 'email-alt', 'manage_car_dealer' ),
-		array( 'admin.php?page=car-dealer-bookings', 'الحجوزات', 'calendar-alt', 'manage_car_dealer' ),
-		array( 'admin.php?page=car-dealer-inventory', 'المخزون', 'chart-bar', 'manage_car_dealer' ),
-		array( 'admin.php?page=car-dealer-subscribers', 'المشتركون', 'groups', 'manage_car_dealer' ),
-		array( 'admin.php?page=car-dealer-settings', 'الإعدادات', 'admin-settings', 'manage_options' ),
-	);
-	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+	if ( ! $screen || ( false === strpos( $screen->id, 'car-dealer' ) && ! in_array( $screen->post_type, array( 'car', 'car_offer', 'testimonial' ), true ) ) ) { return; }
 	echo '<div class="cd-workspace-bar" dir="rtl"><a class="cd-workspace-brand" href="' . esc_url( admin_url( 'admin.php?page=car-dealer-dashboard' ) ) . '"><span class="dashicons dashicons-car" aria-hidden="true"></span><span>' . esc_html( get_bloginfo( 'name' ) ) . '<small>مساحة إدارة المعرض</small></span></a><span class="cd-workspace-date">' . esc_html( wp_date( 'l، j F Y' ) ) . '</span></div>';
-	echo '<nav class="cd-workspace-nav" dir="rtl" aria-label="أقسام المعرض">';
-	foreach ( $items as $item ) {
-		if ( ! current_user_can( $item[3] ) ) { continue; }
-		$active = $page ? false !== strpos( $item[0], 'page=' . $page ) : $item[0] === 'edit.php?post_type=' . $screen->post_type;
-		echo '<a href="' . esc_url( admin_url( $item[0] ) ) . '"' . ( $active ? ' aria-current="page"' : '' ) . '><span class="dashicons dashicons-' . esc_attr( $item[2] ) . '" aria-hidden="true"></span>' . esc_html( $item[1] ) . '</a>';
-	}
-	echo '</nav>';
 }
 add_action( 'in_admin_header', 'car_dealer_workspace_navigation' );
 

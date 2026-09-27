@@ -56,8 +56,8 @@ add_action( 'init', 'car_dealer_register_roles', 5 );
 function car_dealer_admin_menu() {
 	add_menu_page( __( 'إدارة المعرض', 'car-dealer' ), __( 'إدارة المعرض', 'car-dealer' ), 'manage_car_dealer', 'car-dealer-dashboard', 'car_dealer_render_dashboard', 'dashicons-car', 3 );
 	add_submenu_page( 'car-dealer-dashboard', __( 'نظرة عامة', 'car-dealer' ), __( 'نظرة عامة', 'car-dealer' ), 'manage_car_dealer', 'car-dealer-dashboard', 'car_dealer_render_dashboard' );
-	add_submenu_page( 'car-dealer-dashboard', __( 'إضافة سيارة', 'car-dealer' ), __( 'إضافة سيارة', 'car-dealer' ), 'edit_cars', 'car-dealer-add-car', 'car_dealer_render_add_car_page' );
 	add_submenu_page( 'car-dealer-dashboard', __( 'كل السيارات', 'car-dealer' ), __( 'كل السيارات', 'car-dealer' ), 'edit_cars', 'edit.php?post_type=car' );
+	add_submenu_page( 'car-dealer-dashboard', __( 'إضافة سيارة', 'car-dealer' ), __( 'إضافة سيارة', 'car-dealer' ), 'edit_cars', 'car-dealer-add-car', 'car_dealer_render_add_car_page' );
 	add_submenu_page( 'car-dealer-dashboard', __( 'الماركات', 'car-dealer' ), __( 'الماركات', 'car-dealer' ), 'manage_car_brands', 'edit-tags.php?taxonomy=car_brand&post_type=car' );
 	add_submenu_page( 'car-dealer-dashboard', __( 'الفئات', 'car-dealer' ), __( 'الفئات', 'car-dealer' ), 'manage_car_categories', 'edit-tags.php?taxonomy=car_category&post_type=car' );
 
@@ -66,6 +66,48 @@ function car_dealer_admin_menu() {
 	}
 }
 add_action( 'admin_menu', 'car_dealer_admin_menu' );
+
+function car_dealer_dashboard_submenu_order() {
+	return array(
+		'car-dealer-dashboard'                                => 0,
+		'edit.php?post_type=car'                              => 10,
+		'car-dealer-add-car'                                  => 20,
+		'edit-tags.php?taxonomy=car_brand&post_type=car'      => 30,
+		'edit-tags.php?taxonomy=car_category&post_type=car'   => 40,
+		'car-dealer-inventory'                                => 50,
+		'edit.php?post_type=car_offer'                        => 60,
+		'post-new.php?post_type=car_offer'                    => 61,
+		'car-dealer-crm'                                      => 70,
+		'car-dealer-bookings'                                 => 80,
+		'car-dealer-messages'                                 => 90,
+		'car-dealer-subscribers'                              => 100,
+		'edit.php?post_type=testimonial'                      => 110,
+		'post-new.php?post_type=testimonial'                  => 111,
+		'car-dealer-settings'                                 => 120,
+		'car-dealer-users'                                    => 130,
+	);
+}
+
+function car_dealer_dashboard_submenu_icons() {
+	return array(
+		'car-dealer-dashboard'                                => 'dashboard',
+		'edit.php?post_type=car'                              => 'car',
+		'car-dealer-add-car'                                  => 'plus-alt2',
+		'edit-tags.php?taxonomy=car_brand&post_type=car'      => 'tag',
+		'edit-tags.php?taxonomy=car_category&post_type=car'   => 'category',
+		'car-dealer-inventory'                                => 'chart-bar',
+		'edit.php?post_type=car_offer'                        => 'megaphone',
+		'post-new.php?post_type=car_offer'                    => 'plus-alt2',
+		'car-dealer-crm'                                      => 'groups',
+		'car-dealer-bookings'                                 => 'calendar-alt',
+		'car-dealer-messages'                                 => 'email-alt',
+		'car-dealer-subscribers'                              => 'groups',
+		'edit.php?post_type=testimonial'                      => 'format-quote',
+		'post-new.php?post_type=testimonial'                  => 'plus-alt2',
+		'car-dealer-settings'                                 => 'admin-settings',
+		'car-dealer-users'                                    => 'admin-users',
+	);
+}
 
 function car_dealer_prioritize_dashboard_submenu() {
 	global $submenu;
@@ -77,6 +119,10 @@ function car_dealer_prioritize_dashboard_submenu() {
 	$seen = array();
 	foreach ( $submenu['car-dealer-dashboard'] as $index => $item ) {
 		$slug = $item[2] ?? '';
+		if ( 'post-new.php?post_type=car' === $slug ) {
+			unset( $submenu['car-dealer-dashboard'][ $index ] );
+			continue;
+		}
 		if ( isset( $seen[ $slug ] ) ) {
 			unset( $submenu['car-dealer-dashboard'][ $index ] );
 			continue;
@@ -87,16 +133,9 @@ function car_dealer_prioritize_dashboard_submenu() {
 	usort(
 		$submenu['car-dealer-dashboard'],
 		function ( $a, $b ) {
-			$order = array(
-				'car-dealer-dashboard'       => 0,
-				'car-dealer-add-car'        => 1,
-				'edit.php?post_type=car'    => 2,
-				'edit-tags.php?taxonomy=car_brand&post_type=car'    => 3,
-				'edit-tags.php?taxonomy=car_category&post_type=car' => 4,
-				'car-dealer-users'          => 90,
-			);
+			$order = car_dealer_dashboard_submenu_order();
 
-			return ( $order[ $a[2] ] ?? 50 ) <=> ( $order[ $b[2] ] ?? 50 );
+			return ( $order[ $a[2] ] ?? 200 ) <=> ( $order[ $b[2] ] ?? 200 );
 		}
 	);
 
@@ -104,12 +143,25 @@ function car_dealer_prioritize_dashboard_submenu() {
 	if ( isset( $submenu['car-dealer-dashboard'][0][0] ) && 'car-dealer-dashboard' === ( $submenu['car-dealer-dashboard'][0][2] ?? '' ) ) {
 		$submenu['car-dealer-dashboard'][0][0] = __( 'نظرة عامة', 'car-dealer' );
 	}
+
+	$icons = car_dealer_dashboard_submenu_icons();
+	foreach ( $submenu['car-dealer-dashboard'] as &$item ) {
+		if ( 'edit.php?post_type=car' === ( $item[2] ?? '' ) ) {
+			$item[0] = __( 'كل السيارات', 'car-dealer' );
+		}
+
+		$slug = $item[2] ?? '';
+		if ( isset( $icons[ $slug ] ) && false === strpos( $item[0], 'cd-admin-menu-icon' ) ) {
+			$item[0] = '<span class="cd-admin-menu-icon dashicons dashicons-' . esc_attr( $icons[ $slug ] ) . '" aria-hidden="true"></span><span class="cd-admin-menu-label">' . wp_strip_all_tags( $item[0] ) . '</span>';
+		}
+	}
+	unset( $item );
 }
 add_action( 'admin_menu', 'car_dealer_prioritize_dashboard_submenu', 999 );
 
 function car_dealer_admin_assets( $hook ) {
 	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-	if ( false === strpos( $hook, 'car-dealer' ) && ( ! $screen || ! in_array( $screen->post_type, array( 'car', 'car_offer' ), true ) ) ) {
+	if ( false === strpos( $hook, 'car-dealer' ) && ( ! $screen || ! in_array( $screen->post_type, array( 'car', 'car_offer', 'testimonial' ), true ) ) ) {
 		return;
 	}
 
@@ -162,7 +214,7 @@ add_filter( 'post_updated_messages', 'car_dealer_car_updated_messages' );
 
 function car_dealer_car_admin_body_class( $classes ) {
 	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-	if ( $screen && ( in_array( $screen->post_type, array( 'car', 'car_offer' ), true ) || false !== strpos( $screen->id, 'car-dealer' ) ) ) {
+	if ( $screen && ( in_array( $screen->post_type, array( 'car', 'car_offer', 'testimonial' ), true ) || false !== strpos( $screen->id, 'car-dealer' ) ) ) {
 		$classes .= ' car-dealer-admin-screen';
 	}
 	if ( $screen && in_array( $screen->post_type, array( 'car', 'car_offer' ), true ) ) {
@@ -252,6 +304,7 @@ function car_dealer_handle_add_car_form() {
 	update_post_meta( $post_id, '_car_features', $features );
 	update_post_meta( $post_id, '_car_is_featured', isset( $_POST['_car_is_featured'] ) ? '1' : '0' );
 	update_post_meta( $post_id, '_car_is_offer', isset( $_POST['_car_is_offer'] ) ? '1' : '0' );
+	update_post_meta( $post_id, '_car_special_offer', isset( $_POST['_car_is_offer'] ) ? 1 : 0 );
 
 	if ( ! empty( $_POST['_thumbnail_id'] ) ) {
 		set_post_thumbnail( $post_id, absint( $_POST['_thumbnail_id'] ) );
@@ -274,14 +327,16 @@ add_action( 'admin_init', 'car_dealer_handle_add_car_form' );
 
 function car_dealer_car_text_fields() {
 	return array(
-		'_car_make'       => __( 'الماركة', 'car-dealer' ),
-		'_car_model'      => __( 'الموديل', 'car-dealer' ),
-		'_car_color'      => __( 'اللون الخارجي', 'car-dealer' ),
-		'_car_vin'        => __( 'رقم الهيكل VIN', 'car-dealer' ),
-		'_car_stock'      => __( 'رقم المخزون', 'car-dealer' ),
-		'_car_location'   => __( 'موقع السيارة', 'car-dealer' ),
-		'_car_whatsapp'   => __( 'رقم واتساب المبيعات', 'car-dealer' ),
-		'_car_drive_type' => __( 'نظام الدفع', 'car-dealer' ),
+		'_car_make'           => __( 'الشركة المصنعة', 'car-dealer' ),
+		'_car_model'          => __( 'الموديل', 'car-dealer' ),
+		'_car_trim'           => __( 'الإصدار / الفئة', 'car-dealer' ),
+		'_car_color'          => __( 'اللون الخارجي', 'car-dealer' ),
+		'_car_interior_color' => __( 'اللون الداخلي', 'car-dealer' ),
+		'_car_vin'            => __( 'رقم الهيكل VIN', 'car-dealer' ),
+		'_car_stock_number'   => __( 'رقم المخزون', 'car-dealer' ),
+		'_car_location'       => __( 'موقع السيارة', 'car-dealer' ),
+		'_car_whatsapp'       => __( 'رقم واتساب المبيعات', 'car-dealer' ),
+		'_car_video_url'      => __( 'رابط فيديو السيارة', 'car-dealer' ),
 	);
 }
 
@@ -290,6 +345,7 @@ function car_dealer_car_number_fields() {
 		'_car_year'            => __( 'سنة الصنع', 'car-dealer' ),
 		'_car_price'           => __( 'السعر', 'car-dealer' ),
 		'_car_monthly_payment' => __( 'القسط الشهري المتوقع', 'car-dealer' ),
+		'_car_down_payment'    => __( 'الدفعة الأولى', 'car-dealer' ),
 		'_car_mileage'         => __( 'الممشى', 'car-dealer' ),
 		'_car_engine_size'     => __( 'سعة المحرك', 'car-dealer' ),
 		'_car_horsepower'      => __( 'القوة بالحصان', 'car-dealer' ),
@@ -304,7 +360,33 @@ function car_dealer_car_select_fields() {
 		'_car_fuel_type'    => array( 'label' => __( 'نوع الوقود', 'car-dealer' ), 'options' => array( 'gasoline' => __( 'بنزين', 'car-dealer' ), 'diesel' => __( 'ديزل', 'car-dealer' ), 'hybrid' => __( 'هايبرد', 'car-dealer' ), 'electric' => __( 'كهرباء', 'car-dealer' ) ) ),
 		'_car_transmission' => array( 'label' => __( 'ناقل الحركة', 'car-dealer' ), 'options' => array( 'automatic' => __( 'أوتوماتيك', 'car-dealer' ), 'manual' => __( 'عادي', 'car-dealer' ), 'cvt' => __( 'CVT', 'car-dealer' ) ) ),
 		'_car_body_type'    => array( 'label' => __( 'نوع السيارة', 'car-dealer' ), 'options' => array( 'sedan' => __( 'سيدان', 'car-dealer' ), 'suv' => __( 'SUV', 'car-dealer' ), 'coupe' => __( 'كوبيه', 'car-dealer' ), 'pickup' => __( 'بيك أب', 'car-dealer' ), 'van' => __( 'فان', 'car-dealer' ) ) ),
+		'_car_drivetrain'   => array( 'label' => __( 'نظام الدفع', 'car-dealer' ), 'options' => array( 'fwd' => __( 'دفع أمامي', 'car-dealer' ), 'rwd' => __( 'دفع خلفي', 'car-dealer' ), 'awd' => __( 'دفع كلي', 'car-dealer' ), '4wd' => __( 'دفع رباعي', 'car-dealer' ) ) ),
+		'_car_inventory_status' => array( 'label' => __( 'حالة المخزون', 'car-dealer' ), 'options' => array( 'available' => __( 'متوفر', 'car-dealer' ), 'reserved' => __( 'محجوز', 'car-dealer' ), 'sold' => __( 'مباع', 'car-dealer' ), 'pending' => __( 'قيد التجهيز', 'car-dealer' ) ) ),
 	);
+}
+
+function car_dealer_render_field_group( $fields, $value_callback, $type = 'text' ) {
+	foreach ( $fields as $key => $label ) {
+		$input_type = 'number' === $type ? 'number' : 'text';
+		printf(
+			'<label>%1$s<input type="%2$s" name="%3$s" value="%4$s"%5$s></label>',
+			esc_html( $label ),
+			esc_attr( $input_type ),
+			esc_attr( $key ),
+			esc_attr( $value_callback( $key ) ),
+			'number' === $type ? ' step="any" min="0"' : ''
+		);
+	}
+}
+
+function car_dealer_render_select_group( $fields, $value_callback ) {
+	foreach ( $fields as $key => $field ) {
+		echo '<label>' . esc_html( $field['label'] ) . '<select name="' . esc_attr( $key ) . '"><option value="">' . esc_html__( 'اختر', 'car-dealer' ) . '</option>';
+		foreach ( $field['options'] as $option_value => $label ) {
+			echo '<option value="' . esc_attr( $option_value ) . '" ' . selected( $value_callback( $key ), $option_value, false ) . '>' . esc_html( $label ) . '</option>';
+		}
+		echo '</select></label>';
+	}
 }
 
 function car_dealer_dashboard_stat( $label, $value, $icon = 'dashicons-chart-bar' ) {
@@ -313,6 +395,28 @@ function car_dealer_dashboard_stat( $label, $value, $icon = 'dashicons-chart-bar
 
 function car_dealer_admin_link( $url, $label, $description, $icon = 'dashicons-admin-generic' ) {
 	echo '<a class="cd-admin-card" href="' . esc_url( $url ) . '"><span aria-hidden="true" class="dashicons ' . esc_attr( $icon ) . '"></span><div><strong>' . esc_html( $label ) . '</strong><small>' . esc_html( $description ) . '</small></div></a>';
+}
+
+function car_dealer_dashboard_table_count( $table, $where = '', $values = array() ) {
+	global $wpdb;
+
+	$allowed = array( 'car_dealer_messages', 'car_dealer_bookings', 'car_dealer_subscribers' );
+	if ( ! in_array( $table, $allowed, true ) ) {
+		return 0;
+	}
+
+	$table_name = $wpdb->prefix . $table;
+	$exists     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+	if ( $exists !== $table_name ) {
+		return 0;
+	}
+
+	$sql = "SELECT COUNT(*) FROM {$table_name}";
+	if ( $where ) {
+		$sql .= ' WHERE ' . $where;
+	}
+
+	return $values ? (int) $wpdb->get_var( $wpdb->prepare( $sql, $values ) ) : (int) $wpdb->get_var( $sql );
 }
 
 function car_dealer_render_add_car_page() {
@@ -327,6 +431,14 @@ function car_dealer_render_add_car_page() {
 	$categories = get_terms( array( 'taxonomy' => 'car_category', 'hide_empty' => false ) );
 	$features   = array( 'فتحة سقف', 'جلد', 'كاميرا خلفية', 'حساسات', 'مثبت سرعة', 'شاشة لمس', 'بلوتوث', 'ملاحة', 'تشغيل بصمة', 'دخول ذكي', 'مقاعد كهربائية', 'تبريد مقاعد' );
 	$features = array_unique( array_merge( $features, (array) $value( '_car_features' ) ) );
+	$text_fields   = car_dealer_car_text_fields();
+	$number_fields = car_dealer_car_number_fields();
+	$select_fields = car_dealer_car_select_fields();
+	$identity_fields = array_intersect_key( $text_fields, array_flip( array( '_car_make', '_car_model', '_car_trim', '_car_color', '_car_interior_color', '_car_vin' ) ) );
+	$operations_fields = array_intersect_key( $text_fields, array_flip( array( '_car_stock_number', '_car_location', '_car_whatsapp', '_car_video_url' ) ) );
+	$pricing_fields = array_intersect_key( $number_fields, array_flip( array( '_car_price', '_car_monthly_payment', '_car_down_payment' ) ) );
+	$technical_number_fields = array_diff_key( $number_fields, $pricing_fields );
+	$technical_select_fields = array_diff_key( $select_fields, array( '_car_inventory_status' => true ) );
 	?>
 	<div class="wrap car-dealer-dashboard cd-add-car-page">
 		<div class="cd-admin-hero cd-admin-hero-compact">
@@ -357,18 +469,10 @@ function car_dealer_render_add_car_page() {
 						</div>
 					</div>
 					<label><?php esc_html_e( 'اسم السيارة', 'car-dealer' ); ?><input type="text" name="car_title" value="<?php echo esc_attr( $value( 'car_title' ) ); ?>" required placeholder="<?php esc_attr_e( 'مثال: Toyota Camry 2026', 'car-dealer' ); ?>"></label>
-					<label><?php esc_html_e( 'وصف السيارة', 'car-dealer' ); ?><textarea name="car_description" rows="6" placeholder="<?php esc_attr_e( 'اكتب وصفاً تسويقياً واضحاً للسيارة...', 'car-dealer' ); ?>"><?php echo esc_textarea( $value( 'car_description' ) ); ?></textarea></label>
+					<label class="cd-wide-field"><?php esc_html_e( 'وصف السيارة', 'car-dealer' ); ?><textarea name="car_description" rows="5" placeholder="<?php esc_attr_e( 'اكتب وصفاً تسويقياً واضحاً يشرح حالة السيارة، أبرز مزاياها، وما يهم العميل قبل التواصل.', 'car-dealer' ); ?>"><?php echo esc_textarea( $value( 'car_description' ) ); ?></textarea></label>
 
 					<div class="cd-fields-two">
-						<?php foreach ( car_dealer_car_text_fields() as $key => $label ) : ?>
-							<label><?php echo esc_html( $label ); ?><input type="text" name="<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $value( $key ) ); ?>"></label>
-						<?php endforeach; ?>
-					</div>
-
-					<div class="cd-fields-two">
-						<?php foreach ( car_dealer_car_number_fields() as $key => $label ) : ?>
-							<label><?php echo esc_html( $label ); ?><input type="number" name="<?php echo esc_attr( $key ); ?>" step="any" value="<?php echo esc_attr( $value( $key ) ); ?>"></label>
-						<?php endforeach; ?>
+						<?php car_dealer_render_field_group( $identity_fields, $value ); ?>
 					</div>
 				</section>
 
@@ -381,8 +485,13 @@ function car_dealer_render_add_car_page() {
 						</div>
 					</div>
 					<label><?php esc_html_e( 'حالة النشر', 'car-dealer' ); ?><select name="post_status"><option value="publish" <?php selected( $value( 'post_status' ), 'publish' ); ?>><?php esc_html_e( 'نشر مباشر', 'car-dealer' ); ?></option><option value="draft" <?php selected( $value( 'post_status' ), 'draft' ); ?>><?php esc_html_e( 'حفظ كمسودة', 'car-dealer' ); ?></option><?php foreach ( array( 'pending' => 'بانتظار المراجعة', 'private' => 'خاص', 'future' => 'مجدول' ) as $state => $label ) : if ( $state !== 'pending' && $value( 'post_status' ) !== $state ) { continue; } ?><option value="<?php echo esc_attr( $state ); ?>" <?php selected( $value( 'post_status' ), $state ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></label>
-					<label><?php esc_html_e( 'الماركة', 'car-dealer' ); ?><input type="hidden" name="car_brand[]" value=""><select name="car_brand[]" multiple><option value=""><?php esc_html_e( 'اختر الماركة', 'car-dealer' ); ?></option><?php foreach ( $brands as $brand ) : ?><option value="<?php echo esc_attr( $brand->term_id ); ?>" <?php selected( in_array( $brand->term_id, array_map( 'absint', (array) $value( 'car_brand' ) ), true ) ); ?>><?php echo esc_html( $brand->name ); ?></option><?php endforeach; ?></select></label>
-					<label><?php esc_html_e( 'الفئة', 'car-dealer' ); ?><input type="hidden" name="car_category[]" value=""><select name="car_category[]" multiple><option value=""><?php esc_html_e( 'اختر الفئة', 'car-dealer' ); ?></option><?php foreach ( $categories as $category ) : ?><option value="<?php echo esc_attr( $category->term_id ); ?>" <?php selected( in_array( $category->term_id, array_map( 'absint', (array) $value( 'car_category' ) ), true ) ); ?>><?php echo esc_html( $category->name ); ?></option><?php endforeach; ?></select></label>
+					<label><?php esc_html_e( 'حالة المخزون', 'car-dealer' ); ?><select name="_car_inventory_status"><?php foreach ( $select_fields['_car_inventory_status']['options'] as $status_key => $status_label ) : ?><option value="<?php echo esc_attr( $status_key ); ?>" <?php selected( $value( '_car_inventory_status' ) ?: 'available', $status_key ); ?>><?php echo esc_html( $status_label ); ?></option><?php endforeach; ?></select></label>
+					<label><?php esc_html_e( 'الماركة', 'car-dealer' ); ?><input type="hidden" name="car_brand[]" value=""><select name="car_brand[]"><option value=""><?php esc_html_e( 'اختر الماركة', 'car-dealer' ); ?></option><?php foreach ( $brands as $brand ) : ?><option value="<?php echo esc_attr( $brand->term_id ); ?>" <?php selected( in_array( $brand->term_id, array_map( 'absint', (array) $value( 'car_brand' ) ), true ) ); ?>><?php echo esc_html( $brand->name ); ?></option><?php endforeach; ?></select></label>
+					<label><?php esc_html_e( 'الفئة', 'car-dealer' ); ?><input type="hidden" name="car_category[]" value=""><select name="car_category[]"><option value=""><?php esc_html_e( 'اختر الفئة', 'car-dealer' ); ?></option><?php foreach ( $categories as $category ) : ?><option value="<?php echo esc_attr( $category->term_id ); ?>" <?php selected( in_array( $category->term_id, array_map( 'absint', (array) $value( 'car_category' ) ), true ) ); ?>><?php echo esc_html( $category->name ); ?></option><?php endforeach; ?></select></label>
+
+					<div class="cd-compact-fields">
+						<?php car_dealer_render_field_group( $operations_fields, $value ); ?>
+					</div>
 
 					<div class="cd-media-field">
 						<strong><?php esc_html_e( 'الصورة الرئيسية', 'car-dealer' ); ?></strong>
@@ -399,6 +508,20 @@ function car_dealer_render_add_car_page() {
 
 			<section class="cd-form-panel">
 				<div class="cd-panel-heading">
+					<span class="dashicons dashicons-money-alt"></span>
+					<div>
+						<h2><?php esc_html_e( 'السعر والأرقام التشغيلية', 'car-dealer' ); ?></h2>
+						<p><?php esc_html_e( 'الأسعار والمدفوعات والبيانات الرقمية التي تساعد العميل وفريق المبيعات على تقييم السيارة بسرعة.', 'car-dealer' ); ?></p>
+					</div>
+				</div>
+				<div class="cd-fields-three">
+					<?php car_dealer_render_field_group( $pricing_fields, $value, 'number' ); ?>
+					<?php car_dealer_render_field_group( $technical_number_fields, $value, 'number' ); ?>
+				</div>
+			</section>
+
+			<section class="cd-form-panel">
+				<div class="cd-panel-heading">
 					<span class="dashicons dashicons-clipboard"></span>
 					<div>
 						<h2><?php esc_html_e( 'المواصفات التفصيلية', 'car-dealer' ); ?></h2>
@@ -406,9 +529,7 @@ function car_dealer_render_add_car_page() {
 					</div>
 				</div>
 				<div class="cd-fields-two">
-					<?php foreach ( car_dealer_car_select_fields() as $key => $field ) : ?>
-						<label><?php echo esc_html( $field['label'] ); ?><select name="<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $value( $key ) ); ?>"><option value=""><?php esc_html_e( 'اختر', 'car-dealer' ); ?></option><?php foreach ( $field['options'] as $option_value => $label ) : ?><option value="<?php echo esc_attr( $option_value ); ?>" <?php selected( $value( $key ), $option_value ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></label>
-					<?php endforeach; ?>
+					<?php car_dealer_render_select_group( $technical_select_fields, $value ); ?>
 				</div>
 				<div class="cd-feature-list">
 					<?php foreach ( $features as $feature ) : ?>
@@ -436,8 +557,12 @@ function car_dealer_render_admin_hub() {
 	$drafts        = isset( $total_cars->draft ) ? (int) $total_cars->draft : 0;
 	$total_offers  = wp_count_posts( 'car_offer' );
 	$offers        = isset( $total_offers->publish ) ? (int) $total_offers->publish : 0;
-	$users_count   = count_users();
-	$users_total   = isset( $users_count['total_users'] ) ? (int) $users_count['total_users'] : 0;
+	$new_messages  = car_dealer_dashboard_table_count( 'car_dealer_messages', 'status = %s', array( 'new' ) );
+	$bookings      = car_dealer_dashboard_table_count( 'car_dealer_bookings', 'status = %s', array( 'pending' ) );
+	$brand_count   = wp_count_terms( 'car_brand', array( 'hide_empty' => false ) );
+	$brand_count   = is_wp_error( $brand_count ) ? 0 : (int) $brand_count;
+	$category_count = wp_count_terms( 'car_category', array( 'hide_empty' => false ) );
+	$category_count = is_wp_error( $category_count ) ? 0 : (int) $category_count;
 	?>
 	<div class="wrap car-dealer-dashboard">
 		<div class="cd-admin-hero">
@@ -457,7 +582,9 @@ function car_dealer_render_admin_hub() {
 			car_dealer_dashboard_stat( __( 'سيارات منشورة', 'car-dealer' ), $published, 'dashicons-car' );
 			car_dealer_dashboard_stat( __( 'مسودات السيارات', 'car-dealer' ), $drafts, 'dashicons-edit' );
 			car_dealer_dashboard_stat( __( 'عروض نشطة', 'car-dealer' ), $offers, 'dashicons-megaphone' );
-			car_dealer_dashboard_stat( __( 'مستخدمون', 'car-dealer' ), $users_total, 'dashicons-groups' );
+			car_dealer_dashboard_stat( __( 'رسائل جديدة', 'car-dealer' ), $new_messages, 'dashicons-email-alt' );
+			car_dealer_dashboard_stat( __( 'حجوزات معلقة', 'car-dealer' ), $bookings, 'dashicons-calendar-alt' );
+			car_dealer_dashboard_stat( __( 'ماركات وفئات', 'car-dealer' ), $brand_count + $category_count, 'dashicons-tag' );
 			?>
 		</div>
 
@@ -467,14 +594,27 @@ function car_dealer_render_admin_hub() {
 		</div>
 		<div class="cd-admin-grid">
 			<?php
-			car_dealer_admin_link( admin_url( 'admin.php?page=car-dealer-add-car' ), __( 'إضافة سيارة', 'car-dealer' ), __( 'نموذج احترافي شامل لبيانات السيارة.', 'car-dealer' ), 'dashicons-plus-alt2' );
 			car_dealer_admin_link( admin_url( 'edit.php?post_type=car' ), __( 'كل السيارات', 'car-dealer' ), __( 'إدارة مخزون السيارات المنشورة والمسودات.', 'car-dealer' ), 'dashicons-car' );
+			car_dealer_admin_link( admin_url( 'admin.php?page=car-dealer-add-car' ), __( 'إضافة سيارة', 'car-dealer' ), __( 'نموذج احترافي شامل لبيانات السيارة.', 'car-dealer' ), 'dashicons-plus-alt2' );
+			if ( current_user_can( 'manage_car_brands' ) ) {
+				car_dealer_admin_link( admin_url( 'edit-tags.php?taxonomy=car_brand&post_type=car' ), __( 'الماركات', 'car-dealer' ), __( 'تنظيم الشركات والماركات الظاهرة في الفلاتر.', 'car-dealer' ), 'dashicons-tag' );
+			}
+			if ( current_user_can( 'manage_car_categories' ) ) {
+				car_dealer_admin_link( admin_url( 'edit-tags.php?taxonomy=car_category&post_type=car' ), __( 'الفئات', 'car-dealer' ), __( 'ترتيب أنواع السيارات والفئات لتسهيل التصفح.', 'car-dealer' ), 'dashicons-category' );
+			}
+			if ( current_user_can( 'manage_car_dealer' ) ) {
+				car_dealer_admin_link( admin_url( 'admin.php?page=car-dealer-inventory' ), __( 'تقرير المخزون', 'car-dealer' ), __( 'قراءة سريعة لحالات التوفر والحجز والبيع.', 'car-dealer' ), 'dashicons-chart-bar' );
+			}
 			if ( current_user_can( 'edit_posts' ) ) {
 				car_dealer_admin_link( admin_url( 'edit.php?post_type=car_offer' ), __( 'العروض', 'car-dealer' ), __( 'إدارة عروض التمويل والخصومات.', 'car-dealer' ), 'dashicons-megaphone' );
 			}
 			car_dealer_admin_link( admin_url( 'admin.php?page=car-dealer-messages' ), __( 'الرسائل والعملاء', 'car-dealer' ), __( 'متابعة العملاء المحتملين وطلبات التواصل.', 'car-dealer' ), 'dashicons-email-alt2' );
 			car_dealer_admin_link( admin_url( 'admin.php?page=car-dealer-bookings' ), __( 'تجارب القيادة', 'car-dealer' ), __( 'متابعة حجوزات العملاء ومواعيد التجربة.', 'car-dealer' ), 'dashicons-calendar-alt' );
+			if ( current_user_can( 'manage_car_dealer' ) ) {
+				car_dealer_admin_link( admin_url( 'admin.php?page=car-dealer-crm' ), __( 'إدارة العملاء CRM', 'car-dealer' ), __( 'متابعة العملاء والفرص والمواعيد من مكان واحد.', 'car-dealer' ), 'dashicons-groups' );
+			}
 			if ( current_user_can( 'manage_options' ) ) {
+				car_dealer_admin_link( admin_url( 'admin.php?page=car-dealer-settings' ), __( 'إعدادات المعرض', 'car-dealer' ), __( 'تخصيص الهوية وبيانات التواصل وحسابات المعرض.', 'car-dealer' ), 'dashicons-admin-settings' );
 				car_dealer_admin_link( admin_url( 'admin.php?page=car-dealer-users' ), __( 'المستخدمون والصلاحيات', 'car-dealer' ), __( 'إدارة أدوار فريق الإدارة والمبيعات.', 'car-dealer' ), 'dashicons-admin-users' );
 			}
 			?>

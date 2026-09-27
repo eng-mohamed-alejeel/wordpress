@@ -22,6 +22,7 @@ function car_dealer_vehicle_form_value( $key, $id = 0 ) {
  if ( 'post_status' === $key ) { return $id ? get_post_status( $id ) : ( current_user_can( 'publish_cars' ) ? 'publish' : 'draft' ); }
  if ( in_array( $key, array( 'car_brand', 'car_category' ), true ) ) { return $id ? wp_get_object_terms( $id, $key, array( 'fields' => 'ids' ) ) : array(); }
  $value = $id ? get_post_meta( $id, $key, true ) : '';
+ if ( '_car_stock_number' === $key && '' === $value && $id ) { $value = get_post_meta( $id, '_car_stock', true ); }
  if ( '_car_features' === $key && ! is_array( $value ) ) { return array_filter( array_map( 'trim', preg_split( '/\r\n|\r|\n/', (string) $value ) ) ); }
  return $value;
 }
