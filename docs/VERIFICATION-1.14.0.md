@@ -43,4 +43,4 @@ Stop the dedicated server after completion. `--isolated` rejects port 3306 and s
 
 This establishes the covered local service/database/HTTP behavior. It does not establish visual admin/browser rendering, production-copy field reconciliation, performance at production volume, all concurrency schedules, provider execution, physical document authenticity or backup/restore readiness.
 
-The original XAMPP database remains outside this run and requires a protected recovery/restore procedure. Next: production-copy recovery rehearsal and migration reconciliation; remaining independent implementation work is listed in `EXECUTION-STATUS.md`. Overall production readiness remains FAIL.
+The original XAMPP database was outside this synthetic run. A later read-only inspection after the user's manual repairs confirmed normal operation; the current-state backup/restore results and empty-data limitation are recorded in `RESTORE-REHEARSAL-2026-09-27.md`. Remaining work is listed in `EXECUTION-STATUS.md`. Overall production readiness remains FAIL.

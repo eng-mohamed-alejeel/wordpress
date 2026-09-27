@@ -2,7 +2,18 @@
 
 Updated: 2026-09-27. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.14.0 (local integration verification passed)
+## Current increment: 1.15.0 (implemented; integration verification pending)
+
+- Unified REST enquiries and theme contact/test-drive creation in `PublicIntake`, with normalized contact identity, explicit consent, bounded context, vehicle/branch/date checks, a shared IP limit and a honeypot.
+- Added optional UUID v4 replay protection with a unique HMAC key and payload fingerprint. Core customer/lead/activity/audit and the customer-account compatibility row share one transaction; core-owned submissions skip duplicate legacy request CRM capture.
+- Added paginated, branch/owner-scoped activity history to REST and the CRM staff screen. Activity creation now updates the lead timestamp and supplied follow-up date.
+- Erasure/retention clears replay payload fingerprints; retention checks and anonymizes completed, old compatibility copies in the same transaction. Active copies and SQL/storage failures block anonymization.
+- Plugin 1.15.0 / schema 1.11.0. Added `CRM-INTAKE.md` with contracts, feature switch, rollback boundaries and the pending acceptance checklist.
+- Static checks passed: 64 plugin PHP files plus two changed theme files, JavaScript syntax for the new plugin form script, and `git diff --check`. No integration/HTTP/browser tests were run in this increment. Existing 1.14.0 results below do not cover these changes.
+- The user's manual theme edits were preserved. No WordPress bootstrap, source database write, service restart or sample-data insertion was performed during this increment. Schema application is pending the normal WordPress installer lifecycle.
+- CRM remains partial: later legacy request replies/cancellations/rescheduling, account-profile synchronization and legacy staff scope are still theme-owned. Secure matching/merge and full read/write cutover are next; public email/phone values never trigger automatic merging.
+
+## Previous increment: 1.14.0 (local integration verification passed)
 
 - Added eleven public vehicle specification fields, validation, audited branch-scoped editing, a staff form and REST PATCH. Editing is locked during reservations, sales and delivery.
 - Unified vehicle import/reconciliation field mapping; preserved decimal SAR prices, stock/mileage aliases and certified condition. Missing/unknown inventory status is blocked. Existing target rows are not overwritten.
@@ -12,13 +23,13 @@ Updated: 2026-09-27. This records completed increments, not completion of whole 
 - PHP syntax: all 62 plugin PHP files passed; 48 offline authorization checks and 12 money checks passed.
 - The independent test MariaDB server on port 33317 completed 365 database/HTTP checks, including 98 additions for 1.14.0, without loading source `wp-config.php` or contacting its database. The generated database was removed. Detailed evidence and limits: `VERIFICATION-1.14.0.md`.
 - Added concurrent import, additive upgrade, specification HTTP/security, migration rollback and cancellation/refund SQL failure coverage. Fixed malformed serialized identity/status metadata handling discovered during review.
-- The original XAMPP database service remains unavailable. Automatic approval review rejected a proposed forced-recovery level 3 startup against its shared data directory. No such startup is authorized or part of this increment. Recovery requires a protected copy/backup and a separately reviewed recovery procedure.
+- After the user's manual repairs, source MariaDB was verified running normally on port 3306 with recovery mode 0. A local protected-copy rehearsal restored all 40 tables with matching counts/checksums and all 576 archived files with matching SHA-256 values. See `RESTORE-REHEARSAL-2026-09-27.md`. The user confirmed that the empty business dataset is intentional. Historical-data recovery and representative legacy migration are not applicable to this new deployment; that clarification is resolved.
 
 ### Remaining ordered delivery work
 
 1. Local 1.14.0 integration verification is complete for the covered scenarios. Interactive specification form layout, accessibility and browser journeys remain part of the staging review.
-2. Restore source database availability safely; rehearse backup/restore on a protected copy, reconcile migration counts, fields, media and exceptions. Do not run the migration against the unavailable source.
-3. Finish CRM deduplication/migration, reversible intake/read cutover and retirement of duplicate theme writes.
+2. Prepare the new-installation setup using actual branch, brand, location and staff assignments when supplied. Current-state backup/restore passed; no historical restore/import is required.
+3. Continue CRM with scoped compatibility reads/writes and audited synchronization of request replies, cancellations and rescheduling; finish verified contact matching/account linkage and retirement of duplicate profile writes. Intake creation is implemented in 1.15.0 but its isolated integration/browser verification remains pending. Historical migration is optional for future imports.
 4. Complete pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output, delivery document checklist and provider reconciliation.
 5. Finish public catalog/theme cutover, complete Arabic/English journeys, filter/sort behavior, accessibility and performance review.
 6. Implement scoped operational reporting, notification outbox/retries, provider-specific ERP/payment/finance/message adapters and job monitoring after provider contracts and credentials are supplied.

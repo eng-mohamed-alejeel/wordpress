@@ -88,4 +88,9 @@ final class BranchScope {
 			|| current_user_can( 'adc_manage_branch_leads' )
 			|| ( current_user_can( 'adc_manage_own_leads' ) && get_current_user_id() === (int) $lead['owner_user_id'] );
 	}
+
+	public static function can_view_lead( array $lead ): bool {
+		if ( ! isset( $lead['branch_id'], $lead['owner_user_id'] ) || ! self::allows( (int) $lead['branch_id'] ) ) { return false; }
+		return self::is_global() || current_user_can( 'adc_view_branch_leads' ) || ( current_user_can( 'adc_view_own_leads' ) && get_current_user_id() === (int) $lead['owner_user_id'] );
+	}
 }

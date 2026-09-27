@@ -2,7 +2,11 @@
 
 ## Purpose and current baseline
 
+User clarification on 2026-09-27: the empty business database is intentional. Treat this installation as a new deployment. Historical-data recovery and migration reconciliation are not applicable to this launch; retain migration tooling for future imports. This overrides historical-data prerequisites in the original phase descriptions below. Continue CRM/intake consolidation, reference-data setup, workflows and release verification without inventing business records. Backup/restore, authorization, browser review and operational release gates still apply.
+
 Implementation increments and verification evidence are recorded in `EXECUTION-STATUS.md`. Completed increments include central branch authorization, verified schema/customer transactions and manual receipt confirmation with funded-delivery controls. They do not close the full foundational or delivery phases.
+
+Increment 1.15.0 implements public CRM intake consolidation, replay protection, contact normalization and scoped activity history. Its integration/browser acceptance is pending. `CRM-INTAKE.md` records the remaining verified identity matching, account linkage, legacy request update authorization/synchronization and full cutover work; the CRM phase remains partial.
 
 This plan closes the gaps recorded in `PRODUCTION-READINESS.md` and expands `ROADMAP.md` into reviewable delivery phases. The repository already contains the `auto-dealership-core` plugin, operational tables, initial vehicle/branch/lead/reservation/sales/finance/delivery services, REST routes, staff screens, audit logging, privacy handlers, legacy migration commands, and a functioning `car-dealer` theme. The theme still owns substantial business behavior and remains the source of truth for unmigrated records.
 

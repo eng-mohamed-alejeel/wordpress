@@ -135,7 +135,7 @@ final class PrivacyTools {
 			$lead_ids = $wpdb->get_col( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'leads' ) . " WHERE customer_id IN ($placeholders)", array_map( 'intval', $customer_ids ) ) ) ?: array();
 			if ( $lead_ids ) {
 				$lead_placeholders = implode( ',', array_fill( 0, count( $lead_ids ), '%d' ) );
-				if ( false === $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::table( 'activities' ) . " SET notes = %s WHERE lead_id IN ($lead_placeholders)", array_merge( array( '[Personal data erased]' ), array_map( 'intval', $lead_ids ) ) ) ) || false === $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::table( 'leads' ) . " SET lost_reason = '',next_action_at = NULL WHERE id IN ($lead_placeholders)", array_map( 'intval', $lead_ids ) ) ) ) {
+				if ( false === $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::table( 'activities' ) . " SET notes = %s,next_action_at = NULL WHERE lead_id IN ($lead_placeholders)", array_merge( array( '[Personal data erased]' ), array_map( 'intval', $lead_ids ) ) ) ) || false === $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::table( 'leads' ) . " SET lost_reason = '',next_action_at = NULL,public_payload_hash = NULL WHERE id IN ($lead_placeholders)", array_map( 'intval', $lead_ids ) ) ) ) {
 					$wpdb->query( 'ROLLBACK' );
 					return self::erase_failed();
 				}

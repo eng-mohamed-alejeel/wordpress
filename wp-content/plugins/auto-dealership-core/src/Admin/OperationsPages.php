@@ -92,12 +92,42 @@ final class OperationsPages {
 		$leads = LeadService::list_for_current_user( max( 1, absint( $_GET['paged'] ?? 1 ) ), 50 );
 		?>
 		<div class="wrap" dir="rtl"><h1><?php esc_html_e( 'فرص العملاء CRM', 'auto-dealership-core' ); ?></h1><?php self::notice(); ?>
+			<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
+				<input type="hidden" name="page" value="adc-crm">
+				<input type="hidden" name="paged" value="<?php echo max( 1, absint( $_GET['paged'] ?? 1 ) ); ?>">
+				<label for="adc-history-lead"><?php esc_html_e( 'سجل متابعة الفرصة', 'auto-dealership-core' ); ?></label>
+				<select id="adc-history-lead" name="lead_id" required><option value=""><?php esc_html_e( 'اختر فرصة', 'auto-dealership-core' ); ?></option>
+				<?php foreach ( $leads as $item ) : ?><option value="<?php echo absint( $item['id'] ); ?>" <?php selected( absint( $_GET['lead_id'] ?? 0 ), (int) $item['id'] ); ?>><?php echo esc_html( '#' . $item['id'] . ' — ' . $item['full_name'] ); ?></option><?php endforeach; ?>
+				</select><button class="button"><?php esc_html_e( 'عرض السجل', 'auto-dealership-core' ); ?></button>
+			</form>
+			<?php self::render_activity_history(); ?>
 			<table class="widefat striped"><thead><tr><th>ID</th><th><?php esc_html_e( 'العميل', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الجوال', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'البريد', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المصدر', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المرحلة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'تحديث', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'إضافة نشاط', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
 			<?php foreach ( $leads as $lead ) : ?><tr><td><?php echo absint( $lead['id'] ); ?></td><td><?php echo esc_html( $lead['full_name'] ); ?></td><td><?php echo esc_html( $lead['mobile'] ); ?></td><td><?php echo esc_html( $lead['email'] ); ?></td><td><?php echo esc_html( $lead['source'] ); ?></td><td><?php echo esc_html( $lead['stage'] ); ?><?php if ( current_user_can( 'adc_manage_branch_leads' ) ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_assign_lead"><input type="hidden" name="lead_id" value="<?php echo absint( $lead['id'] ); ?>"><?php wp_nonce_field( 'adc_assign_lead_' . (int) $lead['id'] ); ?><select name="staff_id" required><option value="0"><?php esc_html_e( 'إسناد إلى...', 'auto-dealership-core' ); ?></option><?php foreach ( self::sales_staff( (int) $lead['branch_id'] ) as $staff ) : ?><option value="<?php echo absint( $staff->ID ); ?>" <?php selected( (int) $lead['owner_user_id'], (int) $staff->ID ); ?>><?php echo esc_html( $staff->display_name ); ?></option><?php endforeach; ?></select><button class="button"><?php esc_html_e( 'إسناد', 'auto-dealership-core' ); ?></button></form><?php endif; ?></td><td><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_update_lead_stage"><input type="hidden" name="lead_id" value="<?php echo absint( $lead['id'] ); ?>"><?php wp_nonce_field( 'adc_update_lead_stage_' . (int) $lead['id'] ); ?><select name="stage"><?php foreach ( array( 'contacted', 'qualified', 'quotation', 'finance', 'negotiation', 'reserved', 'won', 'lost' ) as $stage ) : ?><option value="<?php echo esc_attr( $stage ); ?>"><?php echo esc_html( $stage ); ?></option><?php endforeach; ?></select><input name="reason" placeholder="<?php esc_attr_e( 'سبب الخسارة عند الحاجة', 'auto-dealership-core' ); ?>"><button class="button"><?php esc_html_e( 'تحديث', 'auto-dealership-core' ); ?></button></form></td><td><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_add_activity"><input type="hidden" name="lead_id" value="<?php echo absint( $lead['id'] ); ?>"><?php wp_nonce_field( 'adc_add_activity_' . (int) $lead['id'] ); ?><select name="type"><option value="call">call</option><option value="whatsapp">WhatsApp</option><option value="meeting">meeting</option><option value="follow_up">follow-up</option><option value="note">note</option></select><input name="notes" required><button class="button"><?php esc_html_e( 'إضافة', 'auto-dealership-core' ); ?></button></form></td></tr><?php endforeach; ?>
 			<?php if ( ! $leads ) : ?><tr><td colspan="8"><?php esc_html_e( 'لا توجد فرص في نطاق صلاحيتك.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?>
 			</tbody></table>
 		</div>
 		<?php
+	}
+
+	private static function render_activity_history(): void {
+		$lead_id = absint( $_GET['lead_id'] ?? 0 );
+		if ( ! $lead_id ) { return; }
+		$page = max( 1, absint( $_GET['activity_page'] ?? 1 ) );
+		$items = LeadService::activity_history( $lead_id, $page, 20 );
+		if ( is_wp_error( $items ) ) { echo '<p role="alert">' . esc_html( $items->get_error_message() ) . '</p>'; return; }
+		echo '<h2>' . esc_html__( 'سجل المتابعة', 'auto-dealership-core' ) . ' #' . $lead_id . '</h2><p>' . esc_html__( 'التواريخ أدناه بالتوقيت العالمي UTC.', 'auto-dealership-core' ) . '</p>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'التاريخ', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'النشاط', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'التفاصيل', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المتابعة التالية', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		foreach ( $items as $item ) {
+			echo '<tr><td>' . esc_html( $item['created_at'] ) . '</td><td>' . esc_html( $item['type'] ) . '</td><td>' . nl2br( esc_html( $item['notes'] ) ) . '</td><td>' . esc_html( $item['next_action_at'] ?? '—' ) . '</td></tr>';
+		}
+		if ( ! $items ) { echo '<tr><td colspan="4">' . esc_html__( 'لا توجد أنشطة في هذه الصفحة.', 'auto-dealership-core' ) . '</td></tr>'; }
+		echo '</tbody></table><p>';
+		foreach ( array( $page - 1=>__( 'السابق', 'auto-dealership-core' ), $page + 1=>__( 'التالي', 'auto-dealership-core' ) ) as $target => $label ) {
+			if ( $target < 1 || ( $target > $page && count( $items ) < 20 ) ) { continue; }
+			$url = add_query_arg( array( 'page'=>'adc-crm', 'lead_id'=>$lead_id, 'activity_page'=>$target, 'paged'=>max( 1, absint( $_GET['paged'] ?? 1 ) ) ), admin_url( 'admin.php' ) );
+			echo '<a class="button" href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a> ';
+		}
+		echo '</p>';
 	}
 
 	private static function sales_staff( int $branch_id ): array {

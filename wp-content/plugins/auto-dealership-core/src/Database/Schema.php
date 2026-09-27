@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.10.0';
+	public const VERSION = '1.11.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -226,11 +226,14 @@ final class Schema {
 				next_action_at datetime NULL,
 				legacy_request_type varchar(16) NULL,
 				legacy_request_id bigint(20) unsigned NULL,
+				public_request_key char(64) NULL,
+				public_payload_hash char(64) NULL,
 				created_at datetime NOT NULL,
 				updated_at datetime NOT NULL,
 				PRIMARY KEY  (id),
 				KEY customer_id (customer_id),
 				UNIQUE KEY legacy_request (legacy_request_type,legacy_request_id),
+				UNIQUE KEY public_request_key (public_request_key),
 				KEY pipeline (branch_id,stage,owner_user_id)
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'activities' ) . " (

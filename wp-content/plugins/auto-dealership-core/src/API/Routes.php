@@ -118,7 +118,14 @@ final class Routes {
 			'methods' => 'POST', 'callback' => array( self::class, 'release_delivery' ), 'permission_callback' => static fn() => current_user_can( 'adc_approve_delivery' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ) ),
 		) );
 		register_rest_route( 'auto-dealership/v1', '/leads', array(
-			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_public_lead' ), 'permission_callback' => '__return_true', 'args' => array( 'name' => array( 'type' => 'string', 'required' => true ), 'mobile' => array( 'type' => 'string', 'required' => true ), 'email' => array( 'type' => 'string' ), 'city' => array( 'type' => 'string' ), 'branch_id' => array( 'type' => 'integer' ), 'source' => array( 'type' => 'string' ), 'consent_marketing' => array( 'type' => 'boolean' ) ) ),
+			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_public_lead' ), 'permission_callback' => '__return_true', 'args' => array(
+				'name'=>array( 'type'=>'string', 'required'=>true ), 'mobile'=>array( 'type'=>'string', 'required'=>true ),
+				'email'=>array( 'type'=>'string' ), 'city'=>array( 'type'=>'string' ), 'branch_id'=>array( 'type'=>'integer', 'minimum'=>0 ),
+				'source'=>array( 'type'=>'string' ), 'consent_marketing'=>array( 'type'=>'boolean' ),
+				'message'=>array( 'type'=>'string', 'maxLength'=>4000 ), 'request_kind'=>array( 'type'=>'string' ),
+				'car_id'=>array( 'type'=>'integer', 'minimum'=>0 ), 'date'=>array( 'type'=>'string' ), 'time'=>array( 'type'=>'string' ),
+				'website'=>array( 'type'=>'string' ), 'idempotency_key'=>array( 'type'=>'string', 'maxLength'=>36 ),
+			) ),
 			array( 'methods' => 'GET', 'callback' => array( self::class, 'list_leads' ), 'permission_callback' => static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'page' => array( 'type' => 'integer', 'minimum' => 1 ), 'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 100 ) ) ),
 		) );
 		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/stage', array(
@@ -126,6 +133,11 @@ final class Routes {
 		) );
 		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/assignment', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'assign_lead' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'staff_id' => array( 'type' => 'integer', 'required' => true ) ),
+		) );
+		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/activities', array(
+			'methods' => 'GET', 'callback' => static fn( \WP_REST_Request $r ) => rest_ensure_response( LeadService::activity_history( (int) $r['id'], (int) ( $r['page'] ?? 1 ), (int) ( $r['per_page'] ?? 50 ) ) ),
+			'permission_callback' => static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ),
+			'args' => array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ), 'page'=>array( 'type'=>'integer', 'minimum'=>1 ), 'per_page'=>array( 'type'=>'integer', 'minimum'=>1, 'maximum'=>100 ) ),
 		) );
 		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/activities', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'add_activity' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'type' => array( 'type' => 'string', 'required' => true ), 'notes' => array( 'type' => 'string', 'required' => true ), 'next_action_at' => array( 'type' => 'string' ) ),
@@ -180,17 +192,7 @@ final class Routes {
 	}
 
 	public static function create_public_lead( \WP_REST_Request $request ) {
-		if ( '' !== (string) $request->get_param( 'website' ) ) {
-			return new \WP_Error( 'adc_invalid_lead', __( 'تعذر تسجيل الطلب.', 'auto-dealership-core' ), array( 'status' => 400 ) );
-		}
-		$ip = (string) ( $_SERVER['REMOTE_ADDR'] ?? 'unknown' );
-		$key = 'adc_lead_rate_' . hash_hmac( 'sha256', $ip, wp_salt( 'auth' ) );
-		$count = (int) get_transient( $key );
-		if ( $count >= 8 ) {
-			return new \WP_Error( 'adc_rate_limited', __( 'تم تجاوز عدد الطلبات المسموح. حاول لاحقًا.', 'auto-dealership-core' ), array( 'status' => 429 ) );
-		}
-		set_transient( $key, $count + 1, HOUR_IN_SECONDS );
-		return rest_ensure_response( LeadService::create_public( $request->get_params() ) );
+		return rest_ensure_response( \AutoDealership\Leads\PublicIntake::submit( $request->get_params() ) );
 	}
 
 	public static function list_leads( \WP_REST_Request $request ): \WP_REST_Response {

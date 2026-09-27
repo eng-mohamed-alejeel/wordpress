@@ -1,6 +1,8 @@
 # Implementation Roadmap
 
-1.14.0 adds vehicle specifications, staff/API editing and shared migration mapping. Current implementation and remaining verification are recorded at the top of `EXECUTION-STATUS.md`; historical increment summaries below do not mean that production cutover or the full plan is complete.
+Scope confirmed by the user on 2026-09-27: start with an intentionally empty business database. Historical recovery/import is not a launch dependency. Next implementation focus is CRM/intake consolidation and removal of duplicate theme writes, followed by the remaining workflows and release gates. Reference data must use actual business inputs; migration tools remain available for later imports.
+
+1.15.0 adds unified public CRM request creation, optional replay protection, account compatibility copies and scoped activity history; its integration/browser verification is pending. Next CRM work covers scoped legacy request updates and verified identity matching. Current implementation and remaining verification are recorded at the top of `EXECUTION-STATUS.md`; historical increment summaries below do not mean that production cutover or the full plan is complete.
 
 Current increments and test evidence are in `EXECUTION-STATUS.md`; detailed acceptance criteria are in `IMPLEMENTATION-PLAN.md`. Core 1.13.0 adds sale cancellation and open-delivery reversal to independently verified refunds, controlled vehicle returns, hold and maintenance resolution, receiving and inspection evidence and protected inventory identity. Broad phases below remain incomplete.
 

@@ -67,6 +67,28 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
+/* ── Back to Top Button ── */
+(function () {
+  var btn = document.getElementById('abBackTop');
+  if (!btn) return;
+  var scrollThreshold = 400;
+
+  function toggleButton() {
+    if (window.scrollY > scrollThreshold) {
+      btn.classList.add('is-visible');
+    } else {
+      btn.classList.remove('is-visible');
+    }
+  }
+
+  window.addEventListener('scroll', toggleButton, { passive: true });
+  toggleButton();
+
+  btn.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
 // Use the signed-in customer's profile in request forms.
 document.addEventListener('DOMContentLoaded', function () {
   if (!window.carDealerCustomer) return;

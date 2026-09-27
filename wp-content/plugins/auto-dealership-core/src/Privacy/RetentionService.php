@@ -34,17 +34,43 @@ final class RetentionService {
 			$wpdb->query( 'ROLLBACK' );
 			return false;
 		}
+		if ( ! self::anonymize_linked_requests( $customer_id, $cutoff ) ) { $wpdb->query( 'ROLLBACK' ); return false; }
 		$lead_ids = $wpdb->get_col( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'leads' ) . ' WHERE customer_id=%d', $customer_id ) );
+		if ( $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); return false; }
 		if ( $lead_ids ) {
 			$in = implode( ',', array_map( 'absint', $lead_ids ) );
 			if ( false === $wpdb->query( "UPDATE " . Schema::table( 'activities' ) . " SET notes='[Retention policy anonymized]',next_action_at=NULL WHERE lead_id IN ($in)" ) ) { $wpdb->query( 'ROLLBACK' ); return false; }
 		}
-		if ( false === $wpdb->update( Schema::table( 'leads' ), array( 'lost_reason' => '', 'next_action_at' => null ), array( 'customer_id' => $customer_id ), array( '%s', null ), array( '%d' ) )
+		if ( false === $wpdb->update( Schema::table( 'leads' ), array( 'lost_reason' => '', 'next_action_at' => null, 'public_payload_hash' => null ), array( 'customer_id' => $customer_id ), array( '%s', null, null ), array( '%d' ) )
 			|| false === $wpdb->update( Schema::table( 'quotation_versions' ), array( 'customer_name' => 'Retained customer' ), array( 'customer_id' => $customer_id ), array( '%s' ), array( '%d' ) )
 			|| false === $wpdb->update( Schema::table( 'customers' ), array( 'full_name' => 'Retained customer', 'mobile' => '', 'email' => '', 'city' => '', 'consent_marketing' => 0, 'consent_at' => null, 'updated_at' => current_time( 'mysql', true ) ), array( 'id' => $customer_id ), array( '%s', '%s', '%s', '%s', '%d', null, '%s' ), array( '%d' ) ) ) {
 			$wpdb->query( 'ROLLBACK' ); return false;
 		}
 		return Transaction::commit( static fn() => AuditLog::record( 'privacy.retention_anonymized', 'customer', $customer_id, 'Configured retention period elapsed', null, array( 'retention_days' => $days ) ) );
+	}
+
+	/** Compatibility copies must be eligible and erased in the same transaction. */
+	private static function anonymize_linked_requests( int $customer_id, string $cutoff ): bool {
+		global $wpdb;
+		$refs = $wpdb->get_results( $wpdb->prepare( 'SELECT legacy_request_type,legacy_request_id FROM ' . Schema::table( 'leads' ) . ' WHERE customer_id=%d AND legacy_request_id IS NOT NULL', $customer_id ), ARRAY_A );
+		if ( $wpdb->last_error ) { return false; }
+		foreach ( $refs as $ref ) {
+			$type = $ref['legacy_request_type'];
+			if ( ! in_array( $type, array( 'message','booking' ), true ) ) { return false; }
+			$table = $wpdb->prefix . 'car_dealer_' . ( 'booking' === $type ? 'bookings' : 'messages' );
+			$engine = $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $table ) );
+			if ( 'InnoDB' !== $engine ) { return false; }
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT status,created_at,updated_at FROM $table WHERE id=%d FOR UPDATE", $ref['legacy_request_id'] ), ARRAY_A );
+			if ( $wpdb->last_error ) { return false; }
+			if ( ! $row ) { continue; }
+			$last = $row['updated_at'] ?: $row['created_at'];
+			if ( ! in_array( $row['status'], array( 'completed','cancelled' ), true ) || ! $last || get_gmt_from_date( $last ) >= $cutoff ) { return false; }
+			$changes = array( 'name'=>'Retained customer', 'email'=>'', 'phone'=>'', 'customer_reply'=>'', 'user_id'=>0 );
+			if ( 'booking' === $type ) { $changes['requested_date'] = null; $changes['requested_time'] = ''; }
+			else { $changes['subject'] = ''; $changes['message'] = ''; }
+			if ( false === $wpdb->update( $table, $changes, array( 'id'=>(int) $ref['legacy_request_id'] ) ) ) { return false; }
+		}
+		return true;
 	}
 
 	private static function has_protected_activity( int $customer_id, string $cutoff ): bool {
@@ -59,6 +85,7 @@ final class RetentionService {
 			SELECT 1 FROM $p INNER JOIN $s sy ON sy.id=$p.sale_id WHERE sy.customer_id=%d AND ($p.status='pending' OR $p.created_at >= %s) UNION ALL
 			SELECT 1 FROM $d INNER JOIN $s sz ON sz.id=$d.sale_id WHERE sz.customer_id=%d AND ($d.status<>'delivered' OR $d.updated_at >= %s) LIMIT 1";
 		$args = array( $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, gmdate( 'Y-m-d' ), $cutoff, $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, $cutoff );
-		return null !== $wpdb->get_var( $wpdb->prepare( $sql, $args ) );
+		$protected = $wpdb->get_var( $wpdb->prepare( $sql, $args ) );
+		return (bool) $wpdb->last_error || null !== $protected;
 	}
 }

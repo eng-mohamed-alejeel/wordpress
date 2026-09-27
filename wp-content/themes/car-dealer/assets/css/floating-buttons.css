@@ -1,0 +1,173 @@
+/* ═══════════════════════════════════════════════════════
+   AUTO BRANDS — Floating Buttons (WhatsApp + Back to Top)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Floating WhatsApp ── */
+.ab-float-wa {
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  z-index: 9999;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: white;
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 6px 20px rgba(37, 211, 102, .35),
+    0 2px 8px rgba(0, 0, 0, .15);
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: transform .3s cubic-bezier(.4, 0, .2, 1), box-shadow .3s;
+  animation: ab-wa-entrance .6s cubic-bezier(.34, 1.56, .64, 1) .5s both;
+}
+.ab-float-wa svg {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  z-index: 2;
+}
+.ab-float-wa:hover {
+  transform: scale(1.12);
+  box-shadow:
+    0 8px 28px rgba(37, 211, 102, .45),
+    0 4px 12px rgba(0, 0, 0, .2);
+}
+.ab-float-wa:active {
+  transform: scale(1.05);
+}
+
+/* WhatsApp Pulse Ring */
+.ab-float-wa-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(37, 211, 102, .4);
+  animation: ab-wa-pulse 2.5s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes ab-wa-pulse {
+  0% { transform: scale(1); opacity: .6; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* WhatsApp Tooltip */
+.ab-float-wa-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  padding: .5rem 1rem;
+  border-radius: 8px;
+  background: #05070b;
+  color: white;
+  font-size: .85rem;
+  font-weight: 700;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .25s, transform .25s;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .2);
+}
+.ab-float-wa-tooltip::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #05070b;
+}
+.ab-float-wa:hover .ab-float-wa-tooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(4px);
+}
+
+/* WhatsApp Entrance Animation */
+@keyframes ab-wa-entrance {
+  from {
+    opacity: 0;
+    transform: scale(0) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Back to Top ── */
+.ab-back-top {
+  position: fixed;
+  bottom: 100px;
+  left: 28px;
+  z-index: 9998;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(5, 7, 11, .12);
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--ab-ink, #111827);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow:
+    0 4px 16px rgba(15, 23, 42, .1),
+    0 1px 4px rgba(0, 0, 0, .06);
+  transition: transform .3s cubic-bezier(.4, 0, .2, 1), box-shadow .3s, opacity .3s, border-color .3s;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+}
+.ab-back-top svg {
+  width: 22px;
+  height: 22px;
+}
+.ab-back-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.ab-back-top:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, .15),
+    0 2px 8px rgba(0, 0, 0, .08);
+  border-color: var(--ab-blue, #0669d9);
+  color: var(--ab-blue, #0669d9);
+  background: white;
+}
+.ab-back-top:active {
+  transform: translateY(-1px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .ab-float-wa {
+    width: 54px;
+    height: 54px;
+    bottom: 20px;
+    left: 20px;
+  }
+  .ab-float-wa svg {
+    width: 28px;
+    height: 28px;
+  }
+  .ab-float-wa-tooltip {
+    display: none;
+  }
+  .ab-back-top {
+    width: 42px;
+    height: 42px;
+    bottom: 84px;
+    left: 20px;
+  }
+  .ab-back-top svg {
+    width: 20px;
+    height: 20px;
+  }
+}

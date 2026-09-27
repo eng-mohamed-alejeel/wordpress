@@ -1,5 +1,11 @@
 # Domain Workflows
 
+## Public CRM intake (1.15.0)
+
+Contact/test-drive forms and public REST enquiries now validate through the core intake service. A successful submission atomically records the contact, lead, initial activity and audit; theme forms also retain their customer-account request copy. A valid replay UUID prevents an additional persisted enquiry for the same canonical payload. This does not confirm a test drive, reserve inventory or merge an unverified identity. Staff read the initial message and later core activities through scoped history. Subsequent theme booking/reply updates still follow the legacy workflow and are not yet synchronized into that history; see `CRM-INTAKE.md`. Integration verification of this increment is pending.
+
+## Operational transitions
+
 Transitions below are target states; the current theme uses a smaller set and does not yet enforce these state machines consistently.
 
 ```mermaid

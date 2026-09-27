@@ -69,6 +69,7 @@ function car_dealer_register_engagement_menu() {
 add_action( 'admin_menu', 'car_dealer_register_engagement_menu', 20 );
 
 function car_dealer_store_message() {
+	if ( class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled() ) { \AutoDealership\Leads\PublicIntake::handle_theme( 'message' ); return; }
 	check_ajax_referer( 'car_dealer_frontend', 'nonce' );
 	global $wpdb;
 	$lead_type = sanitize_key( wp_unslash( $_POST['lead_type'] ?? 'contact' ) );
@@ -87,6 +88,7 @@ add_action( 'wp_ajax_car_dealer_contact', 'car_dealer_store_message' );
 add_action( 'wp_ajax_nopriv_car_dealer_contact', 'car_dealer_store_message' );
 
 function car_dealer_store_booking() {
+	if ( class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled() ) { \AutoDealership\Leads\PublicIntake::handle_theme( 'booking' ); return; }
 	check_ajax_referer( 'car_dealer_frontend', 'nonce' );
 	global $wpdb;
 	$car_id = absint( $_POST['car_id'] ?? 0 );
@@ -125,14 +127,18 @@ function car_dealer_submission_identity() {
  return array( 'name' => sanitize_text_field( car_dealer_account_field( 'name' ) ), 'email' => sanitize_email( car_dealer_account_field( 'email' ) ), 'phone' => sanitize_text_field( car_dealer_account_field( 'phone' ) ) );
 }
 function car_dealer_customer_form_fields( $email_only = false ) {
- $identity = is_user_logged_in() ? car_dealer_submission_identity() : array( 'name' => '', 'email' => '', 'phone' => '' );
+	$identity = is_user_logged_in() ? car_dealer_submission_identity() : array( 'name' => '', 'email' => '', 'phone' => '' );
  $html = '';
  foreach ( array( 'name' => array( 'الاسم', 'text', 'name' ), 'email' => array( 'البريد الإلكتروني', 'email', 'email' ), 'phone' => array( 'الهاتف', 'tel', 'tel' ) ) as $key => $field ) {
   if ( $email_only && 'email' !== $key ) { continue; }
-  $html .= '<label>' . esc_html( $field[0] ) . '<input name="' . esc_attr( $key ) . '" type="' . esc_attr( $field[1] ) . '" autocomplete="' . esc_attr( $field[2] ) . '" value="' . esc_attr( $identity[$key] ) . '"' . ( 'phone' !== $key ? ' required' : '' ) . ( is_user_logged_in() ? ' readonly' : '' ) . '></label>';
+  $phone_required = class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled();
+  $html .= '<label>' . esc_html( $field[0] ) . '<input name="' . esc_attr( $key ) . '" type="' . esc_attr( $field[1] ) . '" autocomplete="' . esc_attr( $field[2] ) . '" value="' . esc_attr( $identity[$key] ) . '"' . ( 'phone' !== $key || $phone_required ? ' required' : '' ) . ( is_user_logged_in() ? ' readonly' : '' ) . '></label>';
  }
  if ( is_user_logged_in() ) {
   $html .= '<p class="cd-profile-form-note">تُرسل بيانات حسابك تلقائياً. <a href="' . esc_url( car_dealer_account_url() ) . '">تحديث بياناتي' . ( ! $email_only && ! $identity['phone'] ? ' وإضافة رقم الهاتف' : '' ) . '</a></p>';
+ }
+ if ( ! $email_only && class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled() ) {
+  $html .= '<input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>';
  }
  return $html;
 }

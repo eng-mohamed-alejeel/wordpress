@@ -17,6 +17,8 @@ function car_dealer_assets() {
 	wp_enqueue_style( 'car-dealer-font', 'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap', array(), null );
 	wp_enqueue_style( 'car-dealer-style', get_stylesheet_uri(), array( 'car-dealer-font' ), $version );
 	wp_enqueue_style( 'car-dealer-enhancements', $uri . '/assets/css/main.css', array( 'car-dealer-style' ), $version );
+	wp_enqueue_style( 'car-dealer-home-v2', $uri . '/assets/css/home-v2.css', array( 'car-dealer-enhancements' ), $version );
+	wp_enqueue_style( 'car-dealer-floating', $uri . '/assets/css/floating-buttons.css', array( 'car-dealer-enhancements' ), $version );
 	wp_enqueue_script( 'car-dealer-main', $uri . '/assets/js/main.js', array(), filemtime( get_template_directory() . '/assets/js/main.js' ), true );
 	wp_localize_script( 'car-dealer-main', 'carDealer', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'nonce' => wp_create_nonce( 'car_dealer_frontend' ) ) );
 }

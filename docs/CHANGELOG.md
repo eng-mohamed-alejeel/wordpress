@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.15.0 — Unified public CRM intake (integration verification pending)
+
+- Centralized public REST/theme enquiry validation, contact normalization, explicit consent, rate counter and honeypot; retained logged-in theme identity and customer-account request copies.
+- Added UUID replay/conflict handling with HMAC fingerprints and atomic customer/lead/activity/compatibility/audit writes. Schema 1.11.0 adds nullable replay columns and a unique key.
+- Added scoped activity-history REST reads and a CRM history screen; activity writes update the lead and supplied follow-up date.
+- Extended privacy erasure and retention to replay fingerprints; eligible legacy request copies are anonymized transactionally during retention.
+- Added a separate plugin form script and reversible theme intake filter; manual theme JavaScript edits remain intact. See `CRM-INTAKE.md` for remaining legacy workflows and rollback limits.
+- PHP syntax passed for 64 plugin files and two changed theme files; new JavaScript syntax and diff whitespace checks passed. Integration and browser scenarios were not run for this increment.
+
 ## 1.14.0 — Vehicle specifications and migration parity
 
 - Added eleven public specification fields, strict validation, scoped atomic edits, REST PATCH and a nonce-protected Arabic staff screen. Transactional inventory states lock edits.
