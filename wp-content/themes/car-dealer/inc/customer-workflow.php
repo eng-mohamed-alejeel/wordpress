@@ -9,6 +9,8 @@ function car_dealer_request_table( $type ) {
  return in_array( $type, array( 'message', 'booking' ), true ) ? $wpdb->prefix . 'car_dealer_' . ( 'booking' === $type ? 'bookings' : 'messages' ) : false;
 }
 function car_dealer_customer_crm( $user_id, $create = true ) {
+ // Core account identity is established by authenticated intake, never by a login/email match.
+ if ( class_exists( '\AutoDealership\Leads\CustomerIdentity' ) ) { return 0; }
  $user = get_userdata( $user_id );
  if ( ! $user || 'customer' !== car_dealer_account_kind( $user ) ) { return 0; }
  $ids = get_posts( array( 'post_type' => 'cd_crm', 'post_status' => 'private', 'meta_key' => '_crm_user_id', 'meta_value' => $user_id, 'numberposts' => 1, 'fields' => 'ids' ) );
@@ -44,6 +46,16 @@ function car_dealer_valid_booking_date( $date, $time ) {
 /** A single update service enforces permissions even when called outside the UI. */
 function car_dealer_update_request( $type, $id, $data, $customer = false ) {
  global $wpdb;
+ if ( class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ) {
+  $lead_id = \AutoDealership\Leads\RequestWorkflow::linked_lead( (string) $type, (int) $id );
+  if ( is_wp_error( $lead_id ) ) { return $lead_id; }
+  if ( $lead_id ) {
+   $result = \AutoDealership\Leads\RequestWorkflow::update( $lead_id, (array) $data, (bool) $customer );
+   return is_wp_error( $result ) ? $result : true;
+  }
+  // Unmapped records have no branch/owner relationship; administrator triage only.
+  if ( ! $customer && ! current_user_can( 'manage_options' ) ) { return new WP_Error( 'forbidden', 'السجل القديم غير مرتبط بفرع. يلزم مسؤول النظام.' ); }
+ }
  $table = car_dealer_request_table( $type );
  if ( ! $table || ! is_user_logged_in() ) { return new WP_Error( 'forbidden', 'طلب غير مسموح.' ); }
  $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $id ) );
@@ -89,6 +101,12 @@ add_action( 'admin_post_car_dealer_request_update', function () {
 } );
 function car_dealer_request_admin_actions( $type, $row ) {
  $row = (object) $row;
+ if ( class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ) {
+  $lead_id = \AutoDealership\Leads\RequestWorkflow::linked_lead( (string) $type, (int) $row->id );
+  if ( is_wp_error( $lead_id ) ) { echo '<p>' . esc_html( $lead_id->get_error_message() ) . '</p>'; return; }
+  if ( $lead_id ) { \AutoDealership\Admin\RequestPage::render( $lead_id ); return; }
+  if ( ! current_user_can( 'manage_options' ) ) { return; }
+ }
  $crm = car_dealer_request_crm( $type, $row );
  if ( $crm ) { echo '<p><a class="button" href="' . esc_url( car_dealer_crm_url( array( 'customer' => $crm ) ) ) . '">ملف العميل CRM</a></p>'; }
  if ( $row->user_id ) { echo '<p>حساب العميل #' . absint( $row->user_id ) . '</p>'; }
@@ -111,7 +129,8 @@ function car_dealer_crm_related_requests( $id ) {
   foreach ( get_post_meta( $id ) as $key => $values ) { if ( 0 === strpos( $key, $prefix ) ) { $ids[] = absint( substr( $key, strlen( $prefix ) ) ); } }
   if ( ! $ids ) { continue; }
   $table = car_dealer_request_table( $type );
-  $rows = $wpdb->get_results( "SELECT * FROM $table WHERE id IN (" . implode( ',', $ids ) . ') ORDER BY id DESC LIMIT 20' );
+  $scope = class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ? \AutoDealership\Leads\RequestWorkflow::staff_predicate( $type, 'r.id' ) : '1=1';
+  $rows = $wpdb->get_results( "SELECT r.* FROM $table r WHERE r.id IN (" . implode( ',', $ids ) . ") AND $scope ORDER BY r.id DESC LIMIT 20" );
   foreach ( $rows as $row ) {
    $found = true;
    echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=car-dealer-' . ( 'booking' === $type ? 'bookings' : 'messages' ) . '&request_id=' . $row->id ) ) . '">' . ( 'booking' === $type ? 'الحجز' : 'الطلب' ) . ' #' . absint( $row->id ) . '</a> — ' . esc_html( car_dealer_request_statuses( $type )[ $row->status ] ?? $row->status ) . ' — ' . esc_html( $row->created_at ) . '</p>';
@@ -130,6 +149,11 @@ add_action( 'admin_init', function () {
   $cursor = absint( get_option( $option, 0 ) );
   $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE user_id > 0 AND id > %d ORDER BY id ASC LIMIT 100", $cursor ) );
   foreach ( $rows as $row ) {
+   if ( class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ) {
+    $lead_id = \AutoDealership\Leads\RequestWorkflow::linked_lead( $type, (int) $row->id );
+    if ( is_wp_error( $lead_id ) ) { break; }
+    if ( $lead_id ) { update_option( $option, $row->id, false ); continue; }
+   }
    car_dealer_crm_capture( $type, $row );
    if ( ! car_dealer_request_crm( $type, $row ) ) { break; }
    update_option( $option, $row->id, false );

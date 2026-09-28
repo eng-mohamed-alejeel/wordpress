@@ -28,7 +28,9 @@ define( 'WP_USE_THEMES', false );
 $session_key = hash( 'sha256', (string) getenv( 'ADC_HTTP_TEST_CONFIG' ) . '|session' );
 $table_prefix = 'test_';
 unset( $config );
+if ( '/wp-admin/admin-ajax.php' === (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ) ) { define( 'DOING_AJAX', true ); }
 require ABSPATH . 'wp-settings.php';
+add_filter( 'pre_wp_mail', '__return_true' );
 if ( '/adc-test-session' === (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ) ) {
 	if ( ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true ) || ! hash_equals( $session_key, (string) ( $_GET['key'] ?? '' ) ) ) { http_response_code( 403 ); exit; }
 	$user_id = absint( $_GET['user_id'] ?? 0 );
@@ -54,6 +56,13 @@ if ( '/wp-admin/admin-post.php' === $request_path ) {
 	do_action( ( is_user_logged_in() ? 'admin_post_' : 'admin_post_nopriv_' ) . $action );
 	http_response_code( 400 );
 	exit;
+}
+if ( '/wp-admin/admin-ajax.php' === $request_path ) {
+	require ABSPATH . 'wp-content/themes/car-dealer/inc/contact-form-manager.php';
+	$action = sanitize_key( $_REQUEST['action'] ?? '' );
+	if ( ! in_array( $action, array( 'car_dealer_contact', 'car_dealer_booking' ), true ) ) { http_response_code( 400 ); exit; }
+	do_action( ( is_user_logged_in() ? 'wp_ajax_' : 'wp_ajax_nopriv_' ) . $action );
+	http_response_code( 400 ); exit;
 }
 wp();
 require ABSPATH . WPINC . '/template-loader.php';

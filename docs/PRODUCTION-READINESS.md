@@ -2,7 +2,7 @@
 
 This is an initial repository review, not a production approval. PASS is used only where verified.
 
-Current code is 1.15.0 / schema 1.11.0. Public CRM intake, replay protection, scoped activity history and compatibility retention changes passed syntax checks (64 plugin PHP files, two changed theme files and the new JavaScript file); integration/HTTP/browser verification is pending. Legacy request-update authorization and account/profile consolidation remain open. The earlier results below apply to 1.14.0 only; overall readiness remains **FAIL**. See `CRM-INTAKE.md`.
+Current code is 1.17.0 / schema 1.12.0. Authenticated account linkage and reviewed CRM-only customer consolidation build on scoped request updates. Duplicate account-profile creation is suppressed; historical claims, financial merges, legacy profile retirement/access and preference synchronization remain open. Syntax checks passed for 68 plugin PHP files and four theme files; integration/HTTP/concurrency/browser verification of 1.15.0–1.17.0 remains pending. Earlier results below apply to 1.14.0 only; overall readiness remains **FAIL**. See `CRM-INTAKE.md` and `CUSTOMER-IDENTITY.md`.
 
 Update 2026-09-27: 1.14.0 passed syntax checks across 62 PHP files, 48 authorization checks, 12 money checks and 365 database/HTTP checks on a separate temporary MariaDB server using `--isolated 33317`. See `VERIFICATION-1.14.0.md`. After the user's manual repairs, source MariaDB is running normally. A local restore matched 40 table counts/checksums and 576 file hashes; the user confirmed the empty business dataset is intentional, so historical recovery/import is not a launch prerequisite. See `RESTORE-REHEARSAL-2026-09-27.md`. Overall readiness remains **FAIL**.
 

@@ -563,6 +563,7 @@ $cancel_checklist=array_fill_keys(array('exterior','interior','engine','tires','
 $unpaid_cancel_vehicle=$make_vehicle('32');wp_set_current_user($sales_a);$unpaid_cancel_quote=SalesService::create_quote($customer_a,$unpaid_cancel_vehicle,$date);$unpaid_cancel_reservation=ReservationService::create(array('vehicle_id'=>$unpaid_cancel_vehicle,'customer_id'=>$customer_a,'idempotency_key'=>wp_generate_uuid4()));$unpaid_cancel_sale=SalesService::create_sale($unpaid_cancel_quote['id'],$unpaid_cancel_reservation['id']);wp_set_current_user($finance_recorder);$pending_cancel_payment=PaymentService::record($unpaid_cancel_sale['id'],100,'bank_transfer','CANCEL-PENDING-1');wp_set_current_user($manager_a);$unpaid_cancellation=SaleCancellationService::cancel($unpaid_cancel_sale['id'],'Unpaid sale cancelled');
 adc_check(is_array($unpaid_cancellation)&&'no_refund_due'===$unpaid_cancellation['financial_status']&&'available'===$wpdb->get_var($wpdb->prepare("SELECT status FROM $vehicles WHERE id=%d",$unpaid_cancel_vehicle))&&'cancelled'===$wpdb->get_var($wpdb->prepare('SELECT status FROM '.Schema::table('reservations').' WHERE id=%d',$unpaid_cancel_reservation['id']))&&'cancelled'===$wpdb->get_var($wpdb->prepare('SELECT status FROM '.Schema::table('payment_confirmations').' WHERE id=%d',$pending_cancel_payment['id'])),'Unpaid pending sale cancellation releases inventory, closes its reservation and cancels pending receipt evidence.');
 require __DIR__ . '/increment-1.14.php';
+require __DIR__ . '/increment-crm.php';
 wp_set_current_user( $finance_verifier );
 ob_start();
 AutoDealership\Admin\PaymentPages::render();
@@ -680,16 +681,16 @@ try {
 	}
 	if ( ! $ready ) { throw new RuntimeException( 'Localhost HTTP verification server did not become ready.' ); }
 
-	$http_request = static function ( string $path, array $auth = array(), string $method = 'GET', ?array $body = null ) use ( $http_port ): array {
+	$http_request = static function ( string $path, array $auth = array(), string $method = 'GET', ?array $body = null, bool $form = false ) use ( $http_port ): array {
 		$headers = array( 'Host: adc-verification.invalid', 'Accept: application/json' );
 		if ( isset( $auth['cookie'] ) ) { $headers[] = 'Cookie: ' . $auth['cookie']; }
 		if ( isset( $auth['nonce'] ) ) { $headers[] = 'X-WP-Nonce: ' . $auth['nonce']; }
 		$handle = curl_init( 'http://127.0.0.1:' . $http_port . $path );
 		$options = array( CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $headers, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_TIMEOUT => 5, CURLOPT_FOLLOWLOCATION => false );
 		if ( null !== $body ) {
-			$headers[] = 'Content-Type: application/json';
+			$headers[] = $form ? 'Content-Type: application/x-www-form-urlencoded' : 'Content-Type: application/json';
 			$options[CURLOPT_HTTPHEADER] = $headers;
-			$options[CURLOPT_POSTFIELDS] = wp_json_encode( $body );
+			$options[CURLOPT_POSTFIELDS] = $form ? http_build_query( $body ) : wp_json_encode( $body );
 		}
 		curl_setopt_array( $handle, $options );
 		$response_body = curl_exec( $handle );
@@ -913,6 +914,7 @@ try {
 	adc_check( 200 === $print_nonce_status && 10 === strlen( $print_nonce ), 'Authenticated administrator obtains a nonce for the print action.' );
 	list( $print_status, $print_body ) = $http_request( $print_path . rawurlencode( $print_nonce ), $admin_http );
 	adc_check( 200 === $print_status && str_contains( $print_body, 'TEST-5' ), 'Printable quote action accepts a valid user cookie and action nonce over HTTP.' );
+	require __DIR__ . '/increment-crm-http.php';
 } finally {
 	if ( is_resource( $http_process ) ) {
 		proc_terminate( $http_process );

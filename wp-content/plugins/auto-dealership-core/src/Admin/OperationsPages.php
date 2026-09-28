@@ -115,6 +115,8 @@ final class OperationsPages {
 		$page = max( 1, absint( $_GET['activity_page'] ?? 1 ) );
 		$items = LeadService::activity_history( $lead_id, $page, 20 );
 		if ( is_wp_error( $items ) ) { echo '<p role="alert">' . esc_html( $items->get_error_message() ) . '</p>'; return; }
+		RequestPage::render( $lead_id );
+		CustomerIdentityPage::link_for_lead( $lead_id );
 		echo '<h2>' . esc_html__( 'سجل المتابعة', 'auto-dealership-core' ) . ' #' . $lead_id . '</h2><p>' . esc_html__( 'التواريخ أدناه بالتوقيت العالمي UTC.', 'auto-dealership-core' ) . '</p>';
 		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'التاريخ', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'النشاط', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'التفاصيل', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المتابعة التالية', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 		foreach ( $items as $item ) {

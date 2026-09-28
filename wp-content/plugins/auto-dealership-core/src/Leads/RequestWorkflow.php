@@ -15,6 +15,11 @@ final class RequestWorkflow {
 		return 'booking' === $type ? array( 'pending'=>'قيد الانتظار', 'confirmed'=>'مؤكد', 'completed'=>'مكتمل', 'cancelled'=>'ملغى' ) : array( 'new'=>'جديد', 'read'=>'قيد المتابعة', 'completed'=>'مكتمل', 'cancelled'=>'ملغى' );
 	}
 
+	public static function allowed_statuses( string $type, string $current ): array {
+		$transitions = 'booking' === $type ? array( 'pending'=>array( 'confirmed','cancelled' ), 'confirmed'=>array( 'pending','completed','cancelled' ) ) : array( 'new'=>array( 'read','completed','cancelled' ), 'read'=>array( 'completed','cancelled' ) );
+		return array_intersect_key( self::statuses( $type ), array_flip( array_merge( array( $current ), $transitions[$current] ?? array() ) ) );
+	}
+
 	private static function table( string $type ): string {
 		global $wpdb;
 		return in_array( $type, array( 'message', 'booking' ), true ) ? $wpdb->prefix . 'car_dealer_' . ( 'booking' === $type ? 'bookings' : 'messages' ) : '';
@@ -32,7 +37,7 @@ final class RequestWorkflow {
 	/** Prepared predicate for code-owned request ID columns, including legacy lists/counts. */
 	public static function staff_predicate( string $type, string $column ): string {
 		global $wpdb;
-		if ( ! preg_match( '/\A[a-z_][a-z0-9_]*\.id\z/i', $column ) || ! self::table( $type ) ) { throw new \InvalidArgumentException( 'Invalid request scope column.' ); }
+		if ( ! preg_match( '/\A[a-z0-9_]+\.id\z/i', $column ) || ! self::table( $type ) ) { throw new \InvalidArgumentException( 'Invalid request scope column.' ); }
 		if ( ! Schema::is_ready() ) { return '1=0'; }
 		if ( current_user_can( 'manage_options' ) ) { return '1=1'; }
 		if ( ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_own_leads' ) ) { return '1=0'; }
@@ -59,11 +64,12 @@ final class RequestWorkflow {
 		return array( 'lead_id'=>$lead_id, 'request_id'=>(int) $row['id'], 'type'=>$type, 'status'=>$row['status'], 'customer_reply'=>$row['customer_reply'], 'requested_date'=>$row['requested_date'] ?? '', 'requested_time'=>$row['requested_time'] ?? '', 'revision'=>$revision, 'can_edit'=>BranchScope::can_manage_lead( $lead ) );
 	}
 
-	private static function revision( int $lead_id, string $type, array $row ) {
+	private static function revision( int $lead_id, string $type, array $row, bool $lock = false ) {
 		global $wpdb;
-		$activity = $wpdb->get_var( $wpdb->prepare( 'SELECT MAX(id) FROM ' . Schema::table( 'activities' ) . ' WHERE lead_id=%d', $lead_id ) );
+		$activity = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'activities' ) . ' WHERE lead_id=%d ORDER BY id DESC LIMIT 1' . ( $lock ? ' FOR UPDATE' : '' ), $lead_id ) );
 		if ( $wpdb->last_error ) { return self::error( 'adc_request_unavailable', 503 ); }
-		return hash_hmac( 'sha256', wp_json_encode( array( $lead_id, $type, $row, (int) $activity ) ), wp_salt( 'auth' ) );
+		$payload = wp_json_encode( array( $lead_id, $type, $row, (int) $activity ) );
+		return false === $payload ? self::error( 'adc_request_unavailable', 503 ) : hash_hmac( 'sha256', $payload, wp_salt( 'auth' ) );
 	}
 
 	public static function update( int $lead_id, array $input, bool $customer_cancel = false ) {
@@ -93,12 +99,12 @@ final class RequestWorkflow {
 			if ( ! in_array( $row['status'], array( 'pending', 'confirmed' ), true ) ) { return self::rollback( 'adc_request_transition', 409 ); }
 			$changes = array( 'status'=>'cancelled' );
 		} else {
-			$revision = self::revision( $lead_id, $type, $row );
+			$revision = self::revision( $lead_id, $type, $row, true );
 			if ( is_wp_error( $revision ) ) { return self::rollback( 'adc_request_unavailable', 503 ); }
 			if ( ! isset( $input['revision'] ) || ! hash_equals( $revision, $input['revision'] ) ) { return self::rollback( 'adc_request_stale', 409 ); }
 			$to = $input['status'] ?? $row['status'];
-			$transitions = 'booking' === $type ? array( 'pending'=>array( 'confirmed','cancelled' ), 'confirmed'=>array( 'pending','completed','cancelled' ) ) : array( 'new'=>array( 'read','completed','cancelled' ), 'read'=>array( 'completed','cancelled' ) );
-			if ( ! isset( self::statuses( $type )[$to] ) || ( $to !== $row['status'] && ! in_array( $to, $transitions[$row['status']] ?? array(), true ) ) ) { return self::rollback( 'adc_request_transition', 409 ); }
+			if ( ! isset( self::allowed_statuses( $type, $row['status'] )[$to] ) ) { return self::rollback( 'adc_request_transition', 409 ); }
+			if ( 'message' === $type && ( ! empty( $input['requested_date'] ) || ! empty( $input['requested_time'] ) ) ) { return self::rollback( 'adc_request_invalid', 400 ); }
 			$changes = array( 'status'=>$to, 'customer_reply'=>array_key_exists( 'customer_reply', $input ) ? sanitize_textarea_field( $input['customer_reply'] ) : $row['customer_reply'] );
 			if ( 'booking' === $type ) {
 				$date = $input['requested_date'] ?? (string) $row['requested_date']; $time = $input['requested_time'] ?? (string) $row['requested_time'];
@@ -118,7 +124,7 @@ final class RequestWorkflow {
 		$changed['updated_at'] = current_time( 'mysql' );
 		if ( 1 !== $wpdb->update( $table, $changed, array( 'id'=>(int) $row['id'] ) ) ) { return self::rollback( 'adc_request_failed', 500 ); }
 		$notes = ( $customer_cancel ? 'Customer cancellation' : 'Staff request update' ) . ': ' . $type . ' #' . $row['id'] . "\nStatus: " . $row['status'] . ' -> ' . $changes['status'];
-		if ( isset( $changed['requested_date'] ) ) { $notes .= "\nAppointment: " . $changed['requested_date'] . ' ' . $changed['requested_time'] . ' (' . wp_timezone_string() . ')'; }
+		if ( isset( $changed['requested_date'] ) || isset( $changed['requested_time'] ) ) { $notes .= "\nAppointment: " . $changes['requested_date'] . ' ' . $changes['requested_time'] . ' (' . wp_timezone_string() . ')'; }
 		if ( array_key_exists( 'customer_reply', $changed ) ) { $notes .= "\nCustomer reply: " . $changed['customer_reply']; }
 		$now = current_time( 'mysql', true );
 		if ( 1 !== $wpdb->insert( Schema::table( 'activities' ), array( 'lead_id'=>$lead_id, 'actor_user_id'=>get_current_user_id(), 'type'=>'note', 'notes'=>$notes, 'created_at'=>$now ) ) ) { return self::rollback( 'adc_request_failed', 500 ); }

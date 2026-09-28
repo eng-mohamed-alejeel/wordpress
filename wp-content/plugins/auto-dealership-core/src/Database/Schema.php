@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.11.0';
+	public const VERSION = '1.12.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -203,6 +203,8 @@ final class Schema {
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'customers' ) . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				account_user_id bigint(20) unsigned NULL,
+				merged_into_id bigint(20) unsigned NULL,
 				full_name varchar(190) NOT NULL,
 				mobile varchar(32) NOT NULL DEFAULT '',
 				email varchar(190) NOT NULL DEFAULT '',
@@ -213,6 +215,8 @@ final class Schema {
 				updated_at datetime NOT NULL,
 				PRIMARY KEY  (id),
 				KEY mobile (mobile),
+				UNIQUE KEY account_user_id (account_user_id),
+				KEY merged_into_id (merged_into_id),
 				KEY email (email)
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'leads' ) . " (

@@ -18,7 +18,7 @@ final class RetentionService {
 			return array( 'processed' => 0, 'disabled' => true );
 		}
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS );
-		$ids = $wpdb->get_col( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'customers' ) . " WHERE updated_at < %s AND (email <> '' OR mobile <> '' OR full_name NOT IN ('Retained customer','Erased customer')) ORDER BY id ASC LIMIT 100", $cutoff ) );
+		$ids = $wpdb->get_col( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'customers' ) . " WHERE merged_into_id IS NULL AND updated_at < %s AND (email <> '' OR mobile <> '' OR full_name NOT IN ('Retained customer','Erased customer')) ORDER BY id ASC LIMIT 100", $cutoff ) );
 		$processed = 0;
 		foreach ( $ids as $id ) {
 			if ( self::anonymize_if_due( (int) $id, $cutoff, $days ) ) { ++$processed; }
@@ -43,7 +43,7 @@ final class RetentionService {
 		}
 		if ( false === $wpdb->update( Schema::table( 'leads' ), array( 'lost_reason' => '', 'next_action_at' => null, 'public_payload_hash' => null ), array( 'customer_id' => $customer_id ), array( '%s', null, null ), array( '%d' ) )
 			|| false === $wpdb->update( Schema::table( 'quotation_versions' ), array( 'customer_name' => 'Retained customer' ), array( 'customer_id' => $customer_id ), array( '%s' ), array( '%d' ) )
-			|| false === $wpdb->update( Schema::table( 'customers' ), array( 'full_name' => 'Retained customer', 'mobile' => '', 'email' => '', 'city' => '', 'consent_marketing' => 0, 'consent_at' => null, 'updated_at' => current_time( 'mysql', true ) ), array( 'id' => $customer_id ), array( '%s', '%s', '%s', '%s', '%d', null, '%s' ), array( '%d' ) ) ) {
+			|| false === $wpdb->update( Schema::table( 'customers' ), array( 'full_name' => 'Retained customer', 'mobile' => '', 'email' => '', 'city' => '', 'account_user_id'=>null, 'consent_marketing' => 0, 'consent_at' => null, 'updated_at' => current_time( 'mysql', true ) ), array( 'id' => $customer_id ), array( '%s', '%s', '%s', '%s', null, '%d', null, '%s' ), array( '%d' ) ) ) {
 			$wpdb->query( 'ROLLBACK' ); return false;
 		}
 		return Transaction::commit( static fn() => AuditLog::record( 'privacy.retention_anonymized', 'customer', $customer_id, 'Configured retention period elapsed', null, array( 'retention_days' => $days ) ) );

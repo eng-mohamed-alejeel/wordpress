@@ -169,9 +169,11 @@ function car_dealer_render_table_page( $title, $table, $columns ) {
  $linked = 'car_dealer_subscribers' !== $table;
  if ( $linked ) { $columns['workflow'] = 'إدارة الطلب'; }
  $page = max( 1, absint( $_GET['paged'] ?? 1 ) );
- $where = $linked && ! empty( $_GET['request_id'] ) ? $wpdb->prepare( ' WHERE id = %d', absint( $_GET['request_id'] ) ) : '';
- $total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}{$table}$where" );
- $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}{$table}$where ORDER BY id DESC LIMIT 20 OFFSET %d", ( $page - 1 ) * 20 ), ARRAY_A );
+ $scope = $linked && class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ? \AutoDealership\Leads\RequestWorkflow::staff_predicate( $request_type, 'r.id' ) : '1=1';
+ $where = ' WHERE ' . $scope;
+ if ( $linked && ! empty( $_GET['request_id'] ) ) { $where .= $wpdb->prepare( ' AND r.id=%d', absint( $_GET['request_id'] ) ); }
+ $total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}{$table} r$where" );
+ $rows = $wpdb->get_results( $wpdb->prepare( "SELECT r.* FROM {$wpdb->prefix}{$table} r$where ORDER BY r.id DESC LIMIT 20 OFFSET %d", ( $page - 1 ) * 20 ), ARRAY_A );
  if ( isset( $_GET['updated'] ) ) { echo '<div class="notice notice-success"><p>تم تحديث الطلب وحساب العميل.</p></div>'; }
 	echo '<div class="wrap cd-admin" dir="rtl"><h1>' . esc_html( $title ) . '</h1><p class="cd-page-description">' . esc_html__( 'طلبات العملاء مرتبة من الأحدث. تحديث الحالة والرد يظهران في حساب صاحب الطلب.', 'car-dealer' ) . '</p><table class="widefat striped"><thead><tr>';
 	foreach ( $columns as $key => $label ) { echo '<th scope="col">' . esc_html( $label ) . '</th>'; }

@@ -1,5 +1,11 @@
 # Database Design
 
+## Schema 1.12.0 increment
+
+Adds nullable `customers.account_user_id` (unique) and `merged_into_id` (indexed), both unsigned bigint. Existing records remain NULL; no inferred account linkage, backfill or merge is performed by installation. Authenticated theme intake serializes against the WordPress user row (InnoDB required) and the customer row. Guest/REST contact matching does not establish ownership.
+
+Reviewed CRM-only consolidation moves eligible lead references, clears source contact fields and keeps a tombstone pointing to the surviving customer. It does not rewrite reservation, quotation, quote-version or sale references. Customer authorization locks the active row and rejects merged source IDs before new operational references. Schema 1.12.0 is the current code target; runtime upgrade and concurrency verification remain pending. See `CUSTOMER-IDENTITY.md`.
+
 ## Schema 1.11.0 increment
 
 Adds nullable `adc_leads.public_request_key` and `public_payload_hash` (`char(64)`) and a unique index on `public_request_key`. Both values are HMACs using the WordPress authentication salt; raw replay UUIDs and contact payloads are not stored in these columns. Existing rows retain NULL values. The request key includes the authentication user ID; the payload includes normalized contact, request context and compatibility destination. Erasure/retention clears the payload hash while keeping the opaque key to reject replay of erased content.
@@ -74,7 +80,7 @@ Operational tables intentionally do not mirror post meta one-for-one. Foreign-ke
 
 ## Current state
 
-Schema version is independent of the plugin version and currently `Schema::VERSION = 1.11.0`. Installation uses a per-database/prefix advisory lock, applies canonical DDL through dbDelta, then checks every declared table, column type/nullability/auto-increment, explicit default, full index column order/uniqueness and InnoDB engine. Only a verified schema and successful quote-history backfill receive the version marker. Failures store safe issue codes in `adc_schema_issues`, remove the success marker, show an administrator notice and delay automatic retry for five minutes. The installer does not silently convert existing MyISAM tables or remove/merge duplicate rows; those need reviewed repair. dbDelta may not repair numeric-default drift, which remains a reported failure until explicitly corrected.
+Schema version is independent of the plugin version and currently `Schema::VERSION = 1.12.0`. Installation uses a per-database/prefix advisory lock, applies canonical DDL through dbDelta, then checks every declared table, column type/nullability/auto-increment, explicit default, full index column order/uniqueness and InnoDB engine. Only a verified schema and successful quote-history backfill receive the version marker. Failures store safe issue codes in `adc_schema_issues`, remove the success marker, show an administrator notice and delay automatic retry for five minutes. The installer does not silently convert existing MyISAM tables or remove/merge duplicate rows; those need reviewed repair. dbDelta may not repair numeric-default drift, which remains a reported failure until explicitly corrected.
 
 Version 1.3.0 adds originating branch to current quotes and minimal documentary identity to revision rows. Older rows are enriched from the currently known related records and remain marked by their existing legacy event; the migration cannot reconstruct identity or branch at the historic issue time. Fresh installation, repeated installation, schema detection/repair, immutable quote revisions and additive upgrade behavior were exercised on an isolated MariaDB database. A production-copy migration/restore rehearsal remains outstanding.
 

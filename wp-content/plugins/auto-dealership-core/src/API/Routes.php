@@ -8,6 +8,8 @@ use AutoDealership\Inventory\VehicleIntakeService;
 use AutoDealership\Inventory\VehicleIssueService;
 use AutoDealership\Inventory\VehicleReturnService;
 use AutoDealership\Leads\LeadService;
+use AutoDealership\Leads\RequestWorkflow;
+use AutoDealership\Leads\CustomerIdentity;
 use AutoDealership\Reservations\ReservationService;
 use AutoDealership\Sales\SalesService;
 use AutoDealership\Sales\SaleCancellationService;
@@ -21,6 +23,19 @@ defined( 'ABSPATH' ) || exit;
 /** Versioned REST boundary. All writes delegate to validated services. */
 final class Routes {
 	public static function register(): void {
+		register_rest_route( 'auto-dealership/v1', '/customers/(?P<id>\d+)/duplicates', array(
+			'methods'=>'GET', 'permission_callback'=>static fn() => current_user_can( 'manage_options' ),
+			'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( CustomerIdentity::candidates( (int) $r['id'] ) ),
+			'args'=>array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ) ),
+		) );
+		register_rest_route( 'auto-dealership/v1', '/customers/merge', array(
+			array( 'methods'=>'GET', 'permission_callback'=>static fn() => current_user_can( 'manage_options' ),
+				'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( CustomerIdentity::preview( (int) $r['source_id'], (int) $r['target_id'] ) ),
+				'args'=>array( 'source_id'=>array( 'type'=>'integer', 'minimum'=>1, 'required'=>true ), 'target_id'=>array( 'type'=>'integer', 'minimum'=>1, 'required'=>true ) ) ),
+			array( 'methods'=>'POST', 'permission_callback'=>static fn() => current_user_can( 'manage_options' ),
+				'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( CustomerIdentity::merge( (int) $r['source_id'], (int) $r['target_id'], (string) $r['revision'], (string) $r['evidence'], true === $r['verified'] ) ),
+				'args'=>array( 'source_id'=>array( 'type'=>'integer', 'minimum'=>1, 'required'=>true ), 'target_id'=>array( 'type'=>'integer', 'minimum'=>1, 'required'=>true ), 'revision'=>array( 'type'=>'string', 'required'=>true, 'pattern'=>'^[a-f0-9]{64}$' ), 'evidence'=>array( 'type'=>'string', 'required'=>true, 'maxLength'=>120 ), 'verified'=>array( 'type'=>'boolean', 'required'=>true ) ) ),
+		) );
 		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/specifications', array(
 			'methods' => 'PATCH',
 			'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ),
@@ -130,6 +145,23 @@ final class Routes {
 		) );
 		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/stage', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'update_lead_stage' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'stage' => array( 'type' => 'string', 'required' => true ), 'reason' => array( 'type' => 'string' ) ),
+		) );
+		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/request', array(
+			array( 'methods'=>'GET', 'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( RequestWorkflow::read( (int) $r['id'] ) ),
+				'permission_callback'=>static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ),
+				'args'=>array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ) ) ),
+			array( 'methods'=>'PATCH', 'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( RequestWorkflow::update( (int) $r['id'], $r->get_params() ) ),
+				'permission_callback'=>static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ),
+				'args'=>array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ), 'revision'=>array( 'type'=>'string', 'required'=>true, 'pattern'=>'^[a-f0-9]{64}$' ), 'status'=>array( 'type'=>'string' ), 'customer_reply'=>array( 'type'=>'string', 'maxLength'=>4000 ), 'requested_date'=>array( 'type'=>'string' ), 'requested_time'=>array( 'type'=>'string' ) ) ),
+		) );
+		register_rest_route( 'auto-dealership/v1', '/bookings/(?P<id>\d+)/cancel', array(
+			'methods'=>'POST', 'permission_callback'=>'is_user_logged_in', 'args'=>array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ) ),
+			'callback'=>static function ( \WP_REST_Request $r ) {
+				$lead_id = RequestWorkflow::linked_lead( 'booking', (int) $r['id'] );
+				if ( is_wp_error( $lead_id ) ) { return $lead_id; }
+				if ( ! $lead_id ) { return new \WP_Error( 'adc_request_not_found', __( 'الطلب غير موجود أو خارج نطاق صلاحيتك.', 'auto-dealership-core' ), array( 'status'=>404 ) ); }
+				return rest_ensure_response( RequestWorkflow::update( $lead_id, array(), true ) );
+			},
 		) );
 		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/assignment', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'assign_lead' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'staff_id' => array( 'type' => 'integer', 'required' => true ) ),

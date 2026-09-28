@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.16.0
+ * Version: 1.17.0
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.16.0' );
+define( 'ADC_VERSION', '1.17.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -35,6 +35,7 @@ require_once ADC_PATH . 'src/Reservations/ReservationService.php';
 require_once ADC_PATH . 'src/Branches/BranchService.php';
 require_once ADC_PATH . 'src/Leads/LeadService.php';
 require_once ADC_PATH . 'src/Leads/ContactIdentity.php';
+require_once ADC_PATH . 'src/Leads/CustomerIdentity.php';
 require_once ADC_PATH . 'src/Leads/PublicIntake.php';
 require_once ADC_PATH . 'src/Leads/RequestWorkflow.php';
 require_once ADC_PATH . 'src/Pricing/Money.php';
@@ -56,6 +57,8 @@ require_once ADC_PATH . 'src/Reports/FinancialExport.php';
 require_once ADC_PATH . 'src/Admin/SettingsPage.php';
 require_once ADC_PATH . 'src/Admin/AuditPage.php';
 require_once ADC_PATH . 'src/Admin/OperationsPages.php';
+require_once ADC_PATH . 'src/Admin/RequestPage.php';
+require_once ADC_PATH . 'src/Admin/CustomerIdentityPage.php';
 require_once ADC_PATH . 'src/Admin/WorkflowPages.php';
 require_once ADC_PATH . 'src/Admin/PaymentPages.php';
 require_once ADC_PATH . 'src/Admin/RefundPage.php';
@@ -97,6 +100,8 @@ add_action( 'car_dealer_engagement_created', array( 'AutoDealership\\Leads\\Lead
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SettingsPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AuditPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OperationsPages', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\RequestPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\CustomerIdentityPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\WorkflowPages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\PaymentPages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\RefundPage', 'boot' ) );

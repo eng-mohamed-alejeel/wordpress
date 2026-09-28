@@ -406,6 +406,10 @@ function car_dealer_dashboard_table_count( $table, $where = '', $values = array(
 	}
 
 	$table_name = $wpdb->prefix . $table;
+	if ( 'car_dealer_subscribers' !== $table && class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ) {
+		$scope = \AutoDealership\Leads\RequestWorkflow::staff_predicate( 'car_dealer_bookings' === $table ? 'booking' : 'message', $table_name . '.id' );
+		$where = ( $where ? '(' . $where . ') AND ' : '' ) . $scope;
+	}
 	$exists     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
 	if ( $exists !== $table_name ) {
 		return 0;

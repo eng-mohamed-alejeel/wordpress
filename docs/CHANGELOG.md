@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.17.0 — Account-linked intake and reviewed CRM consolidation
+
+- Added authenticated account reuse with a unique account key, transactional first-request serialization and audited contact refresh; public email/mobile values never authorize account claims.
+- Added administrator-only candidate search, preview, revision-protected CRM merge and a confirmation screen. Matching contact/scope and reviewed evidence are required; financial references, conflicting accounts and merge chains are rejected.
+- Retained source tombstones, moved eligible leads with activity/audit history and rejected merged IDs in operational customer authorization.
+- Stopped duplicate theme account-profile creation/synchronization on login/profile hooks; preserved existing legacy profiles.
+- Extended privacy to linked account IDs and old-email account request copies. Schema 1.12.0 is additive; no live migration or merge was executed.
+- Syntax passed for 68 plugin and four theme PHP files. Integration/concurrency/browser verification is pending; see `CUSTOMER-IDENTITY.md`.
+
+## 1.16.0 — Scoped linked request updates (integration verification pending)
+
+- Centralized replies, test-drive rescheduling/status transitions and account-owned cancellation with transaction locks, stale-form revisions and atomic activity/audit recording.
+- Added scoped GET/PATCH linked-request routes, customer cancellation route and lead-specific nonce-protected forms in CRM and theme request tables.
+- Scoped request lists, related-request reads, pagination totals and dashboard counters. Unmapped legacy requests require administrator triage for staff access.
+- Reconciliation advances past core-owned records and stops on schema/storage errors; intake-switch reversal cannot bypass linked-request authorization.
+- Schema remains 1.11.0. Syntax passed for 66 plugin and four theme PHP files; integration/concurrency/browser scenarios are pending. No source database changes or data imports were performed.
+
 ## 1.15.0 — Unified public CRM intake (integration verification pending)
 
 - Centralized public REST/theme enquiry validation, contact normalization, explicit consent, rate counter and honeypot; retained logged-in theme identity and customer-account request copies.

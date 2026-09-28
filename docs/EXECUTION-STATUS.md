@@ -1,8 +1,28 @@
 # Implementation execution status
 
-Updated: 2026-09-27. This records completed increments, not completion of whole phases.
+Updated: 2026-09-28. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.15.0 (implemented; integration verification pending)
+## Current increment: 1.17.0 (implemented; integration verification pending)
+
+- Authenticated theme intake creates/reuses a customer by the current account ID under a unique nullable key and row locks. Guest/REST contact values do not acquire account ownership. Profile refresh and linkage are audited inside intake's transaction.
+- Added administrator-only duplicate candidates, preview and CRM-only merge via REST and **Dealership Core → مراجعة ملفات العملاء**. Merge requires independently reviewed identity, an evidence reference, a current revision and identical contact/branch/owner scope. Financial/documentary source references, different account owners and merge chains are blocked.
+- Consolidation moves leads, appends activities, clears source contact fields and keeps a merge reference. Consent is conservatively combined. Customer scope locks active records and rejects merged source IDs for new operations.
+- Login/profile hooks no longer create/synchronize duplicate theme account CRM posts while the core identity service is present. Existing legacy profiles are preserved; canonical profile refresh occurs on authenticated enquiry, not immediately on every account edit.
+- Privacy export/erasure includes linked account identity and can follow the current WordPress account across old-email request copies. Erasure/retention removes account links; merged tombstones are skipped by retention.
+- Code 1.17.0 / schema 1.12.0. Syntax passed for 68 plugin PHP files and four theme compatibility files. No tests were added or run; integration/concurrency/browser acceptance remains pending. No source database bootstrap, migration, merge or sample-data insertion was performed.
+- This closes a bounded account-linkage/CRM-consolidation increment, not the full identity phase. Historical claims, financial/documentary merges, legacy profile retirement/access, immediate profile synchronization and preference management remain. See `CUSTOMER-IDENTITY.md`.
+
+## Previous increment: 1.16.0 (implemented; integration verification pending)
+
+- Centralized linked message/booking replies, status changes, appointment updates and customer cancellation in `RequestWorkflow`; staff writes require active branch/ownership scope, customer cancellation requires the recorded account ID.
+- Added a nonce-protected form in CRM history and theme request tables, GET/PATCH `/leads/{id}/request`, and POST `/bookings/{id}/cancel`. Stale staff revisions return 409; closed requests cannot reopen or reschedule.
+- Compatibility update, activity history, lead timestamp and minimal audit commit atomically. Confirmation/rescheduling checks vehicle availability and the mapped branch. SQL failures never select the legacy fallback.
+- Scoped theme request lists, related request lists and dashboard counters, including pagination totals. Unmapped legacy staff access is administrator-only. Core sales roles use the CRM form directly.
+- Reconciliation skips already-linked records and advances its cursor; duplicate CRM capture remains suppressed even when public intake creation is switched back to the legacy handler.
+- Schema remains 1.11.0. Static checks passed for 66 plugin PHP files and four changed theme files; `git diff --check` passed. No integration/HTTP/browser tests were added or run. The original database was not bootstrapped or changed; no sample data was inserted.
+- Remaining CRM work: verified identity matching/account linkage, duplicate account-profile retirement and broader legacy CRM profile access. The 1.15.0–1.16.0 acceptance scenarios remain pending; see `CRM-INTAKE.md`.
+
+## Previous increment: 1.15.0 (implemented; integration verification pending)
 
 - Unified REST enquiries and theme contact/test-drive creation in `PublicIntake`, with normalized contact identity, explicit consent, bounded context, vehicle/branch/date checks, a shared IP limit and a honeypot.
 - Added optional UUID v4 replay protection with a unique HMAC key and payload fingerprint. Core customer/lead/activity/audit and the customer-account compatibility row share one transaction; core-owned submissions skip duplicate legacy request CRM capture.
@@ -29,7 +49,7 @@ Updated: 2026-09-27. This records completed increments, not completion of whole 
 
 1. Local 1.14.0 integration verification is complete for the covered scenarios. Interactive specification form layout, accessibility and browser journeys remain part of the staging review.
 2. Prepare the new-installation setup using actual branch, brand, location and staff assignments when supplied. Current-state backup/restore passed; no historical restore/import is required.
-3. Continue CRM with scoped compatibility reads/writes and audited synchronization of request replies, cancellations and rescheduling; finish verified contact matching/account linkage and retirement of duplicate profile writes. Intake creation is implemented in 1.15.0 but its isolated integration/browser verification remains pending. Historical migration is optional for future imports.
+3. Complete identity/CRM acceptance for 1.15.0–1.17.0, then address historical identity claims where needed, financial/documentary merges, legacy profile retirement/access, immediate profile synchronization and consent preferences. New authenticated account linkage and reviewed CRM-only consolidation are implemented; no historical import is needed for this empty deployment.
 4. Complete pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output, delivery document checklist and provider reconciliation.
 5. Finish public catalog/theme cutover, complete Arabic/English journeys, filter/sort behavior, accessibility and performance review.
 6. Implement scoped operational reporting, notification outbox/retries, provider-specific ERP/payment/finance/message adapters and job monitoring after provider contracts and credentials are supplied.

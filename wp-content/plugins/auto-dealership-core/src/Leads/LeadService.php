@@ -51,12 +51,14 @@ final class LeadService {
 		if ( ! Transaction::begin() ) {
 			return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		$ok = $wpdb->insert( Schema::table( 'customers' ), array( 'full_name' => $name, 'mobile' => $mobile, 'email' => $email, 'city' => sanitize_text_field( (string) ( $input['city'] ?? '' ) ), 'consent_marketing' => empty( $input['consent_marketing'] ) ? 0 : 1, 'consent_at' => empty( $input['consent_marketing'] ) ? null : $now, 'created_at' => $now, 'updated_at' => $now ), array( '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s' ) );
-		if ( false === $ok ) {
-			$wpdb->query( 'ROLLBACK' );
-			return new \WP_Error( 'adc_lead_failed', __( 'تعذر حفظ الطلب. حاول لاحقًا.', 'auto-dealership-core' ), array( 'status' => 500 ) );
+		if ( $compatibility_type && get_current_user_id() ) {
+			$customer_id = CustomerIdentity::account_customer( $identity );
+			if ( is_wp_error( $customer_id ) ) { $wpdb->query( 'ROLLBACK' ); return $customer_id; }
+		} else {
+			$ok = $wpdb->insert( Schema::table( 'customers' ), array( 'full_name'=>$name, 'mobile'=>$mobile, 'email'=>$email, 'city'=>$identity['city'], 'consent_marketing'=>$identity['consent_marketing'] ? 1 : 0, 'consent_at'=>$identity['consent_marketing'] ? $now : null, 'created_at'=>$now, 'updated_at'=>$now ) );
+			if ( false === $ok ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_lead_failed', __( 'تعذر حفظ الطلب. حاول لاحقًا.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
+			$customer_id = (int) $wpdb->insert_id;
 		}
-		$customer_id = (int) $wpdb->insert_id;
 		if ( $compatibility_table ) {
 			$row = array( 'user_id'=>get_current_user_id(), 'car_id'=>(int) ( $input['car_id'] ?? 0 ), 'name'=>$name, 'email'=>$email, 'phone'=>$mobile, 'status'=>'booking' === $compatibility_type ? 'pending' : 'new', 'customer_reply'=>'', 'created_at'=>current_time( 'mysql' ) );
 			if ( 'booking' === $compatibility_type ) {

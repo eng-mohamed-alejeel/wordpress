@@ -1,6 +1,30 @@
 # API Architecture
 
-Version 1.15.0 implements the following routes under `/wp-json/auto-dealership/v1`. Integration verification of the new intake/activity changes is pending.
+Version 1.17.0 implements the following routes under `/wp-json/auto-dealership/v1`. Integration verification of the 1.15.0–1.17.0 CRM changes is pending.
+
+## Customer identity review (1.17.0)
+
+All three operations below require `manage_options`; browser cookie requests require the WordPress REST nonce. Public `/leads` input remains unlinked even if it submits an account/customer ID. Authenticated theme intake uses the current account ID through its server adapter and may reuse that account's customer record.
+
+- `GET /customers/{id}/duplicates`: up to 50 active candidates with matching stored email and mobile, returning IDs/contact fields/account reference for administrator review. A candidate is not an approved merge.
+- `GET /customers/merge?source_id=…&target_id=…`: validates merge eligibility and returns `source`, `target`, `lead_ids` and opaque `revision`. No writes occur.
+- `POST /customers/merge`: required `source_id`, `target_id`, `revision` (64 lowercase hex characters), `evidence` (internal review reference, 1–120 characters) and `verified: true`. Returns `{source_id,target_id,moved_leads}` after audited commit. Changes since preview return 409; repeat execution against a merged source is rejected.
+
+The source must be unlinked, active, have leads and no reservations, quotes, quote versions or sales. Email/mobile and the branch/lead-owner sets must match; the combined lead count is at most 500. Existing compatibility account owners must agree with the destination account. Sources with previous merged children are blocked. Errors include `adc_identity_conflict`, `adc_identity_operational`, `adc_identity_scope`, `adc_identity_stale` (409), `adc_identity_invalid` (400), `adc_identity_not_found` (404) and `adc_identity_unavailable` (503).
+
+No arbitrary account-link endpoint is exposed. Legal identity verification, historical booking ownership claims and financial-record merges are outside this increment. See `CUSTOMER-IDENTITY.md`.
+
+## Linked request updates (1.16.0)
+
+- `GET /leads/{id}/request` requires lead-view capability plus active branch/ownership scope. Returns `lead_id`, `request_id`, `type`, `status`, `customer_reply`, `requested_date`, `requested_time`, `revision` and `can_edit`. A lead without a linked theme message/booking, or outside scope, returns 404. It does not automatically create a compatibility request for REST-only enquiries.
+- `PATCH /leads/{id}/request` requires lead-management capability plus branch/ownership scope. Supply the latest 64-character `revision` from GET; optional fields are `status`, `customer_reply` (plain text, maximum 4000 characters), `requested_date` (`YYYY-MM-DD`) and `requested_time` (`HH:MM`). Omitted fields remain unchanged; an empty reply clears it. Dates apply to bookings only. Missing/changed revisions return `adc_request_stale` (409) from the service; REST rejects missing required fields before dispatch.
+- `POST /bookings/{id}/cancel` uses the compatibility booking ID and requires authentication. Only the account recorded in `user_id` may cancel its pending/confirmed booking. Repeating cancellation of the same already-cancelled booking returns `updated: false`. Completed bookings cannot be cancelled. This endpoint does not accept staff impersonation, reply or reschedule fields; customer ownership is checked by the service.
+
+Write success is `{ "updated": true, "status": "confirmed" }`; an unchanged staff submission with a current revision returns `updated: false`. Reload GET after saving, or after 409. The revision covers the compatibility row and latest activity ID, so another core activity can also invalidate it. Cookie-authenticated REST requests require the normal WordPress REST nonce. Admin forms have a lead-specific nonce; account cancellation retains its account-dashboard nonce.
+
+Booking transitions are `pending → confirmed/cancelled`, `confirmed → pending/completed/cancelled`. Message transitions are `new → read/completed/cancelled`, `read → completed/cancelled`. The current state can be retained while changing a reply; completed/cancelled requests cannot reopen or reschedule. Rescheduling and entry into pending/confirmed require a future appointment in the site timezone. Confirmation and rescheduling recheck public vehicle availability and, for linked operational vehicles, the request branch. These operations do not reserve inventory, change the sales pipeline or send notifications.
+
+Each changed request, activity note, lead timestamp and `lead.request_updated` audit record commit together. Audit JSON contains IDs, states and changed field names, without free-text replies or appointment details. Failed storage/transaction checks never fall back to the legacy write path.
 
 ## Public intake and activity history (1.15.0)
 

@@ -91,7 +91,11 @@ add_action( 'admin_post_car_dealer_crm_export', function () {
 
 /** Source IDs make repeated imports safe; identical emails share a customer file. */
 function car_dealer_crm_capture( $type, $row ) {
- if ( class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled() && \AutoDealership\Leads\PublicIntake::owns_legacy_request( (string) $type, (int) $row->id ) ) { return true; }
+ if ( class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ) {
+  $lead_id = \AutoDealership\Leads\RequestWorkflow::linked_lead( (string) $type, (int) $row->id );
+  if ( is_wp_error( $lead_id ) ) { return false; }
+  if ( $lead_id ) { return true; }
+ }
  $key = '_crm_origin_' . $type . '_' . absint( $row->id );
  $exists = get_posts( array( 'post_type' => 'cd_crm', 'post_status' => 'private', 'meta_key' => $key, 'meta_value' => '1', 'numberposts' => 1, 'fields' => 'ids' ) );
  $account_crm = ! empty( $row->user_id ) ? car_dealer_customer_crm( $row->user_id ) : 0;

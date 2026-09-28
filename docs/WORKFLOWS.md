@@ -1,8 +1,12 @@
 # Domain Workflows
 
-## Public CRM intake (1.15.0)
+## Account identity and CRM-only consolidation (1.17.0)
 
-Contact/test-drive forms and public REST enquiries now validate through the core intake service. A successful submission atomically records the contact, lead, initial activity and audit; theme forms also retain their customer-account request copy. A valid replay UUID prevents an additional persisted enquiry for the same canonical payload. This does not confirm a test drive, reserve inventory or merge an unverified identity. Staff read the initial message and later core activities through scoped history. Subsequent theme booking/reply updates still follow the legacy workflow and are not yet synchronized into that history; see `CRM-INTAKE.md`. Integration verification of this increment is pending.
+Authenticated theme enquiries reuse the customer linked to the current WordPress account; guest and generic REST contacts remain separate. Administrators can inspect matching contact candidates, review independent identity evidence and consolidate eligible CRM-only source leads into a destination under a current preview revision. Source operational/documentary references, conflicting accounts or branch/owner scopes block the merge. The source becomes a tombstone and the operation appends activity/audit records atomically. Existing booking account ownership is preserved. See `CUSTOMER-IDENTITY.md`; integration acceptance is pending.
+
+## Public CRM intake and linked requests (1.15.0–1.16.0)
+
+Contact/test-drive forms and public REST enquiries validate through the core intake service. A successful submission atomically records the contact, lead, initial activity and audit; theme forms also retain their customer-account request copy. A valid replay UUID prevents an additional persisted enquiry for the same canonical payload. This does not confirm a test drive, reserve inventory or merge an unverified identity. Staff read the initial message and later activities through scoped history. Since 1.16.0, linked theme booking/reply updates and authenticated customer cancellation also append activities and audit atomically; staff writes require a current revision. Closed requests cannot reopen or reschedule. Unmapped legacy records retain their original workflow with administrator-only staff access. See `CRM-INTAKE.md`; integration verification remains pending.
 
 ## Operational transitions
 

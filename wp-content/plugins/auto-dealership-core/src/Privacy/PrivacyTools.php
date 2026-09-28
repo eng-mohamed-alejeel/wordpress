@@ -32,6 +32,13 @@ final class PrivacyTools {
 		return sanitize_email( $email );
 	}
 
+	private static function identity_where( string $email, string $column ): string {
+		global $wpdb;
+		if ( ! in_array( $column, array( 'account_user_id', 'user_id' ), true ) ) { throw new \InvalidArgumentException( 'Invalid identity column.' ); }
+		$user = get_user_by( 'email', $email );
+		return $user ? $wpdb->prepare( "(email=%s OR $column=%d)", $email, $user->ID ) : $wpdb->prepare( 'email=%s', $email );
+	}
+
 	private static function legacy_rows( string $email ): array {
 		global $wpdb;
 		$rows = array();
@@ -41,7 +48,7 @@ final class PrivacyTools {
 				continue;
 			}
 			$columns = 'message' === $type ? 'id,car_id,status,created_at,lead_type,subject,message,customer_reply' : 'id,car_id,status,created_at,requested_date,requested_time,customer_reply';
-			$records = $wpdb->get_results( $wpdb->prepare( "SELECT $columns FROM $table WHERE email = %s ORDER BY id ASC", $email ), ARRAY_A ) ?: array();
+			$records = $wpdb->get_results( "SELECT $columns FROM $table WHERE " . self::identity_where( $email, 'user_id' ) . ' ORDER BY id ASC', ARRAY_A ) ?: array();
 			foreach ( $records as $record ) {
 				$record['request_type'] = $type;
 				$rows[] = $record;
@@ -56,9 +63,10 @@ final class PrivacyTools {
 		if ( ! is_email( $email ) ) {
 			return array( 'data' => array(), 'done' => true );
 		}
-		$customers = $wpdb->get_results( $wpdb->prepare( 'SELECT id,full_name,mobile,email,city,consent_marketing,consent_at,created_at FROM ' . Schema::table( 'customers' ) . ' WHERE email = %s ORDER BY id ASC', $email ), ARRAY_A ) ?: array();
+		$customers = $wpdb->get_results( 'SELECT id,full_name,mobile,email,city,account_user_id,consent_marketing,consent_at,created_at FROM ' . Schema::table( 'customers' ) . ' WHERE ' . self::identity_where( $email, 'account_user_id' ) . ' ORDER BY id ASC', ARRAY_A ) ?: array();
 		$items = array();
 		foreach ( $customers as $customer ) {
+			$items[] = array( 'name'=>__( 'Linked account ID', 'auto-dealership-core' ), 'value'=>(string) ( $customer['account_user_id'] ?? '' ) );
 			$items[] = array( 'name' => __( 'Name', 'auto-dealership-core' ), 'value' => $customer['full_name'] );
 			$items[] = array( 'name' => __( 'Mobile', 'auto-dealership-core' ), 'value' => $customer['mobile'] );
 			$items[] = array( 'name' => __( 'Email', 'auto-dealership-core' ), 'value' => $customer['email'] );
@@ -125,14 +133,16 @@ final class PrivacyTools {
 			return array( 'items_removed' => false, 'items_retained' => false, 'messages' => array(), 'done' => true );
 		}
 		$customer_table = Schema::table( 'customers' );
-		$customer_ids = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM $customer_table WHERE email = %s", $email ) ) ?: array();
 		$legacy_count = self::legacy_count( $email );
 		if ( false === $wpdb->query( 'START TRANSACTION' ) ) {
 			return self::erase_failed();
 		}
+		$customer_ids = $wpdb->get_col( "SELECT id FROM $customer_table WHERE " . self::identity_where( $email, 'account_user_id' ) . ' ORDER BY id ASC FOR UPDATE' );
+		if ( $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); return self::erase_failed(); }
 		if ( $customer_ids ) {
 			$placeholders = implode( ',', array_fill( 0, count( $customer_ids ), '%d' ) );
 			$lead_ids = $wpdb->get_col( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'leads' ) . " WHERE customer_id IN ($placeholders)", array_map( 'intval', $customer_ids ) ) ) ?: array();
+			if ( $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); return self::erase_failed(); }
 			if ( $lead_ids ) {
 				$lead_placeholders = implode( ',', array_fill( 0, count( $lead_ids ), '%d' ) );
 				if ( false === $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::table( 'activities' ) . " SET notes = %s,next_action_at = NULL WHERE lead_id IN ($lead_placeholders)", array_merge( array( '[Personal data erased]' ), array_map( 'intval', $lead_ids ) ) ) ) || false === $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::table( 'leads' ) . " SET lost_reason = '',next_action_at = NULL,public_payload_hash = NULL WHERE id IN ($lead_placeholders)", array_map( 'intval', $lead_ids ) ) ) ) {
@@ -144,7 +154,7 @@ final class PrivacyTools {
 				$wpdb->query( 'ROLLBACK' );
 				return self::erase_failed();
 			}
-			if ( false === $wpdb->query( $wpdb->prepare( "UPDATE $customer_table SET full_name = %s,mobile = '',email = '',city = '',consent_marketing = 0,consent_at = NULL,updated_at = %s WHERE id IN ($placeholders)", array_merge( array( __( 'Erased customer', 'auto-dealership-core' ), current_time( 'mysql', true ) ), array_map( 'intval', $customer_ids ) ) ) ) ) {
+			if ( false === $wpdb->query( $wpdb->prepare( "UPDATE $customer_table SET full_name = %s,mobile = '',email = '',city = '',account_user_id = NULL,consent_marketing = 0,consent_at = NULL,updated_at = %s WHERE id IN ($placeholders)", array_merge( array( __( 'Erased customer', 'auto-dealership-core' ), current_time( 'mysql', true ) ), array_map( 'intval', $customer_ids ) ) ) ) ) {
 				$wpdb->query( 'ROLLBACK' );
 				return self::erase_failed();
 			}
@@ -179,7 +189,7 @@ final class PrivacyTools {
 		foreach ( array( 'car_dealer_messages', 'car_dealer_bookings' ) as $suffix ) {
 			$table = $wpdb->prefix . $suffix;
 			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) === $table ) {
-				$count += (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE email = %s", $email ) );
+				$count += (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table WHERE " . self::identity_where( $email, 'user_id' ) );
 			}
 		}
 		return $count;
@@ -191,9 +201,13 @@ final class PrivacyTools {
 
 	private static function erase_legacy_table( string $table, string $email, array $changes ): bool {
 		global $wpdb;
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) !== $table ) {
-			return true;
-		}
-		return false !== $wpdb->update( $table, $changes, array( 'email' => $email ), null, array( '%s' ) );
+		$engine = $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $table ) );
+		if ( $wpdb->last_error ) { return false; }
+		if ( null === $engine ) { return true; }
+		if ( 'InnoDB' !== $engine ) { return false; }
+		$ids = $wpdb->get_col( "SELECT id FROM $table WHERE " . self::identity_where( $email, 'user_id' ) . ' ORDER BY id ASC FOR UPDATE' );
+		if ( $wpdb->last_error ) { return false; }
+		foreach ( $ids as $id ) { if ( false === $wpdb->update( $table, $changes, array( 'id'=>(int) $id ) ) ) { return false; } }
+		return true;
 	}
 }
