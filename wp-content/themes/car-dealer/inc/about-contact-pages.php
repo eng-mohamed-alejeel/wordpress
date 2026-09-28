@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			var elapsed = now - start;
 			var progress = Math.min(elapsed / duration, 1);
 			var eased = 1 - Math.pow(1 - progress, 3);
-			el.textContent = Math.floor(eased * target).toLocaleString('ar-SA');
+			el.textContent = Math.floor(eased * target).toLocaleString('en-US');
 			if (progress < 1) requestAnimationFrame(update);
 		}
 		requestAnimationFrame(update);

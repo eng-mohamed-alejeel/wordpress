@@ -208,8 +208,8 @@ $total_cars = wp_count_posts( 'car' )->publish;
 				<span class="ab-badge">🏢 <?php esc_html_e( 'تمويل شركات', 'car-dealer' ); ?></span>
 				<span class="ab-badge">⚡ <?php esc_html_e( 'موافقة سريعة', 'car-dealer' ); ?></span>
 			</div>
+			<?php echo do_shortcode( '[car_dealer_loan_calculator]' ); ?>
 		</div>
-		<?php echo do_shortcode( '[car_dealer_loan_calculator]' ); ?>
 	</div>
 </section>
 
