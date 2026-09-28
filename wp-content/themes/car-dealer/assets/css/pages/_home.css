@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الصفحة الرئيسية (Home)
+   ═══════════════════════════════════════════════════════ */
+
+.hero,
+.archive-hero {
+  padding: var(--cd-spacing-4xl) 0;
+  color: var(--cd-color-surface);
+  background: linear-gradient(120deg, #102a43, #1b4c73);
+}
+
+.hero h1,
+.archive-hero h1 {
+  color: var(--cd-color-surface);
+  max-width: 760px;
+  font-size: clamp(2.25rem, 5vw, var(--cd-font-size-5xl));
+  margin: 0.35rem 0 var(--cd-spacing-md);
+}
+
+.hero p,
+.archive-hero p {
+  max-width: 650px;
+  font-size: var(--cd-font-size-md);
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: 2fr repeat(3, 1fr) auto;
+  gap: var(--cd-spacing-md);
+  padding: var(--cd-spacing-lg);
+  margin: -1.5rem 0 var(--cd-spacing-xl);
+  background: var(--cd-color-surface);
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-lg);
+  align-items: end;
+}
+
+.filter-bar label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--cd-color-muted);
+  font-size: var(--cd-font-size-sm);
+}
+
+.filter-bar input,
+.filter-bar select {
+  min-height: 42px;
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-sm);
+  padding: 0.5rem;
+  background: var(--cd-color-surface);
+}
+
+.empty-state {
+  padding: var(--cd-spacing-xl);
+  text-align: center;
+  color: var(--cd-color-muted);
+}
+
+.cd-testimonials {
+  padding: var(--cd-spacing-3xl) 0;
+}
+
+.cd-testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--cd-spacing-md);
+}
+
+.cd-testimonial {
+  padding: var(--cd-spacing-lg);
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-lg);
+  background: var(--cd-color-surface);
+}
+
+.cd-social-share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: var(--cd-spacing-md);
+}
+
+.cd-social-share a {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-full);
+  background: var(--cd-color-surface);
+  color: var(--cd-color-primary);
+  font-size: var(--cd-font-size-sm);
+}
+
+@media (max-width: 900px) {
+  .filter-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cd-testimonial-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero,
+  .archive-hero {
+    padding: var(--cd-spacing-3xl) 0;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+}

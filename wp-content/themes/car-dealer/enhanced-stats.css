@@ -1,0 +1,9 @@
+/* Enhanced Stats Styles */
+@media (max-width: 768px) {
+  .ab-hero-stats {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+  
+}

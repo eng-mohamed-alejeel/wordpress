@@ -1,0 +1,343 @@
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — أيقونات احترافية (Professional Icons)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── حجم أيقونات SVG العامة ── */
+svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ── أيقونات الترويسة ── */
+.main-navigation svg,
+.header-search svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── أيقونات البطاقات ── */
+.car-card svg,
+.car-image-placeholder svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/* ── أيقونات الإشعارات ── */
+.cd-social-share svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── أيقونات الواجهة الداعمة ── */
+.wp-block-file a::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 0.5rem;
+  background: var(--cd-color-accent);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+/* ── أيقونات التحميل ── */
+.loading-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--cd-color-line);
+  border-top-color: var(--cd-color-accent);
+  border-radius: 50%;
+  animation: ab-spin 0.8s linear infinite;
+}
+
+@keyframes ab-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── أيقونات الحالة ── */
+.cd-status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 14px;
+}
+
+.cd-status-icon--available {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.cd-status-icon--reserved {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.cd-status-icon--sold {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ── أيقونات الميزات ── */
+.ab-feature-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--cd-radius-xl);
+  background: linear-gradient(135deg, rgba(6, 105, 217, 0.1), rgba(226, 29, 47, 0.1));
+  border: 1px solid rgba(6, 105, 217, 0.15);
+  margin: 0 auto var(--cd-spacing-md);
+  transition: all var(--cd-transition-base);
+}
+
+.ab-feature-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: all var(--cd-transition-base);
+}
+
+.ab-feature-card:hover .ab-feature-icon {
+  background: linear-gradient(135deg, rgba(226, 29, 47, 0.15), rgba(6, 105, 217, 0.15));
+  border-color: rgba(226, 29, 47, 0.3);
+}
+
+.ab-feature-card:hover .ab-feature-icon svg {
+  transform: scale(1.1);
+}
+
+/* ── أيقونات CTA ── */
+.ab-cta-icon {
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.2), rgba(37, 211, 102, 0.1));
+  border: 1px solid rgba(37, 211, 102, 0.3);
+  color: #25d366;
+  margin: 0 auto var(--cd-spacing-md);
+  transition: all var(--cd-transition-base);
+  box-shadow: 0 0 30px rgba(37, 211, 102, 0.15);
+  animation: ab-cta-pulse 3s ease-in-out infinite;
+}
+
+.ab-cta-icon svg {
+  width: 40px;
+  height: 40px;
+  fill: currentColor;
+}
+
+.ab-cta-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 40px rgba(37, 211, 102, 0.25);
+}
+
+@keyframes ab-cta-pulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(37, 211, 102, 0.15); }
+  50% { box-shadow: 0 0 45px rgba(37, 211, 102, 0.25); }
+}
+
+/* ── أيقونات البحث ── */
+.header-search svg {
+  color: var(--cd-color-primary);
+  transition: color var(--cd-transition-fast);
+}
+
+.header-search button:hover svg {
+  color: var(--cd-color-accent);
+}
+
+/* ── أيقونات التذييل ── */
+.site-footer svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* ── أيقونات الإشعارات ── */
+.cd-notification-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--cd-color-accent);
+  color: var(--cd-color-surface);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ── أيقونات الفلاتر ── */
+.filter-bar svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--cd-color-muted);
+  stroke-width: 2;
+  fill: none;
+}
+
+/* ── أيقونات التنقل ── */
+.menu-toggle svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--cd-color-primary);
+  stroke-width: 2;
+  fill: none;
+}
+
+/* ── أيقونات التذييل العائم ── */
+.ab-float-wa svg {
+  width: 28px;
+  height: 28px;
+  fill: currentColor;
+}
+
+.ab-back-top svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── أيقونات الروابط ── */
+.cd-social-links svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── أيقونات البطاقات في لوحة التحكم ── */
+.cd-stat-card .dashicons {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--cd-radius-lg);
+  background: #edf4ff;
+  color: #2563eb;
+  font-size: 22px;
+  line-height: 48px;
+  text-align: center;
+}
+
+/* ── تأثيرات الحركة للأيقونات ── */
+@keyframes ab-icon-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.ab-feature-icon {
+  animation: ab-icon-float 3s ease-in-out infinite;
+}
+
+.ab-feature-card:nth-child(2) .ab-feature-icon {
+  animation-delay: 0.5s;
+}
+
+.ab-feature-card:nth-child(3) .ab-feature-icon {
+  animation-delay: 1s;
+}
+
+.ab-feature-card:nth-child(4) .ab-feature-icon {
+  animation-delay: 1.5s;
+}
+
+/* ── أيقونات النجوم ── */
+.star-icon {
+  display: inline-flex;
+  gap: 0.25rem;
+  color: #ffb703;
+}
+
+.star-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* ── أيقونات التصنيف ── */
+.category-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--cd-radius-sm);
+  background: var(--cd-color-bg);
+  color: var(--cd-color-text);
+  font-size: var(--cd-font-size-sm);
+  font-weight: 600;
+}
+
+.category-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--cd-color-accent);
+  stroke-width: 2;
+  fill: none;
+}
+
+/* ── أيقونات التحميل ── */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--cd-color-line);
+  border-top-color: var(--cd-color-accent);
+  border-radius: 50%;
+  animation: ab-spin 0.8s linear infinite;
+}
+
+@keyframes ab-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── أيقونات المودال ── */
+.modal-close svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--cd-color-muted);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: all var(--cd-transition-fast);
+}
+
+.modal-close:hover svg {
+  stroke: var(--cd-color-accent);
+  transform: rotate(90deg);
+}

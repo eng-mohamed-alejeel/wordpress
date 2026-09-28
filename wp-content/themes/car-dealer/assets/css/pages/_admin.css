@@ -1,0 +1,256 @@
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — لوحة التحكم (Admin Dashboard)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── متغيرات لوحة التحكم ── */
+:root {
+  --cd-admin-navy: #1A365D;
+  --cd-admin-blue: #2B6CB0;
+  --cd-admin-blue-dark: #2C5282;
+  --cd-admin-blue-soft: #EBF8FF;
+  --cd-admin-red: #E53E3E;
+  --cd-admin-black: #1A202C;
+  --cd-admin-ink: #2D3748;
+  --cd-admin-muted: #718096;
+  --cd-admin-line: #E2E8F0;
+  --cd-admin-bg: #F7FAFC;
+  --cd-admin-white: #FFFFFF;
+  --cd-admin-radius-lg: 12px;
+  --cd-admin-radius-md: 8px;
+  --cd-admin-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --cd-admin-shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* ── هيكل لوحة التحكم ── */
+.cd-admin-wrap {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  background: var(--cd-admin-bg);
+}
+
+.cd-admin-sidebar {
+  background: var(--cd-admin-navy);
+  color: var(--cd-admin-white);
+  padding: var(--cd-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cd-spacing-xs);
+}
+
+.cd-admin-sidebar a {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.6rem 1rem;
+  border-radius: var(--cd-admin-radius-md);
+  font-weight: 500;
+  transition: background var(--cd-transition-fast), color var(--cd-transition-fast);
+}
+
+.cd-admin-sidebar a:hover,
+.cd-admin-sidebar a.is-active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--cd-admin-white);
+}
+
+.cd-admin-main {
+  padding: var(--cd-spacing-2xl);
+  overflow-x: auto;
+}
+
+.cd-admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--cd-spacing-xl);
+  padding-bottom: var(--cd-spacing-lg);
+  border-bottom: 1px solid var(--cd-admin-line);
+}
+
+.cd-admin-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--cd-spacing-lg);
+  margin-bottom: var(--cd-spacing-2xl);
+}
+
+.cd-admin-card {
+  background: var(--cd-admin-white);
+  border: 1px solid var(--cd-admin-line);
+  border-radius: var(--cd-admin-radius-lg);
+  padding: var(--cd-spacing-lg);
+  box-shadow: var(--cd-admin-shadow-soft);
+}
+
+.cd-admin-card h3 {
+  margin: 0 0 var(--cd-spacing-sm);
+  font-size: var(--cd-font-size-sm);
+  color: var(--cd-admin-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cd-admin-card .cd-admin-number {
+  font-size: var(--cd-font-size-3xl);
+  font-weight: 800;
+  color: var(--cd-admin-navy);
+}
+
+.cd-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--cd-admin-white);
+  border-radius: var(--cd-admin-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--cd-admin-shadow-soft);
+}
+
+.cd-admin-table th,
+.cd-admin-table td {
+  padding: var(--cd-spacing-md) var(--cd-spacing-lg);
+  text-align: start;
+  border-bottom: 1px solid var(--cd-admin-line);
+}
+
+.cd-admin-table th {
+  background: var(--cd-admin-bg);
+  font-weight: 700;
+  color: var(--cd-admin-ink);
+  font-size: var(--cd-font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cd-admin-table tr:hover td {
+  background: var(--cd-admin-blue-soft);
+}
+
+.cd-admin-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--cd-radius-full);
+  font-size: var(--cd-font-size-xs);
+  font-weight: 700;
+}
+
+.cd-admin-badge--success {
+  background: #C6F6D5;
+  color: #276749;
+}
+
+.cd-admin-badge--warning {
+  background: #FEFCBF;
+  color: #975A16;
+}
+
+.cd-admin-badge--danger {
+  background: #FED7D7;
+  color: #9B2C2C;
+}
+
+.cd-admin-badge--info {
+  background: #BEE3F8;
+  color: #2A4365;
+}
+
+/* ── نماذج لوحة التحكم ── */
+.cd-admin-form {
+  background: var(--cd-admin-white);
+  border: 1px solid var(--cd-admin-line);
+  border-radius: var(--cd-admin-radius-lg);
+  padding: var(--cd-spacing-xl);
+  max-width: 800px;
+}
+
+.cd-admin-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--cd-spacing-lg);
+  margin-bottom: var(--cd-spacing-lg);
+}
+
+.cd-admin-form-row label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--cd-admin-ink);
+}
+
+.cd-admin-form-row input,
+.cd-admin-form-row select,
+.cd-admin-form-row textarea {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--cd-admin-line);
+  border-radius: var(--cd-admin-radius-md);
+  padding: 0.5rem 0.75rem;
+  box-sizing: border-box;
+}
+
+.cd-admin-form-row textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.cd-admin-form-actions {
+  display: flex;
+  gap: var(--cd-spacing-md);
+  margin-top: var(--cd-spacing-xl);
+  padding-top: var(--cd-spacing-lg);
+  border-top: 1px solid var(--cd-admin-line);
+}
+
+/* ── مساحة العمل ── */
+.cd-workspace-tabs {
+  display: flex;
+  gap: var(--cd-spacing-xs);
+  margin-bottom: var(--cd-spacing-lg);
+  border-bottom: 2px solid var(--cd-admin-line);
+}
+
+.cd-workspace-tab {
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--cd-admin-radius-md) var(--cd-admin-radius-md) 0 0;
+  font-weight: 600;
+  color: var(--cd-admin-muted);
+  transition: color var(--cd-transition-fast), background var(--cd-transition-fast);
+}
+
+.cd-workspace-tab:hover {
+  color: var(--cd-admin-navy);
+  background: var(--cd-admin-bg);
+}
+
+.cd-workspace-tab.is-active {
+  color: var(--cd-admin-navy);
+  background: var(--cd-admin-white);
+  border-bottom: 2px solid var(--cd-admin-navy);
+  margin-bottom: -2px;
+}
+
+.cd-workspace-panel {
+  background: var(--cd-admin-white);
+  border: 1px solid var(--cd-admin-line);
+  border-radius: var(--cd-admin-radius-lg);
+  padding: var(--cd-spacing-xl);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .cd-admin-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .cd-admin-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: var(--cd-spacing-sm);
+  }
+
+  .cd-admin-sidebar a {
+    white-space: nowrap;
+  }
+
+  .cd-admin-form-row {
+    grid-template-columns: 1fr;
+  }
+}

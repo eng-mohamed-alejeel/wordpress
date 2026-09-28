@@ -71,3 +71,4 @@ while ( have_posts() ) :
 		<?php echo do_shortcode( '[car_dealer_loan_calculator price="' . absint( $price ) . '"]' ); ?>
 	</section>
 <?php endwhile; ?>
+<?php get_footer(); ?>

@@ -12,16 +12,25 @@ function car_dealer_account_kind( $user ) {
  return 'customer';
 }
 function car_dealer_account_links() {
- if ( is_user_logged_in() ) {
-  return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url() ) . '">حسابي</a></li><li class="menu-item cd-account-link"><a href="' . esc_url( wp_logout_url( home_url( '/' ) ) ) . '">تسجيل الخروج</a></li>';
- }
- return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url( 'login' ) ) . '">تسجيل الدخول</a></li><li class="menu-item cd-account-link cd-register-link"><a href="' . esc_url( car_dealer_account_url( 'register' ) ) . '">إنشاء حساب</a></li>';
+  if ( is_user_logged_in() ) {
+   return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url() ) . '">حسابي</a></li><li class="menu-item cd-logout-link"><a href="' . esc_url( wp_logout_url( home_url( '/' ) ) ) . '">تسجيل الخروج</a></li>';
+  }
+  return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url( 'login' ) ) . '">تسجيل الدخول</a></li><li class="menu-item cd-account-link cd-register-link"><a href="' . esc_url( car_dealer_account_url( 'register' ) ) . '">إنشاء حساب</a></li>';
 }
-add_filter( 'wp_nav_menu_items', function ( $items, $args ) { return 'primary' === $args->theme_location ? $items . car_dealer_account_links() : $items; }, 20, 2 );
+add_filter( 'wp_nav_menu_items', function ( $items, $args ) {
+  if ( 'primary' === $args->theme_location ) {
+    $home_link = '<li class="menu-item menu-item-home"><a href="' . esc_url( home_url( '/' ) ) . '">الرئيسية</a></li>';
+    if ( false === strpos( $items, 'menu-item-home' ) ) {
+      $items = $home_link . $items;
+    }
+    return $items . car_dealer_account_links();
+  }
+  return $items;
+}, 20, 2 );
 function car_dealer_account_menu_fallback() {
- echo '<ul id="primary-menu"><li><a href="' . esc_url( home_url( '/' ) ) . '">الرئيسية</a></li><li><a href="' . esc_url( get_post_type_archive_link( 'car' ) ) . '">السيارات</a></li>' . car_dealer_account_links() . '</ul>';
+  echo '<ul id="primary-menu"><li><a href="' . esc_url( home_url( '/' ) ) . '">الرئيسية</a></li><li><a href="' . esc_url( get_post_type_archive_link( 'car' ) ) . '">السيارات</a></li>' . car_dealer_account_links() . '</ul>';
 }
-add_action( 'wp_enqueue_scripts', function () { wp_enqueue_style( 'car-dealer-account', get_template_directory_uri() . '/assets/css/account.css', array( 'car-dealer-enhancements' ), filemtime( __DIR__ . '/../assets/css/account.css' ) ); } );
+add_action( 'wp_enqueue_scripts', function () { wp_enqueue_style( 'car-dealer-account', get_template_directory_uri() . '/assets/css/account.css', array( 'car-dealer-main' ), filemtime( __DIR__ . '/../assets/css/account.css' ) ); } );
 add_filter( 'login_redirect', function ( $redirect, $requested, $user ) {
  return $user instanceof WP_User ? car_dealer_account_url() : $redirect;
 }, 10, 3 );
@@ -33,44 +42,44 @@ add_action( 'admin_init', function () {
 } );
 
 function car_dealer_account_process( $view ) {
- if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) { return ''; }
- if ( ! wp_verify_nonce( car_dealer_account_field( '_wpnonce' ), 'cd_account_' . $view ) ) { return 'انتهت صلاحية النموذج. حدّث الصفحة وحاول مجدداً.'; }
- if ( 'dashboard' === $view && is_user_logged_in() ) {
-  if ( 'cancel_booking' === car_dealer_account_field( 'account_action' ) ) {
-   $result = car_dealer_update_request( 'booking', absint( car_dealer_account_field( 'request_id' ) ), array(), true );
-   if ( is_wp_error( $result ) ) { return $result->get_error_message(); }
-   wp_safe_redirect( add_query_arg( 'request_updated', 1, car_dealer_account_url() ) ); exit;
+  if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) { return ''; }
+  if ( ! wp_verify_nonce( car_dealer_account_field( '_wpnonce' ), 'cd_account_' . $view ) ) { return 'انتهت صلاحية النموذج. حدّث الصفحة وحاول مجدداً.'; }
+  if ( 'dashboard' === $view && is_user_logged_in() ) {
+   if ( 'cancel_booking' === car_dealer_account_field( 'account_action' ) ) {
+    $result = car_dealer_update_request( 'booking', absint( car_dealer_account_field( 'request_id' ) ), array(), true );
+    if ( is_wp_error( $result ) ) { return $result->get_error_message(); }
+    wp_safe_redirect( add_query_arg( 'request_updated', 1, car_dealer_account_url() ) ); exit;
+   }
+   $name = sanitize_text_field( car_dealer_account_field( 'display_name' ) );
+   if ( ! $name ) { return 'يرجى إدخال الاسم.'; }
+   $result = wp_update_user( array( 'ID' => get_current_user_id(), 'display_name' => $name ) );
+   if ( is_wp_error( $result ) ) { return 'تعذر تحديث البيانات.'; }
+   update_user_meta( get_current_user_id(), 'car_dealer_phone', sanitize_text_field( car_dealer_account_field( 'phone' ) ) );
+   wp_safe_redirect( add_query_arg( 'saved', 1, car_dealer_account_url() ) ); exit;
   }
-  $name = sanitize_text_field( car_dealer_account_field( 'display_name' ) );
-  if ( ! $name ) { return 'يرجى إدخال الاسم.'; }
-  $result = wp_update_user( array( 'ID' => get_current_user_id(), 'display_name' => $name ) );
-  if ( is_wp_error( $result ) ) { return 'تعذر تحديث البيانات.'; }
-  update_user_meta( get_current_user_id(), 'car_dealer_phone', sanitize_text_field( car_dealer_account_field( 'phone' ) ) );
-  wp_safe_redirect( add_query_arg( 'saved', 1, car_dealer_account_url() ) ); exit;
- }
- if ( ! in_array( $view, array( 'login', 'register' ), true ) || is_user_logged_in() ) { return ''; }
- $limit_key = 'cd_auth_' . hash( 'sha256', ( $_SERVER['REMOTE_ADDR'] ?? '' ) . wp_salt() );
- $attempts = (int) get_transient( $limit_key );
- if ( $attempts >= 10 ) { return 'محاولات كثيرة. يرجى المحاولة بعد 15 دقيقة.'; }
- set_transient( $limit_key, $attempts + 1, 15 * MINUTE_IN_SECONDS );
- if ( 'login' === $view ) {
-  $user = wp_signon( array( 'user_login' => sanitize_text_field( car_dealer_account_field( 'login' ) ), 'user_password' => car_dealer_account_field( 'password' ), 'remember' => (bool) car_dealer_account_field( 'remember' ) ), is_ssl() );
-  if ( is_wp_error( $user ) ) { return 'تعذر تسجيل الدخول. تحقق من بياناتك أو استخدم استعادة كلمة المرور.'; }
- } else {
-  $name = sanitize_text_field( car_dealer_account_field( 'display_name' ) );
-  $email = sanitize_email( car_dealer_account_field( 'email' ) );
-  $password = car_dealer_account_field( 'password' );
-  if ( car_dealer_account_field( 'company_website' ) ) { return 'تعذر إنشاء الحساب.'; }
-  if ( ! $name || ! is_email( $email ) || strlen( $password ) < 10 || strlen( $password ) > 4096 || $password !== car_dealer_account_field( 'password_confirm' ) ) { return 'أدخل اسماً وبريداً صحيحاً وكلمة مرور من 10 أحرف على الأقل مع تأكيد مطابق.'; }
-  if ( email_exists( $email ) ) { return 'تعذر استخدام هذا البريد. جرّب تسجيل الدخول أو استعادة كلمة المرور.'; }
-  $id = wp_insert_user( array( 'user_login' => 'customer_' . wp_generate_password( 20, false ), 'user_email' => $email, 'user_pass' => $password, 'display_name' => $name, 'role' => 'car_dealer_customer' ) );
-  if ( is_wp_error( $id ) ) { return 'تعذر إنشاء الحساب. حاول مجدداً أو تواصل مع المعرض.'; }
-  update_user_meta( $id, 'car_dealer_phone', sanitize_text_field( car_dealer_account_field( 'phone' ) ) );
-  wp_set_current_user( $id ); wp_set_auth_cookie( $id, false, is_ssl() );
-  do_action( 'wp_login', get_userdata( $id )->user_login, get_userdata( $id ) );
- }
- if ( 'login' === $view ) { delete_transient( $limit_key ); }
- wp_safe_redirect( car_dealer_account_url() ); exit;
+  if ( ! in_array( $view, array( 'login', 'register' ), true ) || is_user_logged_in() ) { return ''; }
+  $limit_key = 'cd_auth_' . hash( 'sha256', ( $_SERVER['REMOTE_ADDR'] ?? '' ) . wp_salt() );
+  $attempts = (int) get_transient( $limit_key );
+  if ( $attempts >= 10 ) { return 'محاولات كثيرة. يرجى المحاولة بعد 15 دقيقة.'; }
+  set_transient( $limit_key, $attempts + 1, 15 * MINUTE_IN_SECONDS );
+  if ( 'login' === $view ) {
+   $user = wp_signon( array( 'user_login' => sanitize_text_field( car_dealer_account_field( 'login' ) ), 'user_password' => car_dealer_account_field( 'password' ), 'remember' => (bool) car_dealer_account_field( 'remember' ) ), is_ssl() );
+   if ( is_wp_error( $user ) ) { return 'تعذر تسجيل الدخول. تحقق من بياناتك أو استخدم استعادة كلمة المرور.'; }
+  } else {
+   $name = sanitize_text_field( car_dealer_account_field( 'display_name' ) );
+   $email = sanitize_email( car_dealer_account_field( 'email' ) );
+   $password = car_dealer_account_field( 'password' );
+   if ( car_dealer_account_field( 'company_website' ) ) { return 'تعذر إنشاء الحساب.'; }
+   if ( ! $name || ! is_email( $email ) || strlen( $password ) < 10 || strlen( $password ) > 4096 || $password !== car_dealer_account_field( 'password_confirm' ) ) { return 'أدخل اسماً وبريداً صحيحاً وكلمة مرور من 10 أحرف على الأقل مع تأكيد مطابق.'; }
+   if ( email_exists( $email ) ) { return 'تعذر استخدام هذا البريد. جرّب تسجيل الدخول أو استعادة كلمة المرور.'; }
+   $id = wp_insert_user( array( 'user_login' => 'customer_' . wp_generate_password( 20, false ), 'user_email' => $email, 'user_pass' => $password, 'display_name' => $name, 'role' => 'car_dealer_customer' ) );
+   if ( is_wp_error( $id ) ) { return 'تعذر إنشاء الحساب. حاول مجدداً أو تواصل مع المعرض.'; }
+   update_user_meta( $id, 'car_dealer_phone', sanitize_text_field( car_dealer_account_field( 'phone' ) ) );
+   wp_set_current_user( $id ); wp_set_auth_cookie( $id, false, is_ssl() );
+   do_action( 'wp_login', get_userdata( $id )->user_login, get_userdata( $id ) );
+  }
+  if ( 'login' === $view ) { delete_transient( $limit_key ); }
+  wp_safe_redirect( car_dealer_account_url() ); exit;
 }
 add_action( 'template_redirect', function () {
  $view = car_dealer_account_view();

@@ -1,0 +1,264 @@
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الترويسة (Header)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── عناصر القائمة الرئيسية ── */
+.main-navigation {
+  display: flex;
+  align-items: center;
+}
+
+.main-navigation ul {
+  display: flex;
+  align-items: center;
+  gap: var(--cd-spacing-lg);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.main-navigation ul li {
+  display: flex;
+  align-items: center;
+}
+
+.main-navigation ul li a {
+  color: var(--cd-color-primary);
+  font-weight: 700;
+  font-size: var(--cd-font-size-base);
+  padding: 0.35rem 0;
+  text-decoration: none;
+  transition: color var(--cd-transition-fast);
+  position: relative;
+}
+
+.main-navigation ul li a::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  right: 0;
+  width: 0;
+  height: 2px;
+  background: var(--cd-color-accent);
+  transition: width var(--cd-transition-base);
+}
+
+.main-navigation ul li a:hover {
+  color: var(--cd-color-accent);
+}
+
+.main-navigation ul li a:hover::after {
+  width: 100%;
+}
+
+/* ── روابط حساب المستخدم في القائمة ── */
+.main-navigation .cd-account-link,
+.main-navigation .cd-register-link,
+.main-navigation .cd-logout-link {
+  display: flex;
+  align-items: center;
+}
+
+.main-navigation .cd-account-link a,
+.main-navigation .cd-register-link a,
+.main-navigation .cd-logout-link a {
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--cd-radius-md);
+  font-size: var(--cd-font-size-sm);
+  transition: all var(--cd-transition-base);
+}
+
+.main-navigation .cd-account-link a {
+  color: var(--cd-color-primary);
+  border: 1px solid var(--cd-color-line);
+  background: var(--cd-color-surface);
+}
+
+.main-navigation .cd-account-link a:hover {
+  color: var(--cd-color-accent);
+  border-color: var(--cd-color-accent);
+  background: rgba(208, 43, 43, 0.05);
+}
+
+.main-navigation .cd-register-link a {
+  color: var(--cd-color-surface);
+  background: var(--cd-color-accent);
+  border: 1px solid var(--cd-color-accent);
+}
+
+.main-navigation .cd-register-link a:hover {
+  background: #b32222;
+  border-color: #b32222;
+}
+
+.main-navigation .cd-logout-link a {
+  color: var(--cd-color-primary);
+  border: 1px solid var(--cd-color-line);
+  background: var(--cd-color-surface);
+}
+
+.main-navigation .cd-logout-link a:hover {
+  color: var(--cd-color-accent);
+  border-color: var(--cd-color-accent);
+  background: rgba(208, 43, 43, 0.05);
+}
+
+/* ── رابط الرئيسية في القائمة ── */
+.main-navigation ul li.menu-item-home {
+  margin-inline-end: var(--cd-spacing-sm);
+}
+
+.main-navigation ul li.menu-item-home a {
+  font-weight: 800;
+  color: var(--cd-color-primary);
+}
+
+.main-navigation ul li.menu-item-home a::before {
+  content: "";
+  margin-inline-end: 0.35rem;
+  font-size: var(--cd-font-size-md);
+}
+
+/* ── فصل روابط القائمة ── */
+.main-navigation .menu-item-separator {
+  width: 1px;
+  height: 24px;
+  background: var(--cd-color-line);
+  margin: 0 0.25rem;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--cd-header-bg);
+  border-bottom: var(--cd-header-border);
+  backdrop-filter: blur(10px);
+}
+
+.header-content {
+  min-height: var(--cd-header-height);
+  display: flex;
+  align-items: center;
+  gap: var(--cd-spacing-lg);
+}
+
+.brand-section {
+  margin-left: auto;
+}
+
+.site-title {
+  color: var(--cd-color-primary);
+  font-size: var(--cd-font-size-lg);
+  font-weight: 800;
+}
+
+.custom-logo {
+  max-height: 48px;
+  width: auto;
+}
+
+.main-navigation ul {
+  display: flex;
+  align-items: center;
+  gap: var(--cd-spacing-lg);
+}
+
+.main-navigation a {
+  color: var(--cd-color-primary);
+  font-weight: 700;
+}
+
+.header-search {
+  display: flex;
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-md);
+  overflow: hidden;
+  background: var(--cd-color-surface);
+}
+
+.header-search input {
+  border: 0;
+  width: 160px;
+  padding: 0.55rem 0.75rem;
+  outline: 0;
+}
+
+.header-search button {
+  border: 0;
+  padding: 0 0.75rem;
+  cursor: pointer;
+  background: transparent;
+  color: var(--cd-color-primary);
+}
+
+.menu-toggle {
+  display: none;
+}
+
+.menu-toggle > span:not(.screen-reader-text) {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--cd-color-primary);
+  margin: 5px;
+}
+
+@media (max-width: 900px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .main-navigation {
+    display: none;
+    position: absolute;
+    top: var(--cd-header-height);
+    right: 0;
+    left: 0;
+    background: var(--cd-color-surface);
+    border-bottom: 1px solid var(--cd-color-line);
+    padding: var(--cd-spacing-md);
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .main-navigation.is-open {
+    display: block;
+  }
+
+  .main-navigation ul {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .main-navigation ul li {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .main-navigation ul li a {
+    padding: 0.5rem 1rem;
+    display: block;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .main-navigation ul li:last-child a {
+    border-bottom: none;
+  }
+
+  .main-navigation ul li a:hover {
+    color: var(--cd-color-accent);
+  }
+
+  .header-search {
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .header-search {
+    display: none;
+  }
+}

@@ -1,0 +1,474 @@
+/* ═══════════════════════════════════════════════════════
+    Car Dealer — صفحة تواصل معنا (Contact)
+    ═══════════════════════════════════════════════════════ */
+
+/* ── بطل صفحة التواصل ── */
+.ab-contact-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 350px;
+  display: grid;
+  align-items: center;
+  color: var(--cd-color-surface);
+  background: linear-gradient(135deg, rgba(5, 7, 11, 0.95), rgba(26, 54, 93, 0.85));
+  padding: var(--cd-spacing-3xl) 0;
+}
+
+.ab-contact-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 70% 30%, rgba(6, 105, 217, 0.2), transparent 50%);
+  pointer-events: none;
+}
+
+.ab-contact-hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.ab-contact-hero-text .eyebrow {
+  color: var(--ab-color-chrome);
+  font-size: var(--cd-font-size-sm);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--cd-spacing-md);
+}
+
+.ab-contact-hero h1 {
+  color: var(--cd-color-surface);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  margin: 0 0 var(--cd-spacing-md);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.ab-contact-hero-desc {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--cd-font-size-lg);
+  line-height: 1.8;
+  max-width: 600px;
+  margin: 0;
+}
+
+/* ── بطاقات التواصل ── */
+.ab-contact-grid-section {
+  padding: var(--cd-spacing-4xl) 0;
+  background: var(--cd-color-bg);
+}
+
+.ab-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--cd-spacing-lg);
+  margin-top: var(--cd-spacing-xl);
+}
+
+.ab-contact-info-card {
+  background: var(--cd-color-surface);
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-xl);
+  padding: var(--cd-spacing-2xl) var(--cd-spacing-lg);
+  text-align: center;
+  transition: all var(--cd-transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.ab-contact-info-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--cd-color-accent), var(--ab-color-blue));
+  transform: scaleX(0);
+  transition: transform var(--cd-transition-base);
+  transform-origin: left;
+}
+
+.ab-contact-info-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--cd-shadow-xl);
+  border-color: transparent;
+}
+
+.ab-contact-info-card:hover::before {
+  transform: scaleX(1);
+}
+
+.ab-contact-info-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--cd-radius-xl);
+  background: linear-gradient(135deg, rgba(6, 105, 217, 0.1), rgba(226, 29, 47, 0.1));
+  color: var(--cd-color-accent);
+  margin: 0 auto var(--cd-spacing-md);
+  transition: all var(--cd-transition-base);
+  border: 1px solid rgba(6, 105, 217, 0.15);
+}
+
+.ab-contact-info-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ab-contact-info-card:hover .ab-contact-info-icon {
+  background: linear-gradient(135deg, rgba(226, 29, 47, 0.15), rgba(6, 105, 217, 0.15));
+  border-color: rgba(226, 29, 47, 0.3);
+}
+
+.ab-contact-info-card h3 {
+  font-size: var(--cd-font-size-lg);
+  margin: 0 0 var(--cd-spacing-sm);
+  color: var(--cd-color-primary);
+}
+
+.ab-contact-info-card p {
+  margin: 0;
+  color: var(--cd-color-text);
+  font-size: var(--cd-font-size-md);
+}
+
+.ab-contact-info-card .ab-contact-detail-text {
+  color: var(--cd-color-muted);
+  font-size: var(--cd-font-size-sm);
+  margin-top: 0.25rem;
+}
+
+.ab-contact-link {
+  color: var(--cd-color-accent);
+  font-weight: 700;
+  transition: color var(--cd-transition-fast);
+}
+
+.ab-contact-link:hover {
+  color: var(--ab-color-red);
+}
+
+/* ── الخريطة ── */
+.ab-contact-map-section {
+  padding: var(--cd-spacing-4xl) 0;
+  background: var(--cd-color-bg);
+}
+
+.ab-contact-map-wrapper {
+  margin-top: var(--cd-spacing-xl);
+}
+
+.ab-contact-map-container {
+  position: relative;
+  border-radius: var(--cd-radius-xl);
+  overflow: hidden;
+  box-shadow: var(--cd-shadow-xl);
+  border: 1px solid var(--cd-color-line);
+}
+
+.ab-contact-map-container iframe {
+  width: 100%;
+  height: 450px;
+  display: block;
+  border: 0;
+}
+
+.ab-contact-map-overlay {
+  position: absolute;
+  bottom: 24px;
+  inset-inline-start: 24px;
+  inset-inline-end: 24px;
+  background: var(--cd-color-surface);
+  border-radius: var(--cd-radius-lg);
+  padding: var(--cd-spacing-lg);
+  box-shadow: var(--cd-shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--cd-spacing-md);
+}
+
+.ab-contact-map-info {
+  display: flex;
+  align-items: center;
+  gap: var(--cd-spacing-md);
+}
+
+.ab-contact-map-pin {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--cd-radius-full);
+  background: var(--cd-color-accent);
+  color: var(--cd-color-surface);
+  flex-shrink: 0;
+}
+
+.ab-contact-map-pin svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.ab-contact-map-info h3 {
+  font-size: var(--cd-font-size-md);
+  margin: 0 0 0.25rem;
+  color: var(--cd-color-primary);
+}
+
+.ab-contact-map-info p {
+  margin: 0;
+  color: var(--cd-color-muted);
+  font-size: var(--cd-font-size-sm);
+}
+
+/* ── نموذج التواصل ── */
+.ab-contact-form-section {
+  padding: var(--cd-spacing-4xl) 0;
+}
+
+.ab-contact-form-wrapper {
+  max-width: 600px;
+  margin: var(--cd-spacing-xl) auto 0;
+}
+
+.ab-contact-form-wrapper .section-heading h2 {
+  font-size: var(--cd-font-size-2xl);
+}
+
+/* ── الأسئلة الشائعة ── */
+.ab-faq-section {
+  padding: var(--cd-spacing-4xl) 0;
+  background: var(--cd-color-bg);
+}
+
+.ab-faq-list {
+  max-width: 800px;
+  margin: var(--cd-spacing-xl) auto 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ab-faq-item {
+  background: var(--cd-color-surface);
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-lg);
+  overflow: hidden;
+  transition: all var(--cd-transition-base);
+}
+
+.ab-faq-item:hover {
+  border-color: var(--cd-color-accent);
+  box-shadow: var(--cd-shadow-md);
+}
+
+.ab-faq-question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cd-spacing-md);
+  padding: var(--cd-spacing-lg) var(--cd-spacing-xl);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--cd-font-family);
+  font-size: var(--cd-font-size-md);
+  font-weight: 700;
+  color: var(--cd-color-primary);
+  text-align: right;
+  transition: all var(--cd-transition-fast);
+}
+
+.ab-faq-question:hover {
+  background: var(--cd-color-bg);
+}
+
+.ab-faq-question.is-open {
+  color: var(--cd-color-accent);
+  background: rgba(208, 43, 43, 0.03);
+}
+
+.ab-faq-question span {
+  flex: 1;
+}
+
+.ab-faq-icon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--cd-transition-base);
+  flex-shrink: 0;
+}
+
+.ab-faq-question.is-open .ab-faq-icon {
+  transform: rotate(180deg);
+}
+
+.ab-faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.ab-faq-answer p {
+  padding: 0 var(--cd-spacing-xl) var(--cd-spacing-lg);
+  margin: 0;
+  color: var(--cd-color-muted);
+  line-height: 1.8;
+  font-size: var(--cd-font-size-md);
+}
+
+/* ── وسائل التواصل الاجتماعي ── */
+.ab-social-section {
+  padding: var(--cd-spacing-4xl) 0;
+  background: var(--ab-color-black);
+  color: var(--cd-color-surface);
+}
+
+.ab-social-inner {
+  text-align: center;
+}
+
+.ab-social-content h2 {
+  color: var(--cd-color-surface);
+  font-size: var(--cd-font-size-2xl);
+  margin-bottom: var(--cd-spacing-sm);
+}
+
+.ab-social-content p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-md);
+  margin-bottom: var(--cd-spacing-xl);
+}
+
+.ab-social-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--cd-spacing-md);
+}
+
+.ab-social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--cd-radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cd-color-surface);
+  font-weight: 700;
+  font-size: var(--cd-font-size-md);
+  text-decoration: none;
+  transition: all var(--cd-transition-base);
+}
+
+.ab-social-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.ab-social-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.ab-social-fb:hover {
+  background: #1877F2;
+  border-color: #1877F2;
+}
+
+.ab-social-tw:hover {
+  background: #1DA1F2;
+  border-color: #1DA1F2;
+}
+
+.ab-social-insta:hover {
+  background: linear-gradient(45deg, #833AB4, #FD1D1D, #F77737);
+  border-color: transparent;
+}
+
+.ab-social-wa:hover {
+  background: #25D366;
+  border-color: #25D366;
+}
+
+.ab-social-yt:hover {
+  background: #FF0000;
+  border-color: #FF0000;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .ab-contact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .ab-contact-hero {
+    min-height: auto;
+    padding: var(--cd-spacing-3xl) 0;
+  }
+
+  .ab-contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ab-contact-form-wrapper {
+    padding-inline: var(--cd-spacing-sm);
+  }
+
+  .ab-social-btn {
+    padding: 0.6rem 1rem;
+    font-size: var(--cd-font-size-sm);
+  }
+
+  .ab-social-links {
+    gap: 0.5rem;
+  }
+
+  .ab-faq-question {
+    padding: var(--cd-spacing-md) var(--cd-spacing-lg);
+  }
+
+  /* ── خريطة متجاوبة ── */
+  .ab-contact-map-container iframe {
+    height: 300px;
+  }
+
+  .ab-contact-map-overlay {
+    position: static;
+    flex-direction: column;
+    text-align: center;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: var(--cd-spacing-sm);
+  }
+
+  .ab-contact-map-info {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ab-contact-map-pin {
+    width: 40px;
+    height: 40px;
+  }
+
+  .ab-contact-map-pin svg {
+    width: 20px;
+    height: 20px;
+  }
+}

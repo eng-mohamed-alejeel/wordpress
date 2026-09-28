@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الشبكة والحاوية (Grid & Container)
+   ═══════════════════════════════════════════════════════ */
+
+.container {
+  width: 100%;
+  max-width: var(--cd-container-max);
+  margin: 0 auto;
+  padding-inline: var(--cd-container-padding);
+}
+
+.site-main {
+  min-height: 60vh;
+}
+
+.archive-content {
+  padding: var(--cd-spacing-3xl) 0;
+}
+
+.car-single {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: var(--cd-spacing-2xl);
+  padding-top: var(--cd-spacing-3xl);
+  padding-bottom: var(--cd-spacing-3xl);
+}
+
+.car-single-media img {
+  width: 100%;
+  border-radius: var(--cd-radius-lg);
+}
+
+.car-single-content h1 {
+  margin: 0.25rem 0 var(--cd-spacing-md);
+}
+
+.car-single-price {
+  color: var(--cd-color-accent);
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.car-specification {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.car-specification div {
+  padding: var(--cd-spacing-md);
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-md);
+  background: var(--cd-color-surface);
+}
+
+.car-specification dt {
+  color: var(--cd-color-muted);
+  font-size: var(--cd-font-size-sm);
+}
+
+.car-specification dd {
+  margin: 0.25rem 0 0;
+  font-weight: 700;
+}
+
+.car-description {
+  margin-top: var(--cd-spacing-xl);
+}
+
+.car-single-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.cd-single-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cd-spacing-lg);
+  padding-bottom: var(--cd-spacing-3xl);
+}
+
+.cd-tool {
+  background: var(--cd-color-surface);
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-lg);
+  padding: var(--cd-spacing-lg);
+}
+
+@media (max-width: 900px) {
+  .car-single {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .car-single,
+  .car-specification,
+  .cd-single-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .container {
+    padding-right: var(--cd-spacing-md);
+    padding-left: var(--cd-spacing-md);
+  }
+}

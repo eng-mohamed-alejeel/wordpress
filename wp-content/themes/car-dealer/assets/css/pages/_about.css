@@ -1,0 +1,462 @@
+/* ═══════════════════════════════════════════════════════
+    Car Dealer — صفحة من نحن (About)
+    ═══════════════════════════════════════════════════════ */
+
+/* ── بطل صفحة من نحن ── */
+.ab-about-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 500px;
+  display: grid;
+  align-items: center;
+  color: var(--cd-color-surface);
+  background: linear-gradient(135deg, rgba(5, 7, 11, 0.95), rgba(26, 54, 93, 0.9), rgba(6, 105, 217, 0.8));
+  padding: var(--cd-spacing-4xl) 0;
+}
+
+.ab-about-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(226, 29, 47, 0.15), transparent 50%),
+              radial-gradient(circle at 20% 80%, rgba(6, 105, 217, 0.1), transparent 50%);
+  pointer-events: none;
+}
+
+.ab-about-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 0.5fr);
+  gap: var(--cd-spacing-2xl);
+  align-items: center;
+}
+
+.ab-about-hero-text .eyebrow {
+  color: var(--ab-color-chrome);
+  font-size: var(--cd-font-size-sm);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--cd-spacing-md);
+}
+
+.ab-about-hero h1 {
+  color: var(--cd-color-surface);
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.15;
+  margin: 0 0 var(--cd-spacing-lg);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.ab-about-hero-desc {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--cd-font-size-lg);
+  line-height: 1.8;
+  margin-bottom: var(--cd-spacing-xl);
+  max-width: 600px;
+}
+
+.ab-about-hero-panel {
+  padding: var(--cd-spacing-xl);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--cd-radius-xl);
+  background: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  transition: all var(--cd-transition-slow);
+}
+
+.ab-about-hero-panel:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-4px);
+}
+
+.ab-about-hero-panel .ab-panel-label {
+  font-size: var(--cd-font-size-sm);
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ab-about-hero-panel .ab-panel-number {
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+  margin: var(--cd-spacing-xs) 0;
+  color: var(--cd-color-surface);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ab-about-hero-panel .ab-panel-sub {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-sm);
+}
+
+/* ── رسالة ورؤية ── */
+.ab-mission-vision {
+  padding: var(--cd-spacing-4xl) 0;
+  background: var(--cd-color-bg);
+}
+
+.ab-mission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--cd-spacing-2xl);
+  margin-top: var(--cd-spacing-xl);
+}
+
+.ab-mission-card {
+  padding: var(--cd-spacing-3xl);
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-xl);
+  background: var(--cd-color-surface);
+  transition: all var(--cd-transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.ab-mission-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: var(--cd-radius-xl) 0 0 var(--cd-radius-xl);
+}
+
+.ab-mission-mission::before {
+  background: linear-gradient(180deg, var(--cd-color-accent), var(--ab-color-red));
+}
+
+.ab-mission-vision::before {
+  background: linear-gradient(180deg, var(--ab-color-blue), var(--cd-color-secondary));
+}
+
+.ab-mission-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--cd-shadow-lg);
+  border-color: transparent;
+}
+
+.ab-mission-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--cd-radius-xl);
+  background: var(--cd-color-bg);
+  margin-bottom: var(--cd-spacing-lg);
+  transition: all var(--cd-transition-base);
+}
+
+.ab-mission-icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: var(--cd-color-accent);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ab-mission-mission .ab-mission-icon {
+  background: rgba(208, 43, 43, 0.08);
+}
+
+.ab-mission-mission .ab-mission-icon svg {
+  color: var(--cd-color-accent);
+}
+
+.ab-mission-vision .ab-mission-icon {
+  background: rgba(6, 105, 217, 0.08);
+}
+
+.ab-mission-vision .ab-mission-icon svg {
+  color: var(--ab-color-blue);
+}
+
+.ab-mission-card h3 {
+  font-size: var(--cd-font-size-xl);
+  margin: 0 0 var(--cd-spacing-md);
+  color: var(--cd-color-primary);
+}
+
+.ab-mission-card p {
+  color: var(--cd-color-muted);
+  line-height: 1.8;
+  margin: 0;
+  font-size: var(--cd-font-size-md);
+}
+
+/* ── الإحصائيات ── */
+.ab-stats-section {
+  padding: var(--cd-spacing-4xl) 0;
+  background: var(--ab-color-black);
+  color: var(--cd-color-surface);
+}
+
+.ab-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--cd-spacing-xl);
+  margin-top: var(--cd-spacing-2xl);
+}
+
+.ab-stat-item {
+  text-align: center;
+  padding: var(--cd-spacing-xl);
+}
+
+.ab-stat-number {
+  display: block;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  color: var(--cd-color-surface);
+  line-height: 1.1;
+  margin-bottom: var(--cd-spacing-sm);
+}
+
+.ab-stat-number::after {
+  content: "+";
+  color: var(--ab-color-red);
+  font-weight: 700;
+}
+
+.ab-stat-label {
+  display: block;
+  font-size: var(--cd-font-size-md);
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: var(--cd-spacing-xs);
+}
+
+/* ── القيم والمزايا ── */
+.ab-values-section {
+  padding: var(--cd-spacing-4xl) 0;
+}
+
+/* ── الفريق ── */
+.ab-team-section {
+  padding: var(--cd-spacing-4xl) 0;
+  background: var(--cd-color-bg);
+}
+
+.ab-team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--cd-spacing-lg);
+  margin-top: var(--cd-spacing-xl);
+}
+
+.ab-team-card {
+  background: var(--cd-color-surface);
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-xl);
+  padding: var(--cd-spacing-2xl) var(--cd-spacing-lg);
+  text-align: center;
+  transition: all var(--cd-transition-base);
+  box-shadow: var(--cd-shadow-sm);
+}
+
+.ab-team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--cd-shadow-xl);
+  border-color: transparent;
+}
+
+.ab-team-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto var(--cd-spacing-lg);
+}
+
+.ab-team-avatar svg {
+  width: 36px;
+  height: 36px;
+  stroke: var(--cd-color-surface);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ab-team-card h3 {
+  font-size: var(--cd-font-size-lg);
+  margin: 0 0 0.25rem;
+  color: var(--cd-color-primary);
+}
+
+.ab-team-role {
+  color: var(--cd-color-accent);
+  font-weight: 700;
+  font-size: var(--cd-font-size-sm);
+  margin: 0 0 0.5rem;
+}
+
+.ab-team-experience {
+  color: var(--cd-color-muted);
+  font-size: var(--cd-font-size-sm);
+  margin: 0 0 var(--cd-spacing-md);
+  line-height: 1.5;
+}
+
+.ab-team-social {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.ab-team-social a {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--cd-radius-full);
+  border: 1px solid var(--cd-color-line);
+  color: var(--cd-color-muted);
+  transition: all var(--cd-transition-fast);
+}
+
+.ab-team-social a svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ab-team-social a:hover {
+  background: var(--cd-color-accent);
+  border-color: var(--cd-color-accent);
+  color: var(--cd-color-surface);
+}
+
+/* ── آراء العملاء ── */
+.ab-testimonials-section {
+  padding: var(--cd-spacing-4xl) 0;
+}
+
+.cd-testimonial {
+  padding: var(--cd-spacing-2xl);
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-xl);
+  background: var(--cd-color-surface);
+  transition: all var(--cd-transition-base);
+}
+
+.cd-testimonial:hover {
+  box-shadow: var(--cd-shadow-lg);
+  transform: translateY(-4px);
+}
+
+.cd-testimonial-stars {
+  margin-bottom: var(--cd-spacing-md);
+}
+
+.star-icon {
+  display: inline-flex;
+  gap: 0.2rem;
+  color: #ffb703;
+}
+
+.star-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.cd-testimonial blockquote {
+  margin: 0 0 var(--cd-spacing-lg);
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.cd-testimonial blockquote p {
+  font-size: var(--cd-font-size-md);
+  color: var(--cd-color-text);
+  line-height: 1.8;
+  margin: 0;
+  font-style: italic;
+}
+
+.cd-testimonial-author {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: var(--cd-spacing-md);
+  border-top: 1px solid var(--cd-color-line);
+}
+
+.cd-testimonial-author strong {
+  color: var(--cd-color-primary);
+  font-size: var(--cd-font-size-md);
+}
+
+.cd-testimonial-author span {
+  color: var(--cd-color-muted);
+  font-size: var(--cd-font-size-sm);
+}
+
+/* ── دعوة للعمل ── */
+/* يستخدم نفس أسلوب .ab-cta-v2 من main.css */
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .ab-mission-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ab-about-hero-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .ab-about-hero-desc {
+    margin-inline: auto;
+  }
+
+  .ab-about-hero-panel {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .ab-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--cd-spacing-md);
+  }
+
+  .ab-team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .ab-about-hero {
+    min-height: auto;
+    padding: var(--cd-spacing-3xl) 0;
+  }
+
+  .ab-stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--cd-spacing-lg);
+  }
+
+  .ab-team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ab-mission-card {
+    padding: var(--cd-spacing-xl);
+  }
+
+  .ab-about-hero-panel {
+    max-width: 100%;
+  }
+}

@@ -1,0 +1,98 @@
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — إعادة تعيين (Reset)
+   ═══════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--cd-color-bg);
+  color: var(--cd-color-text);
+  font-family: var(--cd-font-family);
+  font-size: var(--cd-font-size-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: var(--cd-color-accent);
+  text-decoration: none;
+  transition: color var(--cd-transition-base), background-color var(--cd-transition-base), border-color var(--cd-transition-base);
+}
+
+a:hover {
+  color: var(--cd-color-primary);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--cd-color-primary);
+  font-family: var(--cd-font-family);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 var(--cd-spacing-md);
+}
+
+p {
+  margin: 0 0 var(--cd-spacing-md);
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--cd-color-line);
+  margin: var(--cd-spacing-xl) 0;
+}
+
+/* ── إمكانية الوصول ── */
+.screen-reader-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  word-wrap: normal;
+}
+
+/* ── التركيز ── */
+:focus-visible {
+  outline: 2px solid var(--cd-color-accent);
+  outline-offset: 2px;
+}

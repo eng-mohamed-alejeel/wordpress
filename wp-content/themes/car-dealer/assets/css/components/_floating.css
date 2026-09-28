@@ -16,18 +16,12 @@
   color: #fff;
   box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
   transition: transform var(--cd-transition-base), box-shadow var(--cd-transition-base);
-  text-decoration: none;
 }
 
 .ab-float-wa:hover {
   transform: scale(1.1);
   box-shadow: 0 12px 32px rgba(37, 211, 102, 0.5);
   color: #fff;
-}
-
-.ab-float-wa svg {
-  width: 28px;
-  height: 28px;
 }
 
 .ab-float-wa-tooltip {
@@ -54,11 +48,10 @@
   inset: -4px;
   border-radius: 50%;
   border: 2px solid #25d366;
-  animation: ab-wa-pulse 2s ease-out infinite;
-  pointer-events: none;
+  animation: ab-pulse 2s ease-out infinite;
 }
 
-@keyframes ab-wa-pulse {
+@keyframes ab-pulse {
   0% { transform: scale(1); opacity: 0.8; }
   100% { transform: scale(1.6); opacity: 0; }
 }
@@ -79,7 +72,6 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--cd-transition-base), transform var(--cd-transition-base);
-  text-decoration: none;
 }
 
 .ab-back-top.is-visible {
@@ -90,9 +82,4 @@
 .ab-back-top:hover {
   transform: translateY(-4px);
   color: #fff;
-}
-
-.ab-back-top svg {
-  width: 20px;
-  height: 20px;
 }

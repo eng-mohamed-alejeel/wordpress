@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — المتغيرات الموحدة (Unified Variables)
+   تُستورد من جميع ملفات CSS
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  /* ── الألوان الأساسية (cd-color-) ── */
+  --cd-color-primary: #1A365D;      /* أزرق داكن */
+  --cd-color-accent: #D02B2B;       /* أحمر تفاعلي */
+  --cd-color-secondary: #2B4C7E;    /* كحلي باهت */
+  --cd-color-bg: #F3F4F6;           /* خلفية رمادية فاتحة */
+  --cd-color-surface: #FFFFFF;       /* سطح أبيض */
+  --cd-color-muted: #627D98;        /* نص ثانوي */
+  --cd-color-line: #D9E2EC;          /* حدود */
+  --cd-color-text: #1E293B;          /* نص أساسي */
+
+  /* ── ألوان AUTO BRANDS (ab-color-) ── */
+  --ab-color-blue: #0669D9;
+  --ab-color-red: #E21D2F;
+  --ab-color-black: #05070B;
+  --ab-color-ink: #111827;
+  --ab-color-metal: #D8DDE6;
+  --ab-color-chrome: linear-gradient(135deg, #ffffff 0%, #b9c3d0 34%, #f7f9fc 52%, #7d8794 100%);
+
+  /* ── الألوان الدلالية ── */
+  --cd-color-success: #2F855A;
+  --cd-color-warning: #D69E2E;
+  --cd-color-error: #E53E3E;
+  --cd-color-info: #3182CE;
+
+  /* ── الخطوط ── */
+  --cd-font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --cd-font-size-xs: 0.75rem;
+  --cd-font-size-sm: 0.875rem;
+  --cd-font-size-base: 1rem;
+  --cd-font-size-md: 1.125rem;
+  --cd-font-size-lg: 1.25rem;
+  --cd-font-size-xl: 1.5rem;
+  --cd-font-size-2xl: 2rem;
+  --cd-font-size-3xl: 2.5rem;
+  --cd-font-size-4xl: 3rem;
+  --cd-font-size-5xl: 4rem;
+
+  /* ── المسافات ── */
+  --cd-spacing-xs: 0.25rem;
+  --cd-spacing-sm: 0.5rem;
+  --cd-spacing-md: 1rem;
+  --cd-spacing-lg: 1.5rem;
+  --cd-spacing-xl: 2rem;
+  --cd-spacing-2xl: 3rem;
+  --cd-spacing-3xl: 4rem;
+  --cd-spacing-4xl: 5rem;
+
+  /* ── الانحناءات ── */
+  --cd-radius-sm: 6px;
+  --cd-radius-md: 8px;
+  --cd-radius-lg: 12px;
+  --cd-radius-xl: 16px;
+  --cd-radius-full: 999px;
+
+  /* ── الظلال ── */
+  --cd-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --cd-shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+  --cd-shadow-lg: 0 18px 50px rgba(15, 23, 42, 0.09);
+  --cd-shadow-xl: 0 28px 90px rgba(0, 0, 0, 0.45);
+
+  /* ── الانتقالات ── */
+  --cd-transition-fast: 0.15s ease;
+  --cd-transition-base: 0.2s ease;
+  --cd-transition-slow: 0.3s ease;
+
+  /* ── حدود ── */
+  --cd-border-width: 1px;
+  --cd-border-style: solid;
+
+  /* ── الترويسة ── */
+  --cd-header-height: 76px;
+  --cd-header-bg: rgba(255, 255, 255, 0.96);
+  --cd-header-border: 1px solid var(--cd-color-line);
+
+  /* ── الحاوية ── */
+  --cd-container-max: 1200px;
+  --cd-container-padding: 15px;
+
+  /* ── نقاط التوقف ── */
+  --cd-breakpoint-sm: 600px;
+  --cd-breakpoint-md: 900px;
+  --cd-breakpoint-lg: 1200px;
+}

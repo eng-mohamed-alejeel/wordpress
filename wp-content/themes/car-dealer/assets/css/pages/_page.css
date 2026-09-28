@@ -1,0 +1,164 @@
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الصفحات العامة (Page)
+   ═══════════════════════════════════════════════════════ */
+
+.content-area {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--cd-spacing-3xl) var(--cd-spacing-md);
+}
+
+/* ── عرض المحتوى في صفحات القوالب المخصصة ── */
+.page-template-about .content-area,
+.page-template-contact .content-area {
+  max-width: 100%;
+  padding: 0;
+}
+
+.page-template-about .entry-header,
+.page-template-contact .entry-header {
+  display: none;
+}
+
+.page-template-about .entry-content,
+.page-template-contact .entry-content {
+  max-width: 100%;
+  padding: 0;
+}
+
+.entry-header {
+  margin-bottom: var(--cd-spacing-xl);
+  padding-bottom: var(--cd-spacing-lg);
+  border-bottom: 1px solid var(--cd-color-line);
+}
+
+.entry-title {
+  font-size: var(--cd-font-size-3xl);
+  color: var(--cd-color-primary);
+  margin: 0;
+}
+
+.entry-image {
+  margin-bottom: var(--cd-spacing-xl);
+  border-radius: var(--cd-radius-lg);
+  overflow: hidden;
+}
+
+.entry-image img {
+  width: 100%;
+  height: auto;
+}
+
+.entry-content {
+  font-size: var(--cd-font-size-md);
+  line-height: 1.9;
+  color: var(--cd-color-text);
+}
+
+.entry-content p {
+  margin-bottom: var(--cd-spacing-md);
+}
+
+.entry-content h2,
+.entry-content h3,
+.entry-content h4 {
+  margin-top: var(--cd-spacing-xl);
+  margin-bottom: var(--cd-spacing-md);
+}
+
+.entry-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--cd-radius-md);
+}
+
+.entry-content blockquote {
+  margin: var(--cd-spacing-xl) 0;
+  padding: var(--cd-spacing-lg);
+  border-inline-start: 4px solid var(--cd-color-accent);
+  background: var(--cd-color-bg);
+  border-radius: 0 var(--cd-radius-md) var(--cd-radius-md) 0;
+}
+
+.entry-content ul,
+.entry-content ol {
+  margin: var(--cd-spacing-md) 0;
+  padding-inline-start: 1.5rem;
+}
+
+.entry-content ul {
+  list-style: disc;
+}
+
+.entry-content ol {
+  list-style: decimal;
+}
+
+.entry-footer {
+  margin-top: var(--cd-spacing-2xl);
+  padding-top: var(--cd-spacing-lg);
+  border-top: 1px solid var(--cd-color-line);
+  font-size: var(--cd-font-size-sm);
+  color: var(--cd-color-muted);
+}
+
+.edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: var(--cd-spacing-md);
+  color: var(--cd-color-accent);
+  font-size: var(--cd-font-size-sm);
+}
+
+.edit-link:hover {
+  color: var(--cd-color-primary);
+}
+
+.page-links {
+  margin-top: var(--cd-spacing-xl);
+  padding-top: var(--cd-spacing-lg);
+  border-top: 1px solid var(--cd-color-line);
+  font-weight: 600;
+}
+
+.page-links a,
+.page-links span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 0.6rem;
+  border-radius: var(--cd-radius-sm);
+  border: 1px solid var(--cd-color-line);
+  background: var(--cd-color-surface);
+  color: var(--cd-color-text);
+  text-decoration: none;
+  transition: all var(--cd-transition-fast);
+}
+
+.page-links a:hover {
+  border-color: var(--cd-color-accent);
+  color: var(--cd-color-accent);
+}
+
+.page-links .current {
+  background: var(--cd-color-accent);
+  border-color: var(--cd-color-accent);
+  color: var(--cd-color-surface);
+}
+
+.custom-page-content {
+  margin-top: var(--cd-spacing-xl);
+}
+
+@media (max-width: 600px) {
+  .content-area {
+    padding: var(--cd-spacing-xl) var(--cd-spacing-sm);
+  }
+
+  .entry-title {
+    font-size: var(--cd-font-size-2xl);
+  }
+}
