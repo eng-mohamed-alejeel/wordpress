@@ -1,17 +1,54 @@
 /* ═══════════════════════════════════════════════════════
-   Car Dealer — صفحة الحساب (Account)
-   ═══════════════════════════════════════════════════════ */
+    Car Dealer — صفحة الحساب (Account)
+    ═══════════════════════════════════════════════════════ */
 
+/* ─── روابط القائمة العلوية (تسجيل الدخول / تسجيل الخروج) ─── */
+.main-navigation .cd-account-link,
+.main-navigation .cd-logout-link {
+  list-style: none;
+}
+
+.main-navigation .cd-account-link a,
+.main-navigation .cd-logout-link a {
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--cd-radius-md);
+  font-size: var(--cd-font-size-sm);
+  font-weight: 700;
+  transition: all var(--cd-transition-base);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.main-navigation .cd-account-link a {
+  color: var(--cd-color-primary);
+  border: 1px solid var(--cd-color-line);
+  background: var(--cd-color-surface);
+  white-space: nowrap;
+}
+
+.main-navigation .cd-account-link a:hover {
+  color: var(--cd-color-accent);
+  border-color: var(--cd-color-accent);
+  background: rgba(208, 43, 43, 0.05);
+}
+
+.main-navigation .cd-logout-link a {
+  color: var(--cd-color-primary);
+  border: 1px solid var(--cd-color-line);
+  background: var(--cd-color-surface);
+}
+
+.main-navigation .cd-logout-link a:hover {
+  color: var(--cd-color-accent);
+  border-color: var(--cd-color-accent);
+  background: rgba(208, 43, 43, 0.05);
+}
+
+/* ─── تنسيقات إضافية للحساب ─── */
 .main-navigation .cd-account-link a {
   white-space: nowrap;
   color: var(--cd-color-primary);
-}
-
-.main-navigation .cd-register-link a {
-  background: var(--cd-color-accent);
-  color: var(--cd-color-surface);
-  border-radius: var(--cd-radius-md);
-  padding: 9px 16px;
 }
 
 .cd-account {
@@ -50,6 +87,114 @@
 
 .cd-auth-form {
   padding: 32px;
+}
+
+/* ─── موافقة على سياسة الخصوصية ─── */
+.cd-auth-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0 20px;
+  font-size: var(--cd-font-size-sm);
+  cursor: pointer;
+  line-height: 1.6;
+  color: var(--cd-color-muted);
+}
+
+.cd-auth-consent input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border: 2px solid var(--cd-color-line);
+  border-radius: 6px;
+  background: var(--cd-color-surface);
+  cursor: pointer;
+  transition: all var(--cd-transition-base);
+  position: relative;
+  margin-top: 2px;
+}
+
+.cd-auth-consent input[type="checkbox"]:hover {
+  border-color: var(--cd-color-accent);
+}
+
+.cd-auth-consent input[type="checkbox"]:checked {
+  background: var(--cd-color-accent);
+  border-color: var(--cd-color-accent);
+}
+
+.cd-auth-consent input[type="checkbox"]:checked::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--cd-color-surface);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cd-auth-consent input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--cd-color-accent);
+  outline-offset: 2px;
+}
+
+.cd-auth-consent span a {
+  color: var(--cd-color-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cd-auth-consent span a:first-child {
+  color: var(--cd-color-accent);
+}
+
+.cd-auth-consent span a:last-child {
+  color: var(--cd-color-primary);
+}
+
+.cd-auth-consent span a:hover {
+  color: #b32222;
+}
+
+.cd-auth-consent span a:last-child:hover {
+  color: var(--cd-color-accent);
+}
+
+/* ─── تذييل نموذج تسجيل الدخول ─── */
+.cd-auth-footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cd-color-line);
+  text-align: center;
+}
+
+.cd-auth-forgot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cd-color-accent);
+  font-size: var(--cd-font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: var(--cd-radius-md);
+  transition: all var(--cd-transition-base);
+  position: relative;
+}
+
+.cd-auth-forgot::before {
+  content: "🔒";
+  font-size: 14px;
+}
+
+.cd-auth-forgot:hover {
+  color: #b32222;
+  background: rgba(208, 43, 43, 0.08);
+  text-decoration: underline;
 }
 
 .cd-auth-tabs {
@@ -142,27 +287,192 @@
 
 .cd-account-tools {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 .cd-account-tools a {
-  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 24px 20px;
   border: 1px solid var(--cd-color-line);
-  border-radius: var(--cd-radius-md);
+  border-radius: var(--cd-radius-lg);
   color: var(--cd-color-primary);
   font-weight: 600;
+  text-decoration: none;
   transition: all var(--cd-transition-base);
+  line-height: 1.6;
+  min-height: 80px;
+}
+
+.cd-account-tools a strong {
+  font-size: var(--cd-font-size-base);
+  color: var(--cd-color-primary);
+}
+
+.cd-account-tools a span {
+  font-size: var(--cd-font-size-sm);
+  color: var(--cd-color-muted);
+  font-weight: 400;
+  line-height: 1.5;
 }
 
 .cd-account-tools a:hover {
   border-color: var(--cd-color-accent);
   color: var(--cd-color-accent);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
+.cd-account-tools a:hover strong {
+  color: var(--cd-color-accent);
+}
+
+.cd-account-tools a:hover span {
+  color: var(--cd-color-accent);
+  opacity: 0.8;
+}
+
+/* ─── responsive للروابط في القائمة على الجوال ─── */
 @media (max-width: 900px) {
+  .main-navigation .cd-account-link,
+  .main-navigation .cd-logout-link {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .main-navigation .cd-account-link a,
+  .main-navigation .cd-logout-link a {
+    display: block;
+    padding: 0.5rem 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .main-navigation .cd-account-link:last-child a,
+  .main-navigation .cd-logout-link:last-child a {
+    border-bottom: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .main-navigation .cd-account-link a,
+  .main-navigation .cd-logout-link a {
+    font-size: var(--cd-font-size-base);
+    padding: 0.75rem 1rem;
+  }
+  
+  .cd-auth-forgot {
+    font-size: var(--cd-font-size-base);
+    padding: 10px 20px;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .cd-auth-consent {
+    flex-direction: row;
+    font-size: var(--cd-font-size-base);
+    gap: 8px;
+  }
+  
+  /* ─── تحسين card على الجوال ─── */
   .cd-auth-card {
     grid-template-columns: 1fr;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    overflow: visible;
+  }
+  
+  .cd-auth-intro {
+    padding: 32px 20px;
+    order: -1;
+    text-align: center;
+  }
+  
+  .cd-auth-intro h1 {
+    font-size: var(--cd-font-size-2xl);
+    margin-bottom: var(--cd-spacing-sm);
+  }
+  
+  .cd-auth-intro p {
+    opacity: 0.9;
+    font-size: var(--cd-font-size-sm);
+    margin-bottom: var(--cd-spacing-md);
+  }
+  
+  .cd-auth-intro a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 10px 24px;
+    border-radius: var(--cd-radius-md);
+    font-weight: 700;
+    font-size: var(--cd-font-size-sm);
+    margin-top: var(--cd-spacing-sm);
+  }
+  
+  .cd-auth-intro a:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+  
+  .cd-auth-form {
+    padding: 24px 20px;
+    order: 1;
+  }
+}
+
+/* ─── أجهزة لوحيّة ─── */
+@media (min-width: 601px) and (max-width: 900px) {
+  .cd-auth-card {
+    grid-template-columns: 1fr;
+    max-width: 600px;
+    margin: var(--cd-spacing-xl) auto;
+    border-radius: var(--cd-radius-xl);
+  }
+  
+  .cd-auth-intro {
+    padding: 40px var(--cd-spacing-lg);
+    text-align: center;
+  }
+  
+  .cd-auth-intro h1 {
+    font-size: var(--cd-font-size-2xl);
+  }
+  
+  .cd-auth-intro p {
+    font-size: var(--cd-font-size-base);
+    max-width: 500px;
+    margin-inline: auto;
+  }
+  
+  .cd-auth-form {
+    padding: var(--cd-spacing-xl) var(--cd-spacing-lg);
+  }
+}
+
+/* ─── responsive لأدوات لوحة التحكم ─── */
+@media (max-width: 600px) {
+  .cd-account-tools {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .cd-account-tools a {
+    padding: 20px 16px;
+    min-height: 70px;
+  }
+  
+  .cd-account-tools a strong {
+    font-size: var(--cd-font-size-base);
+  }
+  
+  .cd-account-tools a span {
+    font-size: var(--cd-font-size-xs);
   }
 }

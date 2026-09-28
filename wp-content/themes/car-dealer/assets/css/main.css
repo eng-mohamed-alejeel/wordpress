@@ -1287,16 +1287,14 @@ svg {
   width: 100%;
 }
 
-/* â”€â”€ Ø±ÙˆØ§Ø¨Ø· Ø­Ø³Ø§Ø¨ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ÙÙŠ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© â”€â”€ */
+/* ─── روابط القائمة العلوية (تسجيل الدخول / تسجيل الخروج) ─── */
 .main-navigation .cd-account-link,
-.main-navigation .cd-register-link,
 .main-navigation .cd-logout-link {
   display: flex;
   align-items: center;
 }
 
 .main-navigation .cd-account-link a,
-.main-navigation .cd-register-link a,
 .main-navigation .cd-logout-link a {
   padding: 0.5rem 1.1rem;
   border-radius: var(--cd-radius-md);
@@ -1314,17 +1312,6 @@ svg {
   color: var(--cd-color-accent);
   border-color: var(--cd-color-accent);
   background: rgba(208, 43, 43, 0.05);
-}
-
-.main-navigation .cd-register-link a {
-  color: var(--cd-color-surface);
-  background: var(--cd-color-accent);
-  border: 1px solid var(--cd-color-accent);
-}
-
-.main-navigation .cd-register-link a:hover {
-  background: #b32222;
-  border-color: #b32222;
 }
 
 .main-navigation .cd-logout-link a {

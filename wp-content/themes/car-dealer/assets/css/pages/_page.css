@@ -162,3 +162,128 @@
     font-size: var(--cd-font-size-2xl);
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+    Car Dealer — صفحات الخصوصية والشروط
+    ═══════════════════════════════════════════════════════ */
+
+/* ─── تذييل الصفحات ─── */
+.page-privacy .entry-header,
+.page-terms .entry-header {
+  text-align: center;
+  padding: var(--cd-spacing-3xl) var(--cd-spacing-lg) var(--cd-spacing-2xl);
+  background: linear-gradient(135deg, var(--cd-color-primary), var(--cd-color-secondary));
+  border-radius: var(--cd-radius-xl);
+  margin-bottom: var(--cd-spacing-3xl);
+  color: var(--cd-color-surface);
+}
+
+.page-privacy .entry-title,
+.page-terms .entry-title {
+  color: var(--cd-color-surface);
+  font-size: var(--cd-font-size-3xl);
+}
+
+.page-privacy .entry-date,
+.page-terms .entry-date {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--cd-font-size-sm);
+  margin-top: var(--cd-spacing-sm);
+  display: block;
+}
+
+/* ─── محتوى الخصوصية والشروط ─── */
+.page-privacy .entry-content,
+.page-terms .entry-content {
+  font-size: var(--cd-font-size-base);
+  line-height: 2;
+  direction: rtl;
+}
+
+.page-privacy .entry-content h3,
+.page-terms .entry-content h3 {
+  color: var(--cd-color-primary);
+  font-size: var(--cd-font-size-xl);
+  margin-top: var(--cd-spacing-2xl);
+  margin-bottom: var(--cd-spacing-md);
+  padding-bottom: var(--cd-spacing-sm);
+  border-bottom: 2px solid var(--cd-color-accent);
+  display: inline-block;
+}
+
+.page-privacy .entry-content p,
+.page-terms .entry-content p {
+  color: var(--cd-color-text);
+  line-height: 1.9;
+}
+
+.page-privacy .entry-content ul,
+.page-terms .entry-content ul {
+  padding-inline-start: 1.5rem;
+  margin-bottom: var(--cd-spacing-lg);
+}
+
+.page-privacy .entry-content li,
+.page-terms .entry-content li {
+  margin-bottom: var(--cd-spacing-sm);
+  color: var(--cd-color-text);
+  line-height: 1.8;
+}
+
+.page-privacy .entry-content a,
+.page-terms .entry-content a {
+  color: var(--cd-color-accent);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.page-privacy .entry-content a:hover,
+.page-terms .entry-content a:hover {
+  color: #b32222;
+}
+
+.page-privacy .entry-content em,
+.page-terms .entry-content em {
+  color: var(--cd-color-muted);
+  font-size: var(--cd-font-size-sm);
+  display: block;
+  text-align: center;
+  margin-top: var(--cd-spacing-xl);
+  padding: var(--cd-spacing-md);
+  background: var(--cd-color-bg);
+  border-radius: var(--cd-radius-md);
+}
+
+/* ─── بطاقة إضافية للتنزيل ─── */
+.page-privacy .cd-page-actions,
+.page-terms .cd-page-actions {
+  display: flex;
+  gap: var(--cd-spacing-md);
+  justify-content: center;
+  margin: var(--cd-spacing-3xl) 0;
+  flex-wrap: wrap;
+}
+
+.page-privacy .cd-page-actions .btn,
+.page-terms .cd-page-actions .btn {
+  min-width: 200px;
+}
+
+/* ─── responsive ─── */
+@media (max-width: 600px) {
+  .page-privacy .entry-header,
+  .page-terms .entry-header {
+    padding: var(--cd-spacing-xl) var(--cd-spacing-md) var(--cd-spacing-xl);
+    border-radius: 0;
+  }
+
+  .page-privacy .entry-title,
+  .page-terms .entry-title {
+    font-size: var(--cd-font-size-2xl);
+  }
+
+  .page-privacy .entry-content h3,
+  .page-terms .entry-content h3 {
+    font-size: var(--cd-font-size-lg);
+  }
+}

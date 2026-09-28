@@ -20,10 +20,18 @@ get_header();
 <label>البريد الإلكتروني أو اسم المستخدم<input name="login" autocomplete="username" required value="<?php echo esc_attr( car_dealer_account_field( 'login' ) ); ?>"></label>
 <?php endif; ?>
 <label>كلمة المرور<input name="password" type="password" autocomplete="<?php echo $register ? 'new-password' : 'current-password'; ?>" <?php echo $register ? 'minlength="10"' : ''; ?> required></label>
-<?php if ( $register ) : ?><small>استخدم 10 أحرف على الأقل.</small><label>تأكيد كلمة المرور<input name="password_confirm" type="password" autocomplete="new-password" minlength="10" required></label><?php else : ?><label class="cd-auth-remember"><input name="remember" type="checkbox" value="1"> تذكرني</label><?php endif; ?>
-<button class="btn btn-primary" type="submit"><?php echo $register ? 'إنشاء حساب العميل' : 'تسجيل الدخول'; ?></button>
-<p><a href="<?php echo esc_url( wp_lostpassword_url( car_dealer_account_url( 'login' ) ) ); ?>">نسيت كلمة المرور؟</a></p>
-<?php if ( $register && get_privacy_policy_url() ) : ?><p><a href="<?php echo esc_url( get_privacy_policy_url() ); ?>">سياسة الخصوصية</a></p><?php endif; ?>
+<?php if ( $register ) : ?><small>استخدم 10 أحرف على الأقل.</small><label>تأكيد كلمة المرور<input name="password_confirm" type="password" autocomplete="new-password" minlength="10" required></label>
+<label class="cd-auth-consent">
+  <input type="checkbox" name="privacy_consent" required>
+  <span>أوافق على <a href="<?php echo esc_url( get_privacy_policy_url() ); ?>">سياسة الخصوصية</a> و <a href="<?php echo esc_url( get_permalink( 29 ) ); ?>">شروط الاستخدام</a></span>
+</label>
+<?php else : ?><label class="cd-auth-remember"><input name="remember" type="checkbox" value="1"> تذكرني</label><?php endif; ?>
+<button class="btn btn-primary" type="submit"><?php echo $register ? 'إنشاء حساب' : 'تسجيل الدخول'; ?></button>
+<?php if ( ! $register ) : ?>
+<div class="cd-auth-footer">
+  <a href="<?php echo esc_url( wp_lostpassword_url( car_dealer_account_url( 'login' ) ) ); ?>" class="cd-auth-forgot">نسيت كلمة المرور؟</a>
+</div>
+<?php endif; ?>
 </form></div></section>
 <?php else : $user = wp_get_current_user(); $kind = car_dealer_account_kind( $user ); $labels = array( 'administrator' => 'مدير الموقع', 'manager' => 'مدير المعرض', 'sales' => 'مستشار المبيعات', 'customer' => 'حساب العميل' ); ?>
 <header class="cd-account-welcome"><div><span><?php echo esc_html( $labels[$kind] ); ?></span><h1>مرحباً، <?php echo esc_html( $user->display_name ); ?></h1><p>كل ما تحتاجه لإدارة حسابك في مكان واحد.</p></div><a class="btn" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>">تسجيل الخروج</a></header>

@@ -1,24 +1,76 @@
 	</main>
 	<footer id="colophon" class="site-footer">
-		<div class="container footer-content">
-			<div>
-				<a class="footer-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php bloginfo( 'name' ); ?></a>
-				<p><?php bloginfo( 'description' ); ?></p>
-				<?php $cd_options = function_exists( 'car_dealer_theme_options' ) ? car_dealer_theme_options() : array(); ?>
-				<?php if ( ! empty( $cd_options['phone'] ) || ! empty( $cd_options['email'] ) || ! empty( $cd_options['address'] ) ) : ?>
-					<ul class="cd-contact-list">
-						<?php if ( ! empty( $cd_options['phone'] ) ) : ?><li><?php echo esc_html( $cd_options['phone'] ); ?></li><?php endif; ?>
-						<?php if ( ! empty( $cd_options['email'] ) ) : ?><li><?php echo esc_html( $cd_options['email'] ); ?></li><?php endif; ?>
-						<?php if ( ! empty( $cd_options['address'] ) ) : ?><li><?php echo esc_html( $cd_options['address'] ); ?></li><?php endif; ?>
+		<div class="container footer-container">
+			<div class="footer-grid">
+				
+				<!-- Brand Column -->
+				<div class="footer-col footer-brand-col">
+					<a class="footer-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+						<?php if ( has_custom_logo() ) { the_custom_logo(); } else { bloginfo( 'name' ); } ?>
+					</a>
+					<?php if ( function_exists( 'car_dealer_newsletter_form' ) ) { car_dealer_newsletter_form(); } ?>
+					<p class="footer-description"><?php bloginfo( 'description' ); ?></p>
+					<div class="footer-contact">
+						<?php $cd_options = function_exists( 'car_dealer_theme_options' ) ? car_dealer_theme_options() : array(); ?>
+						<?php if ( ! empty( $cd_options['phone'] ) || ! empty( $cd_options['email'] ) ) : ?>
+							<ul class="cd-contact-list">
+								<?php if ( ! empty( $cd_options['phone'] ) ) : ?><li><span>الهاتف:</span> <?php echo esc_html( $cd_options['phone'] ); ?></li><?php endif; ?>
+								<?php if ( ! empty( $cd_options['email'] ) ) : ?><li><span>البريد:</span> <?php echo esc_html( $cd_options['email'] ); ?></li><?php endif; ?>
+							</ul>
+						<?php endif; ?>
+					</div>
+					<?php if ( function_exists( 'car_dealer_footer_social_links' ) ) { car_dealer_footer_social_links(); } ?>
+				</div>
+
+				<!-- Quick Links Column -->
+				<div class="footer-col">
+					<h4 class="footer-title">روابط سريعة</h4>
+					<ul class="footer-links">
+						<li><a href="<?php echo esc_url( home_url( '/' ) ); ?>">الرئيسية</a></li>
+						<li><a href="<?php echo esc_url( get_post_type_archive_link( 'car' ) ); ?>">السيارات</a></li>
+						<li><a href="<?php echo esc_url( get_post_type_archive_link( 'car' ) ) . '#financing'; ?>">التمويل</a></li>
+						<li><a href="<?php echo esc_url( get_permalink( 18 ) ); ?>">تواصل معنا</a></li>
+						<li><a href="<?php echo esc_url( get_permalink( 20 ) ); ?>">من نحن</a></li>
 					</ul>
-				<?php endif; ?>
-				<?php if ( function_exists( 'car_dealer_footer_social_links' ) ) { car_dealer_footer_social_links(); } ?>
-				<?php if ( function_exists( 'car_dealer_newsletter_form' ) ) { car_dealer_newsletter_form(); } ?>
+				</div>
+
+				<!-- Legal Column (Privacy & Terms) -->
+				<div class="footer-col">
+					<h4 class="footer-title">قانوني</h4>
+					<ul class="footer-links footer-legal-links">
+						<li>
+							<a href="<?php echo esc_url( get_permalink( 3 ) ); ?>">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+								سياسة الخصوصية
+							</a>
+						</li>
+						<li>
+							<a href="<?php echo esc_url( get_permalink( 29 ) ); ?>">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+								شروط الاستخدام
+							</a>
+						</li>
+					</ul>
+				</div>
+
+				<!-- Contact/Social Column -->
+				<div class="footer-col">
+					<h4 class="footer-title">تابعنا</h4>
+					<div class="footer-social">
+						<?php if ( function_exists( 'car_dealer_footer_social_links' ) ) { car_dealer_footer_social_links(); } ?>
+					</div>
+				</div>
+
 			</div>
-			<nav aria-label="<?php esc_attr_e( 'روابط التذييل', 'car-dealer' ); ?>">
-				<?php wp_nav_menu( array( 'theme_location' => 'footer', 'container' => false, 'fallback_cb' => false ) ); ?>
-			</nav>
-			<p class="footer-copyright">© <?php echo esc_html( wp_date( 'Y' ) ); ?> <?php bloginfo( 'name' ); ?></p>
+
+			<!-- Copyright Bar -->
+			<div class="footer-bottom">
+				<div class="footer-bottom-content">
+					<p class="footer-copyright">
+						© <?php echo esc_html( wp_date( 'Y' ) ); ?> <?php bloginfo( 'name' ); ?> — جميع الحقوق محفوظة.
+					</p>
+				</div>
+			</div>
 		</div>
 	</footer>
 </div>

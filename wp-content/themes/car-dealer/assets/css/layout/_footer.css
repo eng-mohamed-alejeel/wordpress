@@ -1,33 +1,189 @@
 /* ═══════════════════════════════════════════════════════
-   Car Dealer — التذييل (Footer)
-   ═══════════════════════════════════════════════════════ */
+    Car Dealer — التذييل الاحترافي (Footer Pro)
+    ═══════════════════════════════════════════════════════ */
 
+/* ─── الخلفية الأساسية ─── */
 .site-footer {
-  background: var(--cd-color-primary);
+  background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 50%, #0d1b2a 100%);
   color: var(--cd-color-surface);
   padding: var(--cd-spacing-3xl) 0 var(--cd-spacing-xl);
   margin-top: var(--cd-spacing-3xl);
+  position: relative;
+  overflow: hidden;
 }
 
-.footer-content {
+/* ─── تأثير زخرفي ─── */
+.site-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--cd-color-accent), var(--cd-color-secondary), var(--cd-color-accent));
+}
+
+.site-footer::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(208, 43, 43, 0.08) 0%, transparent 70%);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* ─── الحاوية ─── */
+.footer-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── الشبكة الرئيسية ─── */
+.footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: var(--cd-spacing-2xl);
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: var(--cd-spacing-3xl);
+  padding-bottom: var(--cd-spacing-3xl);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.footer-brand {
-  color: var(--cd-color-surface);
-  font-size: var(--cd-font-size-lg);
+/* ─── أعمدة الفوتر ─── */
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cd-spacing-lg);
+}
+
+/* ─── العناوين ─── */
+.footer-title {
+  font-size: var(--cd-font-size-base);
   font-weight: 800;
+  color: var(--cd-color-surface);
+  margin: 0;
+  padding-bottom: var(--cd-spacing-sm);
+  border-bottom: 2px solid var(--cd-color-accent);
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.cd-contact-list {
+/* ─── وصف العلامة التجارية ─── */
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cd-color-surface);
+  font-size: var(--cd-font-size-xl);
+  font-weight: 800;
+  text-decoration: none;
+  margin-bottom: var(--cd-spacing-sm);
+  transition: opacity var(--cd-transition-base);
+}
+
+.footer-brand:hover {
+  opacity: 0.85;
+}
+
+.footer-brand img {
+  height: 40px;
+  width: auto;
+}
+
+.footer-description {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-sm);
+  line-height: 1.8;
+  margin: 0;
+}
+
+/* ─── معلومات الاتصال ─── */
+.footer-contact .cd-contact-list {
   display: grid;
-  gap: 0.35rem;
-  margin: var(--cd-spacing-md) 0;
+  gap: 0.5rem;
+  margin: 0;
   padding: 0;
   list-style: none;
-  color: var(--cd-color-line);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-sm);
+}
+
+.footer-contact .cd-contact-list li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.footer-contact .cd-contact-list li span {
+  color: var(--cd-color-muted);
+  min-width: 60px;
+}
+
+/* ─── الروابط ─── */
+.footer-links {
+  display: grid;
+  gap: 0.6rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-links li {
+  margin: 0;
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--cd-transition-base);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  line-height: 1.6;
+}
+
+.footer-links a:hover {
+  color: var(--cd-color-accent);
+  padding-left: 4px;
+}
+
+.footer-links a svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity var(--cd-transition-base);
+}
+
+.footer-links a:hover svg {
+  opacity: 1;
+}
+
+/* ─── الروابط القانونية ─── */
+.footer-legal-links {
+  padding-top: var(--cd-spacing-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: var(--cd-spacing-sm);
+}
+
+.footer-legal-links a {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.footer-legal-links a:hover {
+  color: var(--cd-color-accent);
+}
+
+/* ─── وسائل التواصل الاجتماعي ─── */
+.footer-social {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .cd-social-links {
@@ -35,29 +191,153 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
-  margin-top: var(--cd-spacing-md);
 }
 
 .cd-social-links a {
-  padding: 0.4rem 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   border-radius: var(--cd-radius-full);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--cd-color-surface);
   font-size: var(--cd-font-size-sm);
+  text-decoration: none;
+  transition: all var(--cd-transition-base);
+}
+
+.cd-social-links a:hover {
+  background: var(--cd-color-accent);
+  border-color: var(--cd-color-accent);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(208, 43, 43, 0.3);
+}
+
+/* ─── نشرة الأخبار ─── */
+.footer-newsletter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cd-spacing-sm);
+}
+
+.footer-newsletter p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-sm);
+  margin: 0;
+}
+
+.footer-newsletter form {
+  display: flex;
+  gap: 8px;
+}
+
+.footer-newsletter input[type="email"] {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--cd-radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--cd-color-surface);
+  font-size: var(--cd-font-size-sm);
+  outline: none;
+  transition: border-color var(--cd-transition-base);
+  min-width: 0;
+}
+
+.footer-newsletter input[type="email"]:focus {
+  border-color: var(--cd-color-accent);
+}
+
+.footer-newsletter input[type="email"]::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.footer-newsletter button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--cd-radius-md);
+  background: var(--cd-color-accent);
+  color: var(--cd-color-surface);
+  font-weight: 700;
+  font-size: var(--cd-font-size-sm);
+  cursor: pointer;
+  transition: all var(--cd-transition-base);
+  white-space: nowrap;
+}
+
+.footer-newsletter button:hover {
+  background: #b32222;
+  transform: translateY(-2px);
+}
+
+/* ─── شريط الحقوق ─── */
+.footer-bottom {
+  margin-top: var(--cd-spacing-3xl);
+  padding-top: var(--cd-spacing-xl);
+}
+
+.footer-bottom-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--cd-spacing-md);
 }
 
 .footer-copyright {
-  text-align: center;
-  margin-top: var(--cd-spacing-2xl);
-  padding-top: var(--cd-spacing-xl);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--cd-color-muted);
+  color: rgba(255, 255, 255, 0.4);
   font-size: var(--cd-font-size-sm);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ─── responsive ─── */
+@media (max-width: 1024px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--cd-spacing-2xl);
+  }
 }
 
 @media (max-width: 600px) {
-  .footer-content {
+  .site-footer {
+    padding: var(--cd-spacing-xl) 0 var(--cd-spacing-lg);
+  }
+
+  .footer-grid {
     grid-template-columns: 1fr;
+    gap: var(--cd-spacing-xl);
+    text-align: center;
+  }
+
+  .footer-brand {
+    justify-content: center;
+  }
+
+  .footer-contact .cd-contact-list li {
+    justify-content: center;
+  }
+
+  .footer-links {
+    justify-items: center;
+  }
+
+  .footer-social {
+    justify-content: center;
+  }
+
+  .footer-bottom-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-newsletter form {
+    flex-direction: column;
+  }
+
+  .footer-newsletter button {
+    width: 100%;
   }
 }

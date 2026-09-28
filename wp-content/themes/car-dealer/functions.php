@@ -25,6 +25,9 @@ add_filter( 'theme_page_templates', 'car_dealer_register_page_templates', 10, 4 
 require_once get_template_directory() . '/inc/contact-form-manager.php';
 require_once get_template_directory() . '/inc/about-contact-pages.php';
 
+// تحميل نظام تسجيل الدخول والتسجيل (حساب المستخدم)
+require_once get_template_directory() . '/inc/accounts.php';
+
 function car_dealer_get_setting( $setting, $default = '', $type = 'display' ) {
 	$settings = get_option( 'car_dealer_settings', array() );
 	return isset( $settings[ $setting ] ) ? $settings[ $setting ] : $default;
@@ -41,6 +44,14 @@ function car_dealer_assets() {
 	wp_enqueue_style( 'car-dealer-contact', $uri . '/assets/css/pages/_contact.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_script( 'car-dealer-main-js', $uri . '/assets/js/main.js', array(), filemtime( get_template_directory() . '/assets/js/main.js' ), true );
 	wp_localize_script( 'car-dealer-main-js', 'carDealer', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'nonce' => wp_create_nonce( 'car_dealer_frontend' ) ) );
+	
+	// Cookie Consent
+	wp_enqueue_style( 'car-dealer-cookies', $uri . '/assets/css/components/_cookies.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/components/_cookies.css' ) );
+	wp_enqueue_script( 'car-dealer-cookie-consent', $uri . '/assets/js/cookie-consent.js', array(), filemtime( get_template_directory() . '/assets/js/cookie-consent.js' ), true );
+	wp_localize_script( 'car-dealer-cookie-consent', 'cdCookieConfig', array( 'templateUri' => $uri ) );
+	
+	// Footer Pro
+	wp_enqueue_style( 'car-dealer-footer', $uri . '/assets/css/layout/_footer.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/layout/_footer.css' ) );
 }
 add_action( 'wp_enqueue_scripts', 'car_dealer_assets' );
 add_filter( 'wp_nav_menu_args', function ( $args ) {

@@ -15,7 +15,7 @@ function car_dealer_account_links() {
   if ( is_user_logged_in() ) {
    return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url() ) . '">حسابي</a></li><li class="menu-item cd-logout-link"><a href="' . esc_url( wp_logout_url( home_url( '/' ) ) ) . '">تسجيل الخروج</a></li>';
   }
-  return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url( 'login' ) ) . '">تسجيل الدخول</a></li><li class="menu-item cd-account-link cd-register-link"><a href="' . esc_url( car_dealer_account_url( 'register' ) ) . '">إنشاء حساب</a></li>';
+  return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url( 'login' ) ) . '">تسجيل الدخول</a></li>';
 }
 add_filter( 'wp_nav_menu_items', function ( $items, $args ) {
   if ( 'primary' === $args->theme_location ) {
@@ -70,6 +70,7 @@ function car_dealer_account_process( $view ) {
    $email = sanitize_email( car_dealer_account_field( 'email' ) );
    $password = car_dealer_account_field( 'password' );
    if ( car_dealer_account_field( 'company_website' ) ) { return 'تعذر إنشاء الحساب.'; }
+    if ( empty( $_POST['privacy_consent'] ) ) { return 'يجب الموافقة على سياسة الخصوصية وشروط الاستخدام لإنشاء حساب.'; }
    if ( ! $name || ! is_email( $email ) || strlen( $password ) < 10 || strlen( $password ) > 4096 || $password !== car_dealer_account_field( 'password_confirm' ) ) { return 'أدخل اسماً وبريداً صحيحاً وكلمة مرور من 10 أحرف على الأقل مع تأكيد مطابق.'; }
    if ( email_exists( $email ) ) { return 'تعذر استخدام هذا البريد. جرّب تسجيل الدخول أو استعادة كلمة المرور.'; }
    $id = wp_insert_user( array( 'user_login' => 'customer_' . wp_generate_password( 20, false ), 'user_email' => $email, 'user_pass' => $password, 'display_name' => $name, 'role' => 'car_dealer_customer' ) );
