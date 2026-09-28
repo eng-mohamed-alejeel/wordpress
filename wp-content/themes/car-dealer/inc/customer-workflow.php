@@ -141,7 +141,7 @@ function car_dealer_crm_related_requests( $id ) {
 }
 
 // Reconcile existing authenticated requests by their recorded user ID, in bounded batches.
-add_action( 'admin_init', function () {
+function car_dealer_reconcile_customer_requests() {
  if ( ! current_user_can( 'manage_car_dealer' ) ) { return; }
  global $wpdb;
  foreach ( array( 'message', 'booking' ) as $type ) {
@@ -159,9 +159,10 @@ add_action( 'admin_init', function () {
    update_option( $option, $row->id, false );
   }
  }
-} );
+}
+add_action( 'admin_init', 'car_dealer_reconcile_customer_requests' );
 add_action( 'wp_enqueue_scripts', function () {
  if ( ! is_user_logged_in() ) { return; }
  $user = wp_get_current_user();
- wp_localize_script( 'car-dealer-main', 'carDealerCustomer', array( 'name' => $user->display_name, 'email' => $user->user_email, 'phone' => get_user_meta( $user->ID, 'car_dealer_phone', true ) ) );
+ wp_localize_script( 'car-dealer-main-js', 'carDealerCustomer', array( 'name' => $user->display_name, 'email' => $user->user_email, 'phone' => get_user_meta( $user->ID, 'car_dealer_phone', true ) ) );
 }, 20 );

@@ -132,7 +132,7 @@ function car_dealer_customer_form_fields( $email_only = false ) {
  foreach ( array( 'name' => array( 'الاسم', 'text', 'name' ), 'email' => array( 'البريد الإلكتروني', 'email', 'email' ), 'phone' => array( 'الهاتف', 'tel', 'tel' ) ) as $key => $field ) {
   if ( $email_only && 'email' !== $key ) { continue; }
   $phone_required = class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled();
-  $html .= '<label>' . esc_html( $field[0] ) . '<input name="' . esc_attr( $key ) . '" type="' . esc_attr( $field[1] ) . '" autocomplete="' . esc_attr( $field[2] ) . '" value="' . esc_attr( $identity[$key] ) . '"' . ( 'phone' !== $key || $phone_required ? ' required' : '' ) . ( is_user_logged_in() ? ' readonly' : '' ) . '></label>';
+  $html .= '<label>' . esc_html( $field[0] ) . '<input name="' . esc_attr( $key ) . '" type="' . esc_attr( $field[1] ) . '"' . ( 'name' !== $key ? ' dir="ltr"' : '' ) . ' autocomplete="' . esc_attr( $field[2] ) . '" value="' . esc_attr( $identity[$key] ) . '"' . ( 'phone' !== $key || $phone_required ? ' required' : '' ) . ( is_user_logged_in() ? ' readonly' : '' ) . '></label>';
  }
  if ( is_user_logged_in() ) {
   $html .= '<p class="cd-profile-form-note">تُرسل بيانات حسابك تلقائياً. <a href="' . esc_url( car_dealer_account_url() ) . '">تحديث بياناتي' . ( ! $email_only && ! $identity['phone'] ? ' وإضافة رقم الهاتف' : '' ) . '</a></p>';
@@ -143,22 +143,24 @@ function car_dealer_customer_form_fields( $email_only = false ) {
  return $html;
 }
 function car_dealer_contact_form_shortcode() {
- return '<form class="cd-ajax-form cd-contact-form" data-action="car_dealer_contact">' . car_dealer_customer_form_fields() . '<textarea name="message" required aria-label="رسالتك" placeholder="رسالتك"></textarea><button class="btn btn-primary" type="submit">إرسال</button><p class="cd-form-status" role="status"></p></form>';
+ return '<form method="post" class="cd-ajax-form cd-contact-form" data-action="car_dealer_contact">' . car_dealer_customer_form_fields() . '<textarea name="message" required aria-label="رسالتك" placeholder="رسالتك"></textarea><button class="btn btn-primary" type="submit">إرسال</button><p class="cd-form-status" role="status"></p></form>';
 }
 add_shortcode( 'car_dealer_contact_form', 'car_dealer_contact_form_shortcode' );
+function car_dealer_render_lead_form( $car_id, $type, $title, $button ) {
+		echo '<form method="post" class="cd-ajax-form cd-lead-form" data-action="car_dealer_contact"><h2>' . esc_html( $title ) . '</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '"><input type="hidden" name="lead_type" value="' . esc_attr( $type ) . '">' . car_dealer_customer_form_fields() . '<textarea name="message" aria-label="ملاحظات إضافية" placeholder="ملاحظات إضافية"></textarea><button class="btn btn-primary" type="submit">' . esc_html( $button ) . '</button><p class="cd-form-status" role="status"></p></form>';
+}
 if ( ! function_exists( 'car_dealer_lead_form' ) ) {
-	function car_dealer_lead_form( $car_id, $type, $title, $button ) {
-		echo '<form class="cd-ajax-form cd-lead-form" data-action="car_dealer_contact"><h2>' . esc_html( $title ) . '</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '"><input type="hidden" name="lead_type" value="' . esc_attr( $type ) . '">' . car_dealer_customer_form_fields() . '<textarea name="message" aria-label="ملاحظات إضافية" placeholder="ملاحظات إضافية"></textarea><button class="btn btn-primary" type="submit">' . esc_html( $button ) . '</button><p class="cd-form-status" role="status"></p></form>';
-	}
+	function car_dealer_lead_form( $car_id, $type, $title, $button ) { car_dealer_render_lead_form( $car_id, $type, $title, $button ); }
+}
+function car_dealer_render_booking_form( $car_id ) {
+		echo '<form method="post" class="cd-ajax-form cd-booking-form" data-action="car_dealer_booking"><h2>احجز تجربة قيادة</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '">' . car_dealer_customer_form_fields() . '<label>اليوم<input name="date" type="date" min="' . esc_attr( current_time( 'Y-m-d' ) ) . '" required></label><label>الوقت<input name="time" type="time" required></label><button class="btn btn-primary" type="submit">إرسال الطلب</button><p class="cd-form-status" role="status"></p></form>';
 }
 if ( ! function_exists( 'car_dealer_booking_form' ) ) {
-	function car_dealer_booking_form( $car_id ) {
-		echo '<form class="cd-ajax-form cd-booking-form" data-action="car_dealer_booking"><h2>احجز تجربة قيادة</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '">' . car_dealer_customer_form_fields() . '<label>اليوم<input name="date" type="date" min="' . esc_attr( current_time( 'Y-m-d' ) ) . '" required></label><label>الوقت<input name="time" type="time" required></label><button class="btn btn-primary" type="submit">إرسال الطلب</button><p class="cd-form-status" role="status"></p></form>';
-	}
+	function car_dealer_booking_form( $car_id ) { car_dealer_render_booking_form( $car_id ); }
 }
 if ( ! function_exists( 'car_dealer_newsletter_form' ) ) {
 	function car_dealer_newsletter_form() {
-		echo '<form class="cd-ajax-form cd-newsletter-form" data-action="car_dealer_subscribe">' . car_dealer_customer_form_fields( true ) . '<button class="btn btn-primary" type="submit">اشترك</button><p class="cd-form-status" role="status"></p></form>';
+		echo '<form method="post" class="cd-ajax-form cd-newsletter-form" data-action="car_dealer_subscribe">' . car_dealer_customer_form_fields( true ) . '<button class="btn btn-primary" type="submit">اشترك</button><p class="cd-form-status" role="status"></p></form>';
 	}
 }
 function car_dealer_render_table_page( $title, $table, $columns ) {

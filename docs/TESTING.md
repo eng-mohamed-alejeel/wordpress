@@ -2,6 +2,8 @@
 
 ## Current evidence and independent server mode
 
+On 2026-09-28, core 1.17.0 passed 468 database/HTTP checks, 48 offline authorization checks, 12 money checks, seven real Chromium DOM checks, and syntax checks for 70 plugin plus four theme PHP files. CRM additions live in `tests/increment-crm.php`, `tests/increment-crm-http.php` and `tests/browser-public-intake.cjs`. See `VERIFICATION-1.17.0.md` for reproduction, tested failure/concurrency paths and remaining acceptance. The browser script uses a fresh profile and an isolated DOM; it does not establish full-theme rendering.
+
 On 2026-09-27, core 1.14.0 completed 365 database/HTTP checks using `database-runner.php --isolated 33317` on a separate MariaDB data directory. That run never loaded source `wp-config.php`; its disposable database was removed afterward. All 62 PHP files passed syntax checks, plus 48 offline authorization and 12 money checks. See `VERIFICATION-1.14.0.md` for evidence and limits. Historical totals below document earlier increments.
 
 For a separately provisioned disposable localhost MariaDB server:

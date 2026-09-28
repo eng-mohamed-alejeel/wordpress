@@ -111,7 +111,8 @@ function car_dealer_account_request_table( $type ) {
  echo '<section class="cd-account-panel" id="' . ( 'bookings' === $type ? 'customer-bookings' : 'customer-messages' ) . '"><h2>' . ( 'bookings' === $type ? 'حجوزات تجربة القيادة' : 'طلباتي ورسائلي' ) . '</h2>';
  if ( ! $rows ) { echo '<p>لا توجد طلبات حتى الآن. ستظهر هنا الطلبات التي ترسلها أثناء تسجيل الدخول.</p>'; }
  else {
-  echo '<div class="cd-account-table"><table><thead><tr><th>الطلب</th><th>السيارة</th><th>التاريخ</th><th>الحالة</th></tr></thead><tbody>';
+  echo '<p class="cd-account-table-hint">مرّر الجدول أفقيًا لعرض بقية التفاصيل.</p>';
+  echo '<div class="cd-account-table" role="region" tabindex="0" aria-label="' . esc_attr( 'bookings' === $type ? 'جدول حجوزات تجربة القيادة' : 'جدول الطلبات والرسائل' ) . '"><table><thead><tr><th scope="col">الطلب</th><th scope="col">السيارة</th><th scope="col">التاريخ</th><th scope="col">الحالة</th></tr></thead><tbody>';
   foreach ( array_slice( $rows, 0, 10 ) as $row ) {
    $car = $row->car_id && 'publish' === get_post_status( $row->car_id ) ? '<a href="' . esc_url( get_permalink( $row->car_id ) ) . '">' . esc_html( get_the_title( $row->car_id ) ) . '</a>' : esc_html( $row->car_id ? 'السيارة غير متاحة حالياً' : 'طلب عام' );
    echo '<tr><td>#' . absint( $row->id ) . ( 'bookings' === $type ? '<br>' . esc_html( $row->requested_date . ' ' . $row->requested_time ) : '<br>' . nl2br( esc_html( $row->message ) ) ) . '</td><td>' . $car . '</td><td>' . esc_html( $row->created_at ) . '</td><td>' . esc_html( $statuses[$row->status] ?? 'قيد المتابعة' );

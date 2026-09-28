@@ -45,7 +45,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 	require ABSPATH . 'wp-settings.php';
 	add_filter( 'pre_wp_mail', '__return_true' );
-	if ( in_array( $scenario, array( 'reserve', 'migrate', 'crm_intake', 'crm_request', 'crm_merge' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
+	if ( in_array( $scenario, array( 'reserve', 'migrate', 'crm_intake', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
 		require __DIR__ . '/../auto-dealership-core.php';
 		wp_set_current_user( $actor );
 		global $wpdb;
@@ -63,6 +63,10 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 			$result = \AutoDealership\Leads\RequestWorkflow::update( (int) $input['lead_id'], $input );
 		} elseif ( 'crm_merge' === $scenario ) {
 			$result = \AutoDealership\Leads\CustomerIdentity::merge( (int) $input['source_id'], (int) $input['target_id'], $input['revision'], 'CONCURRENT-REVIEW', true );
+		} elseif ( 'crm_quote' === $scenario ) {
+			$result = \AutoDealership\Sales\SalesService::create_quote( (int) $input['customer_id'], (int) $input['vehicle_id'], $input['valid_until'] );
+		} elseif ( 'crm_erase' === $scenario ) {
+			$result = \AutoDealership\Privacy\PrivacyTools::erase( $input['email'] );
 		} else {
 			$result = \AutoDealership\Reservations\ReservationService::create( $input );
 		}
@@ -78,6 +82,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( 0 );
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
+	if ( '1' === getenv( 'ADC_JOURNEY_ONLY' ) ) { require __DIR__ . '/account-journey-fixture.php'; exit; }
 	require __DIR__ . '/database-scenarios.php';
 	exit;
 }

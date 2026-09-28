@@ -3,7 +3,7 @@ defined( 'ABSPATH' ) || exit;
 $view = car_dealer_account_view(); $error = $GLOBALS['cd_account_error'] ?? '';
 get_header();
 ?>
-<div class="container cd-account" dir="rtl">
+<div class="container cd-account" dir="rtl" lang="ar">
 <?php if ( $error ) : ?><div class="cd-account-notice is-error" role="alert"><?php echo esc_html( $error ); ?></div><?php endif; ?>
 <?php if ( 'dashboard' !== $view ) : $register = 'register' === $view; ?>
 <section class="cd-auth-card">
@@ -59,7 +59,7 @@ foreach ( $tools as $tool ) { if ( current_user_can( $tool[0] ) ) { echo '<a hre
 <section class="cd-account-panel"><h2>بياناتي الشخصية</h2><form class="cd-account-profile" method="post" action="<?php echo esc_url( car_dealer_account_url() ); ?>">
 <?php wp_nonce_field( 'cd_account_dashboard' ); ?>
 <label>الاسم<input name="display_name" autocomplete="name" value="<?php echo esc_attr( $user->display_name ); ?>" required></label>
-<label>الهاتف<input name="phone" type="tel" autocomplete="tel" value="<?php echo esc_attr( get_user_meta( $user->ID, 'car_dealer_phone', true ) ); ?>"></label>
+<label>الهاتف<input name="phone" type="tel" autocomplete="tel" dir="ltr" value="<?php echo esc_attr( get_user_meta( $user->ID, 'car_dealer_phone', true ) ); ?>"></label>
 <p>البريد الإلكتروني: <bdi><?php echo esc_html( $user->user_email ); ?></bdi></p><div class="cd-account-actions"><button class="btn btn-primary">حفظ البيانات</button><a href="<?php echo esc_url( wp_lostpassword_url( car_dealer_account_url( 'login' ) ) ); ?>">إعادة تعيين كلمة المرور</a></div>
 </form></section>
 <?php endif; ?>

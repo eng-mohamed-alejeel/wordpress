@@ -177,7 +177,8 @@ $crm_parallel = static function ( string $scenario, int $actor, array $inputs ) 
 		foreach ( $inputs as $input ) {
 			$process = proc_open( array( PHP_BINARY, __DIR__ . '/database-runner.php', '--worker' ), array( 0=>array( 'pipe','r' ), 1=>array( 'pipe','w' ), 2=>STDERR ), $pipes );
 			if ( ! is_resource( $process ) ) { throw new RuntimeException( 'CRM worker unavailable.' ); }
-			fwrite( $pipes[0], wp_json_encode( array( 'database'=>DB_NAME, 'source_database'=>'', 'host'=>DB_HOST, 'user'=>DB_USER, 'password'=>DB_PASSWORD, 'scenario'=>$scenario, 'actor'=>$actor, 'input'=>$input, 'barrier'=>$gate ) ) );
+			$worker_scenario = $input['_scenario'] ?? $scenario; unset( $input['_scenario'] );
+			fwrite( $pipes[0], wp_json_encode( array( 'database'=>DB_NAME, 'source_database'=>'', 'host'=>DB_HOST, 'user'=>DB_USER, 'password'=>DB_PASSWORD, 'scenario'=>$worker_scenario, 'actor'=>$actor, 'input'=>$input, 'barrier'=>$gate ) ) );
 			fclose( $pipes[0] ); $jobs[] = array( $process, $pipes[1] );
 		}
 		usleep( 500000 );

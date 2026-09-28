@@ -7,6 +7,8 @@ Modular dealership core for branch-aware vehicle inventory, leads, reservations,
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
 
+Verification update 2026-09-28: 1.15–1.17 now passes 468 isolated database/HTTP checks, 48 authorization checks, 12 money checks, seven real Chromium DOM checks and syntax across 70 plugin plus four theme PHP files. These results supersede the initial pending-verification notes below. Full theme/browser journeys, mixed races and legacy pagination/cursor acceptance remain; see docs/VERIFICATION-1.17.0.md. No source database was contacted or modified by this run.
+
 Version 1.17.0 adds authenticated account-linked intake and administrator-reviewed CRM-only customer consolidation with preview revisions, evidence confirmation, scope/reference checks and atomic audit. New login/profile hooks stop creating duplicate theme account profiles. Schema 1.12.0 adds nullable account and merge references. Syntax passed for 68 plugin PHP files and four theme files; integration/concurrency/browser verification remains pending. See docs/CUSTOMER-IDENTITY.md for eligibility and limits.
 
 Version 1.16.0 centralizes linked request replies, status updates, test-drive rescheduling and customer cancellation. It adds scoped REST/admin forms, stale-form protection, atomic activity/audit writes and scoped legacy request lists/counts. Schema remains 1.11.0. PHP syntax passed for 66 plugin files and four changed theme files; integration/browser verification remains pending.

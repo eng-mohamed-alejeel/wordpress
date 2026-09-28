@@ -3,6 +3,15 @@
 if ( PHP_SAPI !== 'cli-server' ) { http_response_code( 404 ); exit; }
 $config = json_decode( base64_decode( (string) getenv( 'ADC_HTTP_TEST_CONFIG' ), true ), true );
 if ( ! is_array( $config ) || ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', $config['database'] ?? '' ) ) { http_response_code( 503 ); exit; }
+$theme_test = '1' === getenv( 'ADC_THEME_TEST' );
+if ( $theme_test ) {
+	$asset = (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH );
+	if ( preg_match( '#\A/(?:wp-content/(?:themes/car-dealer|plugins/auto-dealership-core/assets)/|wp-includes/).+\.(?:css|js|svg|png|jpg|jpeg|webp|woff2?)\z#i', $asset ) ) {
+		$root = realpath( dirname( __DIR__, 4 ) ); $file = realpath( $root . $asset );
+		if ( $file && str_starts_with( $file, $root . DIRECTORY_SEPARATOR ) && is_file( $file ) ) { return false; }
+		http_response_code( 404 ); exit;
+	}
+}
 define( 'ABSPATH', dirname( __DIR__, 4 ) . '/' );
 define( 'DB_NAME', $config['database'] );
 define( 'DB_USER', $config['user'] );
@@ -20,11 +29,11 @@ define( 'WP_HTTP_BLOCK_EXTERNAL', true );
 define( 'DISABLE_WP_CRON', true );
 define( 'WP_DEBUG', false );
 define( 'WP_CONTENT_DIR', __DIR__ . '/isolated-content' );
-define( 'WP_CONTENT_URL', 'http://adc-verification.invalid/content' );
+define( 'WP_CONTENT_URL', $theme_test ? 'http://127.0.0.1:' . (int) $_SERVER['SERVER_PORT'] . '/wp-content' : 'http://adc-verification.invalid/content' );
 define( 'WP_PLUGIN_DIR', dirname( __DIR__, 2 ) );
-define( 'WP_SITEURL', 'http://adc-verification.invalid' );
+define( 'WP_SITEURL', $theme_test ? 'http://127.0.0.1:' . (int) $_SERVER['SERVER_PORT'] : 'http://adc-verification.invalid' );
 define( 'WP_HOME', WP_SITEURL );
-define( 'WP_USE_THEMES', false );
+define( 'WP_USE_THEMES', $theme_test );
 $session_key = hash( 'sha256', (string) getenv( 'ADC_HTTP_TEST_CONFIG' ) . '|session' );
 $table_prefix = 'test_';
 unset( $config );
@@ -42,6 +51,12 @@ if ( '/adc-test-session' === (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', 
 	exit;
 }
 $request_path = (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH );
+if ( $theme_test && '/adc-test-review' === $request_path ) {
+	if ( ! current_user_can( 'manage_options' ) ) { http_response_code( 403 ); exit; }
+	get_header();
+	\AutoDealership\Admin\RequestPage::render( absint( $_GET['lead_id'] ?? 0 ) );
+	get_footer(); exit;
+}
 if ( '/adc-test-nonce' === $request_path ) {
 	if ( ! is_user_logged_in() ) { http_response_code( 401 ); exit; }
 	$action = sanitize_text_field( wp_unslash( $_GET['action'] ?? '' ) );
@@ -58,7 +73,7 @@ if ( '/wp-admin/admin-post.php' === $request_path ) {
 	exit;
 }
 if ( '/wp-admin/admin-ajax.php' === $request_path ) {
-	require ABSPATH . 'wp-content/themes/car-dealer/inc/contact-form-manager.php';
+	require_once ABSPATH . 'wp-content/themes/car-dealer/inc/contact-form-manager.php';
 	$action = sanitize_key( $_REQUEST['action'] ?? '' );
 	if ( ! in_array( $action, array( 'car_dealer_contact', 'car_dealer_booking' ), true ) ) { http_response_code( 400 ); exit; }
 	do_action( ( is_user_logged_in() ? 'wp_ajax_' : 'wp_ajax_nopriv_' ) . $action );

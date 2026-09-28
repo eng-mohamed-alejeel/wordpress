@@ -564,6 +564,7 @@ $unpaid_cancel_vehicle=$make_vehicle('32');wp_set_current_user($sales_a);$unpaid
 adc_check(is_array($unpaid_cancellation)&&'no_refund_due'===$unpaid_cancellation['financial_status']&&'available'===$wpdb->get_var($wpdb->prepare("SELECT status FROM $vehicles WHERE id=%d",$unpaid_cancel_vehicle))&&'cancelled'===$wpdb->get_var($wpdb->prepare('SELECT status FROM '.Schema::table('reservations').' WHERE id=%d',$unpaid_cancel_reservation['id']))&&'cancelled'===$wpdb->get_var($wpdb->prepare('SELECT status FROM '.Schema::table('payment_confirmations').' WHERE id=%d',$pending_cancel_payment['id'])),'Unpaid pending sale cancellation releases inventory, closes its reservation and cancels pending receipt evidence.');
 require __DIR__ . '/increment-1.14.php';
 require __DIR__ . '/increment-crm.php';
+require __DIR__ . '/account-workflow-scenarios.php';
 wp_set_current_user( $finance_verifier );
 ob_start();
 AutoDealership\Admin\PaymentPages::render();
@@ -923,4 +924,5 @@ try {
 	if ( is_string( $http_log ) && is_file( $http_log ) ) { unlink( $http_log ); }
 	if ( is_string( $http_error_log ) && is_file( $http_error_log ) ) { unlink( $http_error_log ); }
 }
+if ( '1' === getenv( 'ADC_BROWSER_JOURNEY' ) ) { require __DIR__ . '/account-journey.php'; }
 echo "Completed $checks isolated database checks.\n";

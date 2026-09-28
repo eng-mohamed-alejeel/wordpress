@@ -56,6 +56,33 @@
   min-height: 60vh;
 }
 
+/* Keep request tables readable and keyboard-scrollable on narrow screens. */
+.cd-account-table {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+.cd-account-table:focus-visible {
+  outline: 2px solid var(--cd-color-accent);
+  outline-offset: 2px;
+}
+.cd-account-table table { width: 100%; min-width: 36rem; border-collapse: collapse; text-align: start; }
+.cd-account-table th, .cd-account-table td { padding: 12px; vertical-align: top; overflow-wrap: anywhere; max-width: 20rem; }
+.cd-account-table th { border-bottom: 1px solid var(--cd-color-line); }
+.cd-account-table-hint { display: none; }
+@media (max-width: 767px) {
+  .cd-account-table-hint { display: block; font-size: 0.875rem; color: var(--cd-color-muted); }
+}
+.cd-account-panel { min-width: 0; overflow-wrap: anywhere; }
+.cd-account .cd-account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.cd-account .cd-auth-consent { flex-direction: row; }
+.cd-account-welcome { flex-wrap: wrap; }
+@media (max-width: 600px) {
+  .cd-account .cd-account-panel { padding: 18px; }
+  .cd-account .cd-account-welcome h1 { font-size: clamp(1.5rem, 7vw, 2rem); }
+  .cd-account .cd-account-panel h2 { font-size: 1.5rem; }
+}
+
 .cd-auth-card {
   display: grid;
   grid-template-columns: 1fr 1.1fr;

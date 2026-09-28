@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-28 — Verification of 1.15–1.17
+
+- Added 103 assertions for CRM intake, identity and linked workflows to the isolated database/HTTP suite; all 468 checks pass, alongside 48 authorization and 12 money checks.
+- Added four concurrent CRM scenarios, SQL fault injection, additive upgrade, privacy/retention and actual theme AJAX/admin-post/REST coverage.
+- Added seven passing real Chromium DOM checks for the production form script. Full-site visual review and remaining mixed races/legacy cases stay open.
+- Syntax passed for 70 plugin and four theme PHP files. No production behavior or source database was changed in this verification increment. See `VERIFICATION-1.17.0.md`.
+
 ## 1.17.0 — Account-linked intake and reviewed CRM consolidation
 
 - Added authenticated account reuse with a unique account key, transactional first-request serialization and audited contact refresh; public email/mobile values never authorize account claims.
@@ -7,9 +14,9 @@
 - Retained source tombstones, moved eligible leads with activity/audit history and rejected merged IDs in operational customer authorization.
 - Stopped duplicate theme account-profile creation/synchronization on login/profile hooks; preserved existing legacy profiles.
 - Extended privacy to linked account IDs and old-email account request copies. Schema 1.12.0 is additive; no live migration or merge was executed.
-- Syntax passed for 68 plugin and four theme PHP files. Integration/concurrency/browser verification is pending; see `CUSTOMER-IDENTITY.md`.
+- Initial syntax passed for 68 plugin and four theme PHP files. Subsequent local verification and its limits are recorded above and in `VERIFICATION-1.17.0.md`.
 
-## 1.16.0 — Scoped linked request updates (integration verification pending)
+## 1.16.0 — Scoped linked request updates
 
 - Centralized replies, test-drive rescheduling/status transitions and account-owned cancellation with transaction locks, stale-form revisions and atomic activity/audit recording.
 - Added scoped GET/PATCH linked-request routes, customer cancellation route and lead-specific nonce-protected forms in CRM and theme request tables.
@@ -17,7 +24,7 @@
 - Reconciliation advances past core-owned records and stops on schema/storage errors; intake-switch reversal cannot bypass linked-request authorization.
 - Schema remains 1.11.0. Syntax passed for 66 plugin and four theme PHP files; integration/concurrency/browser scenarios are pending. No source database changes or data imports were performed.
 
-## 1.15.0 — Unified public CRM intake (integration verification pending)
+## 1.15.0 — Unified public CRM intake
 
 - Centralized public REST/theme enquiry validation, contact normalization, explicit consent, rate counter and honeypot; retained logged-in theme identity and customer-account request copies.
 - Added UUID replay/conflict handling with HMAC fingerprints and atomic customer/lead/activity/compatibility/audit writes. Schema 1.11.0 adds nullable replay columns and a unique key.

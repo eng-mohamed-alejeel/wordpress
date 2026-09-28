@@ -27,6 +27,8 @@ require_once get_template_directory() . '/inc/about-contact-pages.php';
 
 // تحميل نظام تسجيل الدخول والتسجيل (حساب المستخدم)
 require_once get_template_directory() . '/inc/accounts.php';
+require_once get_template_directory() . '/inc/crm.php';
+require_once get_template_directory() . '/inc/customer-workflow.php';
 
 function car_dealer_get_setting( $setting, $default = '', $type = 'display' ) {
 	$settings = get_option( 'car_dealer_settings', array() );
@@ -221,33 +223,11 @@ function car_dealer_social_share_buttons() {
 function car_dealer_lead_form( $car_id, $type = 'price_request', $title = '', $button = '' ) {
 	if ( ! $title ) { $title = __( 'اطلب السعر', 'car-dealer' ); }
 	if ( ! $button ) { $button = __( 'إرسال الطلب', 'car-dealer' ); }
-	?>
-	<div class="cd-ajax-form" data-form-type="<?php echo esc_attr( $type ); ?>" data-car-id="<?php echo esc_attr( $car_id ); ?>">
-		<h3><?php echo esc_html( $title ); ?></h3>
-		<div class="cd-form-grid">
-			<label><?php esc_html_e( 'الاسم', 'car-dealer' ); ?><input type="text" name="name" required></label>
-			<label><?php esc_html_e( 'الجوال', 'car-dealer' ); ?><input type="tel" name="phone" required></label>
-		</div>
-		<label><?php esc_html_e( 'ملاحظات', 'car-dealer' ); ?><textarea name="message"></textarea></label>
-		<button class="btn btn-primary" type="submit"><?php echo esc_html( $button ); ?></button>
-		<p class="cd-form-status"></p>
-	</div>
-	<?php
+	car_dealer_render_lead_form( $car_id, $type, $title, $button );
 }
 
 function car_dealer_booking_form( $car_id ) {
-	?>
-	<div class="cd-ajax-form" data-form-type="book_drive" data-car-id="<?php echo esc_attr( $car_id ); ?>">
-		<h3><?php esc_html_e( 'احجز تجربة قيادة', 'car-dealer' ); ?></h3>
-		<div class="cd-form-grid">
-			<label><?php esc_html_e( 'الاسم', 'car-dealer' ); ?><input type="text" name="name" required></label>
-			<label><?php esc_html_e( 'الجوال', 'car-dealer' ); ?><input type="tel" name="phone" required></label>
-		</div>
-		<label><?php esc_html_e( 'التاريخ المفضل', 'car-dealer' ); ?><input type="date" name="date"></label>
-		<button class="btn btn-primary" type="submit"><?php esc_html_e( 'إرسال الحجز', 'car-dealer' ); ?></button>
-		<p class="cd-form-status"></p>
-	</div>
-	<?php
+	car_dealer_render_booking_form( $car_id );
 }
 
 function car_dealer_ajax_handler() {
