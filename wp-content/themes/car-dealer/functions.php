@@ -223,11 +223,11 @@ function car_dealer_social_share_buttons() {
 function car_dealer_lead_form( $car_id, $type = 'price_request', $title = '', $button = '' ) {
 	if ( ! $title ) { $title = __( 'اطلب السعر', 'car-dealer' ); }
 	if ( ! $button ) { $button = __( 'إرسال الطلب', 'car-dealer' ); }
-	car_dealer_render_lead_form( $car_id, $type, $title, $button );
+	car_dealer_render_lead_form( absint( $car_id ), $type, $title, $button );
 }
 
 function car_dealer_booking_form( $car_id ) {
-	car_dealer_render_booking_form( $car_id );
+	car_dealer_render_booking_form( absint( $car_id ) );
 }
 
 function car_dealer_ajax_handler() {

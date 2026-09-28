@@ -5,6 +5,7 @@ if ( PHP_SAPI !== 'cli' ) {
 }
 define( 'ABSPATH', dirname( __DIR__, 4 ) . '/' );
 define( 'ARRAY_A', 'ARRAY_A' );
+define( 'OBJECT', 'OBJECT' );
 require ABSPATH . 'wp-includes/class-wp-error.php';
 
 $test_user = 0;
@@ -32,21 +33,40 @@ function get_option( $key, $default = false ) {
 /** Query recorder. Result filtering is not simulated; assertions inspect SQL and arguments. */
 final class AuthorizationDatabase {
 	public $prefix = 'wp_';
+	public $users = 'wp_users';
+	public $posts = 'wp_posts';
+	public $postmeta = 'wp_postmeta';
+	public $options = 'wp_options';
+	public $charset_collate = 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
+	public $last_error = '';
 	public $last_query = '';
 	public $last_args = array();
+	public $insert_id = 0;
+	public $suppress_errors = false;
 	public $row = null;
+	public $col = array();
 	public $writes = 0;
-	public function prepare( $sql, ...$args ) {
+	/**
+	 * Signatures and members mirror wpdb (optional query/output parameters, string for
+	 * prepare(), array|null for get_results(), the global table-name properties) so
+	 * callers that rely on the real surface are not reported against this recorder.
+	 */
+	public function prepare( $sql, ...$args ): string {
 		$this->last_query = $sql;
 		$this->last_args = count( $args ) === 1 && is_array( $args[0] ) ? $args[0] : $args;
 		return $sql;
 	}
-	public function get_row( $sql, $format ) { return $this->row; }
-	public function get_var( $sql ) { return in_array( (int) ( $this->last_args[0] ?? 0 ), $GLOBALS['test_active_branches'], true ) ? '1' : null; }
-	public function get_results( $sql, $format ) { return array(); }
+	public function get_row( $sql = null, $format = OBJECT, $y = 0 ) { return $this->row; }
+	public function get_col( $sql = null, $x = 0 ) { return $this->col; }
+	public function get_var( $sql = null, $x = 0, $y = 0 ) { return in_array( (int) ( $this->last_args[0] ?? 0 ), $GLOBALS['test_active_branches'], true ) ? '1' : null; }
+	public function get_results( $sql = null, $format = OBJECT ): ?array { return array(); }
+	public function get_charset_collate(): string { return $this->charset_collate; }
+	public function esc_like( $text ): string { return addcslashes( (string) $text, '_%\\' ); }
 	public function query( $sql ) { return true; }
 	public function insert( ...$args ) { ++$this->writes; throw new RuntimeException( 'Unexpected write.' ); }
+	public function replace( ...$args ) { ++$this->writes; throw new RuntimeException( 'Unexpected write.' ); }
 	public function update( ...$args ) { ++$this->writes; throw new RuntimeException( 'Unexpected write.' ); }
+	public function delete( ...$args ) { ++$this->writes; throw new RuntimeException( 'Unexpected write.' ); }
 }
 $wpdb = new AuthorizationDatabase();
 require __DIR__ . '/../src/Database/Schema.php';

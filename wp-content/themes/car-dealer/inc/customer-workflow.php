@@ -130,7 +130,7 @@ function car_dealer_crm_related_requests( $id ) {
   if ( ! $ids ) { continue; }
   $table = car_dealer_request_table( $type );
   $scope = class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ? \AutoDealership\Leads\RequestWorkflow::staff_predicate( $type, 'r.id' ) : '1=1';
-  $rows = $wpdb->get_results( "SELECT r.* FROM $table r WHERE r.id IN (" . implode( ',', $ids ) . ") AND $scope ORDER BY r.id DESC LIMIT 20" );
+  $rows = $wpdb->get_results( "SELECT r.* FROM $table r WHERE r.id IN (" . implode( ',', $ids ) . ") AND $scope ORDER BY r.id DESC LIMIT 20" ) ?: array();
   foreach ( $rows as $row ) {
    $found = true;
    echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=car-dealer-' . ( 'booking' === $type ? 'bookings' : 'messages' ) . '&request_id=' . $row->id ) ) . '">' . ( 'booking' === $type ? 'الحجز' : 'الطلب' ) . ' #' . absint( $row->id ) . '</a> — ' . esc_html( car_dealer_request_statuses( $type )[ $row->status ] ?? $row->status ) . ' — ' . esc_html( $row->created_at ) . '</p>';
@@ -147,7 +147,7 @@ function car_dealer_reconcile_customer_requests() {
  foreach ( array( 'message', 'booking' ) as $type ) {
   $table = car_dealer_request_table( $type ); $option = 'cd_customer_link_cursor_' . $type;
   $cursor = absint( get_option( $option, 0 ) );
-  $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE user_id > 0 AND id > %d ORDER BY id ASC LIMIT 100", $cursor ) );
+  $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE user_id > 0 AND id > %d ORDER BY id ASC LIMIT 100", $cursor ) ) ?: array();
   foreach ( $rows as $row ) {
    if ( class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ) {
     $lead_id = \AutoDealership\Leads\RequestWorkflow::linked_lead( $type, (int) $row->id );

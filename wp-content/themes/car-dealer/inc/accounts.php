@@ -3,9 +3,9 @@
 defined( 'ABSPATH' ) || exit;
 function car_dealer_account_url( $view = 'dashboard' ) { return add_query_arg( 'cd_account', $view, home_url( '/' ) ); }
 function car_dealer_account_view() { return isset( $_GET['cd_account'] ) && is_string( $_GET['cd_account'] ) ? sanitize_key( $_GET['cd_account'] ) : ''; }
-function car_dealer_account_field( $name ) { return isset( $_POST[$name] ) && is_string( $_POST[$name] ) ? wp_unslash( $_POST[$name] ) : ''; }
+function car_dealer_account_field( string $name ) { return isset( $_POST[$name] ) && is_string( $_POST[$name] ) ? wp_unslash( $_POST[$name] ) : ''; }
 add_action( 'init', function () { add_role( 'car_dealer_customer', 'عميل المعرض', array( 'read' => true ) ); } );
-function car_dealer_account_kind( $user ) {
+function car_dealer_account_kind( WP_User $user ) {
  if ( user_can( $user, 'manage_options' ) ) { return 'administrator'; }
  if ( user_can( $user, 'edit_others_cars' ) && user_can( $user, 'manage_car_dealer' ) ) { return 'manager'; }
  if ( user_can( $user, 'manage_car_dealer' ) ) { return 'sales'; }
@@ -41,7 +41,7 @@ add_action( 'admin_init', function () {
  if ( array_intersect( array( 'car_dealer_customer', 'subscriber' ), $user->roles ) && ! current_user_can( 'edit_posts' ) && ! current_user_can( 'manage_car_dealer' ) ) { wp_safe_redirect( car_dealer_account_url() ); exit; }
 } );
 
-function car_dealer_account_process( $view ) {
+function car_dealer_account_process( string $view ) {
   if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) { return ''; }
   if ( ! wp_verify_nonce( car_dealer_account_field( '_wpnonce' ), 'cd_account_' . $view ) ) { return 'انتهت صلاحية النموذج. حدّث الصفحة وحاول مجدداً.'; }
   if ( 'dashboard' === $view && is_user_logged_in() ) {
@@ -97,13 +97,13 @@ add_action( 'template_redirect', function () {
 add_filter( 'pre_get_document_title', function ( $title ) { return car_dealer_account_view() ? 'حسابي — ' . get_bloginfo( 'name' ) : $title; } );
 
 /** Ownership uses authenticated user IDs, never a submitted email address. */
-function car_dealer_account_requests( $type, $page = 1 ) {
+function car_dealer_account_requests(string $type, int $page = 1 ): array {
  global $wpdb;
  if ( ! get_current_user_id() ) { return array(); }
  $suffix = 'bookings' === $type ? 'bookings' : 'messages';
- return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}car_dealer_{$suffix} WHERE user_id = %d ORDER BY id DESC LIMIT 11 OFFSET %d", get_current_user_id(), ( max( 1, $page ) - 1 ) * 10 ) );
+ return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}car_dealer_{$suffix} WHERE user_id = %d ORDER BY id DESC LIMIT 11 OFFSET %d", get_current_user_id(), ( max( 1, $page ) - 1 ) * 10 ) ) ?: array();
 }
-function car_dealer_account_request_table( $type ) {
+function car_dealer_account_request_table(string $type ) {
  $param = 'bookings' === $type ? 'booking_page' : 'message_page';
  $page = max( 1, absint( $_GET[$param] ?? 1 ) );
  $rows = car_dealer_account_requests( $type, $page ); $more = count( $rows ) > 10;

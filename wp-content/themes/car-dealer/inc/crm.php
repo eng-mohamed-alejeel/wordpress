@@ -121,7 +121,7 @@ function car_dealer_crm_import() {
  foreach ( array( 'message' => 'messages', 'booking' => 'bookings' ) as $type => $suffix ) {
   $table = $wpdb->prefix . 'car_dealer_' . $suffix;
   $cursor = absint( get_option( 'car_dealer_crm_cursor_' . $type, 0 ) );
-  $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE id > %d ORDER BY id ASC LIMIT 100", $cursor ) );
+  $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE id > %d ORDER BY id ASC LIMIT 100", $cursor ) ) ?: array();
   foreach ( $rows as $row ) {
    if ( car_dealer_crm_capture( $type, $row ) ) { $count++; }
    else {
@@ -146,7 +146,7 @@ function car_dealer_crm_form_start( $action, $id = 0 ) {
 function car_dealer_crm_summary() {
  if ( ! current_user_can( 'manage_car_dealer' ) ) { return; }
  global $wpdb;
- $counts = $wpdb->get_results( "SELECT m.meta_value stage, COUNT(*) total FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON p.ID=m.post_id AND m.meta_key='_crm_stage' WHERE p.post_type='cd_crm' AND p.post_status='private' GROUP BY m.meta_value", OBJECT_K );
+ $counts = $wpdb->get_results( "SELECT m.meta_value stage, COUNT(*) total FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON p.ID=m.post_id AND m.meta_key='_crm_stage' WHERE p.post_type='cd_crm' AND p.post_status='private' GROUP BY m.meta_value", OBJECT_K ) ?: array();
  $overdue = new WP_Query( array( 'post_type' => 'cd_crm', 'post_status' => 'private', 'posts_per_page' => 1, 'fields' => 'ids', 'meta_query' => array( array( 'key' => '_crm_due', 'value' => '', 'compare' => '!=' ), array( 'key' => '_crm_due', 'value' => current_time( 'Y-m-d\TH:i' ), 'compare' => '<=' ) ) ) );
  echo '<section class="cd-crm-summary"><h2><a href="' . esc_url( car_dealer_crm_url() ) . '">إدارة علاقات العملاء CRM</a></h2><div class="cd-crm-stats">';
  foreach ( car_dealer_crm_stages() as $key => $label ) { echo '<a href="' . esc_url( car_dealer_crm_url( array( 'stage' => $key ) ) ) . '"><strong>' . absint( $counts[ $key ]->total ?? 0 ) . '</strong>' . esc_html( $label ) . '</a>'; }

@@ -20,11 +20,12 @@ final class AuditPage {
 			wp_die( esc_html__( 'لا تملك صلاحية عرض سجل التدقيق.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );
 		}
 		global $wpdb;
-		$page = max( 1, absint( $_GET['paged'] ?? 1 ) );
-		$limit = 50;
-		$table = AuditLog::table_name();
-		$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" );
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT a.id,a.actor_user_id,u.display_name,a.event_key,a.subject_type,a.subject_id,a.reason,a.before_data,a.after_data,a.correlation_id,a.created_at FROM $table a LEFT JOIN {$wpdb->users} u ON u.ID=a.actor_user_id ORDER BY a.id DESC LIMIT %d OFFSET %d", $limit, ( $page - 1 ) * $limit ), ARRAY_A );
+		$page        = max( 1, absint( $_GET['paged'] ?? 1 ) );
+		$limit       = 50;
+		$table       = AuditLog::table_name();
+		$users_table = $wpdb->users;
+		$total       = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" );
+		$rows        = $wpdb->get_results( $wpdb->prepare( "SELECT a.id,a.actor_user_id,u.display_name,a.event_key,a.subject_type,a.subject_id,a.reason,a.before_data,a.after_data,a.correlation_id,a.created_at FROM $table a LEFT JOIN {$users_table} u ON u.ID=a.actor_user_id ORDER BY a.id DESC LIMIT %d OFFSET %d", $limit, ( $page - 1 ) * $limit ), ARRAY_A );
 		?>
 		<div class="wrap"><h1><?php esc_html_e( 'سجل التدقيق', 'auto-dealership-core' ); ?></h1>
 			<p><?php esc_html_e( 'عرض للقراءة فقط. لا تتضمن هذه الصفحة أدوات تعديل أو حذف للسجل.', 'auto-dealership-core' ); ?></p>

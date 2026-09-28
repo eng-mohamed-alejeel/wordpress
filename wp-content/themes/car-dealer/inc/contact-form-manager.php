@@ -146,13 +146,19 @@ function car_dealer_contact_form_shortcode() {
  return '<form method="post" class="cd-ajax-form cd-contact-form" data-action="car_dealer_contact">' . car_dealer_customer_form_fields() . '<textarea name="message" required aria-label="رسالتك" placeholder="رسالتك"></textarea><button class="btn btn-primary" type="submit">إرسال</button><p class="cd-form-status" role="status"></p></form>';
 }
 add_shortcode( 'car_dealer_contact_form', 'car_dealer_contact_form_shortcode' );
-function car_dealer_render_lead_form( $car_id, $type, $title, $button ) {
+function car_dealer_render_lead_form( $car_id, $type, $title = '', $button = '' ) {
+	$car_id = absint( $car_id ); $type = sanitize_key( $type ); $title = sanitize_text_field( $title ); $button = sanitize_text_field( $button );
 		echo '<form method="post" class="cd-ajax-form cd-lead-form" data-action="car_dealer_contact"><h2>' . esc_html( $title ) . '</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '"><input type="hidden" name="lead_type" value="' . esc_attr( $type ) . '">' . car_dealer_customer_form_fields() . '<textarea name="message" aria-label="ملاحظات إضافية" placeholder="ملاحظات إضافية"></textarea><button class="btn btn-primary" type="submit">' . esc_html( $button ) . '</button><p class="cd-form-status" role="status"></p></form>';
 }
 if ( ! function_exists( 'car_dealer_lead_form' ) ) {
-	function car_dealer_lead_form( $car_id, $type, $title, $button ) { car_dealer_render_lead_form( $car_id, $type, $title, $button ); }
+	function car_dealer_lead_form( $car_id, $type = 'price_request', $title = '', $button = '' ) {
+		if ( ! $title ) { $title = __( 'اطلب السعر', 'car-dealer' ); }
+		if ( ! $button ) { $button = __( 'إرسال الطلب', 'car-dealer' ); }
+		car_dealer_render_lead_form( $car_id, $type, $title, $button );
+	}
 }
 function car_dealer_render_booking_form( $car_id ) {
+	$car_id = absint( $car_id );
 		echo '<form method="post" class="cd-ajax-form cd-booking-form" data-action="car_dealer_booking"><h2>احجز تجربة قيادة</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '">' . car_dealer_customer_form_fields() . '<label>اليوم<input name="date" type="date" min="' . esc_attr( current_time( 'Y-m-d' ) ) . '" required></label><label>الوقت<input name="time" type="time" required></label><button class="btn btn-primary" type="submit">إرسال الطلب</button><p class="cd-form-status" role="status"></p></form>';
 }
 if ( ! function_exists( 'car_dealer_booking_form' ) ) {
@@ -163,7 +169,7 @@ if ( ! function_exists( 'car_dealer_newsletter_form' ) ) {
 		echo '<form method="post" class="cd-ajax-form cd-newsletter-form" data-action="car_dealer_subscribe">' . car_dealer_customer_form_fields( true ) . '<button class="btn btn-primary" type="submit">اشترك</button><p class="cd-form-status" role="status"></p></form>';
 	}
 }
-function car_dealer_render_table_page( $title, $table, $columns ) {
+function car_dealer_render_table_page( string $title, string $table, array $columns ) {
 	global $wpdb;
 	if ( ! current_user_can( 'manage_car_dealer' ) ) { wp_die( esc_html__( 'ليست لديك صلاحية لعرض السجلات.', 'car-dealer' ) ); }
 	if ( ! in_array( $table, array( 'car_dealer_messages', 'car_dealer_bookings', 'car_dealer_subscribers' ), true ) ) { return; }
@@ -175,7 +181,7 @@ function car_dealer_render_table_page( $title, $table, $columns ) {
  $where = ' WHERE ' . $scope;
  if ( $linked && ! empty( $_GET['request_id'] ) ) { $where .= $wpdb->prepare( ' AND r.id=%d', absint( $_GET['request_id'] ) ); }
  $total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}{$table} r$where" );
- $rows = $wpdb->get_results( $wpdb->prepare( "SELECT r.* FROM {$wpdb->prefix}{$table} r$where ORDER BY r.id DESC LIMIT 20 OFFSET %d", ( $page - 1 ) * 20 ), ARRAY_A );
+ $rows = $wpdb->get_results( $wpdb->prepare( "SELECT r.* FROM {$wpdb->prefix}{$table} r$where ORDER BY r.id DESC LIMIT 20 OFFSET %d", ( $page - 1 ) * 20 ), ARRAY_A ) ?: array();
  if ( isset( $_GET['updated'] ) ) { echo '<div class="notice notice-success"><p>تم تحديث الطلب وحساب العميل.</p></div>'; }
 	echo '<div class="wrap cd-admin" dir="rtl"><h1>' . esc_html( $title ) . '</h1><p class="cd-page-description">' . esc_html__( 'طلبات العملاء مرتبة من الأحدث. تحديث الحالة والرد يظهران في حساب صاحب الطلب.', 'car-dealer' ) . '</p><table class="widefat striped"><thead><tr>';
 	foreach ( $columns as $key => $label ) { echo '<th scope="col">' . esc_html( $label ) . '</th>'; }
