@@ -13,19 +13,20 @@ function car_dealer_schema_markup() {
 		$car_id = get_the_ID();
 		$vehicle = function_exists( 'car_dealer_public_vehicle' ) ? car_dealer_public_vehicle( $car_id ) : null;
 		$price = $vehicle && function_exists( 'car_dealer_catalog_price' ) ? car_dealer_catalog_price( $vehicle ) : (float) get_post_meta( $car_id, '_car_price', true );
+		$public_url = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer_catalog_localized_url( get_permalink( $car_id ) ) : get_permalink( $car_id );
 		$year = $vehicle ? $vehicle['model_year'] : get_post_meta( $car_id, '_car_year', true );
 		$mileage = $vehicle ? $vehicle['mileage'] : (int) get_post_meta( $car_id, '_car_kilometers', true );
 		$data = array(
 			'@context' => 'https://schema.org',
 			'@type' => 'Vehicle',
 			'name' => get_the_title(),
-			'url' => get_permalink(),
+			'url' => $public_url,
 			'offers' => array(
 				'@type' => 'Offer',
 				'price' => $price,
 				'priceCurrency' => $vehicle['currency'] ?? 'SAR',
 				'availability' => 'https://schema.org/InStock',
-				'url' => get_permalink( $car_id ),
+				'url' => $public_url,
 			),
 			'vehicleModelDate' => $year,
 			'mileageFromOdometer' => array(

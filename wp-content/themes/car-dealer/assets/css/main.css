@@ -103,6 +103,10 @@ html {
   scroll-behavior: smooth;
 }
 
+html[dir="ltr"] {
+  direction: ltr;
+}
+
 body {
   margin: 0;
   background: var(--cd-color-bg);
@@ -1737,6 +1741,42 @@ svg {
   color: var(--cd-color-muted);
 }
 
+.catalog-language-switch {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  margin-bottom: var(--cd-spacing-md);
+  padding: 0.25rem;
+  border: 1px solid currentColor;
+  border-radius: var(--cd-radius-full);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.catalog-language-switch a {
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--cd-radius-full);
+  color: inherit;
+  text-decoration: none;
+}
+
+.catalog-language-switch a[aria-current="page"] {
+  color: var(--cd-color-primary);
+  background: var(--cd-color-surface);
+  font-weight: 800;
+}
+
+.archive-content .catalog-language-switch {
+  color: var(--cd-color-primary);
+  background: var(--cd-color-surface);
+}
+
+[dir="ltr"] .filter-bar,
+[dir="ltr"] .car-card,
+[dir="ltr"] .car-single,
+[dir="ltr"] .ab-lead-tools {
+  text-align: left;
+}
+
 .empty-state {
   padding: var(--cd-spacing-xl);
   text-align: center;
@@ -3157,4 +3197,3 @@ svg {
     grid-template-columns: 1fr;
   }
 }
-

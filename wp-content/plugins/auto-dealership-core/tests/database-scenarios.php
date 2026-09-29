@@ -565,6 +565,7 @@ adc_check(is_array($unpaid_cancellation)&&'no_refund_due'===$unpaid_cancellation
 require __DIR__ . '/increment-1.14.php';
 require __DIR__ . '/increment-1.19.php';
 require __DIR__ . '/increment-1.20.php';
+require __DIR__ . '/catalog-performance.php';
 require __DIR__ . '/increment-crm.php';
 require __DIR__ . '/account-workflow-scenarios.php';
 require __DIR__ . '/customer-preferences-scenarios.php';

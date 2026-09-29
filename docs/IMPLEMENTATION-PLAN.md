@@ -134,6 +134,8 @@ Treat the platform as **not production ready** until the final release gate pass
 
 **Implementation note (1.20.0):** the operational catalog read model, controlled cutover mode, bounded URL filters/sorting, mapped card/detail/schema reads and filtered-URL SEO handling are implemented. Synthetic database/HTTP acceptance and an Arabic responsive Chromium journey pass. Compatibility remains active for the intentionally empty database. Real mapping reconciliation, English LTR, AJAX enhancement, formal accessibility measurement and representative-load performance acceptance remain open.
 
+**Implementation note (1.21.0):** the catalog now has explicit Arabic/English URLs, RTL/LTR rendering, localized archive/detail/forms/AJAX responses, canonical/hreflang output, structural accessibility automation and responsive browser coverage. A 240-vehicle isolated budget passes at 10 queries and 0.028-0.056 seconds for the cold page, total and filter options. Real mapping reconciliation, human screen-reader/contrast/device review, staging load/cache measurement and broader bilingual pages remain open.
+
 **Scope:** complete the customer-facing website on authoritative inventory while preserving editorial content.
 
 **Work:**

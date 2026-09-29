@@ -2,6 +2,8 @@
 
 ## Current evidence and independent server mode
 
+On 2026-09-29, version 1.21.0 passed 565 isolated database/HTTP checks, 48 offline authorization checks, 12 money checks, 16 pricing-policy checks, 34 real-theme catalog Chromium checks, 33 account Chromium checks plus three post-journey database assertions, seven separate public-intake DOM checks, and syntax across all 81 plugin plus 41 theme PHP files and three Node scripts. New coverage includes English LTR archive/detail/forms, localized AJAX success, canonical/hreflang, structural accessibility, four responsive sizes and a 240-vehicle local performance budget. See `VERIFICATION-1.21.0.md`.
+
 On 2026-09-29, version 1.20.0 passed 562 isolated database/HTTP checks, 48 offline authorization checks, 12 money checks, 16 pricing-policy checks, 19 real-theme catalog Chromium checks, 33 account Chromium checks plus three post-journey database assertions, seven separate public-intake DOM checks, and syntax across all 80 plugin plus 41 theme PHP files. The catalog cases cover readiness/cutover, public minimization, every filter, REST validation, native GET submission, SEO output, structured data, Arabic RTL, focus/labels and responsive layouts. See `VERIFICATION-1.20.0.md`.
 
 On 2026-09-29, version 1.19.0 passed 541 isolated database/HTTP checks, 48 offline authorization checks, 12 money checks, 16 pricing-policy checks, 33 real-theme Chromium checks plus three post-journey database assertions, seven separate public-intake DOM checks, and syntax across all 79 plugin plus 40 theme PHP files. The 26 new database assertions cover frozen fee/promotion/seller snapshots, discount tiers and margins, deposit evidence and refund separation, and delivery-document gates. See `VERIFICATION-1.19.0.md`.

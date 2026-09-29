@@ -1,12 +1,14 @@
 <?php get_header(); ?>
-<section class="archive-hero ab-inventory-hero">
+<?php $catalog_language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar'; $catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl'; ?>
+<section class="archive-hero ab-inventory-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 	<div class="container">
+		<?php if ( function_exists( 'car_dealer_catalog_language_switch' ) ) { car_dealer_catalog_language_switch(); } ?>
 		<p class="eyebrow">AUTO BRANDS INVENTORY</p>
 		<h1><?php esc_html_e( 'استعرض سيارات AUTO BRANDS', 'car-dealer' ); ?></h1>
 		<p><?php esc_html_e( 'فلترة دقيقة حسب الماركة، الموديل، السنة، السعر، نوع السيارة، الوقود وناقل الحركة.', 'car-dealer' ); ?></p>
 	</div>
 </section>
-<div class="container archive-content" dir="rtl" lang="ar">
+<div class="container archive-content" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 	<?php get_template_part( 'templates/components/filter-bar' ); ?>
 	<?php if ( have_posts() ) : ?>
 		<p class="catalog-result-count" role="status" aria-live="polite"><?php printf( esc_html( _n( 'سيارة واحدة مطابقة', '%s سيارة مطابقة', (int) $GLOBALS['wp_query']->found_posts, 'car-dealer' ) ), esc_html( number_format_i18n( (int) $GLOBALS['wp_query']->found_posts ) ) ); ?></p>

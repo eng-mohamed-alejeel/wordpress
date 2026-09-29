@@ -124,6 +124,47 @@ const assert = require('node:assert/strict');
         }
         await evaluate("document.querySelector('.ab-filter-authoritative input:not([type=hidden])').focus()");
         check(await evaluate("(() => { const style=getComputedStyle(document.activeElement); return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0; })()"), 'Keyboard focus remains visibly indicated on catalog controls.');
+
+		await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+		await navigate('/?post_type=car&lang=en', '.ab-filter-authoritative');
+		check(await evaluate("document.documentElement.lang === 'en' && document.documentElement.dir === 'ltr' && getComputedStyle(document.documentElement).direction === 'ltr' && document.querySelector('.archive-content').lang === 'en'"), 'English catalog declares English and renders LTR at the document and content levels.');
+		const englishArchiveCopy = await evaluate("(() => ({ heading: document.querySelector('.archive-hero h1')?.textContent.trim() || '', search: document.querySelector('[name=search]')?.labels?.[0]?.innerText.trim() || '', count: document.querySelector('.catalog-result-count')?.innerText.trim() || '' }))()");
+		check(englishArchiveCopy.heading.includes('Browse AUTO BRANDS Vehicles') && englishArchiveCopy.search.includes('Search') && englishArchiveCopy.count.includes('matching vehicle'), `English archive heading, filters and result announcement are translated (${JSON.stringify(englishArchiveCopy)}).`);
+		check(await evaluate("document.querySelector('.catalog-language-switch [lang=en]').getAttribute('aria-current') === 'page' && new URL(document.querySelector('.catalog-language-switch [lang=ar]').href).searchParams.get('lang') === null"), 'Catalog language switch exposes the active language and a clean Arabic URL.');
+		check(await evaluate("document.querySelector('.car-price').textContent.startsWith('SAR ') && new URL(document.querySelector('.car-title a').href).searchParams.get('lang') === 'en' && !/[\u0600-\u06ff]/.test(document.querySelector('.archive-content').innerText)"), 'English cards retain language links, format SAR and contain no Arabic interface copy.');
+		await evaluate("(() => { const form=document.querySelector('.ab-filter-authoritative'); form.elements.search.value='HTTP-201'; form.requestSubmit(); })()");
+		await wait("document.readyState === 'complete' && new URL(location.href).searchParams.get('lang') === 'en' && new URL(location.href).searchParams.get('search') === 'HTTP-201' && !!document.querySelector('.car-card')", 'English native catalog filter submission');
+		check(await evaluate("(() => { const canonical=new URL(document.querySelector('link[rel=canonical]').href); const alternates=Array.from(document.querySelectorAll('link[rel=alternate][hreflang]')).map(link=>link.hreflang); return canonical.searchParams.get('lang') === 'en' && !canonical.searchParams.has('search') && ['ar','en','x-default'].every(lang=>alternates.includes(lang)); })()"), 'English filtered URL preserves its language in canonical and complete hreflang alternates.');
+
+		await navigate('/?post_type=car&p=' + input.car_id + '&lang=en', '.car-single');
+		check(await evaluate("document.querySelector('.car-single').lang === 'en' && document.querySelector('.car-single').dir === 'ltr' && document.querySelector('.car-single-price').textContent.startsWith('SAR ') && document.querySelector('.car-single-actions').innerText.includes('Request price')"), 'English vehicle detail renders LTR with translated actions and SAR price.');
+		check(await evaluate("document.querySelector('.car-specification').innerText.includes('Stock number') && document.querySelector('.car-specification').innerText.includes('Hybrid') && document.querySelector('.car-specification').innerText.includes('SUV') && document.querySelector('.cd-booking-form h2').innerText.includes('Book a test drive')"), 'English detail specifications and lead forms use translated public copy.');
+		await evaluate("(() => { const form=document.querySelector('.cd-lead-form'); form.elements.name.value='English Catalog Visitor'; form.elements.email.value='catalog-en@example.test'; form.elements.phone.value='+966500000321'; form.requestSubmit(); })()");
+		await wait("document.querySelector('.cd-lead-form .cd-form-status').innerText.includes('request has been received')", 'English catalog lead response');
+		check(await evaluate("document.querySelector('.cd-lead-form .cd-form-status').innerText.includes('successfully')"), 'English catalog lead submission returns a localized success message.');
+		const englishSchema = await evaluate("(() => Array.from(document.querySelectorAll('script[type=\"application/ld+json\"]')).map(node=>{try{return JSON.parse(node.textContent)}catch{return null}}).find(node=>node&&node['@type']==='Vehicle'))()");
+		check(englishSchema && new URL(englishSchema.url).searchParams.get('lang') === 'en' && new URL(englishSchema.offers.url).searchParams.get('lang') === 'en', 'English Vehicle structured data uses the English public URL.');
+		const accessibility = await evaluate(`(() => {
+			const visible = element => !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+			const scope = document.querySelector('main');
+			const controls = Array.from(scope.querySelectorAll('input:not([type=hidden]),select,textarea')).filter(visible);
+			const unnamedControls = controls.filter(control => !(control.labels && control.labels.length) && !control.getAttribute('aria-label'));
+			const unnamedActions = Array.from(scope.querySelectorAll('a,button')).filter(visible).filter(action => !(action.innerText.trim() || action.getAttribute('aria-label') || action.querySelector('img[alt]')));
+			const ids = Array.from(document.querySelectorAll('[id]')).map(element => element.id).filter(Boolean);
+			const duplicateIds = ids.filter((id, index) => ids.indexOf(id) !== index);
+			const imagesWithoutAlt = Array.from(scope.querySelectorAll('img')).filter(image => !image.hasAttribute('alt'));
+			return { mains: document.querySelectorAll('main').length, h1: scope.querySelectorAll('h1').length, unnamedControls: unnamedControls.length, unnamedActions: unnamedActions.length, duplicateIds: duplicateIds.length, imagesWithoutAlt: imagesWithoutAlt.length };
+		})()`);
+		check(accessibility.mains === 1 && accessibility.h1 === 1 && accessibility.unnamedControls === 0 && accessibility.unnamedActions === 0 && accessibility.duplicateIds === 0 && accessibility.imagesWithoutAlt === 0, 'English detail passes structural name, label, landmark, heading, ID and image-alt checks.');
+		for (const width of [1440, 768, 390, 320]) {
+			await call('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width <= 390 });
+			await pause(150);
+			check(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1 && getComputedStyle(document.querySelector('.car-single')).direction === 'ltr'"), `English detail fits viewport ${width}px and remains LTR.`);
+			const screenshot = await call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
+			fs.writeFileSync(path.join(artifacts, `catalog-en-${width}.png`), Buffer.from(screenshot.data, 'base64'));
+		}
+		const timing = await evaluate("(() => { const nav=performance.getEntriesByType('navigation')[0]; return { duration: nav.duration, dom: nav.domContentLoadedEventEnd, resources: performance.getEntriesByType('resource').filter(entry => entry.name.startsWith(location.origin)).length }; })()");
+		check(timing.duration < 5000 && timing.dom < 4000 && timing.resources <= 40, `Synthetic English catalog meets local navigation budgets (${Math.round(timing.duration)}ms load, ${timing.resources} local resources).`);
         check(errors.length === 0, `No uncaught catalog JavaScript errors: ${errors.join(';')}`);
         check(badAssets.length === 0, `Catalog CSS and JavaScript assets load successfully: ${badAssets.join(';')}`);
         console.log(`Completed ${checks} real-theme catalog browser checks. Screenshots: ${artifacts}`);

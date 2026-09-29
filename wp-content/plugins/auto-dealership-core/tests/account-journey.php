@@ -34,6 +34,10 @@ try {
 	$catalog_browser_status = proc_close( $catalog_browser );
 	update_option( 'adc_public_catalog_mode', $journey_catalog_mode );
 	if ( 0 !== $catalog_browser_status ) { throw new RuntimeException( 'Catalog browser journey failed. Server log: ' . $journey_log ); }
+	// Keep the two browser journeys independent from the shared loopback rate-limit bucket.
+	$journey_session_key = hash( 'sha256', ADC_TEST_HTTP_CONFIG . '|session' );
+	$journey_rate_reset = @file_get_contents( 'http://127.0.0.1:' . $journey_port . '/adc-test-reset-rate?key=' . rawurlencode( $journey_session_key ) );
+	if ( 'ok' !== $journey_rate_reset ) { throw new RuntimeException( 'Browser rate-limit reset failed.' ); }
 	$browser = proc_open( array( getenv( 'ADC_NODE' ) ?: 'C:/Program Files/nodejs/node.exe', __DIR__ . '/browser-account-journey.cjs' ), array( 0=>array( 'pipe','r' ), 1=>STDOUT, 2=>STDERR ), $browser_pipes );
 	if ( ! is_resource( $browser ) ) { throw new RuntimeException( 'Browser worker failed.' ); }
 	fwrite( $browser_pipes[0], wp_json_encode( array( 'origin'=>'http://127.0.0.1:' . $journey_port, 'customer'=>'browser_customer', 'password'=>$journey_password, 'staff'=>'verify_admin', 'staff_password'=>$journey_staff_password, 'car_id'=>$crm_car ) ) ); fclose( $browser_pipes[0] );

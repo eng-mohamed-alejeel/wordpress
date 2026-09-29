@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.21.0 — Bilingual catalog and measurable acceptance
+
+- Added explicit `lang=ar|en` catalog URLs with Arabic default, visible language switching, correct document/component RTL and LTR, localized filters, cards, specifications, prices, lead forms and AJAX success/error responses.
+- Added language-preserving catalog/detail links, localized Vehicle structured-data URLs, and `ar`, `en` and `x-default` hreflang alternates alongside filtered-URL canonical/noindex behavior.
+- Primed mapped WordPress post and metadata caches before catalog rendering to avoid per-card lookup growth.
+- Added a 240-vehicle isolated performance scenario with stable pagination, exact totals, filter options, a 25-query ceiling and a 3-second local ceiling. Accepted runs used 10 queries in 0.028-0.056 seconds.
+- Added automated structural accessibility checks and Arabic/English responsive Chromium screenshots at 1440, 768, 390 and 320 pixels. English lead submission is exercised through the real AJAX handler.
+- Local acceptance passed 565 isolated database/HTTP checks, 34 catalog-browser checks, 33 account-browser checks plus three post-journey assertions, seven DOM checks, 48 authorization checks, 12 money checks, 16 pricing-policy checks, syntax across 81 plugin plus 41 theme PHP files, and all three Node scripts. The source database was not contacted. See `VERIFICATION-1.21.0.md`.
+
 ## 1.20.0 — Operational public catalog cutover
 
 - Added a plugin-owned public catalog read model with bounded filters for brand, model, trim, year, price, mileage, body, fuel, transmission, engine, drivetrain, colors, branch and condition, plus allowlisted sorting and search.

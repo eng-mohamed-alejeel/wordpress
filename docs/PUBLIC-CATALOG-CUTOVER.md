@@ -24,7 +24,7 @@ Filtered archive URLs emit `noindex,follow` and a canonical link to the base veh
 3. Map every intended public vehicle to one unique published `car` post through `public_post_id`.
 4. Reconcile counts for available mapped vehicles, inactive branches, unavailable vehicles, duplicate mappings and unmapped published posts.
 5. Review several cards and detail pages for price conversion, model/trim, mileage, colors, drivetrain, branch, stock number, media and structured data.
-6. Repeat the accepted Arabic RTL catalog journey and complete the pending English LTR journey at mobile and desktop sizes, including empty results and every sort option.
+6. Repeat the accepted Arabic RTL and English LTR catalog journeys at mobile and desktop sizes, including empty results, localized form responses and every sort option.
 7. Measure query time and page rendering with representative catalog volume and the production cache configuration.
 8. Select **Operational inventory authority** in **Dealership Core → Settings**, then repeat count and public-output checks.
 
@@ -34,4 +34,4 @@ Select **Gradual compatibility with theme data** in **Dealership Core → Settin
 
 ## Current acceptance state
 
-Implementation and local synthetic acceptance are complete in 1.20.0. The isolated suite passed 562 database/HTTP checks and the real-theme Chromium catalog passed 19 checks at 1440, 768, 390 and 320 pixels. The source database remains intentionally empty, so real mapping/count reconciliation, English LTR review, formal accessibility measurement and representative-load performance acceptance are still required before authoritative activation. See `VERIFICATION-1.20.0.md`.
+Implementation and expanded local synthetic acceptance are complete in 1.21.0. The isolated suite passed 565 database/HTTP checks and the real-theme Chromium catalog passed 34 Arabic/English checks at 1440, 768, 390 and 320 pixels. A 240-vehicle scenario passed its 25-query/3-second budget using 10 queries in 0.028-0.056 seconds. The source database remains intentionally empty, so real mapping/count reconciliation, human accessibility review and staging load/cache measurement are still required before authoritative activation. See `VERIFICATION-1.21.0.md`.

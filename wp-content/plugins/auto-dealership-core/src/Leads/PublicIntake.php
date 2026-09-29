@@ -67,6 +67,7 @@ final class PublicIntake {
 	public static function handle_theme( string $type ): void {
 		check_ajax_referer( 'car_dealer_frontend', 'nonce' );
 		$input = wp_unslash( $_POST );
+		$language = isset( $input['lang'] ) && is_scalar( $input['lang'] ) && 'en' === sanitize_key( (string) $input['lang'] ) ? 'en' : 'ar';
 		if ( is_user_logged_in() ) {
 			$user = wp_get_current_user();
 			$input['name'] = $user->display_name; $input['email'] = $user->user_email;
@@ -74,8 +75,18 @@ final class PublicIntake {
 		} else { $input['mobile'] = $input['phone'] ?? ''; }
 		$input['request_kind'] = $input['lead_type'] ?? 'contact';
 		$result = self::submit( $input, $type );
-		if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message'=>$result->get_error_message() ), (int) ( $result->get_error_data()['status'] ?? 400 ) ); }
-		$data = array( 'message'=>__( 'تم استلام طلبك بنجاح.', 'auto-dealership-core' ) );
+		if ( is_wp_error( $result ) ) {
+			$message = $result->get_error_message();
+			if ( 'en' === $language ) {
+				$message = array(
+					'adc_rate_limited' => 'Too many requests. Please try again later.',
+					'adc_invalid_booking_time' => 'Choose a vehicle and a future date and time in the site timezone.',
+					'adc_intake_vehicle_unavailable' => 'This vehicle is unavailable for this request.',
+				)[ $result->get_error_code() ] ?? 'The request could not be saved. Review the details and try again.';
+			}
+			wp_send_json_error( array( 'message'=>$message ), (int) ( $result->get_error_data()['status'] ?? 400 ) );
+		}
+		$data = array( 'message'=>'en' === $language ? 'Your request has been received successfully.' : __( 'تم استلام طلبك بنجاح.', 'auto-dealership-core' ) );
 		if ( 'booking' === $type ) {
 			$data['booking_id'] = $result['legacy_request_id'];
 			$data['account_url'] = is_user_logged_in() && function_exists( 'car_dealer_account_url' ) ? car_dealer_account_url() . '#customer-bookings' : '';

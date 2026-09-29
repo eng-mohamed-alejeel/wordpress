@@ -129,7 +129,7 @@ function car_dealer_submission_identity() {
 function car_dealer_customer_form_fields( $email_only = false ) {
 	$identity = is_user_logged_in() ? car_dealer_submission_identity() : array( 'name' => '', 'email' => '', 'phone' => '' );
  $html = '';
- foreach ( array( 'name' => array( 'الاسم', 'text', 'name' ), 'email' => array( 'البريد الإلكتروني', 'email', 'email' ), 'phone' => array( 'الهاتف', 'tel', 'tel' ) ) as $key => $field ) {
+ foreach ( array( 'name' => array( __( 'الاسم', 'car-dealer' ), 'text', 'name' ), 'email' => array( __( 'البريد الإلكتروني', 'car-dealer' ), 'email', 'email' ), 'phone' => array( __( 'الهاتف', 'car-dealer' ), 'tel', 'tel' ) ) as $key => $field ) {
   if ( $email_only && 'email' !== $key ) { continue; }
   $phone_required = class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled();
   $html .= '<label>' . esc_html( $field[0] ) . '<input name="' . esc_attr( $key ) . '" type="' . esc_attr( $field[1] ) . '"' . ( 'name' !== $key ? ' dir="ltr"' : '' ) . ' autocomplete="' . esc_attr( $field[2] ) . '" value="' . esc_attr( $identity[$key] ) . '"' . ( 'phone' !== $key || $phone_required ? ' required' : '' ) . ( is_user_logged_in() ? ' readonly' : '' ) . '></label>';
@@ -148,7 +148,8 @@ function car_dealer_contact_form_shortcode() {
 add_shortcode( 'car_dealer_contact_form', 'car_dealer_contact_form_shortcode' );
 function car_dealer_render_lead_form( $car_id, $type, $title = '', $button = '' ) {
 	$car_id = absint( $car_id ); $type = sanitize_key( $type ); $title = sanitize_text_field( $title ); $button = sanitize_text_field( $button );
-		echo '<form method="post" class="cd-ajax-form cd-lead-form" data-action="car_dealer_contact"><h2>' . esc_html( $title ) . '</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '"><input type="hidden" name="lead_type" value="' . esc_attr( $type ) . '">' . car_dealer_customer_form_fields() . '<textarea name="message" aria-label="ملاحظات إضافية" placeholder="ملاحظات إضافية"></textarea><button class="btn btn-primary" type="submit">' . esc_html( $button ) . '</button><p class="cd-form-status" role="status"></p></form>';
+		$language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
+		echo '<form method="post" class="cd-ajax-form cd-lead-form" data-action="car_dealer_contact"><h2>' . esc_html( $title ) . '</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '"><input type="hidden" name="lead_type" value="' . esc_attr( $type ) . '"><input type="hidden" name="lang" value="' . esc_attr( $language ) . '">' . car_dealer_customer_form_fields() . '<textarea name="message" aria-label="' . esc_attr__( 'ملاحظات إضافية', 'car-dealer' ) . '" placeholder="' . esc_attr__( 'ملاحظات إضافية', 'car-dealer' ) . '"></textarea><button class="btn btn-primary" type="submit">' . esc_html( $button ) . '</button><p class="cd-form-status" role="status"></p></form>';
 }
 if ( ! function_exists( 'car_dealer_lead_form' ) ) {
 	function car_dealer_lead_form( $car_id, $type = 'price_request', $title = '', $button = '' ) {
@@ -159,7 +160,8 @@ if ( ! function_exists( 'car_dealer_lead_form' ) ) {
 }
 function car_dealer_render_booking_form( $car_id ) {
 	$car_id = absint( $car_id );
-		echo '<form method="post" class="cd-ajax-form cd-booking-form" data-action="car_dealer_booking"><h2>احجز تجربة قيادة</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '">' . car_dealer_customer_form_fields() . '<label>اليوم<input name="date" type="date" min="' . esc_attr( current_time( 'Y-m-d' ) ) . '" required></label><label>الوقت<input name="time" type="time" required></label><button class="btn btn-primary" type="submit">إرسال الطلب</button><p class="cd-form-status" role="status"></p></form>';
+		$language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
+		echo '<form method="post" class="cd-ajax-form cd-booking-form" data-action="car_dealer_booking"><h2>' . esc_html__( 'احجز تجربة قيادة', 'car-dealer' ) . '</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '"><input type="hidden" name="lang" value="' . esc_attr( $language ) . '">' . car_dealer_customer_form_fields() . '<label>' . esc_html__( 'اليوم', 'car-dealer' ) . '<input name="date" type="date" min="' . esc_attr( current_time( 'Y-m-d' ) ) . '" required></label><label>' . esc_html__( 'الوقت', 'car-dealer' ) . '<input name="time" type="time" required></label><button class="btn btn-primary" type="submit">' . esc_html__( 'إرسال الطلب', 'car-dealer' ) . '</button><p class="cd-form-status" role="status"></p></form>';
 }
 if ( ! function_exists( 'car_dealer_booking_form' ) ) {
 	function car_dealer_booking_form( $car_id ) { car_dealer_render_booking_form( $car_id ); }

@@ -40,6 +40,13 @@ unset( $config );
 if ( '/wp-admin/admin-ajax.php' === (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ) ) { define( 'DOING_AJAX', true ); }
 require ABSPATH . 'wp-settings.php';
 add_filter( 'pre_wp_mail', '__return_true' );
+if ( $theme_test && '/adc-test-reset-rate' === (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ) ) {
+	if ( ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true ) || ! hash_equals( $session_key, (string) ( $_GET['key'] ?? '' ) ) ) { http_response_code( 403 ); exit; }
+	delete_transient( 'adc_lead_rate_' . hash_hmac( 'sha256', (string) $_SERVER['REMOTE_ADDR'], wp_salt( 'auth' ) ) );
+	header( 'Content-Type: text/plain' );
+	echo 'ok';
+	exit;
+}
 if ( '/adc-test-session' === (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ) ) {
 	if ( ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true ) || ! hash_equals( $session_key, (string) ( $_GET['key'] ?? '' ) ) ) { http_response_code( 403 ); exit; }
 	$user_id = absint( $_GET['user_id'] ?? 0 );

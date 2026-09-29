@@ -18,18 +18,21 @@ while ( have_posts() ) :
 	$features     = $vehicle && function_exists( 'car_dealer_catalog_features' ) ? car_dealer_catalog_features( $vehicle ) : ( is_array( $features_meta ) ? array_filter( array_map( 'trim', $features_meta ) ) : array_filter( array_map( 'trim', explode( "\n", (string) $features_meta ) ) ) );
 	$brands       = get_the_terms( $id, 'car_brand' );
 	$brand_name   = $vehicle ? $vehicle['brand'] : ( ! is_wp_error( $brands ) && ! empty( $brands ) ? $brands[0]->name : '' );
-	$wa_message   = sprintf( 'مرحباً AUTO BRANDS، أريد الاستفسار عن %s', get_the_title() );
+	$catalog_language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
+	$catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl';
+	$wa_message   = 'en' === $catalog_language ? sprintf( 'Hello AUTO BRANDS, I would like to ask about %s', get_the_title() ) : sprintf( 'مرحباً AUTO BRANDS، أريد الاستفسار عن %s', get_the_title() );
 	?>
-	<section class="ab-car-hero">
+	<section class="ab-car-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div class="container ab-car-hero-grid">
 			<div class="car-single-media">
 				<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large', array( 'loading' => 'eager' ) ); } else { ?><div class="car-image-placeholder">🚘</div><?php } ?>
 			</div>
 			<div class="car-single-content">
+				<?php if ( function_exists( 'car_dealer_catalog_language_switch' ) ) { car_dealer_catalog_language_switch(); } ?>
 				<p class="eyebrow"><?php echo $brand_name ? esc_html( $brand_name ) : esc_html__( 'AUTO BRANDS', 'car-dealer' ); ?></p>
 				<h1><?php the_title(); ?></h1>
-				<?php if ( $price ) : ?><p class="car-single-price"><?php echo esc_html( car_dealer_format_price( $price ) ); ?></p><?php endif; ?>
-				<?php if ( $monthly ) : ?><p class="car-monthly car-single-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
+				<?php if ( $price ) : ?><p class="car-single-price"><?php echo esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ); ?></p><?php endif; ?>
+				<?php if ( $monthly ) : ?><p class="car-monthly car-single-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $monthly ) : car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
 				<div class="car-single-actions">
 					<a class="btn btn-primary" href="#request-price"><?php esc_html_e( 'اطلب السعر', 'car-dealer' ); ?></a>
 					<a class="btn btn-outline" href="#book-drive"><?php esc_html_e( 'احجز تجربة قيادة', 'car-dealer' ); ?></a>
@@ -41,7 +44,7 @@ while ( have_posts() ) :
 		</div>
 	</section>
 
-	<article class="car-single container" dir="rtl" lang="ar">
+	<article class="car-single container" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div>
 			<div class="car-description"><h2><?php esc_html_e( 'الوصف', 'car-dealer' ); ?></h2><?php the_content(); ?></div>
 			<?php if ( $features ) : ?>
@@ -60,15 +63,15 @@ while ( have_posts() ) :
 					__( 'حالة المخزون', 'car-dealer' ) => function_exists( 'car_dealer_inventory_status_label' ) ? car_dealer_inventory_status_label( $status ) : $status,
 					__( 'اللون', 'car-dealer' ) => $color,
 					__( 'اللون الداخلي', 'car-dealer' ) => $vehicle['interior_color'] ?? '',
-					__( 'نوع الهيكل', 'car-dealer' ) => $vehicle['body_type'] ?? '',
-					__( 'الوقود', 'car-dealer' ) => $fuel,
+					__( 'نوع الهيكل', 'car-dealer' ) => $vehicle && function_exists( 'car_dealer_catalog_value_label' ) ? car_dealer_catalog_value_label( (string) ( $vehicle['body_type'] ?? '' ) ) : ( $vehicle['body_type'] ?? '' ),
+					__( 'الوقود', 'car-dealer' ) => function_exists( 'car_dealer_catalog_value_label' ) ? car_dealer_catalog_value_label( (string) $fuel ) : $fuel,
 					__( 'ناقل الحركة', 'car-dealer' ) => $transmission ? ( 'automatic' === $transmission ? __( 'أوتوماتيكي', 'car-dealer' ) : __( 'يدوي', 'car-dealer' ) ) : '',
 					__( 'المحرك', 'car-dealer' ) => $vehicle['engine_size'] ?? '',
 					__( 'نظام الدفع', 'car-dealer' ) => strtoupper( (string) ( $vehicle['drivetrain'] ?? '' ) ),
 					__( 'القوة', 'car-dealer' ) => ! empty( $vehicle['horsepower'] ) ? number_format_i18n( $vehicle['horsepower'] ) . ' HP' : '',
 					__( 'الأبواب', 'car-dealer' ) => $vehicle['doors'] ?? '',
 					__( 'المقاعد', 'car-dealer' ) => $vehicle['seats'] ?? '',
-					__( 'الممشى', 'car-dealer' ) => $kilometers ? number_format_i18n( $kilometers ) . ' كم' : '',
+					__( 'الممشى', 'car-dealer' ) => $kilometers ? ( function_exists( 'car_dealer_catalog_distance' ) ? car_dealer_catalog_distance( $kilometers ) : number_format_i18n( $kilometers ) . ' كم' ) : '',
 					__( 'الفرع', 'car-dealer' ) => $vehicle['branch_name'] ?? '',
 					__( 'رقم المخزون', 'car-dealer' ) => $vehicle['stock_number'] ?? '',
 				) as $label => $value ) : if ( '' === (string) $value ) { continue; } ?><div><dt><?php echo esc_html( $label ); ?></dt><dd><?php echo esc_html( $value ); ?></dd></div><?php endforeach; ?>
@@ -76,7 +79,7 @@ while ( have_posts() ) :
 		</aside>
 	</article>
 
-	<section class="container cd-single-tools ab-lead-tools">
+	<section class="container cd-single-tools ab-lead-tools" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div id="request-price"><?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $id, 'price_request', __( 'اطلب السعر', 'car-dealer' ), __( 'إرسال طلب السعر', 'car-dealer' ) ); } ?></div>
 		<div id="book-drive"><?php if ( function_exists( 'car_dealer_booking_form' ) ) { car_dealer_booking_form( $id ); } ?></div>
 		<div id="finance-request"><?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $id, 'finance_request', __( 'اطلب تمويل', 'car-dealer' ), __( 'إرسال طلب التمويل', 'car-dealer' ) ); } ?></div>

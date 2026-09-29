@@ -2,7 +2,16 @@
 
 Updated: 2026-09-29. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.20.0 (implementation and local acceptance complete)
+## Current increment: 1.21.0 (implementation and local acceptance complete)
+
+- Added an explicit `lang=ar|en` catalog contract with Arabic as the default, a visible language switch, document and component RTL/LTR semantics, localized prices, filters, details, lead forms and AJAX responses.
+- Added localized canonical URLs plus `ar`, `en` and `x-default` hreflang links while keeping filtered result pages out of the search index.
+- Primed mapped WordPress post/meta caches in the central catalog read model and added a 240-vehicle isolated performance scenario. The cold page, total and filter-option path used 10 queries in 0.028-0.056 seconds against a budget of 25 queries and 3 seconds.
+- Added structural accessibility coverage for landmarks, heading count, form labels, action names, duplicate IDs and image alternatives, plus English responsive screenshots at 1440, 768, 390 and 320 pixels.
+- Local acceptance passes syntax across 81 plugin and 41 theme PHP files, all three Node scripts, 48 authorization checks, 12 money checks, 16 pricing-policy checks, 565 isolated database/HTTP checks, 34 real-theme catalog browser checks, 33 account-browser checks plus three post-journey database assertions, and seven standalone DOM checks. The source database was not contacted. See `VERIFICATION-1.21.0.md`.
+- Compatibility remains selected because the operational database is intentionally empty. Authoritative activation still requires actual branch/vehicle setup, unique post mappings and real count/sample reconciliation.
+
+## Previous increment: 1.20.0 (implementation and local acceptance complete)
 
 - Added the plugin-owned public catalog query boundary and expanded its REST contract across vehicle identity, specification, range, branch, search and allowlisted sort fields.
 - Added an audited cutover setting and readiness counts. `compatibility` remains the default because the operational database is intentionally empty; `authoritative` activation rejects schema drift, unmapped published posts and duplicate mappings, then hides every unavailable, unpublished or inactive-branch vehicle.
@@ -77,7 +86,7 @@ Updated: 2026-09-29. This records completed increments, not completion of whole 
 2. Prepare the new-installation setup using actual branch, brand, location and staff assignments when supplied. Current-state backup/restore passed; no historical restore/import is required.
 3. Local 1.18.0 verification passes 515 database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate form-script checks. Historical claims and financial/documentary merging apply only if later required; no historical import is needed for this empty deployment.
 4. Pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output and delivery document gates are implemented and locally accepted in 1.19.0. Complete provider/ERP reconciliation and business review of the configured values.
-5. Reconcile real vehicle/post mappings and activate/review the implemented authoritative catalog. The synthetic Arabic responsive journey passes; complete English LTR, AJAX enhancement, formal accessibility measurement and performance review.
+5. Reconcile real vehicle/post mappings and activate/review the implemented authoritative catalog. Synthetic Arabic/English responsive journeys, localized AJAX, structural accessibility checks and the 240-vehicle local budget pass; complete human accessibility review and production-like staging load/cache measurement.
 6. Implement scoped operational reporting, notification outbox/retries, provider-specific ERP/payment/finance/message adapters and job monitoring after provider contracts and credentials are supplied.
 7. Rehearse controlled cutover/rollback and satisfy the security, browser, operational and business release gates. Overall readiness remains FAIL; the full enterprise plan is not complete.
 
@@ -229,7 +238,7 @@ Current 1.15–1.17 results and limits are recorded at the top of this document 
 | Payment/delivery path | PASS: finance approval alone, pending/partial payment, self-approval, foreign branch, overpayment and audit failures are blocked; complete funded flow reaches delivered. |
 | Retention/financial export | PASS: disabled-by-default bounded retention, active/recent record protection and audit rollback; scoped/minimized CSV, date bounds, formula neutralization and mandatory export audit. The operator must still approve the legal duration. |
 | Migration inventory | PASS: eligible/invalid vehicles, linked/orphaned offers, read-only behavior and fallback-branch rejection. Production-copy counts and restore timing remain unverified. |
-| REST/admin | PASS: real localhost HTTP checks cover session cookies, nonces, validation, public active-branch listing, public lead intake, scoped CRM, inventory creation/state, complete public catalog filters/minimization, quote/discount/reservation/sale/finance/payment boundaries, complete staged transfers, and the funded delivery sequence through balance entry, independent verification, preparation, VIN confirmation, approval and release. Negative cases assert unchanged rows/state; eligible actors complete transitions. Arabic catalog and account browser layouts pass at four viewport sizes; English LTR and formal accessibility remain open. |
+| REST/admin | PASS: real localhost HTTP checks cover session cookies, nonces, validation, public active-branch listing, public lead intake, scoped CRM, inventory creation/state, complete public catalog filters/minimization, quote/discount/reservation/sale/finance/payment boundaries, complete staged transfers, and the funded delivery sequence through balance entry, independent verification, preparation, VIN confirmation, approval and release. Negative cases assert unchanged rows/state; eligible actors complete transitions. Arabic and English catalog layouts plus the Arabic account journey pass at four viewport sizes; human accessibility review remains open. |
 | Cleanup | PASS: the runner removed its generated database; test scenarios did not write to source tables. |
 
 ## Next ordered work

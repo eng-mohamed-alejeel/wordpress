@@ -146,6 +146,10 @@ final class PublicCatalog {
 		$args[] = $limit;
 		$args[] = ( $page - 1 ) * $limit;
 		$items = $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
+		$post_ids = array_values( array_filter( array_map( 'absint', wp_list_pluck( $items, 'public_post_id' ) ) ) );
+		if ( $post_ids && function_exists( '_prime_post_caches' ) ) {
+			_prime_post_caches( $post_ids, true, true );
+		}
 
 		foreach ( $items as &$item ) {
 			$item = self::cast_item( $item );

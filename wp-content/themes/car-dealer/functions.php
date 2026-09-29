@@ -210,14 +210,15 @@ function car_dealer_comparison_button( $car_id ) {
 }
 
 function car_dealer_social_share_buttons() {
-	$url = urlencode( get_permalink() );
+	$share_url = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer_catalog_localized_url( get_permalink() ) : get_permalink();
+	$url = urlencode( $share_url );
 	$title = urlencode( get_the_title() );
 	?>
 	<div class="cd-social-share">
 		<span><?php esc_html_e( 'مشاركة:', 'car-dealer' ); ?></span>
-		<a href="https://wa.me/?text=<?php echo $title . ' ' . $url; ?>" target="_blank" rel="noopener">واتساب</a>
-		<a href="https://twitter.com/intent/tweet?text=<?php echo $title; ?>&url=<?php echo $url; ?>" target="_blank" rel="noopener">تويتر</a>
-		<a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $url; ?>" target="_blank" rel="noopener">فيسبوك</a>
+		<a href="https://wa.me/?text=<?php echo $title . ' ' . $url; ?>" target="_blank" rel="noopener"><?php esc_html_e( 'واتساب', 'car-dealer' ); ?></a>
+		<a href="https://twitter.com/intent/tweet?text=<?php echo $title; ?>&url=<?php echo $url; ?>" target="_blank" rel="noopener"><?php esc_html_e( 'تويتر', 'car-dealer' ); ?></a>
+		<a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $url; ?>" target="_blank" rel="noopener"><?php esc_html_e( 'فيسبوك', 'car-dealer' ); ?></a>
 	</div>
 	<?php
 }
@@ -274,7 +275,7 @@ function car_dealer_shortcode_loan_calculator( $atts ) {
 	?>
 	<div class="cd-tool">
 		<h3><?php esc_html_e( 'حاسبة التمويل', 'car-dealer' ); ?></h3>
-		<?php if ( $price ) : ?><p><?php printf( esc_html__( 'سعر السيارة: %s', 'car-dealer' ), esc_html( car_dealer_format_price( $price ) ) ); ?></p><?php endif; ?>
+		<?php if ( $price ) : ?><p><?php printf( esc_html__( 'سعر السيارة: %s', 'car-dealer' ), esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ) ); ?></p><?php endif; ?>
 		<div class="cd-ajax-form" data-form-type="loan_calculator">
 			<label><?php esc_html_e( 'مبلغ التمويل', 'car-dealer' ); ?><input type="number" name="amount" value="<?php echo esc_attr( $price ); ?>"></label>
 			<label><?php esc_html_e( 'المدة (سنوات)', 'car-dealer' ); ?><select name="years"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label>
