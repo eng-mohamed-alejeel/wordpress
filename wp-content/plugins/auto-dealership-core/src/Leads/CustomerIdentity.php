@@ -9,6 +9,107 @@ defined( 'ABSPATH' ) || exit;
 
 /** Account authentication and reviewed CRM consolidation; contact equality grants no access. */
 final class CustomerIdentity {
+	private const PREFERENCE_META = 'adc_marketing_consent';
+	private const PREFERENCE_AT_META = 'adc_marketing_consent_at';
+
+	public static function boot(): void {
+		add_action( 'profile_update', array( self::class, 'profile_updated' ), 20, 2 );
+		foreach ( array( 'added_user_meta', 'updated_user_meta', 'deleted_user_meta' ) as $hook ) {
+			add_action( $hook, array( self::class, 'profile_meta_updated' ), 20, 4 );
+		}
+		add_action( 'wp_login', array( self::class, 'account_login' ), 20, 2 );
+	}
+
+	public static function profile_updated( int $user_id, $old_user_data = null ): void { self::sync_account_profile( $user_id ); }
+	public static function account_login( string $login, \WP_User $user ): void { self::sync_account_profile( (int) $user->ID ); }
+	public static function profile_meta_updated( $meta_id, int $user_id, string $key, $value = null ): void {
+		if ( 'car_dealer_phone' === $key ) { self::sync_account_profile( $user_id ); }
+	}
+
+	/** Return the current account's explicit marketing preference without exposing another account. */
+	public static function current_preferences() {
+		global $wpdb;
+		$user_id = get_current_user_id();
+		if ( ! $user_id ) { return self::error( 'adc_identity_forbidden', 403 ); }
+		if ( ! Schema::is_ready() ) { return self::error( 'adc_identity_unavailable', 503 ); }
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT id,consent_marketing,consent_at FROM ' . Schema::table( 'customers' ) . ' WHERE account_user_id=%d AND merged_into_id IS NULL', $user_id ), ARRAY_A );
+		if ( $wpdb->last_error ) { return self::error( 'adc_identity_unavailable', 503 ); }
+		$has_meta = metadata_exists( 'user', $user_id, self::PREFERENCE_META );
+		$enabled = $row ? (bool) $row['consent_marketing'] : ( $has_meta && '1' === (string) get_user_meta( $user_id, self::PREFERENCE_META, true ) );
+		$recorded_at = $row ? (string) $row['consent_at'] : (string) get_user_meta( $user_id, self::PREFERENCE_AT_META, true );
+		return array( 'consent_marketing'=>$enabled, 'recorded_at'=>$recorded_at, 'linked_customer_id'=>(int) ( $row['id'] ?? 0 ) );
+	}
+
+	/** Store opt-in or opt-out explicitly for the account and its linked CRM identity. */
+	public static function update_preferences( bool $marketing ) {
+		global $wpdb;
+		$user_id = get_current_user_id();
+		if ( ! $user_id || ! Transaction::begin() ) { return self::error( $user_id ? 'adc_identity_unavailable' : 'adc_identity_forbidden', $user_id ? 503 : 403 ); }
+		foreach ( array( $wpdb->users, $wpdb->usermeta ) as $account_table ) {
+			if ( 'InnoDB' !== $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $account_table ) ) ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_identity_unavailable', 503 ); }
+		}
+		$user = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM {$wpdb->users} WHERE ID=%d FOR UPDATE", $user_id ) );
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT id,consent_marketing,consent_at FROM ' . Schema::table( 'customers' ) . ' WHERE account_user_id=%d AND merged_into_id IS NULL FOR UPDATE', $user_id ), ARRAY_A );
+		if ( $wpdb->last_error || ! $user ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_identity_unavailable', 503 ); }
+		$before = $row ? (bool) $row['consent_marketing'] : ( metadata_exists( 'user', $user_id, self::PREFERENCE_META ) && '1' === (string) get_user_meta( $user_id, self::PREFERENCE_META, true ) );
+		$now = current_time( 'mysql', true );
+		$recorded_at = $marketing ? $now : '';
+		update_user_meta( $user_id, self::PREFERENCE_META, $marketing ? '1' : '0' );
+		update_user_meta( $user_id, self::PREFERENCE_AT_META, $recorded_at );
+		if ( (string) get_user_meta( $user_id, self::PREFERENCE_META, true ) !== ( $marketing ? '1' : '0' ) || (string) get_user_meta( $user_id, self::PREFERENCE_AT_META, true ) !== $recorded_at ) {
+			$wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
+		}
+		if ( $row && false === $wpdb->update( Schema::table( 'customers' ), array( 'consent_marketing'=>$marketing ? 1 : 0, 'consent_at'=>$marketing ? $now : null, 'updated_at'=>$now ), array( 'id'=>(int) $row['id'] ) ) ) {
+			$wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
+		}
+		$subject_type = $row ? 'customer' : 'account'; $subject_id = $row ? (int) $row['id'] : $user_id;
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'customer.preference_changed', $subject_type, $subject_id, 'Customer account preference', array( 'consent_marketing'=>$before ), array( 'consent_marketing'=>$marketing ) ) ) ) {
+			self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
+		}
+		self::clean_account_cache( $user_id );
+		do_action( 'adc_customer_preferences_updated', $user_id, (int) ( $row['id'] ?? 0 ), $marketing );
+		return array( 'consent_marketing'=>$marketing, 'recorded_at'=>$recorded_at, 'linked_customer_id'=>(int) ( $row['id'] ?? 0 ) );
+	}
+
+	/** Immediately refresh an existing account-linked customer; never creates or claims one. */
+	public static function sync_account_profile( int $user_id ) {
+		global $wpdb;
+		if ( $user_id < 1 || ! Schema::is_ready() ) { return self::error( 'adc_identity_unavailable', 503 ); }
+		$user = get_userdata( $user_id );
+		if ( ! $user ) { return self::error( 'adc_identity_not_found', 404 ); }
+		$mobile = ContactIdentity::normalize_mobile( (string) get_user_meta( $user_id, 'car_dealer_phone', true ), false );
+		$name = sanitize_text_field( $user->display_name ); $email = strtolower( sanitize_email( $user->user_email ) );
+		if ( is_wp_error( $mobile ) || '' === $name || ! is_email( $email ) ) { return self::error( 'adc_identity_invalid', 400 ); }
+		if ( ! Transaction::begin() ) { return self::error( 'adc_identity_unavailable', 503 ); }
+		$table = Schema::table( 'customers' );
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT id,merged_into_id,full_name,mobile,email FROM $table WHERE account_user_id=%d FOR UPDATE", $user_id ), ARRAY_A );
+		if ( $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_identity_unavailable', 503 ); }
+		if ( ! $row ) { $wpdb->query( 'ROLLBACK' ); return array( 'linked'=>false ); }
+		if ( $row['merged_into_id'] ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_identity_changed', 409 ); }
+		$next = array( 'full_name'=>$name, 'mobile'=>$mobile, 'email'=>$email ); $fields = array();
+		foreach ( $next as $field=>$value ) { if ( (string) $row[$field] !== (string) $value ) { $fields[] = $field; } }
+		if ( ! $fields ) { $wpdb->query( 'ROLLBACK' ); do_action( 'adc_customer_profile_synced', $user_id, (int) $row['id'] ); return array( 'linked'=>true, 'customer_id'=>(int) $row['id'], 'fields'=>array() ); }
+		$next['updated_at'] = current_time( 'mysql', true );
+		if ( false === $wpdb->update( $table, $next, array( 'id'=>(int) $row['id'] ) ) || ! Transaction::commit( static fn() => AuditLog::record( 'customer.profile_refreshed', 'customer', (int) $row['id'], 'WordPress account profile update', null, array( 'fields'=>$fields ) ) ) ) {
+			return self::error( 'adc_identity_unavailable', 503 );
+		}
+		do_action( 'adc_customer_profile_synced', $user_id, (int) $row['id'] );
+		return array( 'linked'=>true, 'customer_id'=>(int) $row['id'], 'fields'=>$fields );
+	}
+
+	private static function account_preference( int $user_id, bool $submitted ): array {
+		if ( ! metadata_exists( 'user', $user_id, self::PREFERENCE_META ) ) { return array( $submitted, $submitted ? current_time( 'mysql', true ) : null, false ); }
+		$enabled = '1' === (string) get_user_meta( $user_id, self::PREFERENCE_META, true );
+		$at = $enabled ? (string) get_user_meta( $user_id, self::PREFERENCE_AT_META, true ) : null;
+		if ( $enabled && ! preg_match( '/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\z/', $at ) ) { $at = current_time( 'mysql', true ); }
+		return array( $enabled, $enabled ? $at : null, true );
+	}
+
+	private static function clean_account_cache( int $user_id ): void {
+		clean_user_cache( $user_id );
+		wp_cache_delete( $user_id, 'user_meta' );
+	}
+
 	/** Called only inside the intake transaction for its server-owned account identity. */
 	public static function account_customer( array $identity ) {
 		global $wpdb;
@@ -24,18 +125,20 @@ final class CustomerIdentity {
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE account_user_id=%d FOR UPDATE", $user_id ), ARRAY_A );
 		if ( $wpdb->last_error ) { return self::error( 'adc_identity_unavailable', 503 ); }
 		$now = current_time( 'mysql', true );
+		list( $consent, $consent_at, $has_preference ) = self::account_preference( $user_id, (bool) $identity['consent_marketing'] );
 		if ( $row ) {
 			if ( $row['merged_into_id'] ) { return self::error( 'adc_identity_changed', 409 ); }
 			// Profile values are refreshed only by an authenticated submission; consent stays explicit.
 			$changes = array( 'full_name'=>$identity['name'], 'mobile'=>$identity['mobile'], 'email'=>$identity['email'], 'updated_at'=>$now );
-			if ( $identity['consent_marketing'] ) { $changes['consent_marketing'] = 1; $changes['consent_at'] = $now; }
+			if ( $has_preference ) { $changes['consent_marketing'] = $consent ? 1 : 0; $changes['consent_at'] = $consent_at; }
+			elseif ( $consent ) { $changes['consent_marketing'] = 1; $changes['consent_at'] = $consent_at; }
 			if ( false === $wpdb->update( $table, $changes, array( 'id'=>(int) $row['id'] ) ) ) { return self::error( 'adc_identity_unavailable', 503 ); }
 			$fields = array();
 			foreach ( $changes as $field => $value ) { if ( 'updated_at' !== $field && (string) $row[$field] !== (string) $value ) { $fields[] = $field; } }
 			if ( $fields && ! AuditLog::record( 'customer.profile_refreshed', 'customer', (int) $row['id'], 'Authenticated account submission', null, array( 'fields'=>$fields ) ) ) { return self::error( 'adc_identity_unavailable', 503 ); }
 			return (int) $row['id'];
 		}
-		if ( 1 !== $wpdb->insert( $table, array( 'account_user_id'=>$user_id, 'full_name'=>$identity['name'], 'mobile'=>$identity['mobile'], 'email'=>$identity['email'], 'city'=>$identity['city'], 'consent_marketing'=>$identity['consent_marketing'] ? 1 : 0, 'consent_at'=>$identity['consent_marketing'] ? $now : null, 'created_at'=>$now, 'updated_at'=>$now ) ) ) { return self::error( 'adc_identity_unavailable', 503 ); }
+		if ( 1 !== $wpdb->insert( $table, array( 'account_user_id'=>$user_id, 'full_name'=>$identity['name'], 'mobile'=>$identity['mobile'], 'email'=>$identity['email'], 'city'=>$identity['city'], 'consent_marketing'=>$consent ? 1 : 0, 'consent_at'=>$consent_at, 'created_at'=>$now, 'updated_at'=>$now ) ) ) { return self::error( 'adc_identity_unavailable', 503 ); }
 		$id = (int) $wpdb->insert_id;
 		if ( ! AuditLog::record( 'customer.account_linked', 'customer', $id, 'Authenticated account submission', null, array( 'account_user_id'=>$user_id ) ) ) { return self::error( 'adc_identity_unavailable', 503 ); }
 		return $id;

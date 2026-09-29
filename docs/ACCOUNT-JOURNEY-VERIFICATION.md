@@ -4,6 +4,21 @@
 
 Follow-up to `VERIFICATION-1.17.0.md`: exercise the real customer account and vehicle pages, complete the listed mixed CRM races and legacy request pagination/cursor checks, and review Arabic responsive account rendering. Core remains 1.17.0 / schema 1.12.0; this increment changes theme integration and verification, with no new database migration.
 
+## Results
+
+| Check | Result |
+|---|---|
+| PHP syntax | PASS: 74 plugin PHP files and seven theme PHP files |
+| Offline authorization | PASS: 48 checks |
+| Integer money | PASS: 12 checks |
+| Isolated WordPress/MariaDB and localhost HTTP | PASS: 490 checks; process exit 0 |
+| Real theme browser journey | PASS: 27 checks in headless Edge with a temporary profile |
+| Public intake DOM harness | PASS: 7 checks |
+| JavaScript harness syntax and diff whitespace | PASS |
+| Cleanup | PASS: generated database removed, HTTP process stopped and no listener remains on the dedicated database port |
+
+The successful consolidated run is recorded in the local test log as `adc-account-acceptance.log`. All database fixtures were synthetic and disposable. Source `wp-config.php` and the intentionally empty source business database were not loaded or contacted.
+
 ## Repairs
 
 - The actual account page failed after login because `car_dealer_request_statuses()` was unavailable. The theme now loads the existing CRM and customer workflow dependencies.
@@ -59,4 +74,4 @@ Remove-Item Env:\ADC_JOURNEY_ONLY
 
 This closes the listed local account journey, responsive and targeted concurrency acceptance. It does not establish every interleaving, physical mobile device behavior, a full WCAG audit, translated English journeys, all theme catalog/admin pages, load behavior or provider integrations. External requests are blocked; Google fonts and external emoji images are not used as evidence for deployed typography. Native WordPress password recovery/email delivery and logout handling remain outside this custom account workflow run.
 
-Next implementation areas remain consent/preferences and immediate profile synchronization, applicable legacy profile retirement/access, business pricing/deposit policies, branded documents, complete bilingual catalog and integrations/operations. Overall production readiness remains FAIL; reference-data setup still requires real business inputs, and historical import is not required for the intentionally empty deployment.
+The subsequent 1.18.0 increment and its extended 33-check browser journey now pass as recorded in `VERIFICATION-1.18.0.md`. Version 1.20.0 also passes the synthetic Arabic catalog journey recorded in `VERIFICATION-1.20.0.md`; English LTR and real-data activation remain. Overall production readiness remains FAIL; reference-data setup still requires real business inputs, and historical import is not required for the intentionally empty deployment.

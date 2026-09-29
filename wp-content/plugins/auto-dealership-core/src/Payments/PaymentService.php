@@ -16,7 +16,7 @@ final class PaymentService {
 
 	private static function sale( int $sale_id ): ?array {
 		global $wpdb;
-		return $wpdb->get_row( $wpdb->prepare( 'SELECT s.id,s.status,s.owner_user_id,q.final_amount,v.branch_id FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=s.quotation_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id WHERE s.id = %d FOR UPDATE', $sale_id ), ARRAY_A ) ?: null;
+		return $wpdb->get_row( $wpdb->prepare( 'SELECT s.id,s.reservation_id,s.status,s.owner_user_id,q.final_amount,v.branch_id FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=s.quotation_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id WHERE s.id = %d FOR UPDATE', $sale_id ), ARRAY_A ) ?: null;
 	}
 
 	public static function record( int $sale_id, int $amount, string $source, string $reference ) {
@@ -31,6 +31,10 @@ final class PaymentService {
 		if ( ! $sale || ! BranchScope::allows( (int) $sale['branch_id'] ) || ! in_array( $sale['status'], array( 'pending_approval', 'approved' ), true ) || $amount > (int) $sale['final_amount'] ) {
 			$wpdb->query( 'ROLLBACK' );
 			return self::error( 'adc_payment_sale_state' );
+		}
+		if ( $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'reservation_deposits' ) . " WHERE reservation_id=%d AND status='verified' AND reference=%s LIMIT 1", (int) $sale['reservation_id'], $reference ) ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return self::error( 'adc_payment_reference_conflict' );
 		}
 		$table = Schema::table( 'payment_confirmations' );
 		$existing = $wpdb->get_row( $wpdb->prepare( "SELECT id,sale_id,amount,status,recorded_by FROM $table WHERE source = %s AND reference = %s FOR UPDATE", $source, $reference ), ARRAY_A );
@@ -89,7 +93,7 @@ final class PaymentService {
 
 	private static function verified_amount( int $sale_id ): ?int {
 		global $wpdb;
-		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(amount),0) FROM ' . Schema::table( 'payment_confirmations' ) . " WHERE sale_id = %d AND status = 'verified' AND currency = 'SAR'", $sale_id ) );
+		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(p.amount),0)+(SELECT COALESCE(r.deposit_amount,0) FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'reservations' ) . ' r ON r.id=s.reservation_id WHERE s.id=%d) FROM ' . Schema::table( 'payment_confirmations' ) . " p WHERE p.sale_id = %d AND p.status = 'verified' AND p.currency = 'SAR'", $sale_id, $sale_id ) );
 		return null === $value ? null : (int) $value;
 	}
 

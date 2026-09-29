@@ -1712,6 +1712,31 @@ svg {
   background: var(--cd-color-surface);
 }
 
+.ab-filter-authoritative {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.filter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cd-spacing-sm);
+  align-items: center;
+}
+
+.filter-bar input:focus-visible,
+.filter-bar select:focus-visible,
+.filter-bar a:focus-visible,
+.filter-bar button:focus-visible {
+  outline: 3px solid var(--cd-color-primary);
+  outline-offset: 2px;
+}
+
+.catalog-result-count {
+  margin: 0 0 var(--cd-spacing-md);
+  color: var(--cd-color-muted);
+}
+
 .empty-state {
   padding: var(--cd-spacing-xl);
   text-align: center;
@@ -3132,5 +3157,4 @@ svg {
     grid-template-columns: 1fr;
   }
 }
-
 

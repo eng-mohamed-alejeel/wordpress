@@ -116,7 +116,7 @@ $customer_b = $make_customer( $branch_b['id'], $sales_b );
 $make_vehicle = static function ( string $suffix ) use ( $branch_a, $admin, $brand_reference, $location_reference ): int {
 	$previous = get_current_user_id();
 	wp_set_current_user( $admin );
-	$row = VehicleService::create( array( 'vin' => '1M8GDM9AXKP' . str_pad( $suffix, 6, '0', STR_PAD_LEFT ), 'stock_number' => 'TEST-' . $suffix, 'brand' => 'Synthetic', 'brand_id' => $brand_reference['id'], 'model' => 'Fixture', 'model_year' => 2026, 'condition' => 'new', 'branch_id' => $branch_a['id'], 'location_id' => $location_reference['id'], 'retail_price' => 10000000 ) );
+	$row = VehicleService::create( array( 'vin' => '1M8GDM9AXKP' . str_pad( $suffix, 6, '0', STR_PAD_LEFT ), 'stock_number' => 'TEST-' . $suffix, 'brand' => 'Synthetic', 'brand_id' => $brand_reference['id'], 'model' => 'Fixture', 'model_year' => 2026, 'condition' => 'new', 'branch_id' => $branch_a['id'], 'location_id' => $location_reference['id'], 'retail_price' => 10000000, 'minimum_price' => 8500000, 'purchase_cost' => 8000000 ) );
 	if ( ! is_array( $row ) ) { throw new RuntimeException( 'Fixture vehicle creation failed: ' . $row->get_error_code() ); }
 	$checklist = array_fill_keys( array( 'exterior','interior','engine','tires','vin' ), 'pass' );
 	if ( is_wp_error( VehicleIntakeService::receive( $row['id'], array( 'condition'=>'good', 'document_reference'=>'FIXTURE-' . $suffix ) ) ) || is_wp_error( VehicleService::transition( $row['id'], 'inspection', 'Fixture preparation' ) ) || is_wp_error( VehicleIntakeService::inspect( $row['id'], array( 'checklist'=>$checklist ) ) ) || is_wp_error( VehicleService::transition( $row['id'], 'available', 'Fixture inspection passed' ) ) ) { throw new RuntimeException( 'Fixture intake failed.' ); }
@@ -200,7 +200,7 @@ $wpdb->update( $vehicles, array( 'model' => 'Changed model' ), array( 'id' => $p
 $pricing_v1_after_change = QuoteHistory::version( $pricing_quote['id'], 1 );
 adc_check( 'Synthetic customer' === $pricing_v1_after_change['customer_name'] && ! str_contains( $pricing_v1_after_change['vehicle_description'], 'Changed model' ), 'Later customer and vehicle edits do not rewrite an existing quote snapshot.' );
 $unsafe_document = QuoteDocument::render( array_merge( $pricing_v1_after_change, array( 'customer_name' => '<script>alert(1)</script>' ) ) );
-adc_check( ! str_contains( $unsafe_document, '<script>alert(1)</script>' ) && str_contains( $unsafe_document, '&lt;script&gt;alert(1)&lt;/script&gt;' ) && str_contains( $unsafe_document, 'طباعة أو حفظ PDF' ), 'Printable quote escapes snapshot text and exposes the browser PDF action.' );
+adc_check( ! str_contains( $unsafe_document, '<script>alert(1)</script>' ) && str_contains( $unsafe_document, '&lt;script&gt;alert(1)&lt;/script&gt;' ) && str_contains( $unsafe_document, 'window.print()' ), 'Printable quote escapes snapshot text and exposes the browser PDF action.' );
 $wpdb->update( $customers, array( 'full_name' => 'Synthetic customer' ), array( 'id' => $customer_a ) );
 $wpdb->update( $vehicles, array( 'model' => 'Fixture' ), array( 'id' => $pricing_vehicle ) );
 $legacy_inserted = $wpdb->insert( $quotes, array( 'quote_number' => 'Q-LEGACY-CURRENT', 'customer_id' => $customer_a, 'vehicle_id' => $pricing_vehicle, 'owner_user_id' => $sales_a, 'base_amount' => 200000, 'discount_amount' => 10000, 'tax_rate_bps' => null, 'tax_amount' => 28500, 'final_amount' => 218500, 'valid_until' => $date, 'status' => 'approved', 'version' => 7, 'created_at' => current_time( 'mysql', true ) ), array( '%s', '%d', '%d', '%d', '%d', '%d', '%s', '%d', '%d', '%s', '%s', '%d', '%s' ) );
@@ -563,8 +563,11 @@ $cancel_checklist=array_fill_keys(array('exterior','interior','engine','tires','
 $unpaid_cancel_vehicle=$make_vehicle('32');wp_set_current_user($sales_a);$unpaid_cancel_quote=SalesService::create_quote($customer_a,$unpaid_cancel_vehicle,$date);$unpaid_cancel_reservation=ReservationService::create(array('vehicle_id'=>$unpaid_cancel_vehicle,'customer_id'=>$customer_a,'idempotency_key'=>wp_generate_uuid4()));$unpaid_cancel_sale=SalesService::create_sale($unpaid_cancel_quote['id'],$unpaid_cancel_reservation['id']);wp_set_current_user($finance_recorder);$pending_cancel_payment=PaymentService::record($unpaid_cancel_sale['id'],100,'bank_transfer','CANCEL-PENDING-1');wp_set_current_user($manager_a);$unpaid_cancellation=SaleCancellationService::cancel($unpaid_cancel_sale['id'],'Unpaid sale cancelled');
 adc_check(is_array($unpaid_cancellation)&&'no_refund_due'===$unpaid_cancellation['financial_status']&&'available'===$wpdb->get_var($wpdb->prepare("SELECT status FROM $vehicles WHERE id=%d",$unpaid_cancel_vehicle))&&'cancelled'===$wpdb->get_var($wpdb->prepare('SELECT status FROM '.Schema::table('reservations').' WHERE id=%d',$unpaid_cancel_reservation['id']))&&'cancelled'===$wpdb->get_var($wpdb->prepare('SELECT status FROM '.Schema::table('payment_confirmations').' WHERE id=%d',$pending_cancel_payment['id'])),'Unpaid pending sale cancellation releases inventory, closes its reservation and cancels pending receipt evidence.');
 require __DIR__ . '/increment-1.14.php';
+require __DIR__ . '/increment-1.19.php';
+require __DIR__ . '/increment-1.20.php';
 require __DIR__ . '/increment-crm.php';
 require __DIR__ . '/account-workflow-scenarios.php';
+require __DIR__ . '/customer-preferences-scenarios.php';
 wp_set_current_user( $finance_verifier );
 ob_start();
 AutoDealership\Admin\PaymentPages::render();
@@ -612,7 +615,7 @@ $inventory_c = $make_user( 'inventory_c', 'dealership_inventory', $branch_c['id'
 $make_branch_vehicle = static function ( int $branch_id, string $suffix ) use ( $admin ): int {
 	$previous = get_current_user_id();
 	wp_set_current_user( $admin );
-	$row = VehicleService::create( array( 'vin' => '2M8GDM9AXKP' . str_pad( $suffix, 6, '0', STR_PAD_LEFT ), 'stock_number' => 'HTTP-' . $suffix, 'brand' => 'Synthetic', 'model' => 'HTTP Fixture', 'model_year' => 2026, 'condition' => 'new', 'branch_id' => $branch_id, 'retail_price' => 10000000 ) );
+	$row = VehicleService::create( array( 'vin' => '2M8GDM9AXKP' . str_pad( $suffix, 6, '0', STR_PAD_LEFT ), 'stock_number' => 'HTTP-' . $suffix, 'brand' => 'Synthetic', 'model' => 'HTTP Fixture', 'model_year' => 2026, 'condition' => 'new', 'branch_id' => $branch_id, 'retail_price' => 10000000, 'minimum_price' => 8500000, 'purchase_cost' => 8000000 ) );
 	if ( ! is_array( $row ) ) { throw new RuntimeException( 'HTTP vehicle fixture creation failed.' ); }
 	$checklist = array_fill_keys( array( 'exterior','interior','engine','tires','vin' ), 'pass' );
 	if ( is_wp_error( VehicleIntakeService::receive( $row['id'], array( 'condition'=>'good', 'document_reference'=>'HTTP-FIXTURE-' . $suffix ) ) ) || is_wp_error( VehicleService::transition( $row['id'], 'inspection', 'HTTP fixture preparation' ) ) || is_wp_error( VehicleIntakeService::inspect( $row['id'], array( 'checklist'=>$checklist ) ) ) || is_wp_error( VehicleService::transition( $row['id'], 'available', 'HTTP fixture passed' ) ) ) { throw new RuntimeException( 'HTTP vehicle fixture intake failed.' ); }
@@ -723,6 +726,7 @@ try {
 		return $auth;
 	};
 	$rest_path = static fn( string $route ): string => '/?rest_route=' . rawurlencode( $route );
+	require __DIR__ . '/customer-preferences-http.php';
 
 	$versions_path = $rest_path( '/auto-dealership/v1/quotations/' . $pricing_quote['id'] . '/versions' );
 	list( $anonymous_status, $anonymous_body ) = $http_request( $versions_path );
@@ -854,7 +858,7 @@ try {
 
 	$inventory_c_http = $http_auth( $inventory_c );
 	$vehicles_path = $rest_path( '/auto-dealership/v1/vehicles' );
-	$http_vehicle_payload = array( 'vin' => '3M8GDM9AXKP000201', 'stock_number' => 'HTTP-201', 'brand' => 'Synthetic', 'model' => 'Catalog HTTP', 'model_year' => 2026, 'condition' => 'new', 'branch_id' => $branch_b['id'], 'retail_price' => 12000000 );
+	$http_vehicle_payload = array( 'vin' => '3M8GDM9AXKP000201', 'stock_number' => 'HTTP-201', 'brand' => 'Synthetic', 'model' => 'Catalog HTTP', 'model_year' => 2026, 'condition' => 'new', 'branch_id' => $branch_b['id'], 'retail_price' => 12000000, 'mileage' => 240, 'body_type' => 'suv', 'fuel_type' => 'hybrid', 'transmission' => 'automatic' );
 	$http_vehicle_payload['interior_color'] = 'Black';
 	$http_vehicle_payload['engine_size'] = '2.0 L';
 	$invalid_spec_creation = array_merge( $http_vehicle_payload, array( 'doors'=>array( 4 ) ) );
@@ -898,6 +902,23 @@ try {
 	$catalog_match = array_values( array_filter( $catalog_items, static fn( $item ) => $http_vehicle_id === (int) ( $item['id'] ?? 0 ) ) );
 	adc_check( 200 === $catalog_status && 1 === count( $catalog_match ) && ! array_key_exists( 'vin', $catalog_match[0] ) && ! array_key_exists( 'purchase_cost', $catalog_match[0] ), 'Public HTTP catalog exposes the mapped available vehicle without VIN or purchase cost.' );
 	adc_check( 'Silver' === $catalog_match[0]['exterior_color'] && 5 === (int) $catalog_match[0]['seats'] && 'awd' === $catalog_match[0]['drivetrain'] && ! array_key_exists( 'minimum_price', $catalog_match[0] ), 'Public HTTP catalog includes updated specifications without the private price floor.' );
+	$catalog_filter_query = http_build_query( array(
+		'brand'=>'Synthetic', 'model'=>'Catalog HTTP', 'body_type'=>'suv', 'fuel_type'=>'hybrid',
+		'transmission'=>'automatic', 'engine_size'=>'2.0 L', 'drivetrain'=>'awd',
+		'exterior_color'=>'Silver', 'interior_color'=>'Black', 'condition'=>'new',
+		'model_year'=>2026, 'min_year'=>2026, 'max_year'=>2026,
+		'min_price'=>12000000, 'max_price'=>12000000, 'min_mileage'=>200, 'max_mileage'=>300,
+		'branch_id'=>$branch_b['id'], 'search'=>'HTTP-201', 'sort'=>'price_asc', 'page'=>1, 'per_page'=>1,
+	), '', '&', PHP_QUERY_RFC3986 );
+	list( $catalog_filter_status, $catalog_filter_body ) = $http_request( $vehicles_path . '&' . $catalog_filter_query );
+	$catalog_filtered = json_decode( $catalog_filter_body, true );
+	$catalog_filtered_item = $catalog_filtered['items'][0] ?? array();
+	adc_check( 200 === $catalog_filter_status && 1 === (int) ( $catalog_filtered['total'] ?? 0 ) && $http_vehicle_id === (int) ( $catalog_filtered_item['id'] ?? 0 ) && 'price_asc' === ( $catalog_filtered['filters']['sort'] ?? '' ), 'Public HTTP catalog composes every documented filter and returns normalized pagination metadata.' );
+	adc_check( ! array_key_exists( 'vin', $catalog_filtered_item ) && ! array_key_exists( 'purchase_cost', $catalog_filtered_item ) && ! array_key_exists( 'minimum_price', $catalog_filtered_item ) && ! array_key_exists( 'location_id', $catalog_filtered_item ) && ! array_key_exists( 'brand_id', $catalog_filtered_item ), 'Filtered HTTP catalog response keeps private and internal inventory fields out of the public contract.' );
+	list( $private_search_status, $private_search_body ) = $http_request( $vehicles_path . '&search=3M8GDM9AXKP000201' );
+	$private_search = json_decode( $private_search_body, true );
+	adc_check( 200 === $private_search_status && 0 === (int) ( $private_search['total'] ?? -1 ), 'Public HTTP catalog does not search private VIN data.' );
+	adc_check( 400 === $http_request( $vehicles_path . '&sort=unsupported' )[0] && 400 === $http_request( $vehicles_path . '&per_page=49' )[0], 'Public HTTP catalog rejects unsupported sorting and pagination outside the documented bound.' );
 	$transfer_decision_path = $rest_path( '/auto-dealership/v1/transfers/' . $http_transfer['id'] . '/decision' );
 	$transfer_dispatch_path = $rest_path( '/auto-dealership/v1/transfers/' . $http_transfer['id'] . '/dispatch' );
 	$transfer_receipt_path = $rest_path( '/auto-dealership/v1/transfers/' . $http_transfer['id'] . '/receipt' );

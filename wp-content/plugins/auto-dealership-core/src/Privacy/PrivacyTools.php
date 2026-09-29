@@ -57,6 +57,32 @@ final class PrivacyTools {
 		return $rows;
 	}
 
+	/** Theme CRM posts predate the core tables and need the same export/erasure boundary. */
+	private static function legacy_profile_ids( string $email ): array {
+		global $wpdb;
+		$user = get_user_by( 'email', $email );
+		$where = $wpdb->prepare( '(m.meta_key=%s AND LOWER(m.meta_value)=LOWER(%s))', '_crm_email', $email );
+		if ( $user ) { $where .= $wpdb->prepare( ' OR (m.meta_key=%s AND m.meta_value=%d)', '_crm_user_id', $user->ID ); }
+		$ids = $wpdb->get_col( "SELECT DISTINCT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id=p.ID WHERE p.post_type='cd_crm' AND p.post_status='private' AND ($where) ORDER BY p.ID ASC" );
+		return $wpdb->last_error ? array() : array_map( 'intval', $ids ?: array() );
+	}
+
+	private static function legacy_profile_storage_ready(): bool {
+		global $wpdb;
+		foreach ( array( $wpdb->posts, $wpdb->postmeta, $wpdb->comments ) as $table ) {
+			if ( 'InnoDB' !== $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $table ) ) ) { return false; }
+		}
+		return true;
+	}
+
+	private static function set_legacy_profile_meta( int $post_id, string $key, string $value ): bool {
+		global $wpdb;
+		$updated = $wpdb->update( $wpdb->postmeta, array( 'meta_value'=>$value ), array( 'post_id'=>$post_id, 'meta_key'=>$key ) );
+		if ( false === $updated ) { return false; }
+		if ( $updated > 0 || $wpdb->get_var( $wpdb->prepare( "SELECT meta_id FROM {$wpdb->postmeta} WHERE post_id=%d AND meta_key=%s LIMIT 1", $post_id, $key ) ) ) { return true; }
+		return 1 === $wpdb->insert( $wpdb->postmeta, array( 'post_id'=>$post_id, 'meta_key'=>$key, 'meta_value'=>$value ) );
+	}
+
 	public static function export( string $email, int $page = 1 ): array {
 		global $wpdb;
 		$email = self::email( $email );
@@ -65,6 +91,11 @@ final class PrivacyTools {
 		}
 		$customers = $wpdb->get_results( 'SELECT id,full_name,mobile,email,city,account_user_id,consent_marketing,consent_at,created_at FROM ' . Schema::table( 'customers' ) . ' WHERE ' . self::identity_where( $email, 'account_user_id' ) . ' ORDER BY id ASC', ARRAY_A ) ?: array();
 		$items = array();
+		$account = get_user_by( 'email', $email );
+		if ( $account && metadata_exists( 'user', $account->ID, 'adc_marketing_consent' ) ) {
+			$items[] = array( 'name'=>__( 'Account marketing preference', 'auto-dealership-core' ), 'value'=>'1' === (string) get_user_meta( $account->ID, 'adc_marketing_consent', true ) ? __( 'Yes', 'auto-dealership-core' ) : __( 'No', 'auto-dealership-core' ) );
+			$items[] = array( 'name'=>__( 'Account marketing preference recorded', 'auto-dealership-core' ), 'value'=>(string) get_user_meta( $account->ID, 'adc_marketing_consent_at', true ) );
+		}
 		foreach ( $customers as $customer ) {
 			$items[] = array( 'name'=>__( 'Linked account ID', 'auto-dealership-core' ), 'value'=>(string) ( $customer['account_user_id'] ?? '' ) );
 			$items[] = array( 'name' => __( 'Name', 'auto-dealership-core' ), 'value' => $customer['full_name'] );
@@ -82,7 +113,7 @@ final class PrivacyTools {
 					$items[] = array( 'name' => __( 'Lead activity', 'auto-dealership-core' ), 'value' => sprintf( '%s (%s): %s', $activity['type'], $activity['created_at'], $activity['notes'] ) );
 				}
 			}
-			foreach ( array( 'reservations' => 'id,vehicle_id,status,deposit_amount,payment_reference,expires_at,created_at', 'quotations' => 'id,quote_number,vehicle_id,base_amount,discount_amount,tax_amount,final_amount,valid_until,status,created_at', 'sales' => 'id,vehicle_id,status,invoice_reference,created_at,updated_at' ) as $table_name => $columns ) {
+			foreach ( array( 'reservations' => 'id,vehicle_id,status,deposit_policy,deposit_required_amount,deposit_amount,deposit_refund_status,payment_reference,expires_at,created_at', 'quotations' => 'id,quote_number,vehicle_id,base_amount,fee_amount,promotion_code,promotion_amount,discount_amount,subtotal_amount,tax_amount,final_amount,valid_until,status,created_at', 'sales' => 'id,vehicle_id,status,invoice_reference,created_at,updated_at' ) as $table_name => $columns ) {
 				$records = $wpdb->get_results( $wpdb->prepare( "SELECT $columns FROM " . Schema::table( $table_name ) . ' WHERE customer_id = %d ORDER BY id ASC', (int) $customer['id'] ), ARRAY_A ) ?: array();
 				foreach ( $records as $record ) {
 					$value = implode( '; ', array_map( static fn( $key, $value ) => $key . ': ' . (string) $value, array_keys( $record ), array_values( $record ) ) );
@@ -90,15 +121,37 @@ final class PrivacyTools {
 						$value .= '; monetary values are stored in SAR halalas';
 					}
 					$items[] = array( 'name' => ucfirst( rtrim( $table_name, 's' ) ), 'value' => $value );
+					if ( 'reservations' === $table_name ) {
+						$evidence = $wpdb->get_results( $wpdb->prepare( 'SELECT amount,currency,source,reference,status,created_at,decided_at FROM ' . Schema::table( 'reservation_deposits' ) . ' WHERE reservation_id=%d ORDER BY id', (int) $record['id'] ), ARRAY_A ) ?: array();
+						foreach ( $evidence as $deposit ) {
+							$items[] = array( 'name'=>__( 'Reservation deposit evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . (string) $item, array_keys( $deposit ), array_values( $deposit ) ) ) . '; monetary values are stored in SAR halalas' );
+						}
+						$refunds = $wpdb->get_results( $wpdb->prepare( 'SELECT amount,currency,method,reference,status,created_at,decided_at FROM ' . Schema::table( 'payment_refunds' ) . ' WHERE reservation_id=%d ORDER BY id', (int) $record['id'] ), ARRAY_A ) ?: array();
+						foreach ( $refunds as $refund ) {
+							$items[] = array( 'name'=>__( 'Reservation deposit refund', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . (string) $item, array_keys( $refund ), array_values( $refund ) ) ) . '; monetary values are stored in SAR halalas' );
+						}
+					}
 					if ( 'sales' === $table_name ) {
 						$finance = $wpdb->get_results( $wpdb->prepare( 'SELECT provider,requested_amount,status,provider_reference,consent_at,created_at FROM ' . Schema::table( 'finance_requests' ) . ' WHERE sale_id = %d ORDER BY id ASC', (int) $record['id'] ), ARRAY_A ) ?: array();
 						foreach ( $finance as $request ) {
 							$items[] = array( 'name' => __( 'Finance request', 'auto-dealership-core' ), 'value' => implode( '; ', array_map( static fn( $key, $value ) => $key . ': ' . (string) $value, array_keys( $request ), array_values( $request ) ) ) );
 						}
+						$receipts = $wpdb->get_results( $wpdb->prepare( 'SELECT amount,currency,source,reference,status,created_at,decided_at FROM ' . Schema::table( 'payment_confirmations' ) . ' WHERE sale_id=%d ORDER BY id', (int) $record['id'] ), ARRAY_A ) ?: array();
+						foreach ( $receipts as $receipt ) {
+							$items[] = array( 'name'=>__( 'Sale receipt evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . (string) $item, array_keys( $receipt ), array_values( $receipt ) ) ) . '; monetary values are stored in SAR halalas' );
+						}
+						$refunds = $wpdb->get_results( $wpdb->prepare( 'SELECT amount,currency,method,reference,status,created_at,decided_at FROM ' . Schema::table( 'payment_refunds' ) . ' WHERE sale_id=%d ORDER BY id', (int) $record['id'] ), ARRAY_A ) ?: array();
+						foreach ( $refunds as $refund ) {
+							$items[] = array( 'name'=>__( 'Sale refund evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . (string) $item, array_keys( $refund ), array_values( $refund ) ) ) . '; monetary values are stored in SAR halalas' );
+						}
+						$documents = $wpdb->get_results( $wpdb->prepare( 'SELECT dd.document_key,dd.reference,dd.confirmed_at FROM ' . Schema::table( 'delivery_documents' ) . ' dd INNER JOIN ' . Schema::table( 'deliveries' ) . ' d ON d.id=dd.delivery_id WHERE d.sale_id=%d ORDER BY dd.id', (int) $record['id'] ), ARRAY_A ) ?: array();
+						foreach ( $documents as $document ) {
+							$items[] = array( 'name'=>__( 'Delivery document evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . (string) $item, array_keys( $document ), array_values( $document ) ) ) );
+						}
 					}
 				}
 			}
-			$versions = $wpdb->get_results( $wpdb->prepare( 'SELECT quotation_id,quote_number,version,customer_name,vehicle_stock_number,vehicle_description,base_amount,discount_amount,tax_rate_bps,tax_amount,final_amount,valid_until,status,created_at FROM ' . Schema::table( 'quotation_versions' ) . ' WHERE customer_id = %d ORDER BY quotation_id,version', (int) $customer['id'] ), ARRAY_A ) ?: array();
+			$versions = $wpdb->get_results( $wpdb->prepare( 'SELECT quotation_id,quote_number,version,customer_name,vehicle_stock_number,vehicle_description,base_amount,fee_amount,promotion_code,promotion_amount,discount_amount,subtotal_amount,tax_rate_bps,tax_amount,final_amount,valid_until,status,created_at FROM ' . Schema::table( 'quotation_versions' ) . ' WHERE customer_id = %d ORDER BY quotation_id,version', (int) $customer['id'] ), ARRAY_A ) ?: array();
 			foreach ( $versions as $version ) {
 				$items[] = array( 'name' => __( 'Quotation revision', 'auto-dealership-core' ), 'value' => implode( '; ', array_map( static fn( $key, $value ) => $key . ': ' . (string) $value, array_keys( $version ), array_values( $version ) ) ) . '; monetary values are stored in SAR halalas' );
 			}
@@ -113,6 +166,15 @@ final class PrivacyTools {
 			}
 			if ( ! empty( $request['requested_date'] ) || ! empty( $request['requested_time'] ) ) {
 				$items[] = array( 'name' => __( 'Requested appointment', 'auto-dealership-core' ), 'value' => trim( (string) $request['requested_date'] . ' ' . (string) $request['requested_time'] ) );
+			}
+		}
+		foreach ( self::legacy_profile_ids( $email ) as $profile_id ) {
+			$post = get_post( $profile_id );
+			if ( ! $post ) { continue; }
+			$items[] = array( 'name'=>__( 'Legacy CRM profile', 'auto-dealership-core' ), 'value'=>sprintf( 'ID %d; name %s; stage %s; source %s; created %s', $profile_id, $post->post_title, (string) get_post_meta( $profile_id, '_crm_stage', true ), (string) get_post_meta( $profile_id, '_crm_source', true ), $post->post_date_gmt ) );
+			$items[] = array( 'name'=>__( 'Legacy CRM contact', 'auto-dealership-core' ), 'value'=>sprintf( 'Mobile %s; email %s', (string) get_post_meta( $profile_id, '_crm_phone', true ), (string) get_post_meta( $profile_id, '_crm_email', true ) ) );
+			foreach ( get_comments( array( 'post_id'=>$profile_id, 'type'=>'crm_activity', 'status'=>'approve', 'orderby'=>'comment_ID', 'order'=>'ASC' ) ) as $note ) {
+				$items[] = array( 'name'=>__( 'Legacy CRM activity', 'auto-dealership-core' ), 'value'=>sprintf( '%s: %s', $note->comment_date_gmt, $note->comment_content ) );
 			}
 		}
 		$subscriber_table = $wpdb->prefix . 'car_dealer_subscribers';
@@ -133,7 +195,13 @@ final class PrivacyTools {
 			return array( 'items_removed' => false, 'items_retained' => false, 'messages' => array(), 'done' => true );
 		}
 		$customer_table = Schema::table( 'customers' );
+		$account = get_user_by( 'email', $email );
+		$preference_count = $account && ( metadata_exists( 'user', $account->ID, 'adc_marketing_consent' ) || metadata_exists( 'user', $account->ID, 'adc_marketing_consent_at' ) ) ? 1 : 0;
+		if ( $preference_count && 'InnoDB' !== $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $wpdb->usermeta ) ) ) { return self::erase_failed(); }
 		$legacy_count = self::legacy_count( $email );
+		$legacy_profile_ids = self::legacy_profile_ids( $email );
+		if ( $wpdb->last_error ) { return self::erase_failed(); }
+		if ( $legacy_profile_ids && ! self::legacy_profile_storage_ready() ) { return self::erase_failed(); }
 		if ( false === $wpdb->query( 'START TRANSACTION' ) ) {
 			return self::erase_failed();
 		}
@@ -163,6 +231,21 @@ final class PrivacyTools {
 			$wpdb->query( 'ROLLBACK' );
 			return self::erase_failed();
 		}
+		if ( $legacy_profile_ids ) {
+			$ids = implode( ',', array_map( 'absint', $legacy_profile_ids ) );
+			$locked = $wpdb->get_col( "SELECT ID FROM {$wpdb->posts} WHERE ID IN ($ids) AND post_type='cd_crm' AND post_status='private' ORDER BY ID FOR UPDATE" );
+			if ( $wpdb->last_error || count( $locked ) !== count( $legacy_profile_ids )
+				|| false === $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->posts} SET post_title=%s,post_modified=%s,post_modified_gmt=%s WHERE ID IN ($ids)", 'Erased customer', current_time( 'mysql' ), current_time( 'mysql', true ) ) )
+				|| false === $wpdb->query( "UPDATE {$wpdb->comments} SET comment_content='[Personal data erased]',comment_author_email='',comment_author_url='',comment_author_IP='' WHERE comment_post_ID IN ($ids) AND comment_type='crm_activity'" )
+				|| false === $wpdb->query( "UPDATE {$wpdb->postmeta} SET meta_value='' WHERE post_id IN ($ids) AND meta_key IN ('_crm_email','_crm_phone','_crm_user_id','_crm_task','_crm_due','_crm_source')" ) ) {
+				$wpdb->query( 'ROLLBACK' ); return self::erase_failed();
+			}
+			$now = current_time( 'mysql', true );
+			foreach ( $legacy_profile_ids as $profile_id ) {
+				if ( ! self::set_legacy_profile_meta( $profile_id, '_crm_privacy_erased', '1' ) || ! self::set_legacy_profile_meta( $profile_id, '_crm_retired_at', $now ) ) { $wpdb->query( 'ROLLBACK' ); return self::erase_failed(); }
+			}
+		}
+		if ( $preference_count && false === $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->usermeta} WHERE user_id=%d AND meta_key IN ('adc_marketing_consent','adc_marketing_consent_at')", $account->ID ) ) ) { $wpdb->query( 'ROLLBACK' ); return self::erase_failed(); }
 		$subscribers = $wpdb->prefix . 'car_dealer_subscribers';
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $subscribers ) ) ) === $subscribers ) {
 			if ( false === $wpdb->delete( $subscribers, array( 'email' => $email ), array( '%s' ) ) ) {
@@ -174,10 +257,16 @@ final class PrivacyTools {
 			$wpdb->query( 'ROLLBACK' );
 			return self::erase_failed();
 		}
-		$removed = count( $customer_ids ) + $legacy_count;
+		foreach ( $legacy_profile_ids as $profile_id ) {
+			clean_post_cache( $profile_id );
+			$comment_ids = $wpdb->get_col( $wpdb->prepare( "SELECT comment_ID FROM {$wpdb->comments} WHERE comment_post_ID=%d AND comment_type='crm_activity'", $profile_id ) );
+			if ( $comment_ids ) { clean_comment_cache( array_map( 'intval', $comment_ids ) ); }
+		}
+		if ( $account ) { clean_user_cache( $account->ID ); wp_cache_delete( $account->ID, 'user_meta' ); }
+		$removed = count( $customer_ids ) + $legacy_count + count( $legacy_profile_ids ) + $preference_count;
 		return array(
 			'items_removed' => $removed,
-			'items_retained' => count( $customer_ids ),
+			'items_retained' => count( $customer_ids ) + count( $legacy_profile_ids ),
 			'messages' => $removed ? array( __( 'Direct identifiers and enquiry text were erased. Minimal operational records remain for accounting, workflow and audit purposes.', 'auto-dealership-core' ) ) : array(),
 			'done' => true,
 		);

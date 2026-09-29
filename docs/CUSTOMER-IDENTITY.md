@@ -1,6 +1,6 @@
 # Customer identity and reviewed consolidation — 1.17.0
 
-Implemented 2026-09-28; schema 1.12.0. Integration/browser/concurrency acceptance is pending. No source database upgrade, sample customer creation or merge was executed during development.
+Implemented 2026-09-28; schema 1.12.0. The listed local integration, browser and targeted concurrency acceptance passed by 2026-09-29. No source database upgrade, sample customer creation or merge was executed during development.
 
 ## Account linkage
 
@@ -8,9 +8,9 @@ Authenticated theme intake creates or reuses a customer by the server's current 
 
 This establishes ownership of a signed-in account, not external verification of the person's legal identity, phone or email. Guest enquiries and generic REST `/leads` input never acquire an existing account/customer by matching contact fields. They remain separate contacts. No historical request, CRM post or email match is automatically linked.
 
-Further authenticated theme submissions refresh the linked contact's name, email and phone. Profile changes without a new enquiry are not synchronized immediately. An explicit positive marketing consent can be recorded; an omitted/false consent does not withdraw existing consent in this identity refresh path. A separate preference-management journey remains to be implemented. Guest consent and the privacy erasure process retain their existing contracts.
+Further authenticated theme submissions refresh the linked contact's name, email and phone. Version 1.18.0 also synchronizes an existing linked customer immediately after account profile changes. Explicit account marketing preferences now support both opt-in and opt-out and take precedence over later authenticated form input. Guest consent retains its existing contract; see `CUSTOMER-PREFERENCES.md`.
 
-With the core identity class loaded, login/profile hooks no longer create or synchronize the theme's duplicate account CRM post. Existing private CRM posts remain unchanged; legacy request import/capture and legacy profile authorization still require retirement/review. Do not interpret this as deletion or migration of historical profiles.
+With the core identity class loaded, login/profile hooks no longer create or synchronize a duplicate theme account CRM post. Version 1.18.0 retires an existing private profile only when its recorded WordPress user ID belongs to the linked Core customer. Retired history is administrator-only and read-only; contact equality alone cannot trigger retirement or linkage.
 
 ## Administrator review
 
@@ -35,6 +35,6 @@ Every mutation commits with audit or rolls back. There is no automatic unmerge. 
 
 Export includes the account ID. Export/erasure can locate contacts and account request copies by the current account email's WordPress user ID, including copies carrying an older email. Erasure and retention clear the customer-account link; old contact IDs are not automatically restored by a later authenticated enquiry. Merge tombstones retain minimal references and are excluded from scheduled identity retention. Operational audit IDs remain under the existing audit retention policy.
 
-Verification on 2026-09-28 passed syntax across 70 plugin PHP files and four theme files, 468 database/HTTP checks, 48 authorization checks, 12 money checks and seven real Chromium DOM checks. New identity coverage includes additive upgrade, concurrent first account enquiries, impersonation denial, audit/history rollback, owner conflicts, stale/concurrent merges, quotation-reference rejection, conservative consent, privacy after email changes and source tombstones. Real HTTP tests cover reviewed merge permissions/nonces and admin markup escaping. Changed-profile refresh, mixed merge/new-operational-reference races and full browser preview/confirmation journeys remain open; see `VERIFICATION-1.17.0.md`.
+Verification through 2026-09-29 passed syntax across 74 plugin PHP files and seven theme files, 490 database/HTTP checks, 48 authorization checks, 12 money checks, 27 real-theme Chromium journey checks and seven separate public-intake DOM checks. Identity coverage includes additive upgrade, concurrent first account enquiries, impersonation denial, audit/history rollback, owner conflicts, stale/concurrent merges, quotation-reference rejection, conservative consent, privacy after email changes, source tombstones, changed-profile refresh and both launch orders for merge-versus-quotation and erasure-versus-intake. Real HTTP tests cover reviewed merge permissions/nonces and admin markup escaping; the real theme journey covers login, account requests, profile refresh, vehicle enquiry, booking, cancellation, reply and customer isolation. See `VERIFICATION-1.17.0.md` and `ACCOUNT-JOURNEY-VERIFICATION.md`.
 
-Remaining identity work includes secure historical account claims, merges involving financial records or different contact values, bulk deduplication, an opt-out/preference interface, immediate profile synchronization, legacy profile retirement and release verification. Full CRM completion is not asserted.
+Remaining identity work includes secure historical account claims where applicable, merges involving financial records or different contact values, bulk deduplication and 1.18.0 release verification. Full CRM completion is not asserted.

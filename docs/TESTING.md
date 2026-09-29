@@ -2,7 +2,13 @@
 
 ## Current evidence and independent server mode
 
-On 2026-09-28, core 1.17.0 passed 468 database/HTTP checks, 48 offline authorization checks, 12 money checks, seven real Chromium DOM checks, and syntax checks for 70 plugin plus four theme PHP files. CRM additions live in `tests/increment-crm.php`, `tests/increment-crm-http.php` and `tests/browser-public-intake.cjs`. See `VERIFICATION-1.17.0.md` for reproduction, tested failure/concurrency paths and remaining acceptance. The browser script uses a fresh profile and an isolated DOM; it does not establish full-theme rendering.
+On 2026-09-29, version 1.20.0 passed 562 isolated database/HTTP checks, 48 offline authorization checks, 12 money checks, 16 pricing-policy checks, 19 real-theme catalog Chromium checks, 33 account Chromium checks plus three post-journey database assertions, seven separate public-intake DOM checks, and syntax across all 80 plugin plus 41 theme PHP files. The catalog cases cover readiness/cutover, public minimization, every filter, REST validation, native GET submission, SEO output, structured data, Arabic RTL, focus/labels and responsive layouts. See `VERIFICATION-1.20.0.md`.
+
+On 2026-09-29, version 1.19.0 passed 541 isolated database/HTTP checks, 48 offline authorization checks, 12 money checks, 16 pricing-policy checks, 33 real-theme Chromium checks plus three post-journey database assertions, seven separate public-intake DOM checks, and syntax across all 79 plugin plus 40 theme PHP files. The 26 new database assertions cover frozen fee/promotion/seller snapshots, discount tiers and margins, deposit evidence and refund separation, and delivery-document gates. See `VERIFICATION-1.19.0.md`.
+
+On 2026-09-29, version 1.18.0 passed 515 isolated database/HTTP checks, 48 offline authorization checks, 12 money checks, 33 real-theme Chromium checks plus three post-journey database assertions, seven separate public-intake DOM checks, and syntax across all 76 plugin plus 40 theme PHP files. Preference, immediate profile synchronization, legacy CRM retirement/capabilities and legacy privacy rollback/success are covered in `tests/customer-preferences-scenarios.php`, `tests/customer-preferences-http.php` and the extended account journey. See `VERIFICATION-1.18.0.md`.
+
+On 2026-09-29, core 1.17.0 passed 490 database/HTTP checks, 48 offline authorization checks, 12 money checks, 27 real-theme Chromium journey checks, seven separate public-intake DOM checks, and syntax checks for 74 plugin plus seven theme PHP files. CRM additions live in `tests/increment-crm.php`, `tests/increment-crm-http.php`, `tests/account-workflow-scenarios.php`, `tests/browser-public-intake.cjs` and `tests/browser-account-journey.cjs`. See `VERIFICATION-1.17.0.md` and `ACCOUNT-JOURNEY-VERIFICATION.md` for reproduction, failure/concurrency paths and limits.
 
 On 2026-09-27, core 1.14.0 completed 365 database/HTTP checks using `database-runner.php --isolated 33317` on a separate MariaDB data directory. That run never loaded source `wp-config.php`; its disposable database was removed afterward. All 62 PHP files passed syntax checks, plus 48 offline authorization and 12 money checks. See `VERIFICATION-1.14.0.md` for evidence and limits. Historical totals below document earlier increments.
 
@@ -43,9 +49,10 @@ Quote pricing also has a dependency-free unit suite:
 
 ```powershell
 & C:/xampp/php/php.exe wp-content/plugins/auto-dealership-core/tests/money.php
+& C:/xampp/php/php.exe wp-content/plugins/auto-dealership-core/tests/pricing-policy.php
 ```
 
-It covers strict integer parsing, rounding, formatting and overflow. The database suite additionally verifies frozen VAT after a settings change, append-only quote versions, rollback when history persistence fails, ordered REST history and ownership isolation.
+These cover strict integer parsing, rounding, formatting, overflow, fees, dated fixed/percentage promotions, frozen snapshots, approval tiers, reservation deposits and seller identity. The database suite additionally verifies frozen VAT after a settings change, append-only quote versions, rollback when history persistence fails, ordered REST history and ownership isolation.
 
 Version 1.3 scenarios also verify frozen customer/vehicle/branch identity, escaped printable HTML, continued originating-branch access after vehicle relocation, denial to the destination branch, privacy export and snapshot-name anonymization. Version 1.3.1 adds inactive-branch deny-all behavior, direct REST IDOR denial, global administrator remediation and compensation after failed settings/metadata audit. The localhost HTTP boundary verifies real WordPress sessions/nonces, validation, public branch and lead intake, scoped CRM, inventory, catalog field minimization, quote/discount/reservation/sale/finance/payment boundaries, complete staged transfers, and a fully funded delivery from remaining-balance recording through independent verification, preparation, VIN confirmation, approval and release. Rejected writes assert unchanged rows/state, followed by successful transitions for eligible actors. Visual RTL layout, browser print dialogs and Save as PDF output still require the staging browser matrix.
 

@@ -3,6 +3,7 @@ namespace AutoDealership\Admin;
 
 use AutoDealership\Branches\BranchService;
 use AutoDealership\Core\ConfigurationService;
+use AutoDealership\Inventory\PublicCatalog;
 use AutoDealership\Security\BranchScope;
 
 defined( 'ABSPATH' ) || exit;
@@ -30,9 +31,17 @@ final class SettingsPage {
 		$rate = min( 10000, absint( get_option( 'adc_vat_rate_bps', 0 ) ) );
 		$hours = min( 168, max( 1, absint( get_option( 'adc_reservation_hours', 24 ) ) ) );
 		$discount = absint( get_option( 'adc_sales_manager_discount_limit', 0 ) );
+		$general_discount = absint( get_option( 'adc_general_manager_discount_limit', PHP_INT_MAX ) );
+		$fee = absint( get_option( 'adc_pricing_fee_amount', 0 ) );
+		$promotion_type = sanitize_key( (string) get_option( 'adc_promotion_type', 'none' ) );
+		$deposit_type = sanitize_key( (string) get_option( 'adc_reservation_deposit_type', 'none' ) );
+		$required_documents = (array) get_option( 'adc_delivery_required_documents', array() );
+		$document_labels = array( 'invoice'=>'Invoice', 'customer_identity'=>'Customer identity', 'vehicle_registration'=>'Vehicle registration', 'insurance'=>'Insurance', 'handover_form'=>'Signed handover form', 'finance_clearance'=>'Finance clearance' );
 		$branches = BranchService::public_list();
 		$default_branch = absint( get_option( 'adc_default_branch_id', 0 ) );
 		$retention_days = absint( get_option( 'adc_privacy_retention_days', 0 ) );
+		$catalog_mode = PublicCatalog::mode();
+		$catalog_readiness = PublicCatalog::readiness();
 		?>
 		<div class="wrap" dir="rtl">
 			<h1><?php esc_html_e( 'إعدادات منصة المعرض', 'auto-dealership-core' ); ?></h1>
@@ -50,7 +59,14 @@ final class SettingsPage {
 					<tr><th scope="row"><label for="adc_discount_limit"><?php esc_html_e( 'أعلى خصم لمدير المبيعات (هللة)', 'auto-dealership-core' ); ?></label></th><td><input id="adc_discount_limit" name="sales_manager_discount_limit" type="number" min="0" value="<?php echo esc_attr( $discount ); ?>"><p class="description">أي خصم أعلى من الحد يتطلب صلاحية المدير العام. صفر يحول كل طلب خصم للمدير العام.</p></td></tr>
 					<tr><th scope="row"><label for="adc_default_branch_id"><?php esc_html_e( 'الفرع الافتراضي للطلبات الواردة', 'auto-dealership-core' ); ?></label></th><td><select id="adc_default_branch_id" name="default_branch_id"><option value="0"><?php esc_html_e( 'بدون فرع — يتطلب إسنادًا يدويًا', 'auto-dealership-core' ); ?></option><?php foreach ( $branches as $branch ) : ?><option value="<?php echo absint( $branch['id'] ); ?>" <?php selected( $default_branch, (int) $branch['id'] ); ?>><?php echo esc_html( $branch['name'] . ' — ' . $branch['city'] ); ?></option><?php endforeach; ?></select></td></tr>
 					<tr><th scope="row"><label for="adc_privacy_retention_days"><?php esc_html_e( 'مدة الاحتفاظ ببيانات الهوية (يوم)', 'auto-dealership-core' ); ?></label></th><td><input id="adc_privacy_retention_days" name="privacy_retention_days" type="number" min="0" max="3650" value="<?php echo esc_attr( $retention_days ); ?>"><p class="description"><?php esc_html_e( '0 يعطل الإخفاء المجدول. أي قيمة مفعلة يجب أن تكون بين 30 و3650 يومًا وبعد اعتماد السياسة النظامية.', 'auto-dealership-core' ); ?></p></td></tr>
+					<tr><th scope="row"><label for="adc_public_catalog_mode"><?php esc_html_e( 'مصدر الكتالوج العام', 'auto-dealership-core' ); ?></label></th><td><select id="adc_public_catalog_mode" name="public_catalog_mode"><option value="compatibility" <?php selected( $catalog_mode, PublicCatalog::MODE_COMPATIBILITY ); ?>><?php esc_html_e( 'توافق تدريجي مع بيانات القالب', 'auto-dealership-core' ); ?></option><option value="authoritative" <?php selected( $catalog_mode, PublicCatalog::MODE_AUTHORITATIVE ); ?> <?php disabled( ! $catalog_readiness['ready'] && PublicCatalog::MODE_AUTHORITATIVE !== $catalog_mode ); ?>><?php esc_html_e( 'المخزون التشغيلي المعتمد', 'auto-dealership-core' ); ?></option></select><p class="description"><?php esc_html_e( 'فعّل المصدر التشغيلي بعد ربط السيارات المنشورة والتحقق من الترحيل. في هذا الوضع لا تظهر أي سيارة غير مرتبطة أو غير متاحة أو تابعة لفرع غير نشط.', 'auto-dealership-core' ); ?></p><p class="description"><?php printf( esc_html__( 'جاهزية التحويل: سيارات تشغيلية %1$d، مؤهلة للنشر %2$d، منشورات سيارات %3$d، منشورات غير مرتبطة %4$d، خرائط مكررة %5$d.', 'auto-dealership-core' ), absint( $catalog_readiness['operational'] ), absint( $catalog_readiness['eligible'] ), absint( $catalog_readiness['published_posts'] ), absint( $catalog_readiness['unmapped_published_posts'] ), absint( $catalog_readiness['duplicate_mappings'] ) ); ?></p></td></tr>
 					<tr><th scope="row"><?php esc_html_e( 'الفروع', 'auto-dealership-core' ); ?></th><td><?php echo esc_html( (string) count( $branches ) ); ?> — <?php esc_html_e( 'تُدار الفروع عبر واجهة REST.', 'auto-dealership-core' ); ?></td></tr>
+					<tr><th scope="row"><label for="adc_general_discount_limit"><?php esc_html_e( 'General manager discount ceiling (halalas)', 'auto-dealership-core' ); ?></label></th><td><input id="adc_general_discount_limit" name="general_manager_discount_limit" type="number" min="0" value="<?php echo esc_attr( $general_discount ); ?>"></td></tr>
+					<tr><th scope="row"><label for="adc_pricing_fee_amount"><?php esc_html_e( 'Fixed quote fee (halalas)', 'auto-dealership-core' ); ?></label></th><td><input id="adc_pricing_fee_amount" name="pricing_fee_amount" type="number" min="0" value="<?php echo esc_attr( $fee ); ?>"></td></tr>
+					<tr><th scope="row"><?php esc_html_e( 'Active promotion', 'auto-dealership-core' ); ?></th><td><input name="promotion_code" maxlength="64" placeholder="code" value="<?php echo esc_attr( get_option( 'adc_promotion_code', '' ) ); ?>"> <select name="promotion_type"><?php foreach ( array( 'none','fixed','percentage' ) as $type ) : ?><option value="<?php echo esc_attr( $type ); ?>" <?php selected( $promotion_type, $type ); ?>><?php echo esc_html( $type ); ?></option><?php endforeach; ?></select> <input name="promotion_value" type="number" min="0" value="<?php echo esc_attr( absint( get_option( 'adc_promotion_value', 0 ) ) ); ?>"><p><label><?php esc_html_e( 'Starts', 'auto-dealership-core' ); ?> <input name="promotion_starts_at" type="date" value="<?php echo esc_attr( get_option( 'adc_promotion_starts_at', '' ) ); ?>"></label> <label><?php esc_html_e( 'Ends', 'auto-dealership-core' ); ?> <input name="promotion_ends_at" type="date" value="<?php echo esc_attr( get_option( 'adc_promotion_ends_at', '' ) ); ?>"></label></p><p class="description"><?php esc_html_e( 'Percentage values use basis points; 1500 means 15%.', 'auto-dealership-core' ); ?></p></td></tr>
+					<tr><th scope="row"><?php esc_html_e( 'Reservation deposit policy', 'auto-dealership-core' ); ?></th><td><select name="reservation_deposit_type"><?php foreach ( array( 'none','fixed','percentage' ) as $type ) : ?><option value="<?php echo esc_attr( $type ); ?>" <?php selected( $deposit_type, $type ); ?>><?php echo esc_html( $type ); ?></option><?php endforeach; ?></select> <input name="reservation_deposit_value" type="number" min="0" value="<?php echo esc_attr( absint( get_option( 'adc_reservation_deposit_value', 0 ) ) ); ?>"><p class="description"><?php esc_html_e( 'Fixed values are halalas; percentage values are basis points.', 'auto-dealership-core' ); ?></p></td></tr>
+					<tr><th scope="row"><?php esc_html_e( 'Seller identity on quotations', 'auto-dealership-core' ); ?></th><td><p><input class="regular-text" name="seller_name" placeholder="Name" value="<?php echo esc_attr( get_option( 'adc_seller_name', get_bloginfo( 'name' ) ) ); ?>"></p><p><input class="regular-text" name="seller_tax_number" placeholder="Tax number" value="<?php echo esc_attr( get_option( 'adc_seller_tax_number', '' ) ); ?>"></p><p><input class="regular-text" name="seller_phone" placeholder="Phone" value="<?php echo esc_attr( get_option( 'adc_seller_phone', '' ) ); ?>"></p><textarea class="large-text" name="seller_address" rows="2" placeholder="Address"><?php echo esc_textarea( get_option( 'adc_seller_address', '' ) ); ?></textarea></td></tr>
+					<tr><th scope="row"><?php esc_html_e( 'Required delivery documents', 'auto-dealership-core' ); ?></th><td><?php foreach ( $document_labels as $key=>$label ) : ?><label style="display:block"><input type="checkbox" name="delivery_required_documents[]" value="<?php echo esc_attr( $key ); ?>" <?php checked( in_array( $key, $required_documents, true ) ); ?>> <?php echo esc_html( $label ); ?></label><?php endforeach; ?><p class="description"><?php esc_html_e( 'Selected documents block delivery approval and release until evidence references are recorded.', 'auto-dealership-core' ); ?></p></td></tr>
 				</tbody></table>
 				<?php submit_button( __( 'حفظ الإعدادات', 'auto-dealership-core' ) ); ?>
 			</form>
@@ -75,7 +91,7 @@ final class SettingsPage {
 			wp_die( esc_html__( 'لا تملك صلاحية حفظ الإعدادات.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( 'adc_save_settings' );
-		$result = ConfigurationService::update( $_POST );
+		$result = ConfigurationService::update( wp_unslash( $_POST ) );
 		wp_safe_redirect( add_query_arg( is_wp_error( $result ) ? 'error' : 'updated', '1', admin_url( 'admin.php?page=adc-settings' ) ) );
 		exit;
 	}

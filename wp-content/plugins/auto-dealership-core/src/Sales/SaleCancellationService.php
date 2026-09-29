@@ -25,7 +25,7 @@ final class SaleCancellationService {
 		$delivery = $wpdb->get_row($wpdb->prepare('SELECT id,status FROM '.Schema::table('deliveries').' WHERE sale_id=%d FOR UPDATE',$sale_id),ARRAY_A);
 		if ( $wpdb->last_error ) { $wpdb->query('ROLLBACK'); return self::error('adc_sale_cancel_failed',500); }
 		if ( $delivery && ! in_array($delivery['status'],array('preparing','vin_confirmed','approved'),true) ) { $wpdb->query('ROLLBACK'); return self::error('adc_sale_cancel_delivery'); }
-		$verified = $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(amount),0) FROM ".Schema::table('payment_confirmations')." WHERE sale_id=%d AND status='verified' AND currency='SAR'",$sale_id));
+		$verified = $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(p.amount),0)+(SELECT COALESCE(r.deposit_amount,0) FROM ".Schema::table('reservations')." r WHERE r.id=%d) FROM ".Schema::table('payment_confirmations')." p WHERE p.sale_id=%d AND p.status='verified' AND p.currency='SAR'",(int)$sale['reservation_id'],$sale_id));
 		$verified = \AutoDealership\Pricing\Money::parse( $verified );
 		if ( null === $verified ) { $wpdb->query('ROLLBACK'); return self::error('adc_sale_cancel_balance_failed',500); }
 		$financial = $verified > 0 ? 'pending_refund' : 'no_refund_due'; $vehicle_status = $verified > 0 ? 'hold' : 'available'; $now=current_time('mysql',true);

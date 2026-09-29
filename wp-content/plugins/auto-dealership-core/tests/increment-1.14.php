@@ -150,7 +150,7 @@ $cancellations_before = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::
 $cancellation_faults = array(
 	static fn( $q ) => str_starts_with( $q, 'UPDATE `' . Schema::table( 'payment_confirmations' ) . '`' ),
 	static fn( $q ) => str_starts_with( $q, 'UPDATE ' . Schema::table( 'finance_requests' ) ),
-	static fn( $q ) => str_contains( $q, 'SUM(amount)' ) && str_contains( $q, Schema::table( 'payment_confirmations' ) ),
+	static fn( $q ) => ( str_contains( $q, 'SUM(amount)' ) || str_contains( $q, 'SUM(p.amount)' ) ) && str_contains( $q, Schema::table( 'payment_confirmations' ) ),
 	static fn( $q ) => str_starts_with( $q, 'SELECT id,status FROM ' . Schema::table( 'deliveries' ) ),
 );
 foreach ( $cancellation_faults as $fault ) {
@@ -162,14 +162,14 @@ adc_check( is_array( $failure_cancellation ) && 'cancelled' === $wpdb->get_var( 
 wp_set_current_user( $finance_recorder );
 $refund_count = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'payment_refunds' ) );
 foreach ( array( 'payment_confirmations','payment_refunds' ) as $balance_table ) {
-	$fault = static fn( $q ) => str_contains( $q, 'SUM(amount)' ) && str_contains( $q, Schema::table( $balance_table ) );
+	$fault = static fn( $q ) => ( str_contains( $q, 'SUM(amount)' ) || str_contains( $q, 'SUM(p.amount)' ) ) && str_contains( $q, Schema::table( $balance_table ) );
 	$result = $with_sql_failure( $fault, static fn() => RefundService::request_cancellation( $failure_cancellation['id'], 1000, 'bank_transfer', '114-REFUND' ) );
 	adc_check( $error_is( $result, 'adc_refund_balance_failed' ) && $refund_count === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'payment_refunds' ) ), 'Refund request fails closed when a balance aggregate cannot be read.' );
 }
 $failure_refund = RefundService::request_cancellation( $failure_cancellation['id'], 1000, 'bank_transfer', '114-REFUND' );
 wp_set_current_user( $finance_verifier );
 foreach ( array( 'payment_confirmations','payment_refunds' ) as $balance_table ) {
-	$fault = static fn( $q ) => str_contains( $q, 'SUM(amount)' ) && str_contains( $q, Schema::table( $balance_table ) );
+	$fault = static fn( $q ) => ( str_contains( $q, 'SUM(amount)' ) || str_contains( $q, 'SUM(p.amount)' ) ) && str_contains( $q, Schema::table( $balance_table ) );
 	$result = $with_sql_failure( $fault, static fn() => RefundService::decide( $failure_refund['id'], true, 'Injected balance failure' ) );
 	adc_check( $error_is( $result, 'adc_refund_balance_failed' ) && 'pending' === $wpdb->get_var( $wpdb->prepare( 'SELECT status FROM ' . Schema::table( 'payment_refunds' ) . ' WHERE id=%d', $failure_refund['id'] ) ), 'Refund verification fails closed and preserves pending state after an aggregate error.' );
 }

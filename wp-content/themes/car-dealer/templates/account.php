@@ -36,6 +36,7 @@ get_header();
 <?php else : $user = wp_get_current_user(); $kind = car_dealer_account_kind( $user ); $labels = array( 'administrator' => 'مدير الموقع', 'manager' => 'مدير المعرض', 'sales' => 'مستشار المبيعات', 'customer' => 'حساب العميل' ); ?>
 <header class="cd-account-welcome"><div><span><?php echo esc_html( $labels[$kind] ); ?></span><h1>مرحباً، <?php echo esc_html( $user->display_name ); ?></h1><p>كل ما تحتاجه لإدارة حسابك في مكان واحد.</p></div><a class="btn" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>">تسجيل الخروج</a></header>
 <?php if ( isset( $_GET['saved'] ) ) : ?><p class="cd-account-notice" role="status">تم تحديث بياناتك.</p><?php endif; ?>
+<?php if ( isset( $_GET['preferences_saved'] ) ) : ?><p class="cd-account-notice" role="status">تم حفظ تفضيلات التواصل التسويقي.</p><?php endif; ?>
 <?php if ( isset( $_GET['request_updated'] ) ) : ?><p class="cd-account-notice" role="status">تم تحديث الحجز وإبلاغ المعرض داخل لوحة الإدارة.</p><?php endif; ?>
 <?php if ( 'customer' !== $kind ) : ?>
 <section class="cd-account-panel"><h2>مساحة العمل</h2><div class="cd-account-tools">
@@ -62,6 +63,22 @@ foreach ( $tools as $tool ) { if ( current_user_can( $tool[0] ) ) { echo '<a hre
 <label>الهاتف<input name="phone" type="tel" autocomplete="tel" dir="ltr" value="<?php echo esc_attr( get_user_meta( $user->ID, 'car_dealer_phone', true ) ); ?>"></label>
 <p>البريد الإلكتروني: <bdi><?php echo esc_html( $user->user_email ); ?></bdi></p><div class="cd-account-actions"><button class="btn btn-primary">حفظ البيانات</button><a href="<?php echo esc_url( wp_lostpassword_url( car_dealer_account_url( 'login' ) ) ); ?>">إعادة تعيين كلمة المرور</a></div>
 </form></section>
+<?php if ( 'customer' === $kind && class_exists( '\AutoDealership\Leads\CustomerIdentity' ) ) :
+$preferences = \AutoDealership\Leads\CustomerIdentity::current_preferences();
+if ( ! is_wp_error( $preferences ) ) : ?>
+<section class="cd-account-panel cd-account-preferences" id="communication-preferences"><h2>تفضيلات التواصل</h2>
+<p>اختر ما إذا كنت ترغب في استقبال عروض وأخبار تسويقية. رسائل الطلبات والحجوزات والخدمة اللازمة لتنفيذ طلبك لا تتأثر بهذا الاختيار.</p>
+<form method="post" action="<?php echo esc_url( car_dealer_account_url() ); ?>">
+<?php wp_nonce_field( 'cd_account_dashboard' ); ?><input type="hidden" name="account_action" value="save_preferences">
+<fieldset><legend>التواصل التسويقي</legend>
+<label><input type="radio" name="consent_marketing" value="1" required <?php checked( ! empty( $preferences['consent_marketing'] ) ); ?>> أوافق على استقبال العروض والأخبار التسويقية.</label>
+<label><input type="radio" name="consent_marketing" value="0" required <?php checked( empty( $preferences['consent_marketing'] ) ); ?>> لا أرغب في استقبال تواصل تسويقي.</label>
+</fieldset>
+<?php if ( ! empty( $preferences['recorded_at'] ) ) : ?><p><small>آخر موافقة مسجلة: <?php echo esc_html( get_date_from_gmt( $preferences['recorded_at'], 'Y-m-d H:i' ) ); ?></small></p><?php endif; ?>
+<button class="btn btn-primary" type="submit">حفظ التفضيلات</button>
+</form></section>
+<?php else : ?><section class="cd-account-panel"><h2>تفضيلات التواصل</h2><p role="alert">تعذر تحميل التفضيلات حالياً. حاول مرة أخرى لاحقاً.</p></section>
+<?php endif; endif; ?>
 <?php endif; ?>
 </div>
 <?php get_footer(); ?>

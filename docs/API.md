@@ -1,6 +1,25 @@
 # API Architecture
 
-Version 1.17.0 implements the following routes under `/wp-json/auto-dealership/v1`. Integration verification of the 1.15.0–1.17.0 CRM changes is pending.
+Version 1.19.0 implements the following routes under `/wp-json/auto-dealership/v1`. Pricing, deposit, refund and document boundaries passed the local synthetic acceptance recorded in `VERIFICATION-1.19.0.md`.
+
+## Pricing, deposits and delivery documents (1.19.0)
+
+- `POST /quotations` accepts optional `promotion_code`. The server resolves the configured active promotion and freezes fee, promotion, subtotal, VAT, total and seller identity in the immutable revision.
+- `POST /quotations/{id}/discounts` freezes the configured approval tier and before/after gross margin. Requests above the general-manager ceiling are rejected; the stored tier controls approval even if settings later change.
+- `POST /reservations` returns `deposit_policy`, `deposit_required_amount`, `deposit_verified_amount` and `currency`. The optional legacy `deposit_amount` can only declare the exact required value and never marks it received.
+- `POST /reservations/{id}/deposit` requires `adc_record_payments`, exact required `amount`, a supported `source` and unique evidence `reference`. It creates pending evidence.
+- `POST /reservation-deposits/{id}/decision` requires `adc_verify_payments`; the recorder and reservation owner cannot review it. Rejection requires a reason. Only approval updates the reservation's verified deposit. A configured required deposit must be verified before sale conversion and is included once in the sale's verified settlement/refund balance.
+- Manual reservation cancellation is rejected while deposit evidence remains pending; finance must verify or reject that evidence first.
+- `GET /reservation-deposits` returns at most 100 newest evidence records within the finance user's active branch scope, including the reservation owner needed to evaluate separation of duties.
+- `POST /reservations/{id}/refunds` records an external refund for a cancelled reservation's verified deposit. Existing refund review applies through `/refunds/{id}/decision`; requester and reviewer remain separate, and the reservation owner cannot verify it.
+- `GET /deliveries/{id}/documents` returns the configured checklist and evidence in branch scope. `POST` to the same route records or replaces a supported document reference before approval. Missing configured documents block approval and release.
+
+## Account preferences (1.18.0)
+
+- `GET /account/preferences` requires the current authenticated account and returns `consent_marketing`, `recorded_at` and `linked_customer_id`. It does not accept an account/customer identifier.
+- `POST /account/preferences` requires the current authenticated account and boolean `consent_marketing`. It atomically stores the explicit account preference, updates an existing linked customer and writes a minimized audit event. Opt-out clears the consent timestamp. Cookie requests require the WordPress REST nonce.
+
+The account preference can be recorded before the first enquiry. Later authenticated intake applies it when creating or refreshing the canonical customer, so submitted form data cannot silently reverse an account opt-out. See `CUSTOMER-PREFERENCES.md`.
 
 ## Customer identity review (1.17.0)
 
@@ -50,7 +69,7 @@ CRM list, stage and activity operations require the current employee's active as
 |---|---|
 | `GET /branches` | Public active branch list. |
 | `POST /branches` | Administrator; create branch. |
-| `GET /vehicles` | Public available vehicle catalog; bounded filters and page size. |
+| `GET /vehicles` | Public available vehicle catalog; bounded filters, sorting and page size. |
 | `POST /vehicles` | Inventory capability; create vehicle with unique VIN and stock number. |
 | `POST /vehicles/{id}/status` | Inventory capability; allowed transition and reason required. |
 | `POST /vehicles/{id}/issues` | Inventory capability; opens a documented `hold` or `maintenance` case with optional assignee and review date. Direct transitions into these states are rejected. |
@@ -62,6 +81,7 @@ CRM list, stage and activity operations require the current employee's active as
 | `GET /leads/{id}/activities` | Same view capability, branch and ownership scope as the lead list; paginated activity notes. |
 | `POST /leads/{id}/stage`, `/assignment`, `/activities` | Ownership/branch scoped CRM operations. |
 | `POST /reservations`, `POST /reservations/{id}/cancel` | Sales creates with idempotency UUID and transactional lock; branch manager cancels with a reason. Deposits/payment references place the vehicle on hold pending manual review. |
+| `POST /reservations/{id}/deposit`, `/reservation-deposits/{id}/decision` | Finance recorder submits exact policy evidence; a separate finance reviewer verifies or rejects it. |
 | `POST /quotations`, `/quotations/{id}/discounts` | Sales/manager; branch scoped, amount stored in SAR halalas. |
 | `GET /quotations/{id}/versions` | Quote owner, branch lead viewer, finance viewer or administrator, with branch/ownership scope. Returns up to 50 immutable revisions per page, newest first. |
 | `POST /discounts/{id}/decision` | Discount reviewer; requester cannot approve own request and high discounts require general manager. |
@@ -70,16 +90,17 @@ CRM list, stage and activity operations require the current employee's active as
 | `POST /sales/{id}/payments` | `adc_record_payments`; branch scoped receipt entry, positive integer `amount` in halalas, `source` (`cash_receipt`, `bank_transfer`, `finance_disbursement`) and `reference` required. Creates pending confirmation, not a charge. |
 | `POST /payments/{id}/decision` | `adc_verify_payments`; `approve` boolean and `reason` required. Different reviewer from recorder and sale owner; verified amount cannot exceed the remaining balance. |
 | `POST /sales/{id}/delivery`, `/deliveries/{id}/vin`, `/approval`, `/release` | Delivery preparation, VIN confirmer, separate approver and authorized release. |
+| `GET`, `POST /deliveries/{id}/documents` | Branch-scoped configured checklist and audited document-reference recording before approval. |
 | `POST /deliveries/{id}/return` | `adc_process_returns`; receives a completed delivery into an active same-branch location with condition, odometer, document reference and reason. Marks the financial obligation pending refund and requires a new inspection before availability. |
 | `POST /returns/{id}/refunds` | `adc_record_refunds`; records a pending external refund using an amount in halalas, method and unique reference. Pending plus verified refunds cannot exceed verified receipts. |
 | `POST /refunds/{id}/decision` | `adc_verify_refunds`; a different same-branch finance employee verifies or rejects the refund with a reason. |
 | `POST /sales/{id}/cancellation` | `adc_cancel_sales`; cancels an undelivered sale with a reason and atomically reconciles its reservation, open delivery, pending payment evidence and vehicle state. |
 | `POST /cancellations/{id}/refunds` | `adc_record_refunds`; records a pending external refund against a paid sale cancellation. |
 
-Routes use an explicit `permission_callback`, validate request schemas and call services instead of writing directly. Authenticated browser requests use WordPress cookie authentication and REST nonces; external clients use a reviewed authentication method with scoped capabilities and revocation. Public catalog responses omit VIN and purchase cost and include only available vehicles linked to a published `car` post and an active branch. Each item includes its public title, URL and featured image URL; the response includes `total` and `total_pages`. Inventory records without an explicitly published public post remain private. Theme car queries also hide mapped posts when their central inventory status is not available or their branch is inactive; unmigrated legacy posts continue to follow the theme's existing behavior. Finance and audit data remain private.
+Routes use an explicit `permission_callback`, validate request schemas and call services instead of writing directly. Authenticated browser requests use WordPress cookie authentication and REST nonces; external clients use a reviewed authentication method with scoped capabilities and revocation. Public catalog responses omit VIN, purchase cost, internal location and brand reference IDs and include only available vehicles linked exactly once to a published `car` post and an active branch. Duplicate post mappings are withheld. Each item includes its public title, URL and featured image URL; the response includes `total`, `total_pages` and normalized `filters`. Supported filters are `search`, `brand`, `model`, `trim`, `model_year` or `min_year`/`max_year`, `min_price`/`max_price` in halalas, `min_mileage`/`max_mileage`, `body_type`, `fuel_type`, `transmission`, `engine_size`, `drivetrain`, `exterior_color`, `interior_color`, `branch_id`, and `condition`. Sorting is allowlisted to `newest`, `price_asc`, `price_desc`, `year_desc`, or `mileage_asc`; `per_page` is capped at 48. Inventory records without an explicitly published public post remain private. In theme compatibility mode, mapped unavailable records are suppressed while unmigrated legacy posts retain their existing behavior. In authoritative mode, all public car queries require an eligible operational mapping. Finance and audit data remain private.
 
 Reservation retries must retain the same authenticated owner, vehicle, customer and deposit. Matching retries return the original response shape; mismatches return `adc_idempotency_conflict` / HTTP 409 without disclosing the existing record. A key cannot bypass current branch/customer authorization. Receipt references are unique per source; identical submissions by the same recorder against an eligible sale reuse the existing confirmation. Quote prices cannot be discounted once linked to a sale. Quote amounts are integer halalas; `tax_rate_bps` and originating branch are frozen at creation. Vehicle relocation cannot transfer access to historical quote documents. Legacy quotes without a known tax-rate snapshot remain readable but require a new quote before recalculation.
 
-Delivery preparation and release require verified receipt totals covering the whole sale. Approved finance requests, submitted receipts and reservation deposit fields do not establish settlement. The release operation rechecks settlement and sale/invoice/VIN approvals server side. See `PAYMENTS.md` for the manual verification policy and remaining integration work.
+Delivery preparation and release require verified financial evidence covering the whole sale. Approved finance requests and submitted evidence do not establish settlement; an independently verified reservation deposit contributes once after sale conversion. The release operation rechecks settlement, configured documents and sale/invoice/VIN approvals server side. See `PAYMENTS.md` for the manual verification policy and remaining integration work.
 
 Endpoints return domain error codes and appropriate HTTP status. Pagination is bounded. Audit records carry correlation IDs; a universal API correlation header and generated OpenAPI specification remain pending.

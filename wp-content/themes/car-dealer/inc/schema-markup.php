@@ -11,6 +11,10 @@ function car_dealer_schema_markup() {
 	);
 	if ( is_singular( 'car' ) ) {
 		$car_id = get_the_ID();
+		$vehicle = function_exists( 'car_dealer_public_vehicle' ) ? car_dealer_public_vehicle( $car_id ) : null;
+		$price = $vehicle && function_exists( 'car_dealer_catalog_price' ) ? car_dealer_catalog_price( $vehicle ) : (float) get_post_meta( $car_id, '_car_price', true );
+		$year = $vehicle ? $vehicle['model_year'] : get_post_meta( $car_id, '_car_year', true );
+		$mileage = $vehicle ? $vehicle['mileage'] : (int) get_post_meta( $car_id, '_car_kilometers', true );
 		$data = array(
 			'@context' => 'https://schema.org',
 			'@type' => 'Vehicle',
@@ -18,17 +22,31 @@ function car_dealer_schema_markup() {
 			'url' => get_permalink(),
 			'offers' => array(
 				'@type' => 'Offer',
-				'price' => (float) get_post_meta( $car_id, '_car_price', true ),
-				'priceCurrency' => 'SAR',
+				'price' => $price,
+				'priceCurrency' => $vehicle['currency'] ?? 'SAR',
 				'availability' => 'https://schema.org/InStock',
+				'url' => get_permalink( $car_id ),
 			),
-			'vehicleModelDate' => get_post_meta( $car_id, '_car_year', true ),
+			'vehicleModelDate' => $year,
 			'mileageFromOdometer' => array(
 				'@type' => 'QuantitativeValue',
-				'value' => (int) get_post_meta( $car_id, '_car_kilometers', true ),
+				'value' => $mileage,
 				'unitCode' => 'KMT',
 			),
 		);
+		if ( $vehicle ) {
+			$data['brand'] = array( '@type' => 'Brand', 'name' => $vehicle['brand'] );
+			$data['model'] = $vehicle['model'];
+			$data['vehicleConfiguration'] = $vehicle['trim_name'];
+			$data['sku'] = $vehicle['stock_number'];
+			$data['fuelType'] = $vehicle['fuel_type'];
+			$data['vehicleTransmission'] = $vehicle['transmission'];
+			$data['color'] = $vehicle['exterior_color'];
+			$data['itemCondition'] = 'new' === $vehicle['condition_key'] ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition';
+		}
+		if ( has_post_thumbnail( $car_id ) ) {
+			$data['image'] = get_the_post_thumbnail_url( $car_id, 'full' );
+		}
 	}
 	echo '<script type="application/ld+json">' . wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . '</script>' . "\n";
 }

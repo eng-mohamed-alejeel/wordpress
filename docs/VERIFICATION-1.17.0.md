@@ -1,5 +1,7 @@
 # Core 1.15–1.17 verification — 2026-09-28
 
+> Follow-up completed 2026-09-29: the suite now passes 490 database/HTTP checks, 27 real-theme browser journey checks and syntax across 74 plugin plus seven theme PHP files. The account journey, responsive review, targeted mixed races and legacy pagination/cursor cases listed as open below are closed by `ACCOUNT-JOURNEY-VERIFICATION.md`. The tables and limits in this document remain the historical result of the original 2026-09-28 run.
+
 ## Results
 
 | Check | Result |

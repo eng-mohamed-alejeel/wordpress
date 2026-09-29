@@ -3,19 +3,21 @@
 while ( have_posts() ) :
 	the_post();
 	$id           = get_the_ID();
-	$price        = get_post_meta( $id, '_car_price', true );
+	$vehicle      = function_exists( 'car_dealer_public_vehicle' ) ? car_dealer_public_vehicle( $id ) : null;
+	$price        = $vehicle ? car_dealer_catalog_price( $vehicle ) : get_post_meta( $id, '_car_price', true );
 	$monthly      = get_post_meta( $id, '_car_monthly_payment', true );
-	$year         = get_post_meta( $id, '_car_year', true );
-	$model        = get_post_meta( $id, '_car_model', true );
-	$color        = get_post_meta( $id, '_car_color', true );
-	$kilometers   = get_post_meta( $id, '_car_kilometers', true );
-	$transmission = get_post_meta( $id, '_car_transmission', true );
-	$fuel         = get_post_meta( $id, '_car_fuel_type', true );
-	$condition    = get_post_meta( $id, '_car_condition', true );
-	$status       = get_post_meta( $id, '_car_inventory_status', true ) ?: 'available';
+	$year         = $vehicle ? $vehicle['model_year'] : get_post_meta( $id, '_car_year', true );
+	$model        = $vehicle ? $vehicle['model'] : get_post_meta( $id, '_car_model', true );
+	$color        = $vehicle ? $vehicle['exterior_color'] : get_post_meta( $id, '_car_color', true );
+	$kilometers   = $vehicle ? $vehicle['mileage'] : get_post_meta( $id, '_car_kilometers', true );
+	$transmission = $vehicle ? $vehicle['transmission'] : get_post_meta( $id, '_car_transmission', true );
+	$fuel         = $vehicle ? $vehicle['fuel_type'] : get_post_meta( $id, '_car_fuel_type', true );
+	$condition    = $vehicle ? $vehicle['condition_key'] : get_post_meta( $id, '_car_condition', true );
+	$status       = $vehicle ? $vehicle['status'] : ( get_post_meta( $id, '_car_inventory_status', true ) ?: 'available' );
 	$features_meta = get_post_meta( $id, '_car_features', true );
-	$features     = is_array( $features_meta ) ? array_filter( array_map( 'trim', $features_meta ) ) : array_filter( array_map( 'trim', explode( "\n", (string) $features_meta ) ) );
+	$features     = $vehicle && function_exists( 'car_dealer_catalog_features' ) ? car_dealer_catalog_features( $vehicle ) : ( is_array( $features_meta ) ? array_filter( array_map( 'trim', $features_meta ) ) : array_filter( array_map( 'trim', explode( "\n", (string) $features_meta ) ) ) );
 	$brands       = get_the_terms( $id, 'car_brand' );
+	$brand_name   = $vehicle ? $vehicle['brand'] : ( ! is_wp_error( $brands ) && ! empty( $brands ) ? $brands[0]->name : '' );
 	$wa_message   = sprintf( 'مرحباً AUTO BRANDS، أريد الاستفسار عن %s', get_the_title() );
 	?>
 	<section class="ab-car-hero">
@@ -24,7 +26,7 @@ while ( have_posts() ) :
 				<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large', array( 'loading' => 'eager' ) ); } else { ?><div class="car-image-placeholder">🚘</div><?php } ?>
 			</div>
 			<div class="car-single-content">
-				<p class="eyebrow"><?php echo ! is_wp_error( $brands ) && ! empty( $brands ) ? esc_html( $brands[0]->name ) : esc_html__( 'AUTO BRANDS', 'car-dealer' ); ?></p>
+				<p class="eyebrow"><?php echo $brand_name ? esc_html( $brand_name ) : esc_html__( 'AUTO BRANDS', 'car-dealer' ); ?></p>
 				<h1><?php the_title(); ?></h1>
 				<?php if ( $price ) : ?><p class="car-single-price"><?php echo esc_html( car_dealer_format_price( $price ) ); ?></p><?php endif; ?>
 				<?php if ( $monthly ) : ?><p class="car-monthly car-single-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
@@ -39,7 +41,7 @@ while ( have_posts() ) :
 		</div>
 	</section>
 
-	<article class="car-single container">
+	<article class="car-single container" dir="rtl" lang="ar">
 		<div>
 			<div class="car-description"><h2><?php esc_html_e( 'الوصف', 'car-dealer' ); ?></h2><?php the_content(); ?></div>
 			<?php if ( $features ) : ?>
@@ -52,13 +54,23 @@ while ( have_posts() ) :
 			<dl class="car-specification">
 				<?php foreach ( array(
 					__( 'الموديل', 'car-dealer' ) => $model,
+					__( 'الفئة', 'car-dealer' ) => $vehicle['trim_name'] ?? '',
 					__( 'سنة الصنع', 'car-dealer' ) => $year,
 					__( 'الحالة', 'car-dealer' ) => $condition ? ( 'new' === $condition ? __( 'جديدة', 'car-dealer' ) : __( 'مستعملة', 'car-dealer' ) ) : '',
 					__( 'حالة المخزون', 'car-dealer' ) => function_exists( 'car_dealer_inventory_status_label' ) ? car_dealer_inventory_status_label( $status ) : $status,
 					__( 'اللون', 'car-dealer' ) => $color,
+					__( 'اللون الداخلي', 'car-dealer' ) => $vehicle['interior_color'] ?? '',
+					__( 'نوع الهيكل', 'car-dealer' ) => $vehicle['body_type'] ?? '',
 					__( 'الوقود', 'car-dealer' ) => $fuel,
 					__( 'ناقل الحركة', 'car-dealer' ) => $transmission ? ( 'automatic' === $transmission ? __( 'أوتوماتيكي', 'car-dealer' ) : __( 'يدوي', 'car-dealer' ) ) : '',
+					__( 'المحرك', 'car-dealer' ) => $vehicle['engine_size'] ?? '',
+					__( 'نظام الدفع', 'car-dealer' ) => strtoupper( (string) ( $vehicle['drivetrain'] ?? '' ) ),
+					__( 'القوة', 'car-dealer' ) => ! empty( $vehicle['horsepower'] ) ? number_format_i18n( $vehicle['horsepower'] ) . ' HP' : '',
+					__( 'الأبواب', 'car-dealer' ) => $vehicle['doors'] ?? '',
+					__( 'المقاعد', 'car-dealer' ) => $vehicle['seats'] ?? '',
 					__( 'الممشى', 'car-dealer' ) => $kilometers ? number_format_i18n( $kilometers ) . ' كم' : '',
+					__( 'الفرع', 'car-dealer' ) => $vehicle['branch_name'] ?? '',
+					__( 'رقم المخزون', 'car-dealer' ) => $vehicle['stock_number'] ?? '',
 				) as $label => $value ) : if ( '' === (string) $value ) { continue; } ?><div><dt><?php echo esc_html( $label ); ?></dt><dd><?php echo esc_html( $value ); ?></dd></div><?php endforeach; ?>
 			</dl>
 		</aside>

@@ -76,15 +76,17 @@ final class RetentionService {
 	private static function has_protected_activity( int $customer_id, string $cutoff ): bool {
 		global $wpdb;
 		$l = Schema::table( 'leads' ); $r = Schema::table( 'reservations' ); $q = Schema::table( 'quotations' );
-		$s = Schema::table( 'sales' ); $f = Schema::table( 'finance_requests' ); $p = Schema::table( 'payment_confirmations' ); $d = Schema::table( 'deliveries' );
+		$s = Schema::table( 'sales' ); $f = Schema::table( 'finance_requests' ); $p = Schema::table( 'payment_confirmations' ); $pr = Schema::table( 'payment_refunds' ); $d = Schema::table( 'deliveries' ); $rd = Schema::table( 'reservation_deposits' );
 		$sql = "SELECT 1 FROM $l WHERE customer_id=%d AND (stage NOT IN ('won','lost') OR updated_at >= %s) UNION ALL
 			SELECT 1 FROM $r WHERE customer_id=%d AND (status='confirmed' OR updated_at >= %s) UNION ALL
+			SELECT 1 FROM $rd INNER JOIN $r rr ON rr.id=$rd.reservation_id WHERE rr.customer_id=%d AND ($rd.status='pending' OR $rd.created_at >= %s) UNION ALL
 			SELECT 1 FROM $q WHERE customer_id=%d AND (status IN ('draft','pending_discount') OR (status='approved' AND valid_until >= %s) OR created_at >= %s) UNION ALL
 			SELECT 1 FROM $s WHERE customer_id=%d AND (status NOT IN ('delivered','cancelled','rejected') OR updated_at >= %s) UNION ALL
 			SELECT 1 FROM $f INNER JOIN $s sx ON sx.id=$f.sale_id WHERE sx.customer_id=%d AND ($f.status IN ('submitted','under_review') OR $f.updated_at >= %s) UNION ALL
 			SELECT 1 FROM $p INNER JOIN $s sy ON sy.id=$p.sale_id WHERE sy.customer_id=%d AND ($p.status='pending' OR $p.created_at >= %s) UNION ALL
+			SELECT 1 FROM $pr LEFT JOIN $s sr ON sr.id=$pr.sale_id LEFT JOIN $r rr2 ON rr2.id=$pr.reservation_id WHERE (sr.customer_id=%d OR rr2.customer_id=%d) AND ($pr.status='pending' OR $pr.created_at >= %s) UNION ALL
 			SELECT 1 FROM $d INNER JOIN $s sz ON sz.id=$d.sale_id WHERE sz.customer_id=%d AND ($d.status<>'delivered' OR $d.updated_at >= %s) LIMIT 1";
-		$args = array( $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, gmdate( 'Y-m-d' ), $cutoff, $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, $cutoff );
+		$args = array( $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, gmdate( 'Y-m-d' ), $cutoff, $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, $cutoff, $customer_id, $customer_id, $cutoff, $customer_id, $cutoff );
 		$protected = $wpdb->get_var( $wpdb->prepare( $sql, $args ) );
 		return (bool) $wpdb->last_error || null !== $protected;
 	}

@@ -29,6 +29,8 @@ require_once get_template_directory() . '/inc/about-contact-pages.php';
 require_once get_template_directory() . '/inc/accounts.php';
 require_once get_template_directory() . '/inc/crm.php';
 require_once get_template_directory() . '/inc/customer-workflow.php';
+require_once get_template_directory() . '/inc/public-catalog.php';
+require_once get_template_directory() . '/inc/schema-markup.php';
 
 function car_dealer_get_setting( $setting, $default = '', $type = 'display' ) {
 	$settings = get_option( 'car_dealer_settings', array() );
@@ -249,7 +251,14 @@ add_action( 'wp_ajax_nopriv_car_dealer_lead', 'car_dealer_ajax_handler' );
 
 function car_dealer_shortcode_cars( $atts ) {
 	$atts = shortcode_atts( array( 'count' => 6, 'featured' => '' ), $atts );
-	$query = new WP_Query( array( 'post_type' => 'car', 'posts_per_page' => $atts['count'] ) );
+	$args = array( 'post_type' => 'car', 'posts_per_page' => min( 48, max( 1, absint( $atts['count'] ) ) ) );
+	if ( function_exists( 'car_dealer_catalog_is_authoritative' ) && car_dealer_catalog_is_authoritative() ) {
+		$args['adc_public_catalog'] = true;
+		$args['adc_catalog_filters'] = array( 'sort' => 'newest' );
+	} elseif ( '' !== $atts['featured'] ) {
+		$args['meta_query'] = array( array( 'key' => '_car_featured', 'value' => absint( $atts['featured'] ) ) );
+	}
+	$query = new WP_Query( $args );
 	ob_start();
 	if ( $query->have_posts() ) : ?>
 		<div class="car-grid"><?php while ( $query->have_posts() ) { $query->the_post(); get_template_part( 'templates/components/car-card' ); } wp_reset_postdata(); ?></div>

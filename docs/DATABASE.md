@@ -1,10 +1,18 @@
 # Database Design
 
+## Schema 1.13.0 increment (plugin 1.19.0)
+
+Quote and quote-version rows add fee, promotion, subtotal and seller-identity snapshot columns. Discount requests add a frozen approval tier and signed before/after margin values. Reservations add the serialized deposit policy snapshot, required amount and refund state; `adc_reservation_deposits` holds independently reviewed evidence. Payment refunds can reference a cancelled reservation directly. `adc_delivery_documents` stores one audited reference per delivery/document type. These changes are additive; historical quote subtotals are derived only from already stored components, while historical seller identity is left empty rather than invented.
+
+## Version 1.18.0 behavior (schema remains 1.12.0)
+
+No new table or column is required. Explicit marketing preference is retained in WordPress user metadata before the first enquiry and synchronized transactionally to the existing customer consent columns when a canonical account-linked customer exists. Legacy CRM retirement uses private post metadata and does not rewrite Core customer/lead IDs. See `CUSTOMER-PREFERENCES.md`.
+
 ## Schema 1.12.0 increment
 
 Adds nullable `customers.account_user_id` (unique) and `merged_into_id` (indexed), both unsigned bigint. Existing records remain NULL; no inferred account linkage, backfill or merge is performed by installation. Authenticated theme intake serializes against the WordPress user row (InnoDB required) and the customer row. Guest/REST contact matching does not establish ownership.
 
-Reviewed CRM-only consolidation moves eligible lead references, clears source contact fields and keeps a tombstone pointing to the surviving customer. It does not rewrite reservation, quotation, quote-version or sale references. Customer authorization locks the active row and rejects merged source IDs before new operational references. Schema 1.12.0 is the current code target; runtime upgrade and concurrency verification remain pending. See `CUSTOMER-IDENTITY.md`.
+Reviewed CRM-only consolidation moves eligible lead references, clears source contact fields and keeps a tombstone pointing to the surviving customer. It does not rewrite reservation, quotation, quote-version or sale references. Customer authorization locks the active row and rejects merged source IDs before new operational references. Schema 1.12.0 was the target for that increment. See `CUSTOMER-IDENTITY.md`.
 
 ## Schema 1.11.0 increment
 
@@ -29,6 +37,8 @@ erDiagram
   VEHICLES ||--o{ VEHICLE_RETURNS : returned_as
   VEHICLES ||--o{ VEHICLE_TRANSFERS : transfers
   VEHICLES ||--o{ RESERVATIONS : reserved
+  RESERVATIONS ||--o| RESERVATION_DEPOSITS : evidenced_by
+  RESERVATIONS ||--o{ PAYMENT_REFUNDS : refunded_by
   CUSTOMERS ||--o{ LEADS : owns
   CUSTOMERS ||--o{ RESERVATIONS : makes
   LEADS ||--o{ ACTIVITIES : tracks
@@ -41,6 +51,7 @@ erDiagram
   SALES ||--o{ FINANCE_REQUESTS : financed_by
   SALES ||--o{ PAYMENT_CONFIRMATIONS : settled_by
   SALES ||--o| DELIVERIES : fulfilled_by
+  DELIVERIES ||--o{ DELIVERY_DOCUMENTS : evidenced_by
   USERS ||--o{ AUDIT_EVENTS : acts
 ```
 
@@ -63,16 +74,18 @@ All IDs are unsigned bigint primary keys; all tables use the WordPress prefix. A
 | `adc_customers` | Minimal contact/profile and consent timestamps; normalized mobile/email lookup indexes; retention and erasure policy required. |
 | `adc_leads` | Customer, source, owner, branch, stage, lost reason, nullable legacy request reference and timestamps; indexes for branch/stage/owner/follow-up; unique nullable source-reference pair makes theme intake idempotent. |
 | `adc_activities` | Lead/customer, kind, actor, notes, next action and due date; indexed by parent and due time. |
-| `adc_reservations` | Vehicle/customer/branch/owner, expiry, deposit amount/reference, status and idempotency key. Unique active reservation per vehicle enforced transactionally/with a generated active key where DB versions allow it. |
+| `adc_reservations` | Vehicle/customer/branch/owner, expiry, frozen deposit policy/required amount, verified deposit/reference, refund state, status and idempotency key. Active reservation per vehicle is enforced by the locked vehicle transition. |
+| `adc_reservation_deposits` | One current evidence record per reservation with exact required amount, unique source/reference, pending/verified/rejected state and separate recorder/reviewer. |
 | `adc_quotations` | Current quote revision with integer amounts, frozen VAT basis points, customer, vehicle, validity and approval state. |
 | `adc_quotation_versions` | Implemented in 1.2.0 and extended in 1.3.0. Append-only financial snapshots plus originating branch, customer display name and minimal vehicle identity, unique by quotation/version. No phone, email or VIN snapshot. Legacy upgrade captures only the current known revision and leaves an unknown historical VAT rate as `NULL`. |
-| `adc_discount_requests` | Requested/original/proposed amount, margin impact, requester, approver, decision and reason; requester cannot approve own request. |
+| `adc_discount_requests` | Requested amount, frozen approval tier, signed margin impact, requester, approver, decision and reason; requester cannot approve own request. Legacy margins remain nullable when purchase cost was unavailable. |
 | `adc_sales` | Reservation/quotation references, approved totals, invoice reference, owner and workflow state. |
 | `adc_finance_requests` | Sale/customer/provider references, requested amount, consent and status; no bank credentials or card data. |
 | `adc_payment_confirmations` | Implemented in 1.1.0. Sale, integer SAR amount, source/reference, pending/verified/rejected status, recorder/reviewer, decision reason and timestamps. Unique source/reference and indexed sale/status. No card/account credentials. |
-| `adc_payment_refunds` | Return/sale, integer SAR amount, external method/reference, pending/verified/rejected status, requester/reviewer, decision reason and timestamps. Original receipts remain unchanged. |
+| `adc_payment_refunds` | Return, sale cancellation or cancelled reservation, integer SAR amount, external method/reference, pending/verified/rejected status, requester/reviewer, decision reason and timestamps. Original receipts remain unchanged. |
 | `adc_sale_cancellations` | One cancellation per undelivered sale with prior state, linked reservation/delivery/vehicle/branch, verified receipt snapshot, refund obligation, reason and manager. |
 | `adc_deliveries` | Sale/vehicle, checklist, VIN confirmation, approvals and delivered timestamp. |
+| `adc_delivery_documents` | One external evidence reference per delivery/document type with confirming user and UTC timestamp; configured requirements gate approval and release. |
 | `adc_audit_events` | Implemented in 0.1.0. Append-only event key, actor, subject, reason, before/after JSON, correlation ID and UTC timestamp. |
 | `adc_outbox` | Planned reliable event delivery with unique event key, payload, attempts, next attempt and completion timestamp. |
 
@@ -80,7 +93,7 @@ Operational tables intentionally do not mirror post meta one-for-one. Foreign-ke
 
 ## Current state
 
-Schema version is independent of the plugin version and currently `Schema::VERSION = 1.12.0`. Installation uses a per-database/prefix advisory lock, applies canonical DDL through dbDelta, then checks every declared table, column type/nullability/auto-increment, explicit default, full index column order/uniqueness and InnoDB engine. Only a verified schema and successful quote-history backfill receive the version marker. Failures store safe issue codes in `adc_schema_issues`, remove the success marker, show an administrator notice and delay automatic retry for five minutes. The installer does not silently convert existing MyISAM tables or remove/merge duplicate rows; those need reviewed repair. dbDelta may not repair numeric-default drift, which remains a reported failure until explicitly corrected.
+Schema version is independent of the plugin version and currently `Schema::VERSION = 1.13.0`. Installation uses a per-database/prefix advisory lock, applies canonical DDL through dbDelta, then checks every declared table, column type/nullability/auto-increment, explicit default, full index column order/uniqueness and InnoDB engine. Only a verified schema and successful quote-history backfill receive the version marker. Failures store safe issue codes in `adc_schema_issues`, remove the success marker, show an administrator notice and delay automatic retry for five minutes. The installer does not silently convert existing MyISAM tables or remove/merge duplicate rows; those need reviewed repair. dbDelta may not repair numeric-default drift, which remains a reported failure until explicitly corrected.
 
 Version 1.3.0 adds originating branch to current quotes and minimal documentary identity to revision rows. Older rows are enriched from the currently known related records and remain marked by their existing legacy event; the migration cannot reconstruct identity or branch at the historic issue time. Fresh installation, repeated installation, schema detection/repair, immutable quote revisions and additive upgrade behavior were exercised on an isolated MariaDB database. A production-copy migration/restore rehearsal remains outstanding.
 

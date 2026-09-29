@@ -231,45 +231,11 @@ final class VehicleService {
 	}
 
 	public static function catalog( array $filters = array() ): array {
-		global $wpdb;
-		$page = max( 1, absint( $filters['page'] ?? 1 ) );
-		$limit = min( 48, max( 1, absint( $filters['per_page'] ?? 12 ) ) );
-		$where = array( "v.status = 'available'", 'b.active = 1', "p.post_type = 'car'", "p.post_status = 'publish'", 'v.public_post_id = p.ID' );
-		$args = array();
-		foreach ( array( 'brand' => 'brand', 'model_year' => 'model_year', 'body_type' => 'body_type', 'fuel_type' => 'fuel_type' ) as $key => $column ) {
-			if ( isset( $filters[ $key ] ) && '' !== (string) $filters[ $key ] ) {
-				$where[] = "v.$column = %s";
-				$args[] = sanitize_text_field( (string) $filters[ $key ] );
-			}
-		}
-		$spec_fields = 'v.' . implode( ',v.', VehicleSpecifications::fields() );
-		$sql = 'SELECT ' . $spec_fields . ',v.id,v.stock_number,v.brand,v.model,v.trim_name,v.model_year,v.condition_key,v.status,v.body_type,v.fuel_type,v.transmission,v.mileage,v.retail_price,v.currency,b.name branch_name,b.city,p.ID public_post_id FROM ' . Schema::table( 'vehicles' ) . ' v INNER JOIN ' . Schema::table( 'branches' ) . ' b ON b.id=v.branch_id INNER JOIN ' . $wpdb->posts . ' p ON p.ID=v.public_post_id WHERE ' . implode( ' AND ', $where ) . ' ORDER BY v.created_at DESC LIMIT %d OFFSET %d';
-		$args[] = $limit;
-		$args[] = ( $page - 1 ) * $limit;
-		$items = $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
-		foreach ( $items as &$item ) {
-			$post_id = (int) $item['public_post_id'];
-			$item['title'] = get_the_title( $post_id );
-			$item['url'] = get_permalink( $post_id );
-			$item['image'] = get_the_post_thumbnail_url( $post_id, 'large' ) ?: '';
-			unset( $item['public_post_id'] );
-		}
-		unset( $item );
-		return $items;
+		return PublicCatalog::catalog( $filters );
 	}
 
 	public static function catalog_total( array $filters = array() ): int {
-		global $wpdb;
-		$where = array( "v.status = 'available'", 'b.active = 1', "p.post_type = 'car'", "p.post_status = 'publish'", 'v.public_post_id = p.ID' );
-		$args = array();
-		foreach ( array( 'brand' => 'brand', 'model_year' => 'model_year', 'body_type' => 'body_type', 'fuel_type' => 'fuel_type' ) as $key => $column ) {
-			if ( isset( $filters[ $key ] ) && '' !== (string) $filters[ $key ] ) {
-				$where[] = "v.$column = %s";
-				$args[] = sanitize_text_field( (string) $filters[ $key ] );
-			}
-		}
-		$sql = 'SELECT COUNT(*) FROM ' . Schema::table( 'vehicles' ) . ' v INNER JOIN ' . Schema::table( 'branches' ) . ' b ON b.id=v.branch_id INNER JOIN ' . $wpdb->posts . ' p ON p.ID=v.public_post_id WHERE ' . implode( ' AND ', $where );
-		return (int) $wpdb->get_var( $args ? $wpdb->prepare( $sql, $args ) : $sql );
+		return PublicCatalog::catalog_total( $filters );
 	}
 
 	public static function list_for_current_user( int $page = 1 ): array {

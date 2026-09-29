@@ -1,16 +1,42 @@
 # Implementation execution status
 
-Updated: 2026-09-28. This records completed increments, not completion of whole phases.
+Updated: 2026-09-29. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.17.0 (covered local integration scenarios passed)
+## Current increment: 1.20.0 (implementation and local acceptance complete)
+
+- Added the plugin-owned public catalog query boundary and expanded its REST contract across vehicle identity, specification, range, branch, search and allowlisted sort fields.
+- Added an audited cutover setting and readiness counts. `compatibility` remains the default because the operational database is intentionally empty; `authoritative` activation rejects schema drift, unmapped published posts and duplicate mappings, then hides every unavailable, unpublished or inactive-branch vehicle.
+- Connected mapped theme cards, vehicle details and schema.org output to operational inventory, while retaining legacy rendering for unmapped posts during compatibility mode.
+- Added shareable archive filters, filtered-URL noindex/canonical output, result announcements and focus-visible controls.
+- Local acceptance passes syntax across 80 plugin and 41 theme PHP files, 48 authorization checks, 12 money checks, 16 pricing-policy checks, 562 isolated database/HTTP checks, 19 real-theme catalog browser checks, 33 account-browser checks plus three post-journey database assertions, and seven standalone DOM checks. The isolated server/data directory was removed and the source database was not contacted. See `VERIFICATION-1.20.0.md`.
+- Before activation: create/reference actual branches and vehicles, map `public_post_id`, reconcile eligible counts and samples, then select the authoritative source in **Dealership Core → Settings**. See `PUBLIC-CATALOG-CUTOVER.md`.
+
+## Previous increment: 1.19.0 (implementation and local acceptance complete)
+
+- Centralized deterministic quote fees, explicit dated promotions, discounts, subtotal, VAT and total. Immutable versions now retain all price components plus seller name, tax number, address and phone.
+- Added frozen sales-manager/general-manager discount tiers with configured ceilings and before/after gross-margin snapshots.
+- Added configured reservation deposit snapshots and independent evidence recording/review. Unverified references do not become deposits; verified deposits count once toward settlement, and cancellation requires an independently reviewed refund before inventory release.
+- Added configurable required delivery documents, audited evidence references and server-side approval/release gates.
+- Added finance and delivery admin controls for deposit evidence and delivery documents, plus approval-tier and margin evidence in the discount queue.
+- Plugin 1.19.0 targets additive schema 1.13.0. Local acceptance passes syntax across 79 plugin and 40 theme PHP files, 48 authorization checks, 12 money checks, 16 pricing-policy checks, 541 isolated database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate public-intake DOM checks. The isolated schema was installed and removed; no source database migration or sample-data insertion was performed. See `VERIFICATION-1.19.0.md`.
+
+## Previous increment: 1.18.0 (implementation and local acceptance complete)
+
+- Added explicit authenticated marketing opt-in/opt-out in the account workspace and `GET`/`POST /account/preferences`. The preference exists before the first enquiry, synchronizes to an existing canonical customer and is recorded with a minimized audit event.
+- Added immediate refresh of an existing account-linked Core customer after WordPress display-name, email or phone changes. It never creates a customer or claims one by contact equality.
+- Added deterministic retirement of legacy `cd_crm` posts using only their recorded account ID. Retired records leave active CRM counts/search/export, reject writes, and are readable only by administrators through a separate historical view.
+- Extended privacy export/erasure to legacy CRM profiles and free-text activities. Schema remains 1.12.0; no source database migration, backfill or sample data was executed.
+- Code is 1.18.0. Local acceptance passes syntax across all 76 plugin and 40 theme PHP files, 48 authorization checks, 12 money checks, 515 isolated database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate public-intake DOM checks. Preference transactions, immediate profile hooks, legacy capabilities and privacy rollback/success are covered. See `VERIFICATION-1.18.0.md`.
+
+## Previous increment: 1.17.0 (covered local integration scenarios passed)
 
 - Authenticated theme intake creates/reuses a customer by the current account ID under a unique nullable key and row locks. Guest/REST contact values do not acquire account ownership. Profile refresh and linkage are audited inside intake's transaction.
 - Added administrator-only duplicate candidates, preview and CRM-only merge via REST and **Dealership Core → مراجعة ملفات العملاء**. Merge requires independently reviewed identity, an evidence reference, a current revision and identical contact/branch/owner scope. Financial/documentary source references, different account owners and merge chains are blocked.
 - Consolidation moves leads, appends activities, clears source contact fields and keeps a merge reference. Consent is conservatively combined. Customer scope locks active records and rejects merged source IDs for new operations.
 - Login/profile hooks no longer create/synchronize duplicate theme account CRM posts while the core identity service is present. Existing legacy profiles are preserved; canonical profile refresh occurs on authenticated enquiry, not immediately on every account edit.
 - Privacy export/erasure includes linked account identity and can follow the current WordPress account across old-email request copies. Erasure/retention removes account links; merged tombstones are skipped by retention.
-- Code 1.17.0 / schema 1.12.0. On 2026-09-28, syntax passed for 70 plugin PHP files and four theme compatibility files; 48 authorization, 12 money, 468 isolated database/HTTP and seven real Chromium DOM checks passed. This adds 103 database/HTTP assertions for 1.15–1.17. Full-site browser and remaining race/legacy cases are still open; see `VERIFICATION-1.17.0.md` for exact scope. No source database bootstrap, migration, merge or sample-data insertion was performed.
-- This closes a bounded account-linkage/CRM-consolidation increment, not the full identity phase. Historical claims, financial/documentary merges, legacy profile retirement/access, immediate profile synchronization and preference management remain. See `CUSTOMER-IDENTITY.md`.
+- Code 1.17.0 / schema 1.12.0. The 2026-09-29 follow-up passes syntax for 74 plugin PHP files and seven theme files, 48 authorization checks, 12 money checks, 490 isolated database/HTTP checks, 27 real-theme Chromium journey checks and seven separate public-intake DOM checks. It closes the previously listed account journey, responsive, mixed-race and legacy cursor/pagination cases; see `ACCOUNT-JOURNEY-VERIFICATION.md`. No source database bootstrap, migration, merge or sample-data insertion was performed.
+- This closed the bounded account-linkage/CRM-consolidation increment. The subsequent 1.18.0 implementation adds preference management, immediate profile synchronization and legacy-profile retirement/access; historical claims and financial/documentary merges remain excluded. See `CUSTOMER-IDENTITY.md` and `CUSTOMER-PREFERENCES.md`.
 
 ## Previous increment: 1.16.0 (covered by subsequent 1.17 verification)
 
@@ -49,9 +75,9 @@ Updated: 2026-09-28. This records completed increments, not completion of whole 
 
 1. Local 1.14.0 integration verification is complete for the covered scenarios. Interactive specification form layout, accessibility and browser journeys remain part of the staging review.
 2. Prepare the new-installation setup using actual branch, brand, location and staff assignments when supplied. Current-state backup/restore passed; no historical restore/import is required.
-3. Local 1.15.0–1.17.0 verification now passes 468 database/HTTP checks and seven Chromium form-script checks. Complete the remaining targeted races, legacy cursor/pagination and full theme/account journeys listed in `VERIFICATION-1.17.0.md`, then address legacy profile retirement/access, immediate profile synchronization and consent preferences. Historical claims/financial merging apply only if later required; no historical import is needed for this empty deployment.
-4. Complete pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output, delivery document checklist and provider reconciliation.
-5. Finish public catalog/theme cutover, complete Arabic/English journeys, filter/sort behavior, accessibility and performance review.
+3. Local 1.18.0 verification passes 515 database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate form-script checks. Historical claims and financial/documentary merging apply only if later required; no historical import is needed for this empty deployment.
+4. Pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output and delivery document gates are implemented and locally accepted in 1.19.0. Complete provider/ERP reconciliation and business review of the configured values.
+5. Reconcile real vehicle/post mappings and activate/review the implemented authoritative catalog. The synthetic Arabic responsive journey passes; complete English LTR, AJAX enhancement, formal accessibility measurement and performance review.
 6. Implement scoped operational reporting, notification outbox/retries, provider-specific ERP/payment/finance/message adapters and job monitoring after provider contracts and credentials are supplied.
 7. Rehearse controlled cutover/rollback and satisfy the security, browser, operational and business release gates. Overall readiness remains FAIL; the full enterprise plan is not complete.
 
@@ -88,7 +114,7 @@ Create synthetic branch A/B users and records. Verify unassigned managers cannot
 
 - Added `adc_payment_confirmations`, separate record/verify capabilities for finance staff, two REST routes, and **Finance → تأكيدات السداد**.
 - Receipt entry stays pending until another finance employee reviews it; the sale owner cannot verify. Verification enforces branch scope, unique source/reference and remaining balance. Amounts are integer SAR halalas.
-- Delivery preparation and release require full verified receipt totals. Finance approval, submitted receipts and reservation deposits cannot satisfy the gate. Release rechecks the approved sale, invoice reference, VIN/approval actors, scope and settlement.
+- Delivery preparation and release require full verified settlement. Finance approval and submitted evidence cannot satisfy the gate. Since 1.19.0, an independently verified reservation deposit contributes once to the sale settlement; release still rechecks the approved sale, invoice reference, VIN/approval actors, scope and total.
 - Protected quote prices after sale creation. Made receipt operations and all delivery transitions atomic with audit, and fixed delivery preparation preserving its inserted ID before later SQL updates.
 - Updated the older theme-dependent workflow smoke script for receipt verification; it was not run against the source database.
 
@@ -203,16 +229,16 @@ Current 1.15–1.17 results and limits are recorded at the top of this document 
 | Payment/delivery path | PASS: finance approval alone, pending/partial payment, self-approval, foreign branch, overpayment and audit failures are blocked; complete funded flow reaches delivered. |
 | Retention/financial export | PASS: disabled-by-default bounded retention, active/recent record protection and audit rollback; scoped/minimized CSV, date bounds, formula neutralization and mandatory export audit. The operator must still approve the legal duration. |
 | Migration inventory | PASS: eligible/invalid vehicles, linked/orphaned offers, read-only behavior and fallback-branch rejection. Production-copy counts and restore timing remain unverified. |
-| REST/admin | PASS: real localhost HTTP checks cover session cookies, nonces, validation, public active-branch listing, public lead intake, scoped CRM, inventory creation/state, public catalog minimization, quote/discount/reservation/sale/finance/payment boundaries, complete staged transfers, and the funded delivery sequence through balance entry, independent verification, preparation, VIN confirmation, approval and release. Negative cases assert unchanged rows/state; eligible actors complete transitions. Interactive browser layout remains unverified. |
+| REST/admin | PASS: real localhost HTTP checks cover session cookies, nonces, validation, public active-branch listing, public lead intake, scoped CRM, inventory creation/state, complete public catalog filters/minimization, quote/discount/reservation/sale/finance/payment boundaries, complete staged transfers, and the funded delivery sequence through balance entry, independent verification, preparation, VIN confirmation, approval and release. Negative cases assert unchanged rows/state; eligible actors complete transitions. Arabic catalog and account browser layouts pass at four viewport sizes; English LTR and formal accessibility remain open. |
 | Cleanup | PASS: the runner removed its generated database; test scenarios did not write to source tables. |
 
 ## Next ordered work
 
 1. Complete the production-copy staging backup/restore rehearsal, route/job inventory and detailed source-to-target migration mapping. A fresh synthetic database is now available as a repeatable test fixture; it does not replace that rehearsal.
-2. Add approved branded quote templates and, only if required, server-generated PDF storage/delivery with retention controls. Extend remaining route-level HTTP IDOR coverage.
+2. Decide whether server-generated PDF storage/delivery is required beyond the branded browser print/PDF document, and define retention controls if it is. Extend remaining route-level HTTP IDOR coverage.
 3. Approve the configured legal retention duration and exported accounting fields, then decide whether a non-WordPress global dealership role is required.
 4. Complete vehicle field parity, provider/ERP reconciliation and cancellation exceptions, then reconcile vehicle/CRM migration and remove duplicate theme business logic.
-5. Extend payment controls with provider/ERP reconciliation, refunds/reversals, document evidence and the delivery checklist. Keep manual receipt verification explicit until a provider adapter is implemented and verified.
-6. Continue public bilingual catalog, reports/outbox/integrations and the release gate in the implementation plan.
+5. Connect payment-provider/ERP reconciliation when an approved provider contract exists, while keeping the current manual receipt, deposit, refund and delivery-document attestations explicit until that adapter is verified.
+6. Complete the English catalog journey and real-data cutover, then continue reports/outbox/integrations and the release gate in the implementation plan.
 
 Phase 0 remains incomplete: no production-copy restore, migration reconciliation, or business-policy sign-off is claimed. Phases 1–2 progressed and the existing sales/delivery workflow gained a necessary payment control from phase 6. Full completion of any of those phases is not claimed. Overall production readiness remains FAIL.

@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.20.0 — Operational public catalog cutover
+
+- Added a plugin-owned public catalog read model with bounded filters for brand, model, trim, year, price, mileage, body, fuel, transmission, engine, drivetrain, colors, branch and condition, plus allowlisted sorting and search.
+- Added an audited `compatibility` / `authoritative` setting and cutover readiness counts. Compatibility remains the default for the intentionally empty operational database; authoritative activation is blocked by schema drift, unmapped published posts or duplicate mappings, and exposes only available records mapped to published `car` posts in active branches.
+- Switched mapped theme cards, vehicle details and Vehicle structured data to operational values, including minor-unit price conversion, specifications, branch and stock identity.
+- Added authoritative archive controls with shareable query URLs, bounded filter options, result announcements, keyboard focus styling, and noindex/canonical handling for filtered result URLs.
+- Expanded `GET /vehicles` to use the same central filter contract and return normalized active filters. Schema remains 1.13.0.
+- Local acceptance passed 562 isolated database/HTTP checks, 19 real-theme catalog browser checks, 33 account-browser checks plus three post-journey assertions, seven DOM checks, 48 authorization checks, 12 money checks, 16 pricing-policy checks and syntax across 80 plugin plus 41 theme PHP files. The disposable database and MariaDB data directory were removed; the source database was not contacted. See `VERIFICATION-1.20.0.md`.
+
+## 1.19.0 — Pricing, deposits and delivery evidence
+
+- Added one central integer pricing policy for fixed fees, explicit dated promotion codes, approved discounts, subtotal, VAT and final total. Every quote revision freezes all components and the configured seller identity.
+- Added configured sales-manager and general-manager discount ceilings. Each request freezes its approval tier and before/after gross margin; requester/reviewer separation remains enforced.
+- Added reservation deposit policy snapshots and a separate pending/verified/rejected evidence workflow. A reference never proves receipt, and recorder, reservation owner and reviewer are separated. Verified deposits count once toward settlement; cancelled paid reservations use the existing independently reviewed refund ledger before inventory release.
+- Added configurable delivery document requirements and audited document references. Missing configured evidence blocks both delivery approval and final release.
+- Added deposit recording/review to the finance workspace, delivery-document entry to the delivery workspace, and tier/margin visibility to the discount review queue. Pending deposit evidence must be decided before reservation cancellation.
+- Raised schema to 1.13.0 and plugin to 1.19.0. The migration is additive and has not been applied to the intentionally empty source database.
+- Added 16 dependency-free pricing-policy checks and 26 database scenarios for frozen pricing, margin tiers, deposit evidence/refunds and delivery-document gates. Local acceptance passes 541 isolated database/HTTP checks, 48 authorization checks, 12 money checks, 33 real-theme browser checks plus three database assertions, seven DOM checks and syntax across 79 plugin plus 40 theme PHP files. See `VERIFICATION-1.19.0.md`.
+
+## 1.18.0 — Customer preferences and legacy CRM retirement
+
+- Added explicit account marketing opt-in/opt-out with an authenticated REST boundary, user-level pre-enquiry persistence, canonical customer synchronization and minimized audit events.
+- Added immediate existing-customer refresh after WordPress name, email or phone changes; contact equality still cannot create or claim an account identity.
+- Retired legacy `cd_crm` profiles only from their recorded account ID, removed them from active counts/search/export and restricted their history to administrator read-only access.
+- Extended WordPress privacy export/erasure to legacy CRM posts and activities.
+- Kept schema 1.12.0. Local acceptance passed 515 isolated database/HTTP, 48 authorization, 12 money, 33 real-theme browser plus three post-journey database, and seven DOM checks. No source database migration or backfill was executed; see `VERIFICATION-1.18.0.md`.
+- Invalidated legacy CRM activity comment caches after committed privacy erasure so the current request cannot display erased text from WordPress object cache.
+
+## 2026-09-29 — Account journey and targeted acceptance
+
+- Completed 490 isolated database/HTTP checks, 48 authorization checks, 12 money checks, 27 real-theme Chromium journey checks and seven separate public-intake DOM checks.
+- Added both launch orders for merge-versus-quotation and erasure-versus-intake races, partial appointment rescheduling, mapped-vehicle branch rejection, customer ownership pagination, reconciliation cursor failure/progress and staff table pagination.
+- Exercised the actual Arabic account and vehicle pages from login through enquiry, profile refresh, booking, cancellation, staff reply and second-customer isolation at 1440, 768, 390 and 320 pixels.
+- Repaired theme dependency loading, shared enquiry/booking rendering, script localization, POST fallbacks, RTL/LTR field semantics and accessible mobile request-table scrolling.
+- Syntax passed for 74 plugin and seven theme PHP files. The disposable database was removed and no source database was contacted. See `ACCOUNT-JOURNEY-VERIFICATION.md`.
+
 ## 2026-09-28 — Verification of 1.15–1.17
 
 - Added 103 assertions for CRM intake, identity and linked workflows to the isolated database/HTTP suite; all 468 checks pass, alongside 48 authorization and 12 money checks.

@@ -12,9 +12,15 @@ add_shortcode( 'car_dealer_search', 'car_dealer_search_shortcode' );
 function car_dealer_cars_shortcode( $atts ) {
 	$atts = shortcode_atts( array( 'count' => 6, 'featured' => '', 'status' => '' ), $atts, 'car_dealer_cars' );
 	$args = array( 'post_type' => 'car', 'posts_per_page' => absint( $atts['count'] ) );
+	if ( function_exists( 'car_dealer_catalog_is_authoritative' ) && car_dealer_catalog_is_authoritative() ) {
+		$args['adc_public_catalog'] = true;
+		$args['adc_catalog_filters'] = array( 'sort' => 'newest' );
+	}
 	$meta = array();
-	if ( '' !== $atts['featured'] ) { $meta[] = array( 'key' => '_car_featured', 'value' => absint( $atts['featured'] ) ); }
-	if ( '' !== $atts['status'] ) { $meta[] = array( 'key' => '_car_inventory_status', 'value' => sanitize_key( $atts['status'] ) ); }
+	if ( ! function_exists( 'car_dealer_catalog_is_authoritative' ) || ! car_dealer_catalog_is_authoritative() ) {
+		if ( '' !== $atts['featured'] ) { $meta[] = array( 'key' => '_car_featured', 'value' => absint( $atts['featured'] ) ); }
+		if ( '' !== $atts['status'] ) { $meta[] = array( 'key' => '_car_inventory_status', 'value' => sanitize_key( $atts['status'] ) ); }
+	}
 	if ( $meta ) { $args['meta_query'] = $meta; }
 	$query = new WP_Query( $args );
 	ob_start();
@@ -32,6 +38,7 @@ add_shortcode( 'car_dealer_cars', 'car_dealer_cars_shortcode' );
 
 function car_dealer_extend_archive_filters( $query ) {
 	if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'car' ) ) { return; }
+	if ( function_exists( 'car_dealer_catalog_is_authoritative' ) && car_dealer_catalog_is_authoritative() ) { return; }
 	$meta_query = (array) $query->get( 'meta_query' );
 	if ( isset( $_GET['inventory_status'] ) && '' !== $_GET['inventory_status'] ) {
 		$meta_query[] = array( 'key' => '_car_inventory_status', 'value' => sanitize_key( wp_unslash( $_GET['inventory_status'] ) ) );

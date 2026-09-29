@@ -17,13 +17,15 @@ The plugin registers these initial scoped roles; these are capability names, not
 | View/edit lead | `adc_view_own_leads` / `adc_manage_own_leads` | Owner match; manager services enforce branch. |
 | Manage inventory | `adc_manage_inventory` | Validate transition and branch scope; audit changes. |
 | Transfer vehicle | `adc_transfer_inventory` | Source/destination authorization and reason. |
-| Review discount | `adc_review_discounts` | Requester cannot approve own request. |
+| Review discount | `adc_review_discounts` | Requester cannot approve own request; limited to the frozen sales-manager tier. |
+| Approve high discount | `adc_approve_high_discounts` | General manager/administrator only; required for the frozen general-manager tier. |
 | Manage reservation | `adc_manage_reservations` | Lock/recheck vehicle availability within transaction. |
 | View finance | `adc_view_finance` | Mask sensitive fields by default. |
 | Correct vehicle VIN | `adc_change_vehicle_vin` | General manager/administrator only; pre-sale states, branch scope, reason and audit required. |
 | Manage finance | `adc_manage_finance` | No storage of bank credentials/payment card data. |
-| Record receipt confirmation | `adc_record_payments` | Finance role; sale branch scope, positive amount and unique source/reference; pending until reviewed. |
-| Verify/reject receipt | `adc_verify_payments` | Finance role; reviewer differs from recorder and sale owner; approval cannot exceed remaining balance. |
+| Record receipt/deposit evidence | `adc_record_payments` | Finance role; branch scope, exact reservation policy where applicable, positive amount and external reference; pending until reviewed. |
+| Verify/reject receipt/deposit | `adc_verify_payments` | Finance role; reviewer differs from recorder and sale/reservation owner; approval cannot exceed the applicable balance. |
+| Record delivery document | `adc_approve_delivery` or `adc_confirm_vehicle_vin` | Branch scoped; supported reference only while preparing or VIN-confirmed. |
 | Read audit | `adc_view_audit` | No edit/delete capability exposed. |
 
 New roles receive no general `edit_posts`, `manage_options`, or WordPress administrator rights. Activation adds capabilities but does not downgrade existing roles. Reconcile/cleanup on uninstall is deliberately absent because user role data may be in active use.

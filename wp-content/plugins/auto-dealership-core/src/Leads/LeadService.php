@@ -93,6 +93,7 @@ final class LeadService {
 		if ( ! Transaction::commit( static fn() => AuditLog::record( 'lead.created', 'lead', $lead_id, 'Public website enquiry', null, array( 'customer_id' => $customer_id, 'source' => $source ) ) ) ) {
 			return new \WP_Error( 'adc_lead_failed', __( 'تعذر توثيق الطلب. حاول لاحقًا.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
+		if ( $compatibility_type && get_current_user_id() ) { do_action( 'adc_customer_account_linked', get_current_user_id(), $customer_id ); }
 		$result = array( 'id' => $lead_id, 'status' => 'new' );
 		if ( $compatibility_type ) { $result['legacy_request_id'] = $legacy_id; }
 		return $result;

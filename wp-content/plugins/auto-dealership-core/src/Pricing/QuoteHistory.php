@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Append-only financial revisions; callers own the transaction and quote row lock. */
 final class QuoteHistory {
-	private const FIELDS = 'quote_number,customer_id,vehicle_id,branch_id,owner_user_id,version,base_amount,discount_amount,tax_rate_bps,tax_amount,final_amount,valid_until,status';
+	private const FIELDS = 'quote_number,customer_id,vehicle_id,branch_id,owner_user_id,version,base_amount,fee_amount,promotion_code,promotion_amount,discount_amount,subtotal_amount,tax_rate_bps,tax_amount,final_amount,seller_name,seller_tax_number,seller_address,seller_phone,valid_until,status';
 
 	private static function insert_sql(): string {
 		$columns = implode( ',', array_map( static fn( $field ) => 'q.' . $field, explode( ',', self::FIELDS ) ) );
@@ -28,11 +28,20 @@ final class QuoteHistory {
 		if ( false === $wpdb->query( 'START TRANSACTION' ) ) { return false; }
 		$assigned = $wpdb->query( 'UPDATE ' . Schema::table( 'quotations' ) . ' q INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=q.vehicle_id SET q.branch_id=v.branch_id WHERE q.branch_id=0' );
 		if ( false === $assigned ) { $wpdb->query( 'ROLLBACK' ); return false; }
+		$pricing = $wpdb->query( 'UPDATE ' . Schema::table( 'quotations' ) . ' SET subtotal_amount=base_amount+fee_amount-promotion_amount-discount_amount WHERE subtotal_amount=0 AND base_amount>0' );
+		if ( false === $pricing ) { $wpdb->query( 'ROLLBACK' ); return false; }
 		$snapshots = $wpdb->query( 'UPDATE ' . Schema::table( 'quotation_versions' ) . ' h INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=h.quotation_id INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=h.customer_id INNER JOIN ' . Schema::table( 'vehicles' ) . " v ON v.id=h.vehicle_id SET h.branch_id=IF(h.branch_id=0,q.branch_id,h.branch_id),h.customer_name=IF(h.customer_name='',c.full_name,h.customer_name),h.vehicle_stock_number=IF(h.vehicle_stock_number='',v.stock_number,h.vehicle_stock_number),h.vehicle_description=IF(h.vehicle_description='',TRIM(CONCAT_WS(' ',v.model_year,v.brand,v.model,NULLIF(v.trim_name,''))),h.vehicle_description) WHERE h.branch_id=0 OR h.customer_name='' OR h.vehicle_stock_number='' OR h.vehicle_description=''" );
 		if ( false === $snapshots ) { $wpdb->query( 'ROLLBACK' ); return false; }
+		$version_pricing = $wpdb->query( 'UPDATE ' . Schema::table( 'quotation_versions' ) . ' SET subtotal_amount=base_amount+fee_amount-promotion_amount-discount_amount WHERE subtotal_amount=0 AND base_amount>0' );
+		if ( false === $version_pricing ) { $wpdb->query( 'ROLLBACK' ); return false; }
+		$manager = Money::parse( get_option( 'adc_sales_manager_discount_limit', 0 ) );
+		$general = Money::parse( get_option( 'adc_general_manager_discount_limit', PHP_INT_MAX ) );
+		if ( null === $manager || null === $general || $general < $manager ) { $wpdb->query( 'ROLLBACK' ); return false; }
+		$discounts = $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::table( 'discount_requests' ) . ' d INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=d.quotation_id INNER JOIN ' . Schema::table( 'vehicles' ) . " v ON v.id=q.vehicle_id SET d.approval_tier=CASE WHEN d.requested_amount<=%d THEN 'sales_manager' WHEN d.requested_amount<=%d THEN 'general_manager' ELSE 'blocked' END,d.margin_before=CAST(q.base_amount AS SIGNED)-CAST(q.promotion_amount AS SIGNED)-CAST(v.purchase_cost AS SIGNED),d.margin_after=CAST(q.base_amount AS SIGNED)-CAST(q.promotion_amount AS SIGNED)-CAST(v.purchase_cost AS SIGNED)-CAST(d.requested_amount AS SIGNED) WHERE d.approval_tier=''", $manager, $general ) );
+		if ( false === $discounts ) { $wpdb->query( 'ROLLBACK' ); return false; }
 		$count = $wpdb->query( $wpdb->prepare( self::insert_sql() . ' WHERE NOT EXISTS (SELECT 1 FROM ' . Schema::table( 'quotation_versions' ) . ' h WHERE h.quotation_id = q.id AND h.version = q.version)', 'legacy.captured', 0, 'Current legacy revision captured; earlier revisions and original tax rate may be unknown.', current_time( 'mysql', true ) ) );
-		$changes = (int) $assigned + (int) $snapshots + (int) $count;
-		if ( false === $count || ( $changes > 0 && ! AuditLog::record( 'schema.quote_history_captured', 'schema', 0, 'Legacy current revisions and documentary identity preserved', null, array( 'quotes_assigned' => (int) $assigned, 'snapshots_enriched' => (int) $snapshots, 'revisions_captured' => (int) $count ) ) ) || false === $wpdb->query( 'COMMIT' ) ) {
+		$changes = (int) $assigned + (int) $pricing + (int) $snapshots + (int) $version_pricing + (int) $discounts + (int) $count;
+		if ( false === $count || ( $changes > 0 && ! AuditLog::record( 'schema.quote_history_captured', 'schema', 0, 'Legacy current revisions and documentary identity preserved', null, array( 'quotes_assigned' => (int) $assigned, 'snapshots_enriched' => (int) $snapshots, 'discounts_classified' => (int) $discounts, 'revisions_captured' => (int) $count ) ) ) || false === $wpdb->query( 'COMMIT' ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return false;
 		}

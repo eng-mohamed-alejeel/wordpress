@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.12.0';
+	public const VERSION = '1.13.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -259,7 +259,10 @@ final class Schema {
 				branch_id bigint(20) unsigned NOT NULL,
 				owner_user_id bigint(20) unsigned NOT NULL,
 				status varchar(24) NOT NULL DEFAULT 'confirmed',
+				deposit_policy varchar(100) NOT NULL DEFAULT 'none',
+				deposit_required_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				deposit_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				deposit_refund_status varchar(24) NOT NULL DEFAULT 'no_refund_due',
 				payment_reference varchar(100) NOT NULL DEFAULT '',
 				expires_at datetime NOT NULL,
 				idempotency_key char(36) NOT NULL,
@@ -279,13 +282,21 @@ final class Schema {
 				branch_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				owner_user_id bigint(20) unsigned NOT NULL,
 				base_amount bigint(20) unsigned NOT NULL,
+				fee_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				promotion_code varchar(64) NOT NULL DEFAULT '',
+				promotion_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				discount_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				subtotal_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				tax_rate_bps smallint(5) unsigned NULL,
 				tax_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				final_amount bigint(20) unsigned NOT NULL,
 				valid_until date NOT NULL,
 				status varchar(24) NOT NULL DEFAULT 'draft',
 				version int(10) unsigned NOT NULL DEFAULT 1,
+				seller_name varchar(190) NOT NULL DEFAULT '',
+				seller_tax_number varchar(60) NOT NULL DEFAULT '',
+				seller_address text NOT NULL,
+				seller_phone varchar(60) NOT NULL DEFAULT '',
 				created_at datetime NOT NULL,
 				PRIMARY KEY  (id),
 				UNIQUE KEY quote_number (quote_number),
@@ -306,13 +317,21 @@ final class Schema {
 				vehicle_description varchar(255) NOT NULL DEFAULT '',
 				version int(10) unsigned NOT NULL,
 				base_amount bigint(20) unsigned NOT NULL,
+				fee_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				promotion_code varchar(64) NOT NULL DEFAULT '',
+				promotion_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				discount_amount bigint(20) unsigned NOT NULL,
+				subtotal_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				tax_rate_bps smallint(5) unsigned NULL,
 				tax_amount bigint(20) unsigned NOT NULL,
 				final_amount bigint(20) unsigned NOT NULL,
 				currency char(3) NOT NULL DEFAULT 'SAR',
 				valid_until date NOT NULL,
 				status varchar(24) NOT NULL,
+				seller_name varchar(190) NOT NULL DEFAULT '',
+				seller_tax_number varchar(60) NOT NULL DEFAULT '',
+				seller_address text NOT NULL,
+				seller_phone varchar(60) NOT NULL DEFAULT '',
 				event_key varchar(40) NOT NULL,
 				actor_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				reason text NOT NULL,
@@ -328,6 +347,9 @@ final class Schema {
 				requester_user_id bigint(20) unsigned NOT NULL,
 				approver_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				requested_amount bigint(20) unsigned NOT NULL,
+				approval_tier varchar(24) NOT NULL DEFAULT '',
+				margin_before bigint(20) NULL,
+				margin_after bigint(20) NULL,
 				reason text NOT NULL,
 				status varchar(20) NOT NULL DEFAULT 'pending',
 				decided_at datetime NULL,
@@ -351,6 +373,17 @@ final class Schema {
 				PRIMARY KEY  (id),
 				KEY status_created (status,created_at),
 				KEY vehicle_id (vehicle_id)
+			) $collate ENGINE=InnoDB",
+			"CREATE TABLE " . self::table( 'delivery_documents' ) . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				delivery_id bigint(20) unsigned NOT NULL,
+				document_key varchar(40) NOT NULL,
+				reference varchar(190) NOT NULL,
+				confirmed_by bigint(20) unsigned NOT NULL,
+				confirmed_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY delivery_document (delivery_id,document_key),
+				KEY confirmed_at (confirmed_at)
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'finance_requests' ) . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -384,10 +417,29 @@ final class Schema {
 				UNIQUE KEY source_reference (source,reference),
 				KEY sale_status (sale_id,status)
 			) $collate ENGINE=InnoDB",
+			"CREATE TABLE " . self::table( 'reservation_deposits' ) . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				reservation_id bigint(20) unsigned NOT NULL,
+				amount bigint(20) unsigned NOT NULL,
+				currency char(3) NOT NULL DEFAULT 'SAR',
+				source varchar(32) NOT NULL,
+				reference varchar(100) NOT NULL,
+				status varchar(24) NOT NULL DEFAULT 'pending',
+				recorded_by bigint(20) unsigned NOT NULL,
+				decided_by bigint(20) unsigned NOT NULL DEFAULT 0,
+				decision_reason text NOT NULL,
+				created_at datetime NOT NULL,
+				decided_at datetime NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY reservation_id (reservation_id),
+				UNIQUE KEY source_reference (source,reference),
+				KEY status_created (status,created_at)
+			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'payment_refunds' ) . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				return_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				cancellation_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				reservation_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				sale_id bigint(20) unsigned NOT NULL,
 				amount bigint(20) unsigned NOT NULL,
 				currency char(3) NOT NULL DEFAULT 'SAR',
@@ -403,6 +455,7 @@ final class Schema {
 				UNIQUE KEY method_reference (method,reference),
 				KEY return_status (return_id,status),
 				KEY cancellation_status (cancellation_id,status),
+				KEY reservation_status (reservation_id,status),
 				KEY sale_status (sale_id,status)
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'sale_cancellations' ) . " (

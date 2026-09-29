@@ -76,6 +76,10 @@
 .cd-account-panel { min-width: 0; overflow-wrap: anywhere; }
 .cd-account .cd-account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .cd-account .cd-auth-consent { flex-direction: row; }
+.cd-account-preferences fieldset { margin: 20px 0; padding: 18px; border: 1px solid var(--cd-color-line); border-radius: var(--cd-radius-md); }
+.cd-account-preferences legend { padding-inline: 8px; font-weight: 700; }
+.cd-account-preferences label { flex-direction: row; align-items: flex-start; gap: 10px; font-weight: 500; }
+.cd-account-preferences input[type="radio"] { margin-top: 0.25rem; flex: 0 0 auto; }
 .cd-account-welcome { flex-wrap: wrap; }
 @media (max-width: 600px) {
   .cd-account .cd-account-panel { padding: 18px; }

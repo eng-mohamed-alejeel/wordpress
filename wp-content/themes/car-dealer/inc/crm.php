@@ -9,6 +9,13 @@ function car_dealer_crm_url( $args = array() ) { return add_query_arg( $args, ad
 add_action( 'init', function () {
  register_post_type( 'cd_crm', array( 'public' => false, 'publicly_queryable' => false, 'show_ui' => false, 'show_in_rest' => false, 'rewrite' => false, 'query_var' => false, 'supports' => array( 'title' ), 'capability_type' => 'post', 'map_meta_cap' => false, 'capabilities' => array( 'edit_post' => 'manage_car_dealer', 'read_post' => 'manage_car_dealer', 'delete_post' => 'manage_car_dealer', 'edit_posts' => 'manage_car_dealer', 'edit_others_posts' => 'manage_car_dealer', 'publish_posts' => 'manage_car_dealer', 'read_private_posts' => 'manage_car_dealer', 'delete_posts' => 'manage_car_dealer', 'create_posts' => 'do_not_allow' ) ) );
 } );
+add_filter( 'map_meta_cap', function ( $caps, $cap, $user_id, $args ) {
+ if ( ! in_array( $cap, array( 'read_post', 'edit_post', 'delete_post' ), true ) || empty( $args[0] ) ) { return $caps; }
+ $post = get_post( absint( $args[0] ) );
+ if ( ! $post || 'cd_crm' !== $post->post_type || ! car_dealer_crm_is_retired( $post->ID ) ) { return $caps; }
+ $user = get_userdata( $user_id );
+ return 'read_post' === $cap && $user && ! empty( $user->allcaps['manage_options'] ) ? array( 'manage_options' ) : array( 'do_not_allow' );
+}, 20, 4 );
 add_action( 'admin_menu', function () {
  add_submenu_page( 'car-dealer-dashboard', 'إدارة العملاء CRM', 'إدارة العملاء CRM', 'manage_car_dealer', 'car-dealer-crm', 'car_dealer_crm_page' );
 } );
@@ -16,9 +23,36 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
  if ( false !== strpos( $hook, 'car-dealer' ) ) { wp_enqueue_style( 'car-dealer-crm', get_template_directory_uri() . '/assets/css/crm.css', array(), filemtime( __DIR__ . '/../assets/css/crm.css' ) ); }
 } );
 function car_dealer_crm_meta( $id, $key ) { return get_post_meta( $id, '_crm_' . $key, true ); }
+function car_dealer_crm_retired_customer_id( $id ) { return absint( car_dealer_crm_meta( $id, 'retired_core_customer_id' ) ); }
+function car_dealer_crm_is_retired( $id ) { return metadata_exists( 'post', $id, '_crm_retired_core_customer_id' ) || '1' === (string) car_dealer_crm_meta( $id, 'privacy_erased' ); }
+/** A legacy profile with a server-owned account link becomes read-only history once Core owns that account. */
+function car_dealer_retire_account_crm_profiles( $user_id, $customer_id ) {
+ $user_id = absint( $user_id ); $customer_id = absint( $customer_id );
+ if ( ! $user_id || ! $customer_id || ! class_exists( '\\AutoDealership\\Leads\\CustomerIdentity' ) ) { return; }
+ $ids = get_posts( array( 'post_type'=>'cd_crm', 'post_status'=>'private', 'meta_key'=>'_crm_user_id', 'meta_value'=>$user_id, 'posts_per_page'=>100, 'fields'=>'ids' ) );
+ foreach ( $ids as $id ) {
+  if ( car_dealer_crm_is_retired( $id ) ) { continue; }
+  update_post_meta( $id, '_crm_retired_core_customer_id', $customer_id );
+  update_post_meta( $id, '_crm_retired_at', current_time( 'mysql', true ) );
+  delete_post_meta( $id, '_crm_due' ); delete_post_meta( $id, '_crm_task' );
+  car_dealer_crm_log( $id, 'تم اعتزال الملف القديم بعد ربط الحساب بملف Core #' . $customer_id . '. أصبح السجل للقراءة الإدارية فقط.' );
+ }
+}
+add_action( 'adc_customer_account_linked', 'car_dealer_retire_account_crm_profiles', 10, 2 );
+add_action( 'adc_customer_profile_synced', 'car_dealer_retire_account_crm_profiles', 10, 2 );
+/** Retire pre-1.18 account profiles in bounded administrator batches without contact matching. */
+function car_dealer_reconcile_retired_crm_profiles() {
+ if ( ! current_user_can( 'manage_options' ) || ! class_exists( '\\AutoDealership\\Database\\Schema' ) || ! \AutoDealership\Database\Schema::is_ready() ) { return; }
+ global $wpdb;
+ $customers = \AutoDealership\Database\Schema::table( 'customers' );
+ $rows = $wpdb->get_results( "SELECT account.meta_value user_id,c.id customer_id,MIN(p.ID) first_id FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} account ON account.post_id=p.ID AND account.meta_key='_crm_user_id' INNER JOIN $customers c ON c.account_user_id=CAST(account.meta_value AS UNSIGNED) AND c.merged_into_id IS NULL LEFT JOIN {$wpdb->postmeta} retired ON retired.post_id=p.ID AND retired.meta_key IN ('_crm_retired_core_customer_id','_crm_privacy_erased') WHERE p.post_type='cd_crm' AND p.post_status='private' AND retired.meta_id IS NULL GROUP BY account.meta_value,c.id ORDER BY first_id ASC LIMIT 100", ARRAY_A ) ?: array();
+ foreach ( $rows as $row ) { car_dealer_retire_account_crm_profiles( absint( $row['user_id'] ), absint( $row['customer_id'] ) ); }
+}
+add_action( 'admin_init', 'car_dealer_reconcile_retired_crm_profiles', 30 );
 function car_dealer_crm_record( $id ) {
  $post = get_post( $id );
  if ( ! $post || 'cd_crm' !== $post->post_type || 'private' !== $post->post_status ) { wp_die( 'ملف العميل غير موجود.', '', array( 'response' => 404 ) ); }
+ if ( car_dealer_crm_is_retired( $id ) && ! current_user_can( 'manage_options' ) ) { wp_die( 'هذا ملف تاريخي معتزل ومتاح لمسؤول النظام فقط.', '', array( 'response' => 403 ) ); }
  return $post;
 }
 function car_dealer_crm_log( $id, $text ) {
@@ -31,7 +65,7 @@ function car_dealer_crm_save() {
  if ( ! current_user_can( 'manage_car_dealer' ) ) { wp_die( 'ليست لديك صلاحية.', '', array( 'response' => 403 ) ); }
  check_admin_referer( 'car_dealer_crm' );
  $id = absint( car_dealer_crm_input( 'id' ) );
- if ( $id ) { car_dealer_crm_record( $id ); }
+ if ( $id ) { car_dealer_crm_record( $id ); if ( car_dealer_crm_is_retired( $id ) ) { wp_die( 'الملف القديم معتزل ومتاح للقراءة الإدارية فقط.', '', array( 'response'=>409, 'back_link'=>true ) ); } }
  $action = car_dealer_crm_input( 'crm_action' );
  if ( 'import' === $action ) {
   $count = car_dealer_crm_import();
@@ -74,7 +108,7 @@ add_action( 'admin_post_car_dealer_crm_export', function () {
  fputcsv( $stream, array( 'العميل', 'الهاتف', 'البريد', 'المصدر', 'المرحلة', 'قيمة الفرصة', 'المتابعة', 'المهمة' ) );
  $page = 1;
  do {
-  $rows = get_posts( array( 'post_type' => 'cd_crm', 'post_status' => 'private', 'posts_per_page' => 200, 'paged' => $page++, 'orderby' => 'ID', 'order' => 'ASC' ) );
+   $rows = get_posts( array( 'post_type' => 'cd_crm', 'post_status' => 'private', 'posts_per_page' => 200, 'paged' => $page++, 'orderby' => 'ID', 'order' => 'ASC', 'meta_query'=>array( array( 'key'=>'_crm_retired_core_customer_id', 'compare'=>'NOT EXISTS' ), array( 'key'=>'_crm_privacy_erased', 'compare'=>'NOT EXISTS' ) ) ) );
   foreach ( $rows as $row ) {
    $cells = array( $row->post_title );
    foreach ( array( 'phone', 'email', 'source', 'stage', 'value', 'due', 'task' ) as $key ) {
@@ -146,15 +180,15 @@ function car_dealer_crm_form_start( $action, $id = 0 ) {
 function car_dealer_crm_summary() {
  if ( ! current_user_can( 'manage_car_dealer' ) ) { return; }
  global $wpdb;
- $counts = $wpdb->get_results( "SELECT m.meta_value stage, COUNT(*) total FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON p.ID=m.post_id AND m.meta_key='_crm_stage' WHERE p.post_type='cd_crm' AND p.post_status='private' GROUP BY m.meta_value", OBJECT_K ) ?: array();
- $overdue = new WP_Query( array( 'post_type' => 'cd_crm', 'post_status' => 'private', 'posts_per_page' => 1, 'fields' => 'ids', 'meta_query' => array( array( 'key' => '_crm_due', 'value' => '', 'compare' => '!=' ), array( 'key' => '_crm_due', 'value' => current_time( 'Y-m-d\TH:i' ), 'compare' => '<=' ) ) ) );
+ $counts = $wpdb->get_results( "SELECT m.meta_value stage, COUNT(*) total FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} m ON p.ID=m.post_id AND m.meta_key='_crm_stage' WHERE p.post_type='cd_crm' AND p.post_status='private' AND NOT EXISTS (SELECT 1 FROM {$wpdb->postmeta} retired WHERE retired.post_id=p.ID AND retired.meta_key IN ('_crm_retired_core_customer_id','_crm_privacy_erased')) GROUP BY m.meta_value", OBJECT_K ) ?: array();
+ $overdue = new WP_Query( array( 'post_type' => 'cd_crm', 'post_status' => 'private', 'posts_per_page' => 1, 'fields' => 'ids', 'meta_query' => array( array( 'key'=>'_crm_retired_core_customer_id', 'compare'=>'NOT EXISTS' ), array( 'key'=>'_crm_privacy_erased', 'compare'=>'NOT EXISTS' ), array( 'key' => '_crm_due', 'value' => '', 'compare' => '!=' ), array( 'key' => '_crm_due', 'value' => current_time( 'Y-m-d\TH:i' ), 'compare' => '<=' ) ) ) );
  echo '<section class="cd-crm-summary"><h2><a href="' . esc_url( car_dealer_crm_url() ) . '">إدارة علاقات العملاء CRM</a></h2><div class="cd-crm-stats">';
  foreach ( car_dealer_crm_stages() as $key => $label ) { echo '<a href="' . esc_url( car_dealer_crm_url( array( 'stage' => $key ) ) ) . '"><strong>' . absint( $counts[ $key ]->total ?? 0 ) . '</strong>' . esc_html( $label ) . '</a>'; }
  echo '<a href="' . esc_url( car_dealer_crm_url( array( 'due' => '1' ) ) ) . '"><strong>' . absint( $overdue->found_posts ) . '</strong>متابعات مستحقة</a></div></section>';
 }
 function car_dealer_crm_page() {
  if ( ! current_user_can( 'manage_car_dealer' ) ) { wp_die( 'ليست لديك صلاحية.' ); }
- echo '<div class="wrap cd-admin cd-crm" dir="rtl"><h1>إدارة علاقات العملاء CRM</h1><p>ملفات العملاء، فرص البيع، ومواعيد المتابعة. جميع موظفي المعرض المخولين يمكنهم إدارة هذه الملفات.</p>';
+ echo '<div class="wrap cd-admin cd-crm" dir="rtl"><h1>إدارة علاقات العملاء CRM</h1><p>ملفات العملاء القديمة غير المرتبطة بـ Core فقط. الملفات المرتبطة بحسابات Core تُعتزل تلقائياً وتصبح للقراءة الإدارية.</p>';
  if ( isset( $_GET['saved'] ) ) { echo '<div class="notice notice-success"><p>تم حفظ التغييرات.</p></div>'; }
  if ( isset( $_GET['imported'] ) ) { echo '<div class="notice notice-success"><p>تمت مزامنة ' . absint( $_GET['imported'] ) . ' طلب. كرر المزامنة لتحميل الدفعة التالية إن وجدت.</p></div>'; }
  if ( isset( $_GET['customer'] ) ) { car_dealer_crm_editor( absint( $_GET['customer'] ) ); echo '</div>'; return; }
@@ -163,12 +197,14 @@ function car_dealer_crm_page() {
  car_dealer_crm_form_start( 'import' ); echo '<button class="button">مزامنة الطلبات السابقة (حتى 200 طلب)</button></form>';
  echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="car_dealer_crm_export">';
  wp_nonce_field( 'car_dealer_crm' );
- echo '<button class="button">تصدير جميع العملاء CSV</button></form></div>';
- $search = sanitize_text_field( wp_unslash( $_GET['q'] ?? '' ) ); $stage = sanitize_key( $_GET['stage'] ?? '' ); $due = ! empty( $_GET['due'] ); $mine = ! empty( $_GET['mine'] );
- echo '<form method="get" class="cd-crm-toolbar"><input type="hidden" name="page" value="car-dealer-crm"><input name="q" aria-label="بحث العملاء" placeholder="الاسم أو الهاتف أو البريد" value="' . esc_attr( $search ) . '"><select name="stage" aria-label="مرحلة البيع"><option value="">كل المراحل</option>';
+ echo '<button class="button">تصدير الملفات النشطة CSV</button></form>';
+ if ( current_user_can( 'manage_options' ) ) { echo '<a class="button" href="' . esc_url( car_dealer_crm_url( array( 'retired'=>1 ) ) ) . '">السجلات المعتزلة</a>'; }
+ echo '</div>';
+ $search = sanitize_text_field( wp_unslash( $_GET['q'] ?? '' ) ); $stage = sanitize_key( $_GET['stage'] ?? '' ); $due = ! empty( $_GET['due'] ); $mine = ! empty( $_GET['mine'] ); $retired = current_user_can( 'manage_options' ) && ! empty( $_GET['retired'] );
+ echo '<form method="get" class="cd-crm-toolbar"><input type="hidden" name="page" value="car-dealer-crm">' . ( $retired ? '<input type="hidden" name="retired" value="1">' : '' ) . '<input name="q" aria-label="بحث العملاء" placeholder="الاسم أو الهاتف أو البريد" value="' . esc_attr( $search ) . '"><select name="stage" aria-label="مرحلة البيع"><option value="">كل المراحل</option>';
  foreach ( car_dealer_crm_stages() as $key => $label ) { echo '<option value="' . esc_attr( $key ) . '" ' . selected( $stage, $key, false ) . '>' . esc_html( $label ) . '</option>'; }
  echo '</select><label><input type="checkbox" name="due" value="1" ' . checked( $due, true, false ) . '> المستحقة</label><label><input type="checkbox" name="mine" value="1" ' . checked( $mine, true, false ) . '> المسندة إليّ</label><button class="button">بحث وتصفية</button><a href="' . esc_url( car_dealer_crm_url() ) . '">إلغاء التصفية</a></form>';
- $meta = array();
+ $meta = $retired ? array( array( 'relation'=>'OR', array( 'key'=>'_crm_retired_core_customer_id', 'compare'=>'EXISTS' ), array( 'key'=>'_crm_privacy_erased', 'compare'=>'EXISTS' ) ) ) : array( array( 'key'=>'_crm_retired_core_customer_id', 'compare'=>'NOT EXISTS' ), array( 'key'=>'_crm_privacy_erased', 'compare'=>'NOT EXISTS' ) );
  if ( isset( car_dealer_crm_stages()[ $stage ] ) ) { $meta[] = array( 'key' => '_crm_stage', 'value' => $stage ); }
  if ( $mine ) { $meta[] = array( 'key' => '_crm_owner', 'value' => get_current_user_id() ); }
  if ( $due ) { $meta[] = array( 'key' => '_crm_due', 'value' => '', 'compare' => '!=' ); $meta[] = array( 'key' => '_crm_due', 'value' => current_time( 'Y-m-d\TH:i' ), 'compare' => '<=' ); }
@@ -185,12 +221,18 @@ function car_dealer_crm_page() {
   $id = $post->ID; $owner = get_userdata( absint( car_dealer_crm_meta( $id, 'owner' ) ) ); $date = car_dealer_crm_meta( $id, 'due' );
   echo '<tr><td><a href="' . esc_url( car_dealer_crm_url( array( 'customer' => $id ) ) ) . '"><strong>' . esc_html( $post->post_title ) . '</strong></a><br>' . esc_html( car_dealer_crm_meta( $id, 'source' ) ) . '</td><td><span dir="ltr">' . esc_html( car_dealer_crm_meta( $id, 'phone' ) ) . '</span><br>' . esc_html( car_dealer_crm_meta( $id, 'email' ) ) . '</td><td>' . esc_html( car_dealer_crm_stages()[ car_dealer_crm_meta( $id, 'stage' ) ] ?? 'جديد' ) . '<br>' . esc_html( $owner ? $owner->display_name : 'غير مسند' ) . '</td><td>' . esc_html( car_dealer_crm_meta( $id, 'car' ) ? get_the_title( car_dealer_crm_meta( $id, 'car' ) ) : '—' ) . '<br>' . esc_html( car_dealer_format_price( car_dealer_crm_meta( $id, 'value' ) ) ) . '</td><td><span class="' . ( $date && $date <= current_time( 'Y-m-d\TH:i' ) ? 'cd-crm-overdue' : '' ) . '">' . esc_html( str_replace( 'T', ' ', $date ?: 'غير محدد' ) ) . '</span><br>' . esc_html( car_dealer_crm_meta( $id, 'task' ) ) . '</td></tr>';
  }
- if ( ! $query->posts ) { echo '<tr><td colspan="5">لا توجد ملفات مطابقة. أضف عميلاً أو زامن الطلبات السابقة.</td></tr>'; }
+ if ( ! $query->posts ) { echo '<tr><td colspan="5">' . ( $retired ? 'لا توجد سجلات معتزلة.' : 'لا توجد ملفات مطابقة. أضف عميلاً أو زامن الطلبات السابقة.' ) . '</td></tr>'; }
  echo '</tbody></table></div><div class="tablenav">' . wp_kses_post( paginate_links( array( 'base' => add_query_arg( 'paged', '%#%' ), 'format' => '', 'current' => $args['paged'], 'total' => $query->max_num_pages ) ) ) . '</div></div>';
 }
 function car_dealer_crm_editor( $id ) {
  $post = $id ? car_dealer_crm_record( $id ) : null;
  echo '<p><a href="' . esc_url( car_dealer_crm_url() ) . '">← العودة إلى العملاء</a></p><h2>' . esc_html( $post ? $post->post_title : 'إضافة عميل وفرصة بيع' ) . '</h2>';
+ $retired_customer = $id ? car_dealer_crm_retired_customer_id( $id ) : 0;
+ if ( $id && car_dealer_crm_is_retired( $id ) ) {
+  echo '<div class="notice notice-info"><p>' . ( $retired_customer ? 'هذا سجل CRM قديم معتزل ومرتبط بملف Core #' . absint( $retired_customer ) . '.' : 'هذا سجل CRM قديم تم محو بياناته الشخصية.' ) . ' البيانات أدناه للقراءة الإدارية ولا تقبل أي تحديث.</p></div>';
+  echo '<dl><dt>الهاتف</dt><dd><span dir="ltr">' . esc_html( car_dealer_crm_meta( $id, 'phone' ) ) . '</span></dd><dt>البريد</dt><dd>' . esc_html( car_dealer_crm_meta( $id, 'email' ) ) . '</dd><dt>المصدر</dt><dd>' . esc_html( car_dealer_crm_meta( $id, 'source' ) ) . '</dd><dt>تاريخ الاعتزال</dt><dd>' . esc_html( car_dealer_crm_meta( $id, 'retired_at' ) ) . '</dd></dl>';
+  car_dealer_crm_related_requests( $id ); car_dealer_crm_history( $id ); return;
+ }
  car_dealer_crm_form_start( 'save', $id ); echo '<div class="cd-crm-fields">';
  foreach ( array( 'name' => array( 'اسم العميل *', 'text' ), 'phone' => array( 'الهاتف', 'tel' ), 'email' => array( 'البريد الإلكتروني', 'email' ), 'source' => array( 'مصدر العميل', 'text' ), 'value' => array( 'قيمة الفرصة (ر.س)', 'number' ), 'due' => array( 'موعد المتابعة (توقيت الموقع)', 'datetime-local' ), 'task' => array( 'المتابعة المطلوبة', 'text' ) ) as $key => $field ) {
   $value = 'name' === $key ? ( $post ? $post->post_title : '' ) : car_dealer_crm_meta( $id, $key );
@@ -209,6 +251,9 @@ function car_dealer_crm_editor( $id ) {
  if ( car_dealer_crm_meta( $id, 'due' ) ) { car_dealer_crm_form_start( 'complete', $id ); echo '<p><button class="button">تم إنجاز المتابعة الحالية</button></p></form>'; }
  echo '<h2>سجل التواصل والملاحظات</h2>';
  car_dealer_crm_form_start( 'note', $id ); echo '<label for="crm-note">تسجيل مكالمة، زيارة، أو ملاحظة</label><p><textarea id="crm-note" name="note" rows="4" class="large-text" required></textarea></p><button class="button">إضافة للسجل</button></form>';
+ car_dealer_crm_history( $id );
+}
+function car_dealer_crm_history( $id ) {
  $page = max( 1, absint( $_GET['history_page'] ?? 1 ) );
  $base = array( 'post_id' => $id, 'type' => 'crm_activity', 'status' => 'approve' );
  $notes = get_comments( array_merge( $base, array( 'number' => 20, 'offset' => ( $page - 1 ) * 20, 'orderby' => 'comment_ID', 'order' => 'DESC' ) ) );
