@@ -2,6 +2,8 @@
 
 Scope confirmed by the user on 2026-09-27: start with an intentionally empty business database. Historical recovery/import is not a launch dependency. Next implementation focus is CRM/intake consolidation and removal of duplicate theme writes, followed by the remaining workflows and release gates. Reference data must use actual business inputs; migration tools remain available for later imports.
 
+1.22.0 adds the missing operational catalog setup workflow: an administrator can map each operational vehicle to an editorial `car` post through a transactional audited service, inspect bounded discrepancy lists with complete totals, and capture a reconciliation fingerprint. The activation gate now rejects an empty operational source and an empty eligible public result. Actual branch, brand, location, vehicle and post values remain intentionally absent and must be entered by the business before authoritative activation.
+
 1.21.0 completes the bounded bilingual catalog increment: explicit Arabic/English URLs, RTL/LTR rendering, localized forms and AJAX responses, canonical/hreflang output, structural accessibility automation, responsive browser acceptance and a 240-vehicle local query/performance budget. Compatibility remains selected while the operational database is intentionally empty. Activation still requires real published-post mappings and count reconciliation, human screen-reader/contrast/device review, and staging performance with real data and cache behavior.
 
 1.20.0 started the public-site cutover with a central operational catalog, full bounded URL filter/sort coverage, mapped card/detail/schema reads, and a controlled compatibility/authoritative switch.

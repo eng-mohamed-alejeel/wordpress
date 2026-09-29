@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.21.0
+ * Version: 1.22.0
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.21.0' );
+define( 'ADC_VERSION', '1.22.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -31,6 +31,7 @@ require_once ADC_PATH . 'src/Inventory/VehicleIssueService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleReturnService.php';
 require_once ADC_PATH . 'src/Inventory/TransferService.php';
 require_once ADC_PATH . 'src/Inventory/PublicCatalog.php';
+require_once ADC_PATH . 'src/Inventory/CatalogMappingService.php';
 require_once ADC_PATH . 'src/Reservations/ReservationService.php';
 require_once ADC_PATH . 'src/Branches/BranchService.php';
 require_once ADC_PATH . 'src/Leads/LeadService.php';
@@ -68,6 +69,7 @@ require_once ADC_PATH . 'src/Admin/TransferPages.php';
 require_once ADC_PATH . 'src/Admin/QuotePages.php';
 require_once ADC_PATH . 'src/Admin/FinancialExportPage.php';
 require_once ADC_PATH . 'src/Admin/ReferencePage.php';
+require_once ADC_PATH . 'src/Admin/CatalogCutoverPage.php';
 require_once ADC_PATH . 'src/Admin/InventoryIdentityPage.php';
 require_once ADC_PATH . 'src/Admin/VehicleSpecificationsPage.php';
 require_once ADC_PATH . 'src/Admin/VehicleIssuePage.php';
@@ -112,6 +114,7 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\TransferPages', 'bo
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\QuotePages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FinancialExportPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\ReferencePage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\CatalogCutoverPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\InventoryIdentityPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleSpecificationsPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleIssuePage', 'boot' ) );

@@ -2,7 +2,15 @@
 
 Updated: 2026-09-29. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.21.0 (implementation and local acceptance complete)
+## Current increment: 1.22.0 (implementation and local acceptance complete)
+
+- Added **Dealership Core → Catalog cutover** for the new-installation setup sequence. It shows active reference counts, cutover readiness, bounded discrepancy details with complete totals, and a reconciliation fingerprint without exposing VIN, cost, customer or financial fields.
+- Added a shared administrator-only service for one-to-one operational vehicle/WordPress `car` post mapping. Every change requires a reason and commits with `vehicle.catalog_mapping_changed`; invalid targets, conflicting posts, unauthorized users and audit failures fail closed. Identical retries are idempotent.
+- Tightened authoritative activation to require a current schema, a nonempty operational catalog, published vehicle posts and at least one eligible public row, in addition to zero unmapped published posts, duplicate mappings and invalid targets.
+- Local acceptance passes 576 isolated database/HTTP checks including 14 mapping/cutover assertions, 34 catalog-browser checks, 33 account-browser checks plus three post-journey assertions, seven standalone DOM checks, 48 authorization checks, 12 money checks, 16 pricing-policy checks, and syntax across 84 plugin plus 41 theme PHP files and three Node scripts. The complete opt-in browser runner printed 579 checks after its three post-journey assertions. The disposable database was removed and the intentionally empty source database was not contacted. Schema remains 1.13.0. See `VERIFICATION-1.22.0.md`.
+- Compatibility remains selected. Actual branches, brands, locations, staff assignments, vehicles and editorial posts must be entered using real business values before the new workspace can produce an activation-ready result.
+
+## Previous increment: 1.21.0 (implementation and local acceptance complete)
 
 - Added an explicit `lang=ar|en` catalog contract with Arabic as the default, a visible language switch, document and component RTL/LTR semantics, localized prices, filters, details, lead forms and AJAX responses.
 - Added localized canonical URLs plus `ar`, `en` and `x-default` hreflang links while keeping filtered result pages out of the search index.
@@ -11,7 +19,7 @@ Updated: 2026-09-29. This records completed increments, not completion of whole 
 - Local acceptance passes syntax across 81 plugin and 41 theme PHP files, all three Node scripts, 48 authorization checks, 12 money checks, 16 pricing-policy checks, 565 isolated database/HTTP checks, 34 real-theme catalog browser checks, 33 account-browser checks plus three post-journey database assertions, and seven standalone DOM checks. The source database was not contacted. See `VERIFICATION-1.21.0.md`.
 - Compatibility remains selected because the operational database is intentionally empty. Authoritative activation still requires actual branch/vehicle setup, unique post mappings and real count/sample reconciliation.
 
-## Previous increment: 1.20.0 (implementation and local acceptance complete)
+## Earlier increment: 1.20.0 (implementation and local acceptance complete)
 
 - Added the plugin-owned public catalog query boundary and expanded its REST contract across vehicle identity, specification, range, branch, search and allowlisted sort fields.
 - Added an audited cutover setting and readiness counts. `compatibility` remains the default because the operational database is intentionally empty; `authoritative` activation rejects schema drift, unmapped published posts and duplicate mappings, then hides every unavailable, unpublished or inactive-branch vehicle.
@@ -86,7 +94,7 @@ Updated: 2026-09-29. This records completed increments, not completion of whole 
 2. Prepare the new-installation setup using actual branch, brand, location and staff assignments when supplied. Current-state backup/restore passed; no historical restore/import is required.
 3. Local 1.18.0 verification passes 515 database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate form-script checks. Historical claims and financial/documentary merging apply only if later required; no historical import is needed for this empty deployment.
 4. Pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output and delivery document gates are implemented and locally accepted in 1.19.0. Complete provider/ERP reconciliation and business review of the configured values.
-5. Reconcile real vehicle/post mappings and activate/review the implemented authoritative catalog. Synthetic Arabic/English responsive journeys, localized AJAX, structural accessibility checks and the 240-vehicle local budget pass; complete human accessibility review and production-like staging load/cache measurement.
+5. Enter actual reference/inventory/editorial values, use **Dealership Core → Catalog cutover** to reconcile and audit every intended public mapping, then activate/review the authoritative catalog. Synthetic Arabic/English responsive journeys, localized AJAX, structural accessibility checks and the 240-vehicle local budget pass; complete human accessibility review and production-like staging load/cache measurement.
 6. Implement scoped operational reporting, notification outbox/retries, provider-specific ERP/payment/finance/message adapters and job monitoring after provider contracts and credentials are supplied.
 7. Rehearse controlled cutover/rollback and satisfy the security, browser, operational and business release gates. Overall readiness remains FAIL; the full enterprise plan is not complete.
 

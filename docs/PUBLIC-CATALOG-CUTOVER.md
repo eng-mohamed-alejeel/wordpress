@@ -9,7 +9,9 @@ The `adc_public_catalog_mode` setting has two allowlisted values:
 
 Authoritative mode is effective only while the installed schema version matches `Schema::VERSION`. The setting is saved through the compensated, audited configuration service.
 
-The settings screen reports operational rows, eligible public rows, published car posts, unmapped published posts and duplicate mappings. Authoritative activation is blocked until the schema is current and both unmapped published posts and duplicate mappings are zero. An intentionally empty catalog can still be valid when it has no published vehicle posts.
+The settings screen reports operational rows, eligible public rows, published car posts, unmapped published posts, duplicate mappings and invalid targets. Authoritative activation is blocked until the schema is current, the operational source and published catalog are nonempty, at least one eligible public vehicle exists, and unmapped published posts, duplicate mappings and invalid targets are all zero.
+
+**Dealership Core → Catalog cutover** is the setup and reconciliation workspace. It lists active branch, brand and location counts; lets an administrator assign or remove each operational vehicle's `public_post_id`; requires a reason; and records `vehicle.catalog_mapping_changed` in the append-only audit log inside the same transaction. The workspace shows complete issue totals with at most 100 detail rows per category by default and provides a SHA-256 fingerprint for the reviewed catalog state. It excludes VIN, purchase cost, customers and financial records.
 
 ## Filter contract
 
@@ -20,13 +22,14 @@ Filtered archive URLs emit `noindex,follow` and a canonical link to the base veh
 ## Activation checklist
 
 1. Keep `compatibility` selected while operational inventory is empty or incomplete.
-2. Create the real active branches and operational vehicles without sample data.
-3. Map every intended public vehicle to one unique published `car` post through `public_post_id`.
-4. Reconcile counts for available mapped vehicles, inactive branches, unavailable vehicles, duplicate mappings and unmapped published posts.
-5. Review several cards and detail pages for price conversion, model/trim, mileage, colors, drivetrain, branch, stock number, media and structured data.
-6. Repeat the accepted Arabic RTL and English LTR catalog journeys at mobile and desktop sizes, including empty results, localized form responses and every sort option.
-7. Measure query time and page rendering with representative catalog volume and the production cache configuration.
-8. Select **Operational inventory authority** in **Dealership Core → Settings**, then repeat count and public-output checks.
+2. Create the real active branches, brands, locations and operational vehicles without sample data.
+3. Create or review the corresponding editorial `car` posts.
+4. Open **Dealership Core → Catalog cutover** and map every intended public vehicle to one unique post, recording a useful reason for each assignment.
+5. Reconcile active setup counts, eligible rows, unmapped vehicles/posts, invalid targets and duplicate mappings. Record the displayed fingerprint in the release evidence.
+6. Review several cards and detail pages for price conversion, model/trim, mileage, colors, drivetrain, branch, stock number, media and structured data.
+7. Repeat the accepted Arabic RTL and English LTR catalog journeys at mobile and desktop sizes, including empty results, localized form responses and every sort option.
+8. Measure query time and page rendering with representative catalog volume and the production cache configuration.
+9. Select **Operational inventory authority** in **Dealership Core → Settings**, then repeat count and public-output checks and confirm the reviewed fingerprint has not changed unexpectedly.
 
 ## Rollback
 
@@ -34,4 +37,4 @@ Select **Gradual compatibility with theme data** in **Dealership Core → Settin
 
 ## Current acceptance state
 
-Implementation and expanded local synthetic acceptance are complete in 1.21.0. The isolated suite passed 565 database/HTTP checks and the real-theme Chromium catalog passed 34 Arabic/English checks at 1440, 768, 390 and 320 pixels. A 240-vehicle scenario passed its 25-query/3-second budget using 10 queries in 0.028-0.056 seconds. The source database remains intentionally empty, so real mapping/count reconciliation, human accessibility review and staging load/cache measurement are still required before authoritative activation. See `VERIFICATION-1.21.0.md`.
+The mapping workspace and stricter activation gate are complete in 1.22.0. The isolated suite passed 576 database/HTTP checks, including authorization, target validation and remediation, audit rollback, duplicate prevention, idempotency, reconciliation and empty-result blocking. The final real-theme Chromium regression passed 34 Arabic/English catalog checks at 1440, 768, 390 and 320 pixels, and the 240-vehicle scenario stayed within its 25-query/3-second budget using 10 queries in 0.024 seconds. The source database remains intentionally empty, so real setup/mapping, human accessibility review and staging load/cache measurement are still required before authoritative activation. See `VERIFICATION-1.22.0.md`.

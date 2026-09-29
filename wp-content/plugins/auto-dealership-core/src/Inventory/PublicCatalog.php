@@ -199,6 +199,7 @@ final class PublicCatalog {
 			'published_posts' => 0,
 			'unmapped_published_posts' => 0,
 			'duplicate_mappings' => 0,
+			'invalid_mappings' => 0,
 			'ready' => false,
 		);
 		if ( ! $schema_ready ) {
@@ -221,8 +222,15 @@ final class PublicCatalog {
 		$result['published_posts'] = $count( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='car' AND post_status='publish'" );
 		$result['unmapped_published_posts'] = $count( "SELECT COUNT(*) FROM {$wpdb->posts} p WHERE p.post_type='car' AND p.post_status='publish' AND NOT EXISTS (SELECT 1 FROM $vehicles v WHERE v.public_post_id=p.ID)" );
 		$result['duplicate_mappings'] = $count( "SELECT COUNT(*) FROM (SELECT public_post_id FROM $vehicles WHERE public_post_id>0 GROUP BY public_post_id HAVING COUNT(*)>1) adc_duplicates" );
+		$result['invalid_mappings'] = $count( "SELECT COUNT(*) FROM $vehicles v LEFT JOIN {$wpdb->posts} p ON p.ID=v.public_post_id WHERE v.public_post_id>0 AND (p.ID IS NULL OR p.post_type<>'car' OR p.post_status<>'publish')" );
 		$result['eligible'] = $count( "SELECT COUNT(*) FROM $vehicles v INNER JOIN $branches b ON b.id=v.branch_id AND b.active=1 INNER JOIN {$wpdb->posts} p ON p.ID=v.public_post_id AND p.post_type='car' AND p.post_status='publish' WHERE v.status='available' AND NOT EXISTS (SELECT 1 FROM $vehicles adc_duplicate WHERE adc_duplicate.public_post_id=v.public_post_id AND adc_duplicate.id<>v.id)" );
-		$result['ready'] = ! $error && 0 === $result['unmapped_published_posts'] && 0 === $result['duplicate_mappings'];
+		$result['ready'] = ! $error
+			&& $result['operational'] > 0
+			&& $result['published_posts'] > 0
+			&& $result['eligible'] > 0
+			&& 0 === $result['unmapped_published_posts']
+			&& 0 === $result['duplicate_mappings']
+			&& 0 === $result['invalid_mappings'];
 		return $result;
 	}
 

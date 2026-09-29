@@ -23,12 +23,13 @@ foreach ( $catalog_options as $key ) {
 	$catalog_option_state[ $key ] = array( 'exists' => $sentinel !== $value, 'value' => $sentinel === $value ? null : $value );
 }
 $original_car_posts = $wpdb->get_results( "SELECT ID,post_status FROM {$wpdb->posts} WHERE post_type='car'", ARRAY_A ) ?: array();
+$catalog_original_mappings = $wpdb->get_results( 'SELECT id,public_post_id FROM ' . Schema::table( 'vehicles' ) . ' WHERE public_post_id>0', ARRAY_A ) ?: array();
 $catalog_operational_baseline = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'vehicles' ) );
 $catalog_post_ids = array();
 $catalog_vehicle_ids = array();
 $catalog_hooks_added = false;
 
-$restore_catalog_fixture = static function () use ( $wpdb, $catalog_option_state, $original_car_posts, &$catalog_post_ids, &$catalog_vehicle_ids, &$catalog_hooks_added ): void {
+$restore_catalog_fixture = static function () use ( $wpdb, $catalog_option_state, $original_car_posts, $catalog_original_mappings, &$catalog_post_ids, &$catalog_vehicle_ids, &$catalog_hooks_added ): void {
 	if ( $catalog_hooks_added ) {
 		remove_action( 'pre_get_posts', array( PublicCatalog::class, 'prepare_theme_query' ), 12 );
 		remove_filter( 'posts_clauses', array( PublicCatalog::class, 'filter_car_queries' ), 20 );
@@ -42,12 +43,18 @@ $restore_catalog_fixture = static function () use ( $wpdb, $catalog_option_state
 		$wpdb->update( $wpdb->posts, array( 'post_status' => $post['post_status'] ), array( 'ID' => (int) $post['ID'] ), array( '%s' ), array( '%d' ) );
 		clean_post_cache( (int) $post['ID'] );
 	}
+	foreach ( $catalog_original_mappings as $mapping ) {
+		$wpdb->update( Schema::table( 'vehicles' ), array( 'public_post_id'=>(int) $mapping['public_post_id'] ), array( 'id'=>(int) $mapping['id'] ), array( '%d' ), array( '%d' ) );
+	}
 	foreach ( $catalog_option_state as $key => $state ) {
 		$state['exists'] ? update_option( $key, $state['value'], false ) : delete_option( $key );
 	}
 };
 
 try {
+	foreach ( $catalog_original_mappings as $mapping ) {
+		$wpdb->update( Schema::table( 'vehicles' ), array( 'public_post_id'=>0 ), array( 'id'=>(int) $mapping['id'] ), array( '%d' ), array( '%d' ) );
+	}
 	foreach ( $original_car_posts as $post ) {
 		$wpdb->update( $wpdb->posts, array( 'post_status' => 'draft' ), array( 'ID' => (int) $post['ID'] ), array( '%s' ), array( '%d' ) );
 		clean_post_cache( (int) $post['ID'] );

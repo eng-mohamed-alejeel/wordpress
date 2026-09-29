@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.22.0 — Audited catalog mapping and cutover workspace
+
+- Added **Dealership Core → Catalog cutover**, an administrator workspace that lists operational vehicles and eligible WordPress `car` posts, records a required reason, and applies one-to-one mapping changes through a shared service.
+- Made mapping writes transactional and append-only audited. Invalid post types, trashed posts, duplicate assignments, non-administrators and audit failures are rejected; audit failure rolls the mapping back and identical retries create no event.
+- Added bounded reconciliation details for unmapped posts, unmapped operational vehicles, duplicate mappings and invalid/unpublished targets, while reporting complete issue totals and a SHA-256 review fingerprint derived from complete catalog-state aggregates.
+- Tightened authoritative activation so a current schema, at least one operational vehicle, at least one published vehicle post, at least one eligible public record, zero unmapped published posts, zero duplicate mappings and zero invalid targets are all required.
+- Added 14 focused mapping/cutover assertions within a full run of **576 isolated database/HTTP checks**. Regression also passed 34 catalog-browser checks, 33 account-browser checks plus three post-journey assertions, seven DOM checks, 48 authorization checks, 12 money checks, 16 pricing-policy checks, and syntax across 84 plugin plus 41 theme PHP files and three Node scripts. The disposable database was removed and the intentionally empty source database was not contacted. Schema remains 1.13.0; see `VERIFICATION-1.22.0.md`.
+
 ## 1.21.0 — Bilingual catalog and measurable acceptance
 
 - Added explicit `lang=ar|en` catalog URLs with Arabic default, visible language switching, correct document/component RTL and LTR, localized filters, cards, specifications, prices, lead forms and AJAX success/error responses.

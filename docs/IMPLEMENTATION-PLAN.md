@@ -136,6 +136,8 @@ Treat the platform as **not production ready** until the final release gate pass
 
 **Implementation note (1.21.0):** the catalog now has explicit Arabic/English URLs, RTL/LTR rendering, localized archive/detail/forms/AJAX responses, canonical/hreflang output, structural accessibility automation and responsive browser coverage. A 240-vehicle isolated budget passes at 10 queries and 0.028-0.056 seconds for the cold page, total and filter options. Real mapping reconciliation, human screen-reader/contrast/device review, staging load/cache measurement and broader bilingual pages remain open.
 
+**Implementation note (1.22.0):** an administrator catalog-cutover workspace now performs audited one-to-one vehicle/post mapping and presents setup counts, complete discrepancy totals, bounded details and a reconciliation fingerprint. Authoritative activation fails closed for empty operational or empty eligible public catalogs. Real business reference data and mappings, human accessibility review, staging load/cache measurement and broader bilingual pages remain open.
+
 **Scope:** complete the customer-facing website on authoritative inventory while preserving editorial content.
 
 **Work:**
