@@ -569,6 +569,7 @@ require __DIR__ . '/catalog-performance.php';
 require __DIR__ . '/increment-1.22.php';
 require __DIR__ . '/increment-1.23.php';
 require __DIR__ . '/increment-1.24.php';
+require __DIR__ . '/increment-1.25.php';
 require __DIR__ . '/increment-crm.php';
 require __DIR__ . '/account-workflow-scenarios.php';
 require __DIR__ . '/customer-preferences-scenarios.php';

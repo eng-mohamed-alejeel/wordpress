@@ -5,6 +5,7 @@ use AutoDealership\Audit\AuditLog;
 use AutoDealership\Database\Schema;
 use AutoDealership\Database\Transaction;
 use AutoDealership\Security\BranchScope;
+use AutoDealership\Integrations\DomainEventPublisher;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -85,7 +86,7 @@ final class PaymentService {
 			$wpdb->query( 'ROLLBACK' );
 			return self::error( 'adc_payment_decision_failed', 500 );
 		}
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'payment.' . $status, 'payment', $payment_id, $reason, array( 'status' => 'pending' ), array( 'status' => $status, 'sale_id' => $sale_id, 'amount' => (int) $row['amount'] ) ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'payment.' . $status, 'payment', $payment_id, $reason, array( 'status' => 'pending' ), array( 'status' => $status, 'sale_id' => $sale_id, 'amount' => (int) $row['amount'] ) ) && ( ! $approve || DomainEventPublisher::commit( 'payment.verified', $payment_id, (int) $sale['branch_id'], 'verified' ) ) ) ) {
 			return self::error( 'adc_payment_decision_failed', 500 );
 		}
 		return array( 'id' => $payment_id, 'status' => $status );

@@ -2,7 +2,7 @@
 
 ## Scope
 
-Core 1.23.0 provides a durable local outbox. It accepts minimized domain references, claims due events safely across concurrent workers, retries transient failures with bounded backoff, and exposes failed events to authorized operators. It does not enable any external provider by itself.
+Core 1.23.0 provides a durable local outbox. Version 1.25.0 adds a provider-neutral adapter registry and default-disabled transactional event producers. The outbox accepts minimized domain references, claims due events safely across concurrent workers, retries transient failures with bounded backoff, and exposes failed events to authorized operators. It does not enable any external provider by itself.
 
 No provider credential, endpoint, message template or customer contact value belongs in the outbox payload. Provider adapters and the domain events that feed them are enabled only after their contracts, consent rules and production configuration are approved.
 
@@ -77,6 +77,6 @@ Deactivation clears the outbox schedule but preserves queue records. Re-enabling
 ## Current limits
 
 - No ERP, accounting, payment, finance, WhatsApp, email or analytics adapter is active.
-- No domain service emits provider events yet.
+- Reservation, sale, finance, verified-payment and delivery services contain transactional producers, but every route remains disabled until an adapter registers and explicitly enables its event. See `INTEGRATION-CONTRACTS.md`.
 - The administrator page is polling-based and has no external alert delivery.
 - Provider timeout, signature, consent, reconciliation, rate-limit and credential-rotation rules must be defined per adapter before activation.

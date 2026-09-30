@@ -2,7 +2,16 @@
 
 Updated: 2026-09-30. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.24.0 (implementation and local acceptance complete)
+## Current increment: 1.25.0 (implementation and local acceptance complete)
+
+- Added a provider-neutral `AdapterContract`, a one-owner event registry and the `adc_integrations_register` lifecycle hook. Invalid event declarations and duplicate route ownership are rejected.
+- Added default-disabled transactional producers for reservation confirmation, sale approval, finance submission/decisions, verified payments and final delivery release.
+- Enabled routes persist minimized subject/branch/state/version references through the durable outbox inside the owning business transaction. Missing adapter routes or outbox persistence fail closed and roll back the mutation and audit.
+- No provider adapter, credential, endpoint, outbound request or sample business record was added. Schema remains 1.14.0.
+- Local acceptance passes 621 isolated database/HTTP checks, including 11 focused contract, routing, minimization, dispatch and rollback assertions. The disposable database was removed and the intentionally empty source database was never contacted. See `INTEGRATION-CONTRACTS.md` and `VERIFICATION-1.25.0.md`.
+- Provider-specific adapters, approved templates/consent policies, acknowledgements, reconciliation, production scheduler monitoring and external alerts remain.
+
+## Previous increment: 1.24.0 (implementation and local acceptance complete)
 
 - Added **التقارير التشغيلية**, a read-only aggregate workspace for inventory, leads, reservations, quotations, sales, deliveries and current operational exceptions.
 - Added `adc_view_reports` for sales managers, general managers, auditors and administrators. Every query uses the central active-branch policy; only administrators with global scope can see all branches.
@@ -11,7 +20,7 @@ Updated: 2026-09-30. This records completed increments, not completion of whole 
 - Local acceptance passes 610 isolated database/HTTP checks, including 13 focused report assertions. The disposable database was removed and the intentionally empty source database was never contacted. Schema remains 1.14.0. See `OPERATIONAL-REPORTS.md` and `VERIFICATION-1.24.0.md`.
 - Provider contracts, approved domain-event producers, provider adapters, reconciliation, production scheduler monitoring and external alerts remain the next integration work.
 
-## Previous increment: 1.23.0 (implementation and local acceptance complete)
+## Earlier increment: 1.23.0 (implementation and local acceptance complete)
 
 - Added a durable local outbox with hashed idempotency, strict minimized payloads, payload-integrity checks, atomic worker leases, expired-lease recovery, bounded backoff and five-attempt terminal failure.
 - Added a five-minute WP-Cron worker and restricted **Audit Log → مراقبة المهام** page. General managers/administrators can retry a terminal event with a required audited reason; auditors have metadata-only read access. Payloads and replay keys are never displayed.
@@ -112,7 +121,7 @@ Updated: 2026-09-30. This records completed increments, not completion of whole 
 3. Local 1.18.0 verification passes 515 database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate form-script checks. Historical claims and financial/documentary merging apply only if later required; no historical import is needed for this empty deployment.
 4. Pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output and delivery document gates are implemented and locally accepted in 1.19.0. Complete provider/ERP reconciliation and business review of the configured values.
 5. Enter actual reference/inventory/editorial values, use **Dealership Core → Catalog cutover** to reconcile and audit every intended public mapping, then activate/review the authoritative catalog. Synthetic Arabic/English responsive journeys, localized AJAX, structural accessibility checks and the 240-vehicle local budget pass; complete human accessibility review and production-like staging load/cache measurement.
-6. The local notification outbox/retry worker, job monitor and aggregate operational reports are complete through 1.24.0. Implement approved domain-event producers, provider-specific ERP/payment/finance/message adapters, reconciliation and external alerting after contracts and credentials are supplied.
+6. The local outbox/retry worker, job monitor, aggregate operational reports, provider-neutral contracts and approved transactional producer catalogue are complete through 1.25.0. Implement provider-specific ERP/payment/finance/message adapters, acknowledgement reconciliation and external alerting after contracts and credentials are supplied.
 7. Rehearse controlled cutover/rollback and satisfy the security, browser, operational and business release gates. Overall readiness remains FAIL; the full enterprise plan is not complete.
 
 ## Increment 1: central branch authorization

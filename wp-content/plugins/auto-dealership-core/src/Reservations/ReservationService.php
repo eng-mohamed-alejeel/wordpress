@@ -8,6 +8,7 @@ use AutoDealership\Security\CustomerScope;
 use AutoDealership\Database\Transaction;
 use AutoDealership\Pricing\PricingPolicy;
 use AutoDealership\Security\BranchScope;
+use AutoDealership\Integrations\DomainEventPublisher;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -79,7 +80,7 @@ final class ReservationService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_reservation_failed', __( 'تعذر تسجيل حركة المخزون.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'reservation.confirmed', 'reservation', $reservation_id, 'Reservation created', null, array( 'vehicle_id' => $vehicle_id, 'customer_id' => $customer_id, 'expires_at' => $expires, 'deposit_policy' => $policy, 'deposit_receipt_verified' => false ) ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'reservation.confirmed', 'reservation', $reservation_id, 'Reservation created', null, array( 'vehicle_id' => $vehicle_id, 'customer_id' => $customer_id, 'expires_at' => $expires, 'deposit_policy' => $policy, 'deposit_receipt_verified' => false ) ) && DomainEventPublisher::commit( 'reservation.confirmed', $reservation_id, (int) $vehicle['branch_id'], 'confirmed' ) ) ) {
 			return new \WP_Error( 'adc_reservation_failed', __( 'تعذر توثيق الحجز وحفظه.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return array( 'id' => $reservation_id, 'vehicle_id' => $vehicle_id, 'status' => 'confirmed', 'expires_at' => $expires, 'deposit_policy' => $policy['type'], 'deposit_required_amount' => $policy['required_amount'], 'deposit_verified_amount' => 0, 'currency' => 'SAR' );

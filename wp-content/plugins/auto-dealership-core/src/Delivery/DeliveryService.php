@@ -6,6 +6,7 @@ use AutoDealership\Database\Schema;
 use AutoDealership\Inventory\VehicleService;
 use AutoDealership\Payments\PaymentService;
 use AutoDealership\Database\Transaction;
+use AutoDealership\Integrations\DomainEventPublisher;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -206,7 +207,7 @@ final class DeliveryService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_delivery_release_failed', __( 'تعذر تسجيل تسليم المركبة.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'delivery.released', 'delivery', $delivery_id, '', array( 'status' => 'approved' ), array( 'status' => 'delivered', 'released_by' => get_current_user_id() ) ) && AuditLog::record( 'vehicle.status_changed', 'vehicle', (int) $row['vehicle_id'], 'Delivery released', array( 'status' => 'ready_for_delivery' ), array( 'status' => 'delivered' ) ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'delivery.released', 'delivery', $delivery_id, '', array( 'status' => 'approved' ), array( 'status' => 'delivered', 'released_by' => get_current_user_id() ) ) && AuditLog::record( 'vehicle.status_changed', 'vehicle', (int) $row['vehicle_id'], 'Delivery released', array( 'status' => 'ready_for_delivery' ), array( 'status' => 'delivered' ) ) && DomainEventPublisher::commit( 'delivery.released', $delivery_id, (int) $row['branch_id'], 'delivered' ) ) ) {
 			return new \WP_Error( 'adc_delivery_release_failed', __( 'تعذر توثيق تسليم المركبة.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return array( 'id' => $delivery_id, 'status' => 'delivered', 'delivered_at' => $now );

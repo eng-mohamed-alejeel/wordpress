@@ -8,6 +8,7 @@ use AutoDealership\Security\CustomerScope;
 use AutoDealership\Pricing\Money;
 use AutoDealership\Pricing\QuoteHistory;
 use AutoDealership\Pricing\PricingPolicy;
+use AutoDealership\Integrations\DomainEventPublisher;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -256,7 +257,7 @@ final class SalesService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_sale_approval_failed', __( 'تعذر حفظ اعتماد البيع.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'vehicle.status_changed', 'vehicle', (int) $sale['vehicle_id'], 'Sale approved', array( 'status' => 'reserved' ), array( 'status' => 'sold' ) ) && AuditLog::record( 'sale.approved', 'sale', $sale_id, 'Sales approval', array( 'status' => 'pending_approval' ), array( 'status' => 'approved', 'approver' => get_current_user_id() ) ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'vehicle.status_changed', 'vehicle', (int) $sale['vehicle_id'], 'Sale approved', array( 'status' => 'reserved' ), array( 'status' => 'sold' ) ) && AuditLog::record( 'sale.approved', 'sale', $sale_id, 'Sales approval', array( 'status' => 'pending_approval' ), array( 'status' => 'approved', 'approver' => get_current_user_id() ) ) && DomainEventPublisher::commit( 'sale.approved', $sale_id, $branch_id, 'approved' ) ) ) {
 			return new \WP_Error( 'adc_sale_approval_failed', __( 'تعذر توثيق اعتماد البيع.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return array( 'id' => $sale_id, 'status' => 'approved' );
@@ -283,7 +284,7 @@ final class SalesService {
 			return new \WP_Error( 'adc_finance_failed', __( 'تعذر حفظ طلب التمويل.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$id = (int) $wpdb->insert_id;
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'finance.submitted', 'finance_request', $id, 'Customer finance consent recorded', null, array( 'sale_id' => $sale_id, 'provider' => $provider, 'amount' => $amount ) ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'finance.submitted', 'finance_request', $id, 'Customer finance consent recorded', null, array( 'sale_id' => $sale_id, 'provider' => $provider, 'amount' => $amount ) ) && DomainEventPublisher::commit( 'finance.submitted', $id, (int) $sale['branch_id'], 'submitted' ) ) ) {
 			return new \WP_Error( 'adc_finance_failed', __( 'تعذر توثيق طلب التمويل.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return array( 'id' => $id, 'status' => 'submitted' );
@@ -311,7 +312,7 @@ final class SalesService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_finance_update_failed', __( 'تعذر حفظ قرار التمويل.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'finance.' . $status, 'finance_request', $request_id, '', array( 'status' => $row['status'] ), array( 'status' => $status ) ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'finance.' . $status, 'finance_request', $request_id, '', array( 'status' => $row['status'] ), array( 'status' => $status ) ) && DomainEventPublisher::commit( 'finance.' . $status, $request_id, (int) $row['branch_id'], $status ) ) ) {
 			return new \WP_Error( 'adc_finance_update_failed', __( 'تعذر توثيق قرار التمويل.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return array( 'id' => $request_id, 'status' => $status );

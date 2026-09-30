@@ -154,7 +154,7 @@ Treat the platform as **not production ready** until the final release gate pass
 
 ## Phase 8 — Staff workspace, reports, notifications, and integrations
 
-**Status through 1.24.0:** the durable local outbox, bounded retry/leases, terminal failure visibility, audited operator retry, scheduled-job page and branch-scoped aggregate operational reports are implemented and locally accepted. Provider adapters, approved domain-event producers, templates/consent decisions, reconciliation, external alerts and any business-approved specialist financial reports remain.
+**Status through 1.25.0:** the durable local outbox, bounded retry/leases, terminal failure visibility, audited operator retry, scheduled-job page, branch-scoped aggregate reports, provider-neutral adapter contract and default-disabled transactional producer catalogue are implemented and locally accepted. Provider-specific adapters, templates/consent decisions, acknowledgement reconciliation, external alerts and any business-approved specialist financial reports remain.
 
 **Scope:** finish day-to-day operations and controlled system connections.
 
@@ -162,7 +162,7 @@ Treat the platform as **not production ready** until the final release gate pass
 - Replace duplicate theme admin CRM/workspace flows with plugin-owned staff queues for leads, inventory, transfers, reservations, approvals, finance, delivery, audit, and branch dashboards.
 - Extend the implemented aggregate operational report catalogue only from approved business definitions. Existing reports enforce explicit capability, branch scope, date limits, export audit, field minimization and CSV formula-injection protection.
 - Implement notification templates/channels and outbox workers with consent checks, retries, deduplication, failure queues and operator visibility. Do not block database transactions on remote services.
-- Define and implement adapter contracts for ERP/accounting, payment verification, finance providers, WhatsApp/email, and vehicle feeds as actually required. Specify authentication, timeouts, retries, idempotency, field minimization and reconciliation per provider.
+- Implement provider-specific ERP/accounting, payment verification, finance, WhatsApp/email and vehicle-feed adapters against the provider-neutral contract as actually required. Specify authentication, timeouts, remote idempotency, field minimization, acknowledgements and reconciliation per provider before enabling any event.
 - Add monitoring for scheduled jobs, outbox failures, migration exceptions, schema failures, API errors and security events without logging secrets or unnecessary personal data.
 
 **Deliverables:** staff workspace; report catalogue; notification operations page; integration contracts and adapter runbooks; monitoring dashboard/alerts.

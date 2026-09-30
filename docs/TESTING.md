@@ -2,7 +2,9 @@
 
 ## Current evidence and independent server mode
 
-On 2026-09-30, version 1.24.0 passed **610 isolated database/HTTP checks** on the independent MariaDB server. Its 13 new assertions cover report authorization, date bounds, branch and global scope, exact aggregate counts/amounts, current exceptions, minimized UTF-8 CSV, formula neutralization, mandatory export audit/rollback, SQL failure behavior and safe admin rendering. Syntax passes across 90 plugin PHP, 41 theme PHP and 8 JavaScript/CommonJS files; 48 authorization, 12 money and 16 pricing-policy checks also pass. The disposable database was removed and the intentionally empty source database was never contacted. See `VERIFICATION-1.24.0.md`.
+On 2026-09-30, version 1.25.0 passed **621 isolated database/HTTP checks** on the independent MariaDB server. Its 11 new assertions cover adapter/event validation, default-disabled routing, missing/duplicate routes, deterministic replay, minimized payloads, worker dispatch, service production and transactional rollback on outbox failure. Syntax passes across 94 plugin PHP, 41 theme PHP and 8 JavaScript/CommonJS files; 48 authorization, 12 money and 16 pricing-policy checks also pass. The disposable database was removed and the intentionally empty source database was never contacted. See `VERIFICATION-1.25.0.md`.
+
+Version 1.24.0 previously passed 610 isolated checks for branch-scoped aggregate reports and safe audited exports. See `VERIFICATION-1.24.0.md`.
 
 Version 1.23.0 previously passed 597 isolated checks. Its 21 assertions cover additive outbox migration, payload minimization/integrity, replay conflicts, delivery/retries/leases, role separation, audited retry and a two-process claim race. See `VERIFICATION-1.23.0.md`.
 

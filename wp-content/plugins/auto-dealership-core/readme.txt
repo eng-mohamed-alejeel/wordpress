@@ -1,11 +1,13 @@
 === Auto Dealership Core ===
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 1.24.0
+Stable tag: 1.25.0
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The existing theme remains active as a compatibility layer during staged migration.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
+
+Version 1.25.0 adds a provider-neutral adapter contract and default-disabled transactional producers for reservation confirmation, sale approval, finance transitions, verified payments and completed delivery. Enabled events store minimized references in the durable outbox; missing routes or outbox persistence fail the owning transaction closed. No provider, credential or external call is active. Schema remains 1.14.0. Local acceptance passes 621 isolated database/HTTP checks; see docs/INTEGRATION-CONTRACTS.md and docs/VERIFICATION-1.25.0.md.
 
 Version 1.24.0 adds branch-scoped aggregate operational reports for inventory, leads, reservations, quotations, sales, deliveries and current exception queues. The protected CSV export is audited, neutralizes spreadsheet formulas and excludes customer/contact/VIN/stock identity. Schema remains 1.14.0. Local acceptance passes 610 isolated database/HTTP checks; no source business data was created or contacted. See docs/OPERATIONAL-REPORTS.md and docs/VERIFICATION-1.24.0.md.
 

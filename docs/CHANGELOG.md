@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.25.0 — Provider-neutral integration contracts
+
+- Added a strict runtime adapter contract, one-owner event registry and the `adc_integrations_register` registration boundary.
+- Added an allowlisted domain-event catalogue for reservation confirmation, sale approval, finance transitions, verified payments and completed delivery.
+- Kept every event disabled by default. Explicit activation without a registered adapter fails closed, and no provider, credential, endpoint or outbound request is configured.
+- Made enabled event persistence part of each owning business transaction. A failed outbox insert rolls back the business mutation and audit together.
+- Reused the durable outbox with deterministic replay keys and minimized subject/branch/state/version payloads that exclude identity, contact, VIN, references and amounts.
+- Raised the plugin to 1.25.0; schema remains 1.14.0. Added 11 focused assertions within **621 isolated database/HTTP checks**. The disposable database was removed and the source database was not contacted. See `INTEGRATION-CONTRACTS.md` and `VERIFICATION-1.25.0.md`.
+
 ## 1.24.0 — Branch-scoped operational reports
 
 - Added a restricted Arabic operational-report workspace covering inventory, leads, reservations, quotations, sales, deliveries and current exception queues.

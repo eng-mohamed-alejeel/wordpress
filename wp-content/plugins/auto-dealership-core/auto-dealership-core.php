@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.24.0
+ * Version: 1.25.0
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.24.0' );
+define( 'ADC_VERSION', '1.25.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -22,6 +22,9 @@ require_once ADC_PATH . 'src/Database/Schema.php';
 require_once ADC_PATH . 'src/Database/Transaction.php';
 require_once ADC_PATH . 'src/Database/SchemaGuard.php';
 require_once ADC_PATH . 'src/Operations/OutboxService.php';
+require_once ADC_PATH . 'src/Integrations/AdapterContract.php';
+require_once ADC_PATH . 'src/Integrations/IntegrationRegistry.php';
+require_once ADC_PATH . 'src/Integrations/DomainEventPublisher.php';
 require_once ADC_PATH . 'src/Security/BranchScope.php';
 require_once ADC_PATH . 'src/Security/CustomerScope.php';
 require_once ADC_PATH . 'src/Reference/ReferenceService.php';
@@ -126,6 +129,9 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleSpecificatio
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleIssuePage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleReturnPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Privacy\\PrivacyTools', 'boot' ) );
+add_action( 'plugins_loaded', static function (): void {
+	do_action( 'adc_integrations_register' );
+}, 20 );
 
 add_filter( 'cron_schedules', static function ( array $schedules ): array {
 	$schedules['adc_five_minutes'] = array( 'interval' => 5 * MINUTE_IN_SECONDS, 'display' => __( 'Every 5 minutes', 'auto-dealership-core' ) );
