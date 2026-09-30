@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.24.0 — Branch-scoped operational reports
+
+- Added a restricted Arabic operational-report workspace covering inventory, leads, reservations, quotations, sales, deliveries and current exception queues.
+- Applied the central active-branch scope to every aggregate and retained historical sale/delivery attribution through the originating quotation branch. Administrators retain global scope.
+- Added a nonce-protected UTF-8 CSV export with formula neutralization, aggregate-only fields and mandatory `operations.report_exported` audit persistence.
+- Excluded customer names, contact details, VINs, stock numbers and reference identifiers from both the screen and export. Any section query failure rejects the whole report instead of returning partial results.
+- Raised the plugin to 1.24.0; schema remains 1.14.0 and no business/reference/sample data was inserted into the intentionally empty source database.
+- Added 13 focused assertions within a full run of **610 isolated database/HTTP checks**. The disposable database was removed and the source database was not contacted. See `OPERATIONAL-REPORTS.md` and `VERIFICATION-1.24.0.md`.
+
 ## 1.23.0 — Durable outbox and job monitoring
 
 - Added a durable at-least-once outbox with SHA-256 replay keys and payload hashes, a strict reference-only payload allowlist, delayed availability, atomic worker leases and expired-lease recovery.

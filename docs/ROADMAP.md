@@ -2,6 +2,8 @@
 
 Scope confirmed by the user on 2026-09-27: start with an intentionally empty business database. Historical recovery/import is not a launch dependency. Next implementation focus is CRM/intake consolidation and removal of duplicate theme writes, followed by the remaining workflows and release gates. Reference data must use actual business inputs; migration tools remain available for later imports.
 
+1.24.0 adds the branch-scoped aggregate operational report catalogue, current exception queues and an audited minimized CSV export. No reference or sample business data was created. Local acceptance passes 610 isolated database/HTTP checks; provider contracts, event producers, adapters, reconciliation and external alerts remain.
+
 1.22.0 adds the missing operational catalog setup workflow: an administrator can map each operational vehicle to an editorial `car` post through a transactional audited service, inspect bounded discrepancy lists with complete totals, and capture a reconciliation fingerprint. The activation gate now rejects an empty operational source and an empty eligible public result. Actual branch, brand, location, vehicle and post values remain intentionally absent and must be entered by the business before authoritative activation.
 
 1.21.0 completes the bounded bilingual catalog increment: explicit Arabic/English URLs, RTL/LTR rendering, localized forms and AJAX responses, canonical/hreflang output, structural accessibility automation, responsive browser acceptance and a 240-vehicle local query/performance budget. Compatibility remains selected while the operational database is intentionally empty. Activation still requires real published-post mappings and count reconciliation, human screen-reader/contrast/device review, and staging performance with real data and cache behavior.
@@ -24,7 +26,7 @@ Current increments and test evidence are in `EXECUTION-STATUS.md`; detailed acce
 8. **Pricing and quotations:** integer price history, originating branch/customer/vehicle snapshots, deterministic fee/promotion components, branded seller snapshots and browser print/PDF output are implemented; server-generated stored PDF files and approved delivery adapters remain.
 9. **Discount approvals and reservations:** two configurable approval tiers, margin snapshots, separation of duties, atomic reservation, independently reviewed deposit evidence/refunds, expiry job and audit are implemented; external reconciliation remains.
 10. **Sales, finance and delivery:** validated state transitions, manual receipt/refund verification, configurable delivery-document gates and controlled vehicle release are implemented; finance/payment provider adapters remain.
-11. **Admin workspace and reports:** branch-aware dashboards, audit review and export controls.
+11. **Admin workspace and reports:** branch-aware dashboards and audit review exist; aggregate operational reports and audited safe export controls are implemented in 1.24.0. Business-approved specialist financial reports may be added later.
 12. **Integrations and hardening:** local outbox/retries and operator visibility are implemented in 1.23.0; provider notifications/adapters, external alerts, rate limiting, privacy review, accessibility and production performance remain.
 13. **Verification and operations:** automated unit/integration/API/permission/workflow/security coverage, staging rehearsal, monitoring and recovery drill.
 14. **Migration and release:** repeatable batches, row counts and reconciliation, backups, cutover, smoke checks and rollback plan.

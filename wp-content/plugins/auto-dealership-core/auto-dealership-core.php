@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.23.0
+ * Version: 1.24.0
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.23.0' );
+define( 'ADC_VERSION', '1.24.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -57,6 +57,7 @@ require_once ADC_PATH . 'src/Core/MigrationReportCommand.php';
 require_once ADC_PATH . 'src/Privacy/PrivacyTools.php';
 require_once ADC_PATH . 'src/Privacy/RetentionService.php';
 require_once ADC_PATH . 'src/Reports/FinancialExport.php';
+require_once ADC_PATH . 'src/Reports/OperationalReport.php';
 require_once ADC_PATH . 'src/Admin/SettingsPage.php';
 require_once ADC_PATH . 'src/Admin/AuditPage.php';
 require_once ADC_PATH . 'src/Admin/OutboxPage.php';
@@ -70,6 +71,7 @@ require_once ADC_PATH . 'src/Admin/SaleCancellationPage.php';
 require_once ADC_PATH . 'src/Admin/TransferPages.php';
 require_once ADC_PATH . 'src/Admin/QuotePages.php';
 require_once ADC_PATH . 'src/Admin/FinancialExportPage.php';
+require_once ADC_PATH . 'src/Admin/OperationalReportPage.php';
 require_once ADC_PATH . 'src/Admin/ReferencePage.php';
 require_once ADC_PATH . 'src/Admin/CatalogCutoverPage.php';
 require_once ADC_PATH . 'src/Admin/InventoryIdentityPage.php';
@@ -116,6 +118,7 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SaleCancellationPag
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\TransferPages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\QuotePages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FinancialExportPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OperationalReportPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\ReferencePage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\CatalogCutoverPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\InventoryIdentityPage', 'boot' ) );
