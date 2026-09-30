@@ -154,6 +154,8 @@ Treat the platform as **not production ready** until the final release gate pass
 
 ## Phase 8 — Staff workspace, reports, notifications, and integrations
 
+**Status through 1.23.0:** the durable local outbox, bounded retry/leases, terminal failure visibility, audited operator retry and scheduled-job page are implemented and locally accepted. Provider adapters, domain-event producers, templates/consent decisions, reconciliation, broader reports and external alerts remain.
+
 **Scope:** finish day-to-day operations and controlled system connections.
 
 **Work:**

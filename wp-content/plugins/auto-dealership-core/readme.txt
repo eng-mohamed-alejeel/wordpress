@@ -1,11 +1,13 @@
 === Auto Dealership Core ===
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 1.22.0
+Stable tag: 1.23.0
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The existing theme remains active as a compatibility layer during staged migration.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
+
+Version 1.23.0 adds a durable local outbox with hashed idempotency, minimized allowlisted payloads, integrity verification, concurrent leases, bounded backoff, terminal failures, audited operator retry, a restricted job monitor and a five-minute WP-Cron worker. No external provider or random business data is enabled. Schema 1.14.0 is additive. Local acceptance passes 597 isolated database/HTTP checks; see docs/OUTBOX-OPERATIONS.md and docs/VERIFICATION-1.23.0.md.
 
 Version 1.22.0 adds an administrator catalog-cutover workspace, audited one-to-one operational vehicle/post mapping, bounded discrepancy lists with complete totals, a reconciliation fingerprint, and stricter activation gates that reject an empty source, an empty eligible public result, or invalid mappings. Compatibility remains the default while the intentionally empty operational database has no real values to map. Schema remains 1.13.0. Local acceptance passes 576 isolated database/HTTP checks, 34 catalog-browser checks, 33 account-browser checks plus three post-journey assertions, seven DOM checks, 48 authorization checks, 12 money checks, 16 pricing-policy checks, and syntax across 84 plugin plus 41 theme PHP files and three Node scripts. See docs/VERIFICATION-1.22.0.md.
 

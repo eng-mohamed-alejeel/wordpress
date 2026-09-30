@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.23.0 — Durable outbox and job monitoring
+
+- Added a durable at-least-once outbox with SHA-256 replay keys and payload hashes, a strict reference-only payload allowlist, delayed availability, atomic worker leases and expired-lease recovery.
+- Added bounded retry delays, five-attempt terminal failures, safe error-code retention, and terminal rejection for malformed or hash-mismatched stored payloads.
+- Added a five-minute WP-Cron worker and a restricted **Audit Log → مراقبة المهام** page with queue counts, scheduled-job timestamps and safe event metadata. Payloads and replay keys are never rendered.
+- Added read-only auditor access and general-manager/administrator retry access. A retry requires a reason and commits atomically with `outbox.retry_requested`; audit failure restores the terminal state.
+- Raised the plugin to 1.23.0 and schema to 1.14.0. The additive upgrade preserves the earlier outbox shape and data. No provider adapters, credentials, outbound messages or sample business records were added.
+- Added 21 focused assertions within a full run of **597 isolated database/HTTP checks**, including a real two-process worker race. Authorization (48), money (12), pricing-policy (16), 87 plugin PHP, 41 theme PHP and 8 JavaScript/CommonJS checks also pass. The disposable database was removed and the intentionally empty source database was never contacted. See `OUTBOX-OPERATIONS.md` and `VERIFICATION-1.23.0.md`.
+
 ## 1.22.0 — Audited catalog mapping and cutover workspace
 
 - Added **Dealership Core → Catalog cutover**, an administrator workspace that lists operational vehicles and eligible WordPress `car` posts, records a required reason, and applies one-to-one mapping changes through a shared service.

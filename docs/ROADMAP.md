@@ -25,7 +25,7 @@ Current increments and test evidence are in `EXECUTION-STATUS.md`; detailed acce
 9. **Discount approvals and reservations:** two configurable approval tiers, margin snapshots, separation of duties, atomic reservation, independently reviewed deposit evidence/refunds, expiry job and audit are implemented; external reconciliation remains.
 10. **Sales, finance and delivery:** validated state transitions, manual receipt/refund verification, configurable delivery-document gates and controlled vehicle release are implemented; finance/payment provider adapters remain.
 11. **Admin workspace and reports:** branch-aware dashboards, audit review and export controls.
-12. **Integrations and hardening:** outbox/retries, notifications, rate limiting, privacy review, accessibility and performance.
+12. **Integrations and hardening:** local outbox/retries and operator visibility are implemented in 1.23.0; provider notifications/adapters, external alerts, rate limiting, privacy review, accessibility and production performance remain.
 13. **Verification and operations:** automated unit/integration/API/permission/workflow/security coverage, staging rehearsal, monitoring and recovery drill.
 14. **Migration and release:** repeatable batches, row counts and reconciliation, backups, cutover, smoke checks and rollback plan.
 

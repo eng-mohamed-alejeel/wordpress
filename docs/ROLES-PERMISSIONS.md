@@ -7,10 +7,10 @@ The plugin registers these initial scoped roles; these are capability names, not
 | Administrator | WordPress administrator plus all `adc_*` capabilities. |
 | Dealership Sales | Own leads, manage own leads, create reservations, view workspace. |
 | Dealership Sales Manager | Branch leads, discount reviews up to configured limit, reservation management, sales/delivery approval, workspace. |
-| Dealership General Manager | High discount review, branch leads, pricing floors, sales/delivery approval, finance/audit reads, workspace. |
+| Dealership General Manager | High discount review, branch leads, pricing floors, sales/delivery approval, finance/audit reads, outbox view/retry, workspace. |
 | Dealership Inventory | Inventory read/write and transfers, workspace. |
 | Dealership Finance | Finance read/write, workspace. |
-| Dealership Auditor | Audit read only, workspace. |
+| Dealership Auditor | Audit and safe outbox metadata read only, workspace. |
 
 | Action | Minimum capability | Additional rule |
 |---|---|---|
@@ -27,6 +27,8 @@ The plugin registers these initial scoped roles; these are capability names, not
 | Verify/reject receipt/deposit | `adc_verify_payments` | Finance role; reviewer differs from recorder and sale/reservation owner; approval cannot exceed the applicable balance. |
 | Record delivery document | `adc_approve_delivery` or `adc_confirm_vehicle_vin` | Branch scoped; supported reference only while preparing or VIN-confirmed. |
 | Read audit | `adc_view_audit` | No edit/delete capability exposed. |
+| Read outbox monitor | `adc_view_outbox` | Safe event metadata and job status only; payload and idempotency key remain hidden. |
+| Retry terminal outbox event | `adc_manage_outbox` | General manager/administrator only; failed state, reason and atomic audit required. |
 
 New roles receive no general `edit_posts`, `manage_options`, or WordPress administrator rights. Activation adds capabilities but does not downgrade existing roles. Reconcile/cleanup on uninstall is deliberately absent because user role data may be in active use.
 
@@ -41,6 +43,8 @@ Version 1.11.0 grants `adc_process_returns` to sales managers, general managers 
 Version 1.12.0 grants finance staff `adc_record_refunds` and `adc_verify_refunds`. A requester cannot verify the same refund, and branch scope and verified receipt balance are rechecked by the service.
 
 Version 1.13.0 grants `adc_cancel_sales` to sales managers, general managers and administrators. It applies only before final delivery and does not let the cancelling manager verify a financial refund.
+
+Version 1.23.0 grants `adc_view_outbox` to general managers, auditors and administrators. `adc_manage_outbox` is limited to general managers and administrators. Manual retry accepts only a terminal failure, requires a reason and commits with its audit event.
 
 Sales ownership is evaluated together with the allowed active branches. Removing a branch immediately removes access to records in that branch; adding a branch does not bypass lead ownership for sales users. Direct operational vehicle reads require an inventory/finance capability plus branch scope; requesting private fields does not grant VIN or purchase-cost access. Public reads continue through the published catalog.
 

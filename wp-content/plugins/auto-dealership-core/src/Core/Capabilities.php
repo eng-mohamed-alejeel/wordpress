@@ -8,10 +8,10 @@ final class Capabilities {
 	private const ROLE_CAPABILITIES = array(
 		'dealership_sales' => array( 'read', 'adc_view_workspace', 'adc_view_own_leads', 'adc_manage_own_leads', 'adc_create_reservations' ),
 		'dealership_sales_manager' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_create_reservations', 'adc_review_discounts', 'adc_manage_reservations', 'adc_approve_sales', 'adc_cancel_sales', 'adc_approve_delivery', 'adc_process_returns' ),
-		'dealership_general_manager' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_view_inventory', 'adc_change_vehicle_vin', 'adc_create_reservations', 'adc_review_discounts', 'adc_approve_high_discounts', 'adc_manage_reservations', 'adc_approve_sales', 'adc_cancel_sales', 'adc_approve_delivery', 'adc_process_returns', 'adc_manage_pricing', 'adc_view_finance', 'adc_view_audit' ),
+		'dealership_general_manager' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_view_inventory', 'adc_change_vehicle_vin', 'adc_create_reservations', 'adc_review_discounts', 'adc_approve_high_discounts', 'adc_manage_reservations', 'adc_approve_sales', 'adc_cancel_sales', 'adc_approve_delivery', 'adc_process_returns', 'adc_manage_pricing', 'adc_view_finance', 'adc_view_audit', 'adc_view_outbox', 'adc_manage_outbox' ),
 		'dealership_inventory' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_manage_inventory', 'adc_transfer_inventory', 'adc_confirm_vehicle_vin' ),
 		'dealership_finance' => array( 'read', 'adc_view_workspace', 'adc_view_finance', 'adc_manage_finance', 'adc_record_payments', 'adc_verify_payments', 'adc_record_refunds', 'adc_verify_refunds' ),
-		'dealership_auditor' => array( 'read', 'adc_view_workspace', 'adc_view_audit' ),
+		'dealership_auditor' => array( 'read', 'adc_view_workspace', 'adc_view_audit', 'adc_view_outbox' ),
 	);
 
 	public static function activate(): void {

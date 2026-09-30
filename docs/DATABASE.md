@@ -87,7 +87,7 @@ All IDs are unsigned bigint primary keys; all tables use the WordPress prefix. A
 | `adc_deliveries` | Sale/vehicle, checklist, VIN confirmation, approvals and delivered timestamp. |
 | `adc_delivery_documents` | One external evidence reference per delivery/document type with confirming user and UTC timestamp; configured requirements gate approval and release. |
 | `adc_audit_events` | Implemented in 0.1.0. Append-only event key, actor, subject, reason, before/after JSON, correlation ID and UTC timestamp. |
-| `adc_outbox` | Planned reliable event delivery with unique event key, payload, attempts, next attempt and completion timestamp. |
+| `adc_outbox` | Durable at-least-once event delivery with hashed idempotency/payload integrity, status, attempts, due time, worker lease, completion/failure timestamps and a safe error code. Payloads are minimized references. |
 
 Operational tables intentionally do not mirror post meta one-for-one. Foreign-key constraints are not assumed because WordPress installations may differ in engine/upgrade management; enforce relationships in repositories and index every join key. Unique VIN and stock number constraints are required. Never silently truncate/merge duplicate data during migration.
 

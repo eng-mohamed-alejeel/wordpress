@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.13.0';
+	public const VERSION = '1.14.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -492,13 +492,23 @@ final class Schema {
 			"CREATE TABLE " . self::table( 'outbox' ) . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				event_key varchar(100) NOT NULL,
+				idempotency_key char(64) NULL,
 				payload longtext NOT NULL,
+				payload_hash char(64) NOT NULL DEFAULT '',
+				status varchar(16) NOT NULL DEFAULT 'pending',
 				attempts smallint(5) unsigned NOT NULL DEFAULT 0,
 				next_attempt_at datetime NOT NULL,
+				locked_at datetime NULL,
+				lock_token char(36) NULL,
 				completed_at datetime NULL,
+				failed_at datetime NULL,
+				last_error varchar(100) NOT NULL DEFAULT '',
 				created_at datetime NOT NULL,
 				PRIMARY KEY  (id),
-				KEY pending (completed_at,next_attempt_at)
+				UNIQUE KEY idempotency_key (idempotency_key),
+				KEY pending (completed_at,next_attempt_at),
+				KEY queue (status,next_attempt_at,id),
+				KEY lock_token (lock_token)
 			) $collate ENGINE=InnoDB",
 		);
 

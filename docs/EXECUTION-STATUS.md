@@ -1,8 +1,16 @@
 # Implementation execution status
 
-Updated: 2026-09-29. This records completed increments, not completion of whole phases.
+Updated: 2026-09-30. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.22.0 (implementation and local acceptance complete)
+## Current increment: 1.23.0 (implementation and local acceptance complete)
+
+- Added a durable local outbox with hashed idempotency, strict minimized payloads, payload-integrity checks, atomic worker leases, expired-lease recovery, bounded backoff and five-attempt terminal failure.
+- Added a five-minute WP-Cron worker and restricted **Audit Log → مراقبة المهام** page. General managers/administrators can retry a terminal event with a required audited reason; auditors have metadata-only read access. Payloads and replay keys are never displayed.
+- Raised the schema to 1.14.0 through an additive migration that preserves the prior outbox rows. No external adapter, credential, outbound message, domain-event producer or sample business record was added.
+- Local acceptance passes 597 isolated database/HTTP checks, including 21 focused outbox assertions and a real two-process claim race, plus 48 authorization, 12 money and 16 pricing-policy checks. Syntax passes across 87 plugin PHP files, 41 theme PHP files and 8 JavaScript/CommonJS files. The generated database was removed and the intentionally empty source database was never contacted. See `OUTBOX-OPERATIONS.md` and `VERIFICATION-1.23.0.md`.
+- Provider contracts, event producers, consent/template policy, reconciliation, production scheduler monitoring and external alerts remain the next integration work.
+
+## Previous increment: 1.22.0 (implementation and local acceptance complete)
 
 - Added **Dealership Core → Catalog cutover** for the new-installation setup sequence. It shows active reference counts, cutover readiness, bounded discrepancy details with complete totals, and a reconciliation fingerprint without exposing VIN, cost, customer or financial fields.
 - Added a shared administrator-only service for one-to-one operational vehicle/WordPress `car` post mapping. Every change requires a reason and commits with `vehicle.catalog_mapping_changed`; invalid targets, conflicting posts, unauthorized users and audit failures fail closed. Identical retries are idempotent.
@@ -95,7 +103,7 @@ Updated: 2026-09-29. This records completed increments, not completion of whole 
 3. Local 1.18.0 verification passes 515 database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate form-script checks. Historical claims and financial/documentary merging apply only if later required; no historical import is needed for this empty deployment.
 4. Pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output and delivery document gates are implemented and locally accepted in 1.19.0. Complete provider/ERP reconciliation and business review of the configured values.
 5. Enter actual reference/inventory/editorial values, use **Dealership Core → Catalog cutover** to reconcile and audit every intended public mapping, then activate/review the authoritative catalog. Synthetic Arabic/English responsive journeys, localized AJAX, structural accessibility checks and the 240-vehicle local budget pass; complete human accessibility review and production-like staging load/cache measurement.
-6. Implement scoped operational reporting, notification outbox/retries, provider-specific ERP/payment/finance/message adapters and job monitoring after provider contracts and credentials are supplied.
+6. The local notification outbox/retry worker and job monitor are complete in 1.23.0. Implement remaining scoped operational reports, approved domain-event producers, provider-specific ERP/payment/finance/message adapters, reconciliation and external alerting after contracts and credentials are supplied.
 7. Rehearse controlled cutover/rollback and satisfy the security, browser, operational and business release gates. Overall readiness remains FAIL; the full enterprise plan is not complete.
 
 ## Increment 1: central branch authorization
