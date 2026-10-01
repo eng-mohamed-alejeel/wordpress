@@ -87,11 +87,14 @@ final class VehicleService {
 				'retail_price' => $retail_price,
 				'minimum_price' => $minimum_price ?: null,
 				'purchase_cost' => current_user_can( 'manage_options' ) && isset( $input['purchase_cost'] ) ? absint( $input['purchase_cost'] ) : null,
+				'gallery_media_ids' => '',
+				'document_media_ids' => '',
+				'internal_notes' => '',
 				'currency' => 'SAR',
 				'created_at' => $now,
 				'updated_at' => $now,
 			),
-			array( '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s', '%s', '%s' )
+			array( '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
 		if ( false === $result ) {
 			$wpdb->query( 'ROLLBACK' );
@@ -216,12 +219,16 @@ final class VehicleService {
 		if ( $include_private && ( $inventory_access || BranchScope::is_global() ) ) {
 			$fields .= ',vin';
 		}
-		if ( current_user_can( 'manage_options' ) || current_user_can( 'adc_view_finance' ) ) {
-			$fields .= ',purchase_cost';
+		if ( current_user_can( 'manage_options' ) || current_user_can( 'adc_view_vehicle_costs' ) ) {
+			$fields .= ',supplier_id,purchase_cost,additional_cost,total_cost,wholesale_price,customs_reference,arrival_date,document_media_ids,internal_notes';
 		}
 		list( $scope, $args ) = BranchScope::predicate( 'branch_id' );
 		array_unshift( $args, $id );
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT ' . $fields . ' FROM ' . Schema::table( 'vehicles' ) . ' WHERE id = %d AND ' . $scope, $args ), ARRAY_A );
+		if ( $row && array_key_exists( 'gallery_media_ids', $row ) ) {
+			$ids = json_decode( (string) $row['gallery_media_ids'], true );
+			$row['gallery_media_ids'] = is_array( $ids ) ? array_values( array_filter( array_map( 'absint', $ids ) ) ) : array();
+		}
 		return $row ?: null;
 	}
 

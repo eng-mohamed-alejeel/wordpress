@@ -62,6 +62,9 @@ final class AuditLog {
 		if ( ( null !== $before && null === $before_json ) || ( null !== $after && null === $after_json ) ) {
 			return false;
 		}
+		if ( '' === $correlation_id && class_exists( '\\AutoDealership\\API\\ResponseContract' ) ) {
+			$correlation_id = \AutoDealership\API\ResponseContract::current_request_id();
+		}
 		$correlation_id = preg_match( '/^[a-f0-9-]{36}$/i', $correlation_id ) ? $correlation_id : wp_generate_uuid4();
 		$result = $wpdb->insert(
 			self::table_name(),

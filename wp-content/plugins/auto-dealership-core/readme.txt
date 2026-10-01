@@ -1,11 +1,13 @@
 === Auto Dealership Core ===
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 1.27.0
+Stable tag: 1.28.0
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The existing theme remains active as a compatibility layer during staged migration.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
+
+Version 1.28.0 adds the supplier and restricted vehicle-acquisition foundation, missing vehicle profile fields, finance provider-attempt lineage, expanded dealership roles, account-security audit events, request correlation, an enveloped v2 REST contract and generated OpenAPI 3.1 discovery. Schema 1.17.0 is additive. No supplier, vehicle or sample business data is created; purchase-order policy and automatic landed-cost rules remain disabled pending approval. Verification for this increment is pending.
 
 Version 1.27.0 declares the complete anonymous REST surface, replaces transient lead throttling with atomic privacy-preserving InnoDB policies, ignores forwarded addresses until the direct proxy is trusted, adds bounded cleanup and a restricted aggregate security workspace. Schema 1.16.0 adds only the opaque request-bucket table. Local acceptance passes 654 isolated database/HTTP checks; the source database was not contacted and no business/sample data was inserted. See docs/SECURITY-HARDENING.md and docs/VERIFICATION-1.27.0.md.
 

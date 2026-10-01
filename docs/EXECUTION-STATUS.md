@@ -1,8 +1,17 @@
 # Implementation execution status
 
-Updated: 2026-09-30. This records completed increments, not completion of whole phases.
+Updated: 2026-10-01. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.27.0 (implementation and local acceptance complete)
+## Current increment: 1.28.0 (implementation complete; verification pending)
+
+- Added schema 1.17.0 with the supplier directory, missing vehicle specification/acquisition fields and ordered finance-attempt history. The upgrade is additive and no source business data was created.
+- Added capability-restricted supplier and vehicle-acquisition services/admin pages. Costs, supplier contacts, customs references, documents and internal notes never enter the public catalog response.
+- Added four least-privilege dealership roles and dedicated supplier/cost capabilities while retaining the existing service-level branch and separation-of-duties checks.
+- Added finance retry lineage and optional commercial terms without inventing provider credentials or mandatory field rules that have not been approved.
+- Added account/login/role/capability audit hooks, `X-Request-ID`, an enveloped `v2` REST contract and an authenticated generated OpenAPI 3.1 description. Compatibility `v1` remains available.
+- Purchase-order workflow, total-cost formula, cost-visibility sign-off, mandatory finance terms and document-retention policy remain explicit business decisions. Automated and database acceptance for 1.28.0 has not been run in this increment.
+
+## Previous increment: 1.27.0 (implementation and local acceptance complete)
 
 - Declared exactly three anonymous core REST pairs and added a regression inventory that rejects any unreviewed anonymous exposure.
 - Replaced best-effort transient throttling with atomic fixed-window InnoDB policies. Stored identity is HMAC-only; storage failure returns 503 and an exceeded policy returns retry-aware 429.

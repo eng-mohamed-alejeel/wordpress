@@ -263,39 +263,51 @@ final class SalesService {
 		return array( 'id' => $sale_id, 'status' => 'approved' );
 	}
 
-	public static function create_finance_request( int $sale_id, string $provider, int $amount, bool $consent ) {
+	public static function create_finance_request( int $sale_id, string $provider, int $amount, bool $consent, array $terms = array() ) {
 		global $wpdb;
 		$provider = sanitize_text_field( $provider );
-		if ( ! current_user_can( 'adc_manage_finance' ) || ! $consent || $amount <= 0 || '' === $provider ) {
+		$down_payment = absint( $terms['down_payment'] ?? 0 );
+		$term_months = absint( $terms['term_months'] ?? 0 );
+		$monthly_payment = absint( $terms['monthly_payment'] ?? 0 );
+		if ( ! current_user_can( 'adc_manage_finance' ) || ! $consent || $amount <= 0 || '' === $provider || mb_strlen( $provider ) > 100 || $term_months > 120 || ( ( $term_months > 0 ) !== ( $monthly_payment > 0 ) ) ) {
 			return new \WP_Error( 'adc_finance_denied', __( 'الصلاحية أو الموافقة أو المبلغ غير صالح.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
 		if ( ! Transaction::begin() ) {
 			return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$sale = $wpdb->get_row( $wpdb->prepare( 'SELECT s.id,s.status,q.final_amount,v.branch_id FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=s.quotation_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id WHERE s.id = %d FOR UPDATE', $sale_id ), ARRAY_A );
-		if ( ! $sale || 'pending_approval' !== $sale['status'] || $amount > (int) $sale['final_amount'] || ! \AutoDealership\Inventory\VehicleService::user_can_access_branch( (int) $sale['branch_id'] ) ) {
+		if ( ! $sale || 'pending_approval' !== $sale['status'] || $amount > (int) $sale['final_amount'] || $down_payment > (int) $sale['final_amount'] || $amount + $down_payment > (int) $sale['final_amount'] || ! \AutoDealership\Inventory\VehicleService::user_can_access_branch( (int) $sale['branch_id'] ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_finance_sale_state', __( 'لا يمكن تقديم طلب تمويل لهذه العملية.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
+		$previous = $wpdb->get_row( $wpdb->prepare( 'SELECT id,attempt_number,status FROM ' . Schema::table( 'finance_requests' ) . ' WHERE sale_id=%d ORDER BY attempt_number DESC,id DESC LIMIT 1 FOR UPDATE', $sale_id ), ARRAY_A );
+		if ( $previous && in_array( $previous['status'], array( 'submitted','under_review','approved' ), true ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'adc_finance_attempt_open', __( 'The current finance attempt must reach a final rejected or cancelled state before another provider is tried.', 'auto-dealership-core' ), array( 'status'=>409 ) );
+		}
+		$attempt_number = $previous ? (int) $previous['attempt_number'] + 1 : 1;
+		if ( $attempt_number > 100 ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_finance_attempt_limit', __( 'The finance attempt history requires administrative review.', 'auto-dealership-core' ), array( 'status'=>409 ) ); }
 		$now = current_time( 'mysql', true );
-		$ok = $wpdb->insert( Schema::table( 'finance_requests' ), array( 'sale_id' => $sale_id, 'provider' => $provider, 'requested_amount' => $amount, 'requested_by' => get_current_user_id(), 'status' => 'submitted', 'consent_at' => $now, 'created_at' => $now, 'updated_at' => $now ), array( '%d', '%s', '%d', '%d', '%s', '%s', '%s', '%s' ) );
+		$ok = $wpdb->insert( Schema::table( 'finance_requests' ), array( 'sale_id'=>$sale_id, 'attempt_number'=>$attempt_number, 'previous_request_id'=>$previous ? (int) $previous['id'] : 0, 'provider'=>$provider, 'requested_amount'=>$amount, 'down_payment'=>$down_payment, 'term_months'=>$term_months, 'monthly_payment'=>$monthly_payment, 'requested_by'=>get_current_user_id(), 'status'=>'submitted', 'consent_at'=>$now, 'submitted_at'=>$now, 'created_at'=>$now, 'updated_at'=>$now ), array( '%d','%d','%d','%s','%d','%d','%d','%d','%d','%s','%s','%s','%s','%s' ) );
 		if ( false === $ok ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_finance_failed', __( 'تعذر حفظ طلب التمويل.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$id = (int) $wpdb->insert_id;
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'finance.submitted', 'finance_request', $id, 'Customer finance consent recorded', null, array( 'sale_id' => $sale_id, 'provider' => $provider, 'amount' => $amount ) ) && DomainEventPublisher::commit( 'finance.submitted', $id, (int) $sale['branch_id'], 'submitted' ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'finance.submitted', 'finance_request', $id, 'Customer finance consent recorded', null, array( 'sale_id'=>$sale_id, 'provider'=>$provider, 'amount'=>$amount, 'down_payment'=>$down_payment, 'term_months'=>$term_months, 'monthly_payment'=>$monthly_payment, 'attempt_number'=>$attempt_number, 'previous_request_id'=>$previous ? (int) $previous['id'] : 0 ) ) && DomainEventPublisher::commit( 'finance.submitted', $id, (int) $sale['branch_id'], 'submitted' ) ) ) {
 			return new \WP_Error( 'adc_finance_failed', __( 'تعذر توثيق طلب التمويل.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		return array( 'id' => $id, 'status' => 'submitted' );
+		return array( 'id'=>$id, 'status'=>'submitted', 'attempt_number'=>$attempt_number, 'previous_request_id'=>$previous ? (int) $previous['id'] : 0 );
 	}
 
-	public static function update_finance_status( int $request_id, string $status, string $provider_reference = '' ) {
+	public static function update_finance_status( int $request_id, string $status, string $provider_reference = '', string $decision_reason = '' ) {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_manage_finance' ) || ! in_array( $status, array( 'under_review', 'approved', 'rejected' ), true ) ) {
 			return new \WP_Error( 'adc_finance_forbidden', __( 'لا تملك صلاحية تحديث حالة التمويل.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
-		if ( 'approved' === $status && '' === sanitize_text_field( $provider_reference ) ) {
+		$provider_reference = sanitize_text_field( $provider_reference );
+		$decision_reason = sanitize_textarea_field( $decision_reason );
+		if ( ( 'approved' === $status && '' === $provider_reference ) || mb_strlen( $decision_reason ) > 2000 ) {
 			return new \WP_Error( 'adc_finance_reference_required', __( 'مرجع جهة التمويل مطلوب عند الاعتماد.', 'auto-dealership-core' ), array( 'status' => 400 ) );
 		}
 		if ( ! Transaction::begin() ) {
@@ -307,14 +319,32 @@ final class SalesService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_finance_state', __( 'حالة طلب التمويل لا تسمح بالتحديث.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
-		$updated = $wpdb->update( $table, array( 'status' => $status, 'provider_reference' => sanitize_text_field( $provider_reference ), 'updated_at' => current_time( 'mysql', true ) ), array( 'id' => $request_id, 'status' => $row['status'] ), array( '%s', '%s', '%s' ), array( '%d', '%s' ) );
+		$now = current_time( 'mysql', true );
+		$updated = $wpdb->update( $table, array( 'status'=>$status, 'provider_reference'=>$provider_reference, 'decision_reason'=>$decision_reason, 'decided_at'=>in_array( $status, array( 'approved','rejected' ), true ) ? $now : null, 'updated_at'=>$now ), array( 'id'=>$request_id, 'status'=>$row['status'] ), array( '%s','%s','%s','%s','%s' ), array( '%d','%s' ) );
 		if ( 1 !== $updated ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_finance_update_failed', __( 'تعذر حفظ قرار التمويل.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'finance.' . $status, 'finance_request', $request_id, '', array( 'status' => $row['status'] ), array( 'status' => $status ) ) && DomainEventPublisher::commit( 'finance.' . $status, $request_id, (int) $row['branch_id'], $status ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'finance.' . $status, 'finance_request', $request_id, $decision_reason, array( 'status'=>$row['status'] ), array( 'status'=>$status, 'provider_reference_present'=>'' !== $provider_reference ) ) && DomainEventPublisher::commit( 'finance.' . $status, $request_id, (int) $row['branch_id'], $status ) ) ) {
 			return new \WP_Error( 'adc_finance_update_failed', __( 'تعذر توثيق قرار التمويل.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return array( 'id' => $request_id, 'status' => $status );
+	}
+
+	public static function finance_history( int $sale_id ) {
+		global $wpdb;
+		if ( ! current_user_can( 'adc_view_finance' ) && ! current_user_can( 'adc_manage_finance' ) ) {
+			return new \WP_Error( 'adc_finance_forbidden', __( 'Finance viewing permission is required.', 'auto-dealership-core' ), array( 'status'=>403 ) );
+		}
+		$sale = $wpdb->get_row( $wpdb->prepare( 'SELECT s.id,v.branch_id FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id WHERE s.id=%d', $sale_id ), ARRAY_A );
+		if ( ! $sale || ! \AutoDealership\Inventory\VehicleService::user_can_access_branch( (int) $sale['branch_id'] ) ) {
+			return new \WP_Error( 'adc_finance_not_found', __( 'Finance history is unavailable in your branch scope.', 'auto-dealership-core' ), array( 'status'=>404 ) );
+		}
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT id,sale_id,attempt_number,previous_request_id,provider,requested_amount,down_payment,term_months,monthly_payment,requested_by,status,provider_reference,decision_reason,consent_at,submitted_at,decided_at,created_at,updated_at FROM ' . Schema::table( 'finance_requests' ) . ' WHERE sale_id=%d ORDER BY attempt_number ASC,id ASC LIMIT 100', $sale_id ), ARRAY_A ) ?: array();
+		foreach ( $rows as &$row ) {
+			foreach ( array( 'id','sale_id','attempt_number','previous_request_id','requested_amount','down_payment','term_months','monthly_payment','requested_by' ) as $field ) { $row[$field] = (int) $row[$field]; }
+		}
+		unset( $row );
+		return $rows;
 	}
 }

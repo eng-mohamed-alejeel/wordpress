@@ -8,6 +8,8 @@ use AutoDealership\Inventory\VehicleSpecifications;
 use AutoDealership\Inventory\VehicleIntakeService;
 use AutoDealership\Inventory\VehicleIssueService;
 use AutoDealership\Inventory\VehicleReturnService;
+use AutoDealership\Inventory\VehicleAcquisitionService;
+use AutoDealership\Purchasing\SupplierService;
 use AutoDealership\Leads\LeadService;
 use AutoDealership\Leads\RequestWorkflow;
 use AutoDealership\Leads\CustomerIdentity;
@@ -33,13 +35,20 @@ final class Routes {
 
 	public static function public_endpoints(): array { return self::PUBLIC_ENDPOINTS; }
 
+	/** Registers the compatibility contract and the enveloped v2 contract together. */
+	private static function route( string $route, array $args ): void {
+		foreach ( array( 'auto-dealership/v1', 'auto-dealership/v2' ) as $namespace ) {
+			register_rest_route( $namespace, $route, $args );
+		}
+	}
+
 	public static function register(): void {
-		register_rest_route( 'auto-dealership/v1', '/customers/(?P<id>\d+)/duplicates', array(
+		self::route( '/customers/(?P<id>\d+)/duplicates', array(
 			'methods'=>'GET', 'permission_callback'=>static fn() => current_user_can( 'manage_options' ),
 			'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( CustomerIdentity::candidates( (int) $r['id'] ) ),
 			'args'=>array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/customers/merge', array(
+		self::route( '/customers/merge', array(
 			array( 'methods'=>'GET', 'permission_callback'=>static fn() => current_user_can( 'manage_options' ),
 				'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( CustomerIdentity::preview( (int) $r['source_id'], (int) $r['target_id'] ) ),
 				'args'=>array( 'source_id'=>array( 'type'=>'integer', 'minimum'=>1, 'required'=>true ), 'target_id'=>array( 'type'=>'integer', 'minimum'=>1, 'required'=>true ) ) ),
@@ -47,13 +56,13 @@ final class Routes {
 				'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( CustomerIdentity::merge( (int) $r['source_id'], (int) $r['target_id'], (string) $r['revision'], (string) $r['evidence'], true === $r['verified'] ) ),
 				'args'=>array( 'source_id'=>array( 'type'=>'integer', 'minimum'=>1, 'required'=>true ), 'target_id'=>array( 'type'=>'integer', 'minimum'=>1, 'required'=>true ), 'revision'=>array( 'type'=>'string', 'required'=>true, 'pattern'=>'^[a-f0-9]{64}$' ), 'evidence'=>array( 'type'=>'string', 'required'=>true, 'maxLength'=>120 ), 'verified'=>array( 'type'=>'boolean', 'required'=>true ) ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/account/preferences', array(
+		self::route( '/account/preferences', array(
 			array( 'methods'=>'GET', 'permission_callback'=>'is_user_logged_in', 'callback'=>static fn() => rest_ensure_response( CustomerIdentity::current_preferences() ) ),
 			array( 'methods'=>'POST', 'permission_callback'=>'is_user_logged_in',
 				'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( CustomerIdentity::update_preferences( true === $r['consent_marketing'] ) ),
 				'args'=>array( 'consent_marketing'=>array( 'type'=>'boolean', 'required'=>true ) ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/specifications', array(
+		self::route( '/vehicles/(?P<id>\d+)/specifications', array(
 			'methods' => 'PATCH',
 			'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ),
 			'callback' => static fn( \WP_REST_Request $r ) => rest_ensure_response( VehicleSpecifications::update( (int) $r['id'], (array) $r['specifications'], (string) $r['reason'] ) ),
@@ -63,112 +72,123 @@ final class Routes {
 				'specifications' => array( 'type'=>'object', 'required'=>true ),
 			),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/sales/(?P<id>\d+)/payments', array(
+		self::route( '/vehicles/(?P<id>\d+)/acquisition', array(
+			array( 'methods'=>'GET', 'permission_callback'=>static fn()=>current_user_can( 'adc_view_vehicle_costs' ) || current_user_can( 'adc_manage_vehicle_costs' ), 'callback'=>static fn( \WP_REST_Request $r )=>rest_ensure_response( VehicleAcquisitionService::get( absint( $r['id'] ) ) ), 'args'=>array( 'id'=>array( 'type'=>'integer','minimum'=>1,'required'=>true ) ) ),
+			array( 'methods'=>'PATCH', 'permission_callback'=>static fn()=>current_user_can( 'adc_manage_vehicle_costs' ), 'callback'=>static fn( \WP_REST_Request $r )=>rest_ensure_response( VehicleAcquisitionService::update( absint( $r['id'] ), (array) $r['acquisition'], (string) $r['reason'] ) ), 'args'=>array( 'id'=>array( 'type'=>'integer','minimum'=>1,'required'=>true ), 'acquisition'=>array( 'type'=>'object','required'=>true ), 'reason'=>array( 'type'=>'string','minLength'=>1,'maxLength'=>2000,'required'=>true ) ) ),
+		) );
+		self::route( '/suppliers', array(
+			array( 'methods'=>'GET', 'permission_callback'=>static fn()=>current_user_can( 'adc_view_suppliers' ) || current_user_can( 'adc_manage_suppliers' ), 'callback'=>static fn( \WP_REST_Request $r )=>rest_ensure_response( SupplierService::all( (bool) $r['active_only'] ) ), 'args'=>array( 'active_only'=>array( 'type'=>'boolean','default'=>false ) ) ),
+			array( 'methods'=>'POST', 'permission_callback'=>static fn()=>current_user_can( 'adc_manage_suppliers' ), 'callback'=>static fn( \WP_REST_Request $r )=>rest_ensure_response( SupplierService::create( $r->get_params() ) ) ),
+		) );
+		self::route( '/sales/(?P<id>\d+)/payments', array(
 			'methods' => 'POST',
 			'permission_callback' => static fn() => current_user_can( 'adc_record_payments' ),
 			'callback' => static fn( \WP_REST_Request $request ) => rest_ensure_response( PaymentService::record( (int) $request['id'], (int) $request['amount'], (string) $request['source'], (string) $request['reference'] ) ),
 			'args' => array( 'id' => array( 'type' => 'integer', 'minimum' => 1, 'required' => true ), 'amount' => array( 'type' => 'integer', 'minimum' => 1, 'required' => true ), 'source' => array( 'type' => 'string', 'enum' => array( 'cash_receipt', 'bank_transfer', 'finance_disbursement' ), 'required' => true ), 'reference' => array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 100, 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/payments/(?P<id>\d+)/decision', array(
+		self::route( '/payments/(?P<id>\d+)/decision', array(
 			'methods' => 'POST',
 			'permission_callback' => static fn() => current_user_can( 'adc_verify_payments' ),
 			'callback' => static fn( \WP_REST_Request $request ) => rest_ensure_response( PaymentService::decide( (int) $request['id'], (bool) $request['approve'], (string) $request['reason'] ) ),
 			'args' => array( 'id' => array( 'type' => 'integer', 'minimum' => 1, 'required' => true ), 'approve' => array( 'type' => 'boolean', 'required' => true ), 'reason' => array( 'type' => 'string', 'minLength' => 1, 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/returns/(?P<id>\d+)/refunds', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_record_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::request(absint($r['id']),absint($r['amount']),(string)$r['method'],(string)$r['reference'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'amount'=>array('type'=>'integer','minimum'=>1,'required'=>true),'method'=>array('type'=>'string','enum'=>array('cash_refund','bank_transfer','finance_reversal'),'required'=>true),'reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true)) ) );
-		register_rest_route( 'auto-dealership/v1', '/refunds/(?P<id>\d+)/decision', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_verify_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::decide(absint($r['id']),(bool)$r['approve'],(string)$r['reason'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'approve'=>array('type'=>'boolean','required'=>true),'reason'=>array('type'=>'string','minLength'=>1,'required'=>true)) ) );
-		register_rest_route( 'auto-dealership/v1', '/sales/(?P<id>\d+)/cancellation', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_cancel_sales'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(SaleCancellationService::cancel(absint($r['id']),(string)$r['reason'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'reason'=>array('type'=>'string','minLength'=>1,'maxLength'=>2000,'required'=>true)) ) );
-		register_rest_route( 'auto-dealership/v1', '/cancellations/(?P<id>\d+)/refunds', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_record_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::request_cancellation(absint($r['id']),absint($r['amount']),(string)$r['method'],(string)$r['reference'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'amount'=>array('type'=>'integer','minimum'=>1,'required'=>true),'method'=>array('type'=>'string','enum'=>array('cash_refund','bank_transfer','finance_reversal'),'required'=>true),'reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true)) ) );
-		register_rest_route( 'auto-dealership/v1', '/reservations/(?P<id>\d+)/refunds', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_record_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::request_reservation(absint($r['id']),absint($r['amount']),(string)$r['method'],(string)$r['reference'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'amount'=>array('type'=>'integer','minimum'=>1,'required'=>true),'method'=>array('type'=>'string','enum'=>array('cash_refund','bank_transfer','finance_reversal'),'required'=>true),'reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true)) ) );
-		register_rest_route( 'auto-dealership/v1', '/branches', array(
+		self::route( '/returns/(?P<id>\d+)/refunds', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_record_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::request(absint($r['id']),absint($r['amount']),(string)$r['method'],(string)$r['reference'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'amount'=>array('type'=>'integer','minimum'=>1,'required'=>true),'method'=>array('type'=>'string','enum'=>array('cash_refund','bank_transfer','finance_reversal'),'required'=>true),'reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true)) ) );
+		self::route( '/refunds/(?P<id>\d+)/decision', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_verify_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::decide(absint($r['id']),(bool)$r['approve'],(string)$r['reason'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'approve'=>array('type'=>'boolean','required'=>true),'reason'=>array('type'=>'string','minLength'=>1,'required'=>true)) ) );
+		self::route( '/sales/(?P<id>\d+)/cancellation', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_cancel_sales'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(SaleCancellationService::cancel(absint($r['id']),(string)$r['reason'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'reason'=>array('type'=>'string','minLength'=>1,'maxLength'=>2000,'required'=>true)) ) );
+		self::route( '/cancellations/(?P<id>\d+)/refunds', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_record_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::request_cancellation(absint($r['id']),absint($r['amount']),(string)$r['method'],(string)$r['reference'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'amount'=>array('type'=>'integer','minimum'=>1,'required'=>true),'method'=>array('type'=>'string','enum'=>array('cash_refund','bank_transfer','finance_reversal'),'required'=>true),'reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true)) ) );
+		self::route( '/reservations/(?P<id>\d+)/refunds', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_record_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::request_reservation(absint($r['id']),absint($r['amount']),(string)$r['method'],(string)$r['reference'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'amount'=>array('type'=>'integer','minimum'=>1,'required'=>true),'method'=>array('type'=>'string','enum'=>array('cash_refund','bank_transfer','finance_reversal'),'required'=>true),'reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true)) ) );
+		self::route( '/branches', array(
 			array( 'methods' => 'GET', 'callback' => static fn() => rest_ensure_response( BranchService::public_list() ), 'permission_callback' => static fn() => PublicRequestGuard::permission( 'public_read' ) ),
 			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_branch' ), 'permission_callback' => static fn() => current_user_can( 'manage_options' ), 'args' => array( 'code' => array( 'required' => true, 'type' => 'string' ), 'name' => array( 'required' => true, 'type' => 'string' ), 'city' => array( 'type' => 'string' ), 'address' => array( 'type' => 'string' ) ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/vehicles', array(
+		self::route( '/vehicles', array(
 			array( 'methods' => 'GET', 'callback' => array( self::class, 'catalog' ), 'permission_callback' => static fn() => PublicRequestGuard::permission( 'public_read' ), 'args' => self::catalog_args() ),
 			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_vehicle' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/status', array(
+		self::route( '/vehicles/(?P<id>\d+)/status', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'transition_vehicle' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'status' => array( 'type' => 'string', 'required' => true ), 'reason' => array( 'type' => 'string', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/receipt', array( 'methods' => 'POST', 'callback' => static fn( \WP_REST_Request $r ) => rest_ensure_response( VehicleIntakeService::receive( absint( $r['id'] ), $r->get_params() ) ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ), 'args' => array( 'id' => array( 'type'=>'integer','minimum'=>1,'required'=>true ), 'odometer'=>array('type'=>'integer','minimum'=>0), 'condition'=>array('type'=>'string','enum'=>array('good','damaged','incomplete'),'required'=>true), 'document_reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true), 'notes'=>array('type'=>'string'), 'evidence_media_ids'=>array('type'=>'array','maxItems'=>10,'items'=>array('type'=>'integer','minimum'=>1)) ) ) );
-		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/inspection', array( 'methods' => 'POST', 'callback' => static fn( \WP_REST_Request $r ) => rest_ensure_response( VehicleIntakeService::inspect( absint( $r['id'] ), $r->get_params() ) ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ), 'args' => array( 'id'=>array('type'=>'integer','minimum'=>1,'required'=>true), 'checklist'=>array('type'=>'object','required'=>true), 'notes'=>array('type'=>'string'), 'evidence_media_ids'=>array('type'=>'array','maxItems'=>10,'items'=>array('type'=>'integer','minimum'=>1)) ) ) );
-		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/issues', array( 'methods'=>'POST','callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(VehicleIssueService::open(absint($r['id']),(string)$r['type'],(string)$r['reason'],absint($r['assigned_user_id']),(string)$r['review_at'])),'permission_callback'=>static fn()=>current_user_can('adc_manage_inventory'),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'type'=>array('type'=>'string','enum'=>array('hold','maintenance'),'required'=>true),'reason'=>array('type'=>'string','minLength'=>1,'required'=>true),'assigned_user_id'=>array('type'=>'integer','minimum'=>0),'review_at'=>array('type'=>'string')) ) );
-		register_rest_route( 'auto-dealership/v1', '/vehicle-issues/(?P<id>\d+)/resolve', array( 'methods'=>'POST','callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(VehicleIssueService::resolve(absint($r['id']),(string)$r['resolution'])),'permission_callback'=>static fn()=>current_user_can('adc_manage_inventory'),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'resolution'=>array('type'=>'string','minLength'=>1,'required'=>true)) ) );
-		register_rest_route( 'auto-dealership/v1', '/deliveries/(?P<id>\d+)/return', array( 'methods'=>'POST','callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(VehicleReturnService::receive(absint($r['id']),$r->get_params())),'permission_callback'=>static fn()=>current_user_can('adc_process_returns'),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'location_id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'condition'=>array('type'=>'string','enum'=>array('good','damaged','incomplete'),'required'=>true),'odometer'=>array('type'=>'integer','minimum'=>0,'required'=>true),'document_reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true),'reason'=>array('type'=>'string','minLength'=>1,'maxLength'=>2000,'required'=>true)) ) );
-		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/location', array(
+		self::route( '/vehicles/(?P<id>\d+)/receipt', array( 'methods' => 'POST', 'callback' => static fn( \WP_REST_Request $r ) => rest_ensure_response( VehicleIntakeService::receive( absint( $r['id'] ), $r->get_params() ) ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ), 'args' => array( 'id' => array( 'type'=>'integer','minimum'=>1,'required'=>true ), 'odometer'=>array('type'=>'integer','minimum'=>0), 'condition'=>array('type'=>'string','enum'=>array('good','damaged','incomplete'),'required'=>true), 'document_reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true), 'notes'=>array('type'=>'string'), 'evidence_media_ids'=>array('type'=>'array','maxItems'=>10,'items'=>array('type'=>'integer','minimum'=>1)) ) ) );
+		self::route( '/vehicles/(?P<id>\d+)/inspection', array( 'methods' => 'POST', 'callback' => static fn( \WP_REST_Request $r ) => rest_ensure_response( VehicleIntakeService::inspect( absint( $r['id'] ), $r->get_params() ) ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ), 'args' => array( 'id'=>array('type'=>'integer','minimum'=>1,'required'=>true), 'checklist'=>array('type'=>'object','required'=>true), 'notes'=>array('type'=>'string'), 'evidence_media_ids'=>array('type'=>'array','maxItems'=>10,'items'=>array('type'=>'integer','minimum'=>1)) ) ) );
+		self::route( '/vehicles/(?P<id>\d+)/issues', array( 'methods'=>'POST','callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(VehicleIssueService::open(absint($r['id']),(string)$r['type'],(string)$r['reason'],absint($r['assigned_user_id']),(string)$r['review_at'])),'permission_callback'=>static fn()=>current_user_can('adc_manage_inventory'),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'type'=>array('type'=>'string','enum'=>array('hold','maintenance'),'required'=>true),'reason'=>array('type'=>'string','minLength'=>1,'required'=>true),'assigned_user_id'=>array('type'=>'integer','minimum'=>0),'review_at'=>array('type'=>'string')) ) );
+		self::route( '/vehicle-issues/(?P<id>\d+)/resolve', array( 'methods'=>'POST','callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(VehicleIssueService::resolve(absint($r['id']),(string)$r['resolution'])),'permission_callback'=>static fn()=>current_user_can('adc_manage_inventory'),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'resolution'=>array('type'=>'string','minLength'=>1,'required'=>true)) ) );
+		self::route( '/deliveries/(?P<id>\d+)/return', array( 'methods'=>'POST','callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(VehicleReturnService::receive(absint($r['id']),$r->get_params())),'permission_callback'=>static fn()=>current_user_can('adc_process_returns'),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'location_id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'condition'=>array('type'=>'string','enum'=>array('good','damaged','incomplete'),'required'=>true),'odometer'=>array('type'=>'integer','minimum'=>0,'required'=>true),'document_reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true),'reason'=>array('type'=>'string','minLength'=>1,'maxLength'=>2000,'required'=>true)) ) );
+		self::route( '/vehicles/(?P<id>\d+)/location', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'move_vehicle_location' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ), 'args' => array( 'id' => array( 'type' => 'integer', 'minimum' => 1, 'required' => true ), 'location_id' => array( 'type' => 'integer', 'minimum' => 1, 'required' => true ), 'reason' => array( 'type' => 'string', 'minLength' => 1, 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/vin', array(
+		self::route( '/vehicles/(?P<id>\d+)/vin', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'change_vehicle_vin' ), 'permission_callback' => static fn() => current_user_can( 'adc_change_vehicle_vin' ), 'args' => array( 'id' => array( 'type' => 'integer', 'minimum' => 1, 'required' => true ), 'vin' => array( 'type' => 'string', 'minLength' => 17, 'maxLength' => 17, 'required' => true ), 'reason' => array( 'type' => 'string', 'minLength' => 1, 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/transfer', array(
+		self::route( '/vehicles/(?P<id>\d+)/transfer', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'transfer_vehicle' ), 'permission_callback' => static fn() => current_user_can( 'adc_transfer_inventory' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'target_branch_id' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ), 'reason' => array( 'type' => 'string', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/transfers/(?P<id>\d+)/decision', array( 'methods' => 'POST', 'callback' => array( self::class, 'decide_transfer' ), 'permission_callback' => static fn() => current_user_can( 'adc_transfer_inventory' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'approve' => array( 'type' => 'boolean', 'required' => true ) ) ) );
-		register_rest_route( 'auto-dealership/v1', '/transfers/(?P<id>\d+)/dispatch', array( 'methods' => 'POST', 'callback' => array( self::class, 'dispatch_transfer' ), 'permission_callback' => static fn() => current_user_can( 'adc_transfer_inventory' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ) ) ) );
-		register_rest_route( 'auto-dealership/v1', '/transfers/(?P<id>\d+)/receipt', array( 'methods' => 'POST', 'callback' => array( self::class, 'receive_transfer' ), 'permission_callback' => static fn() => current_user_can( 'adc_transfer_inventory' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ) ) ) );
-		register_rest_route( 'auto-dealership/v1', '/reservations', array(
+		self::route( '/transfers/(?P<id>\d+)/decision', array( 'methods' => 'POST', 'callback' => array( self::class, 'decide_transfer' ), 'permission_callback' => static fn() => current_user_can( 'adc_transfer_inventory' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'approve' => array( 'type' => 'boolean', 'required' => true ) ) ) );
+		self::route( '/transfers/(?P<id>\d+)/dispatch', array( 'methods' => 'POST', 'callback' => array( self::class, 'dispatch_transfer' ), 'permission_callback' => static fn() => current_user_can( 'adc_transfer_inventory' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ) ) ) );
+		self::route( '/transfers/(?P<id>\d+)/receipt', array( 'methods' => 'POST', 'callback' => array( self::class, 'receive_transfer' ), 'permission_callback' => static fn() => current_user_can( 'adc_transfer_inventory' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ) ) ) );
+		self::route( '/reservations', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'create_reservation' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_reservations' ) || current_user_can( 'adc_manage_reservations' ), 'args' => array( 'vehicle_id' => array( 'type' => 'integer', 'required' => true ), 'customer_id' => array( 'type' => 'integer', 'required' => true ), 'idempotency_key' => array( 'type' => 'string', 'required' => true ), 'deposit_amount' => array( 'type' => 'integer', 'minimum' => 0 ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/reservations/(?P<id>\d+)/cancel', array(
+		self::route( '/reservations/(?P<id>\d+)/cancel', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'cancel_reservation' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_reservations' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'reason' => array( 'type' => 'string', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/reservations/(?P<id>\d+)/deposit', array(
+		self::route( '/reservations/(?P<id>\d+)/deposit', array(
 			'methods'=>'POST', 'callback'=>static fn( \WP_REST_Request $r )=>rest_ensure_response( ReservationService::record_deposit( absint( $r['id'] ), absint( $r['amount'] ), (string) $r['source'], (string) $r['reference'] ) ),
 			'permission_callback'=>static fn()=>current_user_can( 'adc_record_payments' ),
 			'args'=>array( 'id'=>array( 'type'=>'integer','minimum'=>1,'required'=>true ), 'amount'=>array( 'type'=>'integer','minimum'=>1,'required'=>true ), 'source'=>array( 'type'=>'string','enum'=>array( 'bank_transfer','cash','card','finance' ),'required'=>true ), 'reference'=>array( 'type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/reservation-deposits/(?P<id>\d+)/decision', array(
+		self::route( '/reservation-deposits/(?P<id>\d+)/decision', array(
 			'methods'=>'POST', 'callback'=>static fn( \WP_REST_Request $r )=>rest_ensure_response( ReservationService::decide_deposit( absint( $r['id'] ), (bool) $r['approve'], (string) $r->get_param( 'reason' ) ) ),
 			'permission_callback'=>static fn()=>current_user_can( 'adc_verify_payments' ),
 			'args'=>array( 'id'=>array( 'type'=>'integer','minimum'=>1,'required'=>true ), 'approve'=>array( 'type'=>'boolean','required'=>true ), 'reason'=>array( 'type'=>'string','maxLength'=>2000 ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/reservation-deposits', array(
+		self::route( '/reservation-deposits', array(
 			'methods'=>'GET', 'callback'=>static fn()=>rest_ensure_response( ReservationService::deposit_queue() ),
 			'permission_callback'=>static fn()=>current_user_can( 'adc_view_finance' ) || current_user_can( 'adc_record_payments' ) || current_user_can( 'adc_verify_payments' ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/quotations', array(
+		self::route( '/quotations', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'create_quote' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_reservations' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'customer_id' => array( 'type' => 'integer', 'required' => true ), 'vehicle_id' => array( 'type' => 'integer', 'required' => true ), 'valid_until' => array( 'type' => 'string', 'required' => true, 'format' => 'date' ), 'promotion_code'=>array( 'type'=>'string','maxLength'=>64 ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/quotations/(?P<id>\d+)/discounts', array(
+		self::route( '/quotations/(?P<id>\d+)/discounts', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'request_discount' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_reservations' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'amount' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ), 'reason' => array( 'type' => 'string', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/quotations/(?P<id>\d+)/versions', array(
+		self::route( '/quotations/(?P<id>\d+)/versions', array(
 			'methods' => 'GET', 'callback' => array( self::class, 'quote_versions' ), 'permission_callback' => array( QuoteHistory::class, 'can_read' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ), 'page' => array( 'type' => 'integer', 'minimum' => 1, 'default' => 1 ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/discounts/(?P<id>\d+)/decision', array(
+		self::route( '/discounts/(?P<id>\d+)/decision', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'decide_discount' ), 'permission_callback' => static fn() => current_user_can( 'adc_review_discounts' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'approve' => array( 'type' => 'boolean', 'required' => true ), 'reason' => array( 'type' => 'string' ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/sales', array(
+		self::route( '/sales', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'create_sale' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_reservations' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'quotation_id' => array( 'type' => 'integer', 'required' => true ), 'reservation_id' => array( 'type' => 'integer', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/sales/(?P<id>\d+)/approval', array(
+		self::route( '/sales/(?P<id>\d+)/approval', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'approve_sale' ), 'permission_callback' => static fn() => current_user_can( 'adc_approve_sales' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'invoice_reference' => array( 'type' => 'string', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/finance-requests', array(
-			'methods' => 'POST', 'callback' => array( self::class, 'create_finance_request' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_finance' ), 'args' => array( 'sale_id' => array( 'type' => 'integer', 'required' => true ), 'provider' => array( 'type' => 'string', 'required' => true ), 'amount' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ), 'consent' => array( 'type' => 'boolean', 'required' => true ) ),
+		self::route( '/finance-requests', array(
+			'methods' => 'POST', 'callback' => array( self::class, 'create_finance_request' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_finance' ), 'args' => array( 'sale_id'=>array( 'type'=>'integer','required'=>true,'minimum'=>1 ), 'provider'=>array( 'type'=>'string','required'=>true,'minLength'=>1,'maxLength'=>100 ), 'amount'=>array( 'type'=>'integer','required'=>true,'minimum'=>1 ), 'down_payment'=>array( 'type'=>'integer','minimum'=>0,'default'=>0 ), 'term_months'=>array( 'type'=>'integer','minimum'=>0,'maximum'=>120,'default'=>0 ), 'monthly_payment'=>array( 'type'=>'integer','minimum'=>0,'default'=>0 ), 'consent'=>array( 'type'=>'boolean','required'=>true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/finance-requests/(?P<id>\d+)/status', array(
-			'methods' => 'POST', 'callback' => array( self::class, 'update_finance_status' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_finance' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'status' => array( 'type' => 'string', 'required' => true ), 'provider_reference' => array( 'type' => 'string' ) ),
+		self::route( '/sales/(?P<id>\d+)/finance-requests', array(
+			'methods'=>'GET', 'callback'=>static fn( \WP_REST_Request $r )=>rest_ensure_response( SalesService::finance_history( absint( $r['id'] ) ) ), 'permission_callback'=>static fn()=>current_user_can( 'adc_view_finance' ) || current_user_can( 'adc_manage_finance' ), 'args'=>array( 'id'=>array( 'type'=>'integer','minimum'=>1,'required'=>true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/sales/(?P<id>\d+)/delivery', array(
+		self::route( '/finance-requests/(?P<id>\d+)/status', array(
+			'methods' => 'POST', 'callback' => array( self::class, 'update_finance_status' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_finance' ), 'args' => array( 'id'=>array( 'type'=>'integer','required'=>true,'minimum'=>1 ), 'status'=>array( 'type'=>'string','required'=>true,'enum'=>array( 'under_review','approved','rejected' ) ), 'provider_reference'=>array( 'type'=>'string','maxLength'=>100 ), 'decision_reason'=>array( 'type'=>'string','maxLength'=>2000 ) ),
+		) );
+		self::route( '/sales/(?P<id>\d+)/delivery', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'prepare_delivery' ), 'permission_callback' => static fn() => current_user_can( 'adc_approve_delivery' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/deliveries/(?P<id>\d+)/vin', array(
+		self::route( '/deliveries/(?P<id>\d+)/vin', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'confirm_delivery_vin' ), 'permission_callback' => static fn() => current_user_can( 'adc_confirm_vehicle_vin' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'vin' => array( 'type' => 'string', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/deliveries/(?P<id>\d+)/documents', array(
+		self::route( '/deliveries/(?P<id>\d+)/documents', array(
 			array( 'methods'=>'GET', 'callback'=>static fn( \WP_REST_Request $r )=>rest_ensure_response( DeliveryService::checklist( absint( $r['id'] ) ) ), 'permission_callback'=>static fn()=>current_user_can( 'adc_approve_delivery' ) || current_user_can( 'adc_confirm_vehicle_vin' ), 'args'=>array( 'id'=>array( 'type'=>'integer','minimum'=>1,'required'=>true ) ) ),
 			array( 'methods'=>'POST', 'callback'=>static fn( \WP_REST_Request $r )=>rest_ensure_response( DeliveryService::record_document( absint( $r['id'] ), (string) $r['document_key'], (string) $r['reference'] ) ), 'permission_callback'=>static fn()=>current_user_can( 'adc_approve_delivery' ) || current_user_can( 'adc_confirm_vehicle_vin' ), 'args'=>array( 'id'=>array( 'type'=>'integer','minimum'=>1,'required'=>true ), 'document_key'=>array( 'type'=>'string','enum'=>array( 'invoice','customer_identity','vehicle_registration','insurance','handover_form','finance_clearance' ),'required'=>true ), 'reference'=>array( 'type'=>'string','minLength'=>1,'maxLength'=>190,'required'=>true ) ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/deliveries/(?P<id>\d+)/approval', array(
+		self::route( '/deliveries/(?P<id>\d+)/approval', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'approve_delivery' ), 'permission_callback' => static fn() => current_user_can( 'adc_approve_delivery' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/deliveries/(?P<id>\d+)/release', array(
+		self::route( '/deliveries/(?P<id>\d+)/release', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'release_delivery' ), 'permission_callback' => static fn() => current_user_can( 'adc_approve_delivery' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/leads', array(
+		self::route( '/leads', array(
 			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_public_lead' ), 'permission_callback' => array( self::class, 'public_intake_permission' ), 'args' => array(
 				'name'=>array( 'type'=>'string', 'required'=>true ), 'mobile'=>array( 'type'=>'string', 'required'=>true ),
 				'email'=>array( 'type'=>'string' ), 'city'=>array( 'type'=>'string' ), 'branch_id'=>array( 'type'=>'integer', 'minimum'=>0 ),
@@ -179,10 +199,10 @@ final class Routes {
 			) ),
 			array( 'methods' => 'GET', 'callback' => array( self::class, 'list_leads' ), 'permission_callback' => static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'page' => array( 'type' => 'integer', 'minimum' => 1 ), 'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 100 ) ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/stage', array(
+		self::route( '/leads/(?P<id>\d+)/stage', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'update_lead_stage' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'stage' => array( 'type' => 'string', 'required' => true ), 'reason' => array( 'type' => 'string' ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/request', array(
+		self::route( '/leads/(?P<id>\d+)/request', array(
 			array( 'methods'=>'GET', 'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( RequestWorkflow::read( (int) $r['id'] ) ),
 				'permission_callback'=>static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ),
 				'args'=>array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ) ) ),
@@ -190,7 +210,7 @@ final class Routes {
 				'permission_callback'=>static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ),
 				'args'=>array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ), 'revision'=>array( 'type'=>'string', 'required'=>true, 'pattern'=>'^[a-f0-9]{64}$' ), 'status'=>array( 'type'=>'string' ), 'customer_reply'=>array( 'type'=>'string', 'maxLength'=>4000 ), 'requested_date'=>array( 'type'=>'string' ), 'requested_time'=>array( 'type'=>'string' ) ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/bookings/(?P<id>\d+)/cancel', array(
+		self::route( '/bookings/(?P<id>\d+)/cancel', array(
 			'methods'=>'POST', 'permission_callback'=>'is_user_logged_in', 'args'=>array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ) ),
 			'callback'=>static function ( \WP_REST_Request $r ) {
 				$lead_id = RequestWorkflow::linked_lead( 'booking', (int) $r['id'] );
@@ -199,15 +219,15 @@ final class Routes {
 				return rest_ensure_response( RequestWorkflow::update( $lead_id, array(), true ) );
 			},
 		) );
-		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/assignment', array(
+		self::route( '/leads/(?P<id>\d+)/assignment', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'assign_lead' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'staff_id' => array( 'type' => 'integer', 'required' => true ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/activities', array(
+		self::route( '/leads/(?P<id>\d+)/activities', array(
 			'methods' => 'GET', 'callback' => static fn( \WP_REST_Request $r ) => rest_ensure_response( LeadService::activity_history( (int) $r['id'], (int) ( $r['page'] ?? 1 ), (int) ( $r['per_page'] ?? 50 ) ) ),
 			'permission_callback' => static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ),
 			'args' => array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ), 'page'=>array( 'type'=>'integer', 'minimum'=>1 ), 'per_page'=>array( 'type'=>'integer', 'minimum'=>1, 'maximum'=>100 ) ),
 		) );
-		register_rest_route( 'auto-dealership/v1', '/leads/(?P<id>\d+)/activities', array(
+		self::route( '/leads/(?P<id>\d+)/activities', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'add_activity' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'type' => array( 'type' => 'string', 'required' => true ), 'notes' => array( 'type' => 'string', 'required' => true ), 'next_action_at' => array( 'type' => 'string' ) ),
 		) );
 	}
@@ -326,11 +346,11 @@ final class Routes {
 	}
 
 	public static function create_finance_request( \WP_REST_Request $request ) {
-		return rest_ensure_response( SalesService::create_finance_request( absint( $request['sale_id'] ), (string) $request['provider'], absint( $request['amount'] ), (bool) $request['consent'] ) );
+		return rest_ensure_response( SalesService::create_finance_request( absint( $request['sale_id'] ), (string) $request['provider'], absint( $request['amount'] ), (bool) $request['consent'], array( 'down_payment'=>absint( $request['down_payment'] ), 'term_months'=>absint( $request['term_months'] ), 'monthly_payment'=>absint( $request['monthly_payment'] ) ) ) );
 	}
 
 	public static function update_finance_status( \WP_REST_Request $request ) {
-		return rest_ensure_response( SalesService::update_finance_status( absint( $request['id'] ), (string) $request['status'], (string) $request->get_param( 'provider_reference' ) ) );
+		return rest_ensure_response( SalesService::update_finance_status( absint( $request['id'] ), (string) $request['status'], (string) $request->get_param( 'provider_reference' ), (string) $request->get_param( 'decision_reason' ) ) );
 	}
 
 	public static function prepare_delivery( \WP_REST_Request $request ) {

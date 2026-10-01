@@ -14,6 +14,8 @@ This plan closes the gaps recorded in `PRODUCTION-READINESS.md` and expands `ROA
 
 Treat the platform as **not production ready** until the final release gate passes. Do not enable a module for operational use merely because its tables or screen exist.
 
+**Implementation note (1.28.0):** the additive supplier directory, restricted vehicle acquisition fields, finance-attempt lineage, expanded role matrix, account-security audit hooks, request IDs, compatible v1/enveloped v2 contracts and generated OpenAPI 3.1 discovery are implemented. Purchase-order workflow, automatic total-cost policy, mandatory provider terms, retention decisions and 1.28 acceptance verification remain open. See `BUSINESS-MODEL-1.28.md`.
+
 ## Delivery rules
 
 1. Keep existing theme behavior and records working during migration. Do not drop or rename legacy tables, post types, metadata, or routes before reconciliation and an approved rollback window.
@@ -220,4 +222,4 @@ Deliver in deployable slices: (A) Phase 0–2 foundation/security; (B) Phase 3 i
 
 ## Items requiring business decisions
 
-Resolve in Phase 0 before dependent implementation: branch/user assignment model; VAT/tax rates and effective dates; price/discount limits and approver hierarchy; deposit and refund policy; definition and source of payment verification; finance-provider status semantics; quote validity and numbering; customer consent wording; retention and erasure obligations; required Arabic/English translation workflow; integrations and data ownership with any ERP/accounting system.
+Resolve in Phase 0 before dependent implementation: branch/user assignment model; VAT/tax rates and effective dates; price/discount limits and approver hierarchy; deposit and refund policy; definition and source of payment verification; finance-provider status semantics; quote validity and numbering; customer consent wording; retention and erasure obligations; supplier/purchase-order states and approvers; landed-cost formula and cost-visibility policy; required Arabic/English translation workflow; integrations and data ownership with any ERP/accounting system.

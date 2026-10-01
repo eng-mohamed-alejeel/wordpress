@@ -1,5 +1,7 @@
 # Implementation Roadmap
 
+1.28.0 implements the first business-model completion slice: suppliers, restricted vehicle acquisition fields, ordered finance-provider attempts, the expanded job-role matrix, security account events, correlation IDs, an enveloped API v2 and generated OpenAPI 3.1 discovery. It intentionally does not create business records. Purchase-order approvals, automatic landed-cost rules, mandatory finance terms and retention rules remain blocked on business decisions; acceptance verification for this increment is still pending.
+
 1.27.0 completes the current application-level public-boundary hardening slice: an exact anonymous route inventory, atomic HMAC-only request buckets, trusted-proxy validation, bounded cleanup and aggregate operator visibility. Local acceptance passes 654 isolated database/HTTP checks. Actual proxy CIDRs, edge/WAF controls, production-like abuse/load testing, external monitoring and the broader manual security review remain deployment work.
 
 Scope confirmed by the user on 2026-09-27: start with an intentionally empty business database. Historical recovery/import is not a launch dependency. Next implementation focus is CRM/intake consolidation and removal of duplicate theme writes, followed by the remaining workflows and release gates. Reference data must use actual business inputs; migration tools remain available for later imports.

@@ -1,6 +1,38 @@
 # API Architecture
 
-Version 1.27.0 implements the following routes under `/wp-json/auto-dealership/v1`. The exact anonymous surface and application request policies passed the local acceptance recorded in `VERIFICATION-1.27.0.md`.
+Version 1.28.0 exposes the same route catalogue under `/wp-json/auto-dealership/v1` and `/wp-json/auto-dealership/v2`. Version 1 remains the compatibility contract. Version 2 returns the envelope documented below. The exact anonymous surface and application request policies were last accepted for v1 in `VERIFICATION-1.27.0.md`; 1.28 verification is pending.
+
+## Response contract and discovery (1.28.0)
+
+Every v1 and v2 response includes `X-Request-ID`. A valid caller-supplied UUID is preserved; otherwise the server generates one. Audit events written during that REST request reuse the same UUID as their correlation ID.
+
+Successful v2 responses use:
+
+```json
+{"success":true,"data":{},"meta":{"request_id":"..."}}
+```
+
+Failed v2 responses use:
+
+```json
+{"success":false,"error":{"code":"adc_error_code","message":"...","details":{}},"meta":{"request_id":"..."}}
+```
+
+Authenticated staff with `adc_view_workspace` can retrieve the generated OpenAPI 3.1 description from `GET /wp-json/auto-dealership/schema/v2`. Cookie-authenticated requests require `X-WP-Nonce`.
+
+## Suppliers and vehicle acquisition (1.28.0)
+
+- `GET /suppliers` requires supplier read access. `POST /suppliers` requires `adc_manage_suppliers`. Supplier deactivation is available through the protected administrator workspace and does not delete history.
+- `GET /vehicles/{id}/acquisition` requires `adc_view_vehicle_costs`; `PATCH` requires `adc_manage_vehicle_costs`, active-branch scope, an editable inventory state and a change reason.
+- Acquisition values use integer SAR halalas. `total_cost` is explicit because no business-approved landed-cost formula exists yet. Acquisition documents accept existing WordPress image/PDF attachments only, with a maximum of 20 files and 20 MiB per file.
+- Public catalog routes include descriptive origin, cylinder, video and image-gallery fields. They never expose supplier identity, purchase/additional/total cost, wholesale price, customs reference, acquisition documents or internal notes.
+
+## Finance attempt history (1.28.0)
+
+- `POST /finance-requests` accepts optional `down_payment`, `term_months` and `monthly_payment` alongside the existing sale, provider, amount and consent fields.
+- Each request receives an ordered `attempt_number` and `previous_request_id`. Another provider cannot be attempted while the latest request is submitted, under review or approved.
+- `GET /sales/{id}/finance-requests` returns at most 100 ordered attempts to finance-authorized staff within branch scope.
+- `POST /finance-requests/{id}/status` accepts `under_review`, `approved` or `rejected`, plus an optional decision reason. Approval still requires a provider reference and never verifies payment by itself.
 
 ## Public boundary protection (1.27.0)
 

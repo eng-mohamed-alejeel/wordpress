@@ -1,5 +1,7 @@
 # Verification Plan
 
+Plugin 1.28.0 / schema 1.17.0 implementation is present, but migration, RBAC, supplier/acquisition, finance-attempt, v2 envelope and OpenAPI acceptance has not yet been executed. The latest complete local evidence remains 1.27.0 in `VERIFICATION-1.27.0.md`. Verification must continue to use an isolated disposable database and must not seed or connect to the intentionally empty source database.
+
 ## Current evidence and independent server mode
 
 On 2026-10-01, version 1.27.0 passed **654 isolated database/HTTP checks** on an independent disposable MariaDB server. Its 13 focused assertions cover additive rate-table migration, proxy trust/fallback, HMAC-only storage, policy isolation, fail-closed storage, cleanup, exact anonymous-route inventory, minimized operations output, scheduling and a 12-process atomic race. Syntax passes across 105 plugin PHP, 41 theme PHP and 8 JavaScript/CommonJS files; 48 authorization, 12 money and 16 pricing-policy checks also pass. The disposable database and server directory were removed and the intentionally empty source database was not contacted. See `VERIFICATION-1.27.0.md`.

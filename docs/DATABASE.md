@@ -1,5 +1,9 @@
 # Database Design
 
+## Schema 1.17.0 increment (plugin 1.28.0)
+
+Adds `adc_suppliers`, optional vehicle supplier links, origin/cylinder/video/gallery fields, restricted acquisition costs/customs/documents/notes and ordered finance-provider attempt fields. Monetary values remain integer SAR halalas. No supplier, vehicle, finance or sample row is created and no total-cost value is inferred.
+
 ## Schema 1.13.0 increment (plugin 1.19.0)
 
 Quote and quote-version rows add fee, promotion, subtotal and seller-identity snapshot columns. Discount requests add a frozen approval tier and signed before/after margin values. Reservations add the serialized deposit policy snapshot, required amount and refund state; `adc_reservation_deposits` holds independently reviewed evidence. Payment refunds can reference a cancelled reservation directly. `adc_delivery_documents` stores one audited reference per delivery/document type. These changes are additive; historical quote subtotals are derived only from already stored components, while historical seller identity is left empty rather than invented.
@@ -32,6 +36,7 @@ Adds public vehicle fields `exterior_color`, `interior_color`, `engine_size`, `d
 erDiagram
   BRANCHES ||--o{ VEHICLES : holds
   BRANDS ||--o{ VEHICLES : identifies
+  SUPPLIERS ||--o{ VEHICLES : supplies
   VEHICLES ||--o{ VEHICLE_MOVEMENTS : moves
   VEHICLES ||--o{ VEHICLE_ISSUES : requires_action
   VEHICLES ||--o{ VEHICLE_RETURNS : returned_as
@@ -64,6 +69,7 @@ All IDs are unsigned bigint primary keys; all tables use the WordPress prefix. A
 | `adc_branches` | Branch code unique; name, city, address, timezone, active flag. |
 | `adc_brands` | Implemented in schema 1.4.0. Unique brand key, Arabic/English display names and active flag. |
 | `adc_locations` | Implemented in schema 1.4.0. Unique code, parent branch, showroom/warehouse/yard/service type and active flag. |
+| `adc_suppliers` | Schema 1.17.0 global supplier directory with unique code, active status, restricted contacts and audited changes. No purchase-order workflow is implied. |
 | `adc_vehicles` | Vehicle identity, VIN unique, stock number unique, brand/branch IDs, specifications, condition, cost and public pricing, VAT attributes, status. Private cost fields have separately authorized reads. |
 | `adc_vehicle_movements` | Immutable from/to branch/location/status, reason, actor and timestamp; index vehicle/time. |
 | `adc_vehicle_receipts` | One physical receiving record per vehicle with location, staff, odometer, condition, document reference, notes and validated image evidence IDs. |
@@ -80,7 +86,7 @@ All IDs are unsigned bigint primary keys; all tables use the WordPress prefix. A
 | `adc_quotation_versions` | Implemented in 1.2.0 and extended in 1.3.0. Append-only financial snapshots plus originating branch, customer display name and minimal vehicle identity, unique by quotation/version. No phone, email or VIN snapshot. Legacy upgrade captures only the current known revision and leaves an unknown historical VAT rate as `NULL`. |
 | `adc_discount_requests` | Requested amount, frozen approval tier, signed margin impact, requester, approver, decision and reason; requester cannot approve own request. Legacy margins remain nullable when purchase cost was unavailable. |
 | `adc_sales` | Reservation/quotation references, approved totals, invoice reference, owner and workflow state. |
-| `adc_finance_requests` | Sale/customer/provider references, requested amount, consent and status; no bank credentials or card data. |
+| `adc_finance_requests` | Ordered sale/provider attempt chain, requested amount, optional down payment/term/monthly payment, consent, decision and timestamps; no bank credentials or card data. |
 | `adc_payment_confirmations` | Implemented in 1.1.0. Sale, integer SAR amount, source/reference, pending/verified/rejected status, recorder/reviewer, decision reason and timestamps. Unique source/reference and indexed sale/status. No card/account credentials. |
 | `adc_payment_refunds` | Return, sale cancellation or cancelled reservation, integer SAR amount, external method/reference, pending/verified/rejected status, requester/reviewer, decision reason and timestamps. Original receipts remain unchanged. |
 | `adc_sale_cancellations` | One cancellation per undelivered sale with prior state, linked reservation/delivery/vehicle/branch, verified receipt snapshot, refund obligation, reason and manager. |
@@ -95,7 +101,7 @@ Operational tables intentionally do not mirror post meta one-for-one. Foreign-ke
 
 ## Current state
 
-Schema version is independent of the plugin version and currently `Schema::VERSION = 1.16.0`. Installation uses a per-database/prefix advisory lock, applies canonical DDL through dbDelta, then checks every declared table, column type/nullability/auto-increment, explicit default, full index column order/uniqueness and InnoDB engine. Only a verified schema and successful quote-history backfill receive the version marker. Failures store safe issue codes in `adc_schema_issues`, remove the success marker, show an administrator notice and delay automatic retry for five minutes. The installer does not silently convert existing MyISAM tables or remove/merge duplicate rows; those need reviewed repair. dbDelta may not repair numeric-default drift, which remains a reported failure until explicitly corrected.
+Schema version is independent of the plugin version and currently `Schema::VERSION = 1.17.0`. Installation uses a per-database/prefix advisory lock, applies canonical DDL through dbDelta, then checks every declared table, column type/nullability/auto-increment, explicit default, full index column order/uniqueness and InnoDB engine. Only a verified schema and successful quote-history backfill receive the version marker. Failures store safe issue codes in `adc_schema_issues`, remove the success marker, show an administrator notice and delay automatic retry for five minutes. The installer does not silently convert existing MyISAM tables or remove/merge duplicate rows; those need reviewed repair. dbDelta may not repair numeric-default drift, which remains a reported failure until explicitly corrected.
 
 Version 1.3.0 adds originating branch to current quotes and minimal documentary identity to revision rows. Older rows are enriched from the currently known related records and remain marked by their existing legacy event; the migration cannot reconstruct identity or branch at the historic issue time. Fresh installation, repeated installation, schema detection/repair, immutable quote revisions and additive upgrade behavior were exercised on an isolated MariaDB database. A production-copy migration/restore rehearsal remains outstanding.
 

@@ -11,7 +11,7 @@ final class SchemaGuard {
 	}
 
 	public static function rest( $result, $server, \WP_REST_Request $request ) {
-		if ( null === $result && preg_match( '#\A/auto-dealership/v1(?:/|$)#', $request->get_route() ) && ! Schema::is_ready() ) {
+		if ( null === $result && preg_match( '#\A/auto-dealership/v[12](?:/|$)#', $request->get_route() ) && ! Schema::is_ready() ) {
 			return new \WP_Error( 'adc_schema_unavailable', __( 'المنصة غير متاحة مؤقتًا أثناء التحقق من قاعدة البيانات.', 'auto-dealership-core' ), array( 'status' => 503 ) );
 		}
 		return $result;

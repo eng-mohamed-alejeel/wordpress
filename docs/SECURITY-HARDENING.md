@@ -2,13 +2,13 @@
 
 ## Anonymous surface
 
-The core plugin has three deliberately anonymous method/route pairs:
+The core plugin has three deliberately anonymous relative method/route pairs, exposed through both compatibility v1 and enveloped v2:
 
 | Method and route | Policy | Limit |
 |---|---|---|
-| `GET /auto-dealership/v1/branches` | `public_read` | 120 requests per 60 seconds |
-| `GET /auto-dealership/v1/vehicles` | `public_read` | 120 requests per 60 seconds |
-| `POST /auto-dealership/v1/leads` | `intake` | 8 validated attempts per 3600 seconds |
+| `GET /auto-dealership/v1|v2/branches` | `public_read` | 120 requests per 60 seconds |
+| `GET /auto-dealership/v1|v2/vehicles` | `public_read` | 120 requests per 60 seconds |
+| `POST /auto-dealership/v1|v2/leads` | `intake` | 8 validated attempts per 3600 seconds |
 
 `Routes::PUBLIC_ENDPOINTS` is the canonical inventory. Isolated acceptance enumerates every registered core REST handler as an anonymous user and fails if the runtime surface differs. All other routes retain their capability, authentication, ownership, branch and state checks.
 
@@ -49,4 +49,3 @@ The `adc_public_rate_limited` hook receives only `policy` and `retry_after`. Ext
 - Run production-like load and abuse testing with real cache/proxy topology.
 - Complete dependency, upload, security-header and human penetration review.
 - Connect approved external monitoring and define alert thresholds/ownership.
-

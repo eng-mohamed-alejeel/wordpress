@@ -301,10 +301,14 @@ final class PublicCatalog {
 	}
 
 	private static function cast_item( array $item ): array {
-		foreach ( array( 'id', 'model_year', 'branch_id', 'mileage', 'retail_price', 'doors', 'seats', 'horsepower', 'public_post_id' ) as $key ) {
+		foreach ( array( 'id', 'model_year', 'branch_id', 'mileage', 'retail_price', 'doors', 'seats', 'horsepower', 'cylinders', 'public_post_id' ) as $key ) {
 			if ( array_key_exists( $key, $item ) && null !== $item[ $key ] ) {
 				$item[ $key ] = (int) $item[ $key ];
 			}
+		}
+		if ( array_key_exists( 'gallery_media_ids', $item ) ) {
+			$ids = json_decode( (string) $item['gallery_media_ids'], true );
+			$item['gallery_media_ids'] = is_array( $ids ) ? array_values( array_filter( array_map( 'absint', $ids ) ) ) : array();
 		}
 		return $item;
 	}

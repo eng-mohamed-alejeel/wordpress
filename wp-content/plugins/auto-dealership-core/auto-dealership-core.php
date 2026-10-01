@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.27.0
+ * Version: 1.28.0
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.27.0' );
+define( 'ADC_VERSION', '1.28.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -34,9 +34,12 @@ require_once ADC_PATH . 'src/Security/BranchScope.php';
 require_once ADC_PATH . 'src/Security/CustomerScope.php';
 require_once ADC_PATH . 'src/Security/ClientAddress.php';
 require_once ADC_PATH . 'src/Security/PublicRequestGuard.php';
+require_once ADC_PATH . 'src/Security/SecurityAudit.php';
 require_once ADC_PATH . 'src/Reference/ReferenceService.php';
+require_once ADC_PATH . 'src/Purchasing/SupplierService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleSpecifications.php';
+require_once ADC_PATH . 'src/Inventory/VehicleAcquisitionService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleIntakeService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleIssueService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleReturnService.php';
@@ -90,6 +93,10 @@ require_once ADC_PATH . 'src/Admin/InventoryIdentityPage.php';
 require_once ADC_PATH . 'src/Admin/VehicleSpecificationsPage.php';
 require_once ADC_PATH . 'src/Admin/VehicleIssuePage.php';
 require_once ADC_PATH . 'src/Admin/VehicleReturnPage.php';
+require_once ADC_PATH . 'src/Admin/SupplierPage.php';
+require_once ADC_PATH . 'src/Admin/VehicleAcquisitionPage.php';
+require_once ADC_PATH . 'src/API/ResponseContract.php';
+require_once ADC_PATH . 'src/API/OpenApiSpecification.php';
 require_once ADC_PATH . 'src/API/Routes.php';
 
 register_activation_hook( ADC_FILE, array( 'AutoDealership\\Core\\Capabilities', 'activate' ) );
@@ -112,6 +119,9 @@ add_action( 'admin_notices', static function (): void {
 } );
 
 add_action( 'rest_api_init', array( 'AutoDealership\\API\\Routes', 'register' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\API\\ResponseContract', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\API\\OpenApiSpecification', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Security\\SecurityAudit', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\CustomerIdentity', 'boot' ) );
 add_action( 'wp_enqueue_scripts', array( 'AutoDealership\\Leads\\PublicIntake', 'enqueue' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Database\\SchemaGuard', 'boot' ) );
@@ -139,6 +149,8 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\InventoryIdentityPa
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleSpecificationsPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleIssuePage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleReturnPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SupplierPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleAcquisitionPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Privacy\\PrivacyTools', 'boot' ) );
 add_action( 'plugins_loaded', static function (): void {
 	do_action( 'adc_integrations_register' );

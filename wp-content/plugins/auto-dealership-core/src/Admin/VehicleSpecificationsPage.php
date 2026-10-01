@@ -43,6 +43,10 @@ final class VehicleSpecificationsPage {
 		<?php else : ?>
 		<input class="regular-text" id="adc-spec-<?php echo esc_attr( $field ); ?>" name="specifications[<?php echo esc_attr( $field ); ?>]" maxlength="<?php echo (int) VehicleSpecifications::TEXT_LIMITS[$field]; ?>" value="<?php echo esc_attr( $value ); ?>">
 		<?php endif; ?></td></tr><?php endforeach; ?>
+		<tr><th><label for="adc-spec-origin-country"><?php esc_html_e( 'بلد المنشأ', 'auto-dealership-core' ); ?></label></th><td><input class="regular-text" id="adc-spec-origin-country" name="specifications[origin_country]" maxlength="80" value="<?php echo esc_attr( $vehicle['origin_country'] ?? '' ); ?>"></td></tr>
+		<tr><th><label for="adc-spec-cylinders"><?php esc_html_e( 'عدد الأسطوانات', 'auto-dealership-core' ); ?></label></th><td><input id="adc-spec-cylinders" name="specifications[cylinders]" type="number" min="1" max="32" value="<?php echo esc_attr( $vehicle['cylinders'] ?? '' ); ?>"></td></tr>
+		<tr><th><label for="adc-spec-video"><?php esc_html_e( 'رابط فيديو المركبة', 'auto-dealership-core' ); ?></label></th><td><input class="large-text" id="adc-spec-video" name="specifications[video_url]" type="url" maxlength="500" value="<?php echo esc_attr( $vehicle['video_url'] ?? '' ); ?>"></td></tr>
+		<tr><th><label for="adc-spec-gallery"><?php esc_html_e( 'معرّفات صور المعرض', 'auto-dealership-core' ); ?></label></th><td><input class="large-text" id="adc-spec-gallery" name="specifications[gallery_media_ids]" value="<?php echo esc_attr( implode( ',', (array) ( $vehicle['gallery_media_ids'] ?? array() ) ) ); ?>"><p class="description"><?php esc_html_e( 'معرّفات مرفقات صور WordPress، مفصولة بفواصل، بحد أقصى 30 صورة.', 'auto-dealership-core' ); ?></p></td></tr>
 		<tr><th><label for="adc-spec-reason"><?php esc_html_e( 'سبب التعديل', 'auto-dealership-core' ); ?></label></th><td><textarea id="adc-spec-reason" name="reason" required maxlength="2000" class="large-text"></textarea></td></tr>
 		</tbody></table><?php submit_button( __( 'حفظ المواصفات', 'auto-dealership-core' ) ); ?></form><?php endif; ?></div>
 		<?php
@@ -52,6 +56,9 @@ final class VehicleSpecificationsPage {
 		$id = absint( $_POST['id'] ?? 0 );
 		check_admin_referer( 'adc_save_vehicle_specifications_' . $id );
 		$input = isset( $_POST['specifications'] ) && is_array( $_POST['specifications'] ) ? wp_unslash( $_POST['specifications'] ) : array();
+		if ( isset( $input['gallery_media_ids'] ) && is_string( $input['gallery_media_ids'] ) ) {
+			$input['gallery_media_ids'] = '' === trim( $input['gallery_media_ids'] ) ? array() : array_map( 'trim', explode( ',', $input['gallery_media_ids'] ) );
+		}
 		$reason = isset( $_POST['reason'] ) && is_string( $_POST['reason'] ) ? wp_unslash( $_POST['reason'] ) : '';
 		$result = VehicleSpecifications::update( $id, $input, $reason );
 		wp_safe_redirect( add_query_arg( array( 'page'=>'adc-vehicle-specifications', 'vehicle_id'=>$id, is_wp_error( $result ) ? 'error' : 'saved'=>'1' ), admin_url( 'admin.php' ) ) );

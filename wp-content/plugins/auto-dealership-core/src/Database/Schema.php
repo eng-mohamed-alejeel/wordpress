@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.16.0';
+	public const VERSION = '1.17.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -55,6 +55,25 @@ final class Schema {
 				UNIQUE KEY code (code),
 				KEY branch_active (branch_id,active)
 			) $collate ENGINE=InnoDB",
+			"CREATE TABLE " . self::table( 'suppliers' ) . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				supplier_code varchar(64) NOT NULL,
+				display_name varchar(190) NOT NULL,
+				legal_name varchar(190) NOT NULL DEFAULT '',
+				country varchar(80) NOT NULL DEFAULT '',
+				tax_number varchar(100) NOT NULL DEFAULT '',
+				contact_name varchar(190) NOT NULL DEFAULT '',
+				contact_email varchar(190) NOT NULL DEFAULT '',
+				contact_phone varchar(40) NOT NULL DEFAULT '',
+				notes text NOT NULL,
+				active tinyint(1) NOT NULL DEFAULT 1,
+				created_by bigint(20) unsigned NOT NULL DEFAULT 0,
+				created_at datetime NOT NULL,
+				updated_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY supplier_code (supplier_code),
+				KEY active_name (active,display_name)
+			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'vehicles' ) . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				vin varchar(32) NOT NULL,
@@ -67,6 +86,7 @@ final class Schema {
 				condition_key varchar(16) NOT NULL,
 				branch_id bigint(20) unsigned NOT NULL,
 				location_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				supplier_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				status varchar(32) NOT NULL DEFAULT 'received',
 				body_type varchar(40) NOT NULL DEFAULT '',
 				fuel_type varchar(40) NOT NULL DEFAULT '',
@@ -74,7 +94,9 @@ final class Schema {
 				exterior_color varchar(80) NOT NULL DEFAULT '',
 				interior_color varchar(80) NOT NULL DEFAULT '',
 				engine_size varchar(40) NOT NULL DEFAULT '',
+				origin_country varchar(80) NOT NULL DEFAULT '',
 				drivetrain varchar(8) NOT NULL DEFAULT '',
+				cylinders tinyint(3) unsigned NULL,
 				doors tinyint(3) unsigned NULL,
 				seats tinyint(3) unsigned NULL,
 				horsepower smallint(5) unsigned NULL,
@@ -86,6 +108,15 @@ final class Schema {
 				retail_price bigint(20) unsigned NOT NULL DEFAULT 0,
 				minimum_price bigint(20) unsigned NULL,
 				purchase_cost bigint(20) unsigned NULL,
+				additional_cost bigint(20) unsigned NOT NULL DEFAULT 0,
+				total_cost bigint(20) unsigned NULL,
+				wholesale_price bigint(20) unsigned NULL,
+				customs_reference varchar(100) NOT NULL DEFAULT '',
+				arrival_date date NULL,
+				video_url varchar(500) NOT NULL DEFAULT '',
+				gallery_media_ids text NOT NULL,
+				document_media_ids text NOT NULL,
+				internal_notes text NOT NULL,
 				currency char(3) NOT NULL DEFAULT 'SAR',
 				public_post_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				created_at datetime NOT NULL,
@@ -96,6 +127,8 @@ final class Schema {
 				KEY branch_status (branch_id,status),
 				KEY brand_id (brand_id),
 				KEY location_id (location_id),
+				KEY supplier_id (supplier_id),
+				KEY arrival_status (arrival_date,status),
 				KEY catalog (status,brand,model_year),
 				KEY public_post_id (public_post_id)
 			) $collate ENGINE=InnoDB",
@@ -388,16 +421,25 @@ final class Schema {
 			"CREATE TABLE " . self::table( 'finance_requests' ) . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				sale_id bigint(20) unsigned NOT NULL,
+				attempt_number smallint(5) unsigned NOT NULL DEFAULT 1,
+				previous_request_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				provider varchar(100) NOT NULL DEFAULT '',
 				requested_amount bigint(20) unsigned NOT NULL,
+				down_payment bigint(20) unsigned NOT NULL DEFAULT 0,
+				term_months smallint(5) unsigned NOT NULL DEFAULT 0,
+				monthly_payment bigint(20) unsigned NOT NULL DEFAULT 0,
 				requested_by bigint(20) unsigned NOT NULL DEFAULT 0,
 				status varchar(24) NOT NULL DEFAULT 'submitted',
 				provider_reference varchar(100) NOT NULL DEFAULT '',
+				decision_reason text NOT NULL,
 				consent_at datetime NULL,
+				submitted_at datetime NULL,
+				decided_at datetime NULL,
 				created_at datetime NOT NULL,
 				updated_at datetime NOT NULL,
 				PRIMARY KEY  (id),
-				KEY sale_id (sale_id),
+				KEY sale_attempt (sale_id,attempt_number),
+				KEY previous_request_id (previous_request_id),
 				KEY status_created (status,created_at)
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'payment_confirmations' ) . " (

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.28.0 — Business model, RBAC and API contract foundation
+
+- Added an additive supplier directory and restricted vehicle acquisition model covering supplier, origin, cylinders, customs reference, arrival date, explicit purchase/additional/total costs, wholesale price, video, image gallery, acquisition documents and internal notes.
+- Added purchasing, delivery, customer-service and marketing roles with task-specific capabilities. Vehicle costs and acquisition documents require dedicated capabilities and remain absent from the public catalog.
+- Expanded finance requests into ordered provider attempts with predecessor links, down payment, term, monthly payment, decision reason and timestamps. A new attempt is blocked while another is open or approved.
+- Added minimized audit coverage for successful/failed login, password reset, account lifecycle, role changes and direct capability-meta changes.
+- Registered the existing API as both compatibility `v1` and enveloped `v2`. Both emit `X-Request-ID`; `v2` returns stable success/error envelopes. An authenticated OpenAPI 3.1 document is generated from registered routes at `/wp-json/auto-dealership/schema/v2`.
+- Raised the plugin to 1.28.0 and schema to 1.17.0. No supplier, vehicle, finance, reference or sample business record was inserted. Purchase-order states/approvers and automatic total-cost rules remain disabled pending approved business policy. Verification has not yet been executed for this increment.
+
 ## 1.27.0 — Public boundary hardening
 
 - Declared the exact anonymous REST inventory and applied named `public_read` and `intake` policies at the core boundary.
