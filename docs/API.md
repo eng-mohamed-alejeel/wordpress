@@ -85,6 +85,10 @@ Each changed request, activity note, lead timestamp and `lead.request_updated` a
 
 ## Public intake and activity history (1.15.0)
 
+Since 1.29.0, the plugin registers the existing theme AJAX actions `car_dealer_lead`, `car_dealer_contact` and `car_dealer_booking` directly. Their nonce and response shape remain compatible, while validation, identity, availability, replay and rate enforcement run through `PublicIntake`. The active theme suppresses its old handlers when the ownership facade is enabled. Message and booking compatibility rows remain temporary account/request-workflow projections written inside the same plugin transaction; the theme no longer installs those tables in normal operation.
+
+The plugin also owns `car_dealer_subscribe`. It requires a valid email, an explicit `consent_marketing=1`, an empty `website` honeypot and the shared atomic intake policy. Subscription activation and a minimized audit event commit together. The AJAX response contains only a display message.
+
 `POST /leads` requires `name` and `mobile`; optional fields are `email`, `city`, `branch_id`, `consent_marketing`, `message` (4000 characters), `request_kind`, `car_id` (WordPress car post ID), `date`, `time`, `website` (honeypot, must remain empty) and `idempotency_key` (UUID v4). Source is always `website`. Kinds: `contact`, `finance`, `finance_request`, `price_request`, `offer_request`, `test_drive`, `purchase`. Marketing consent defaults to false; public contact values never authorize merging into another customer's record.
 
 Saudi local mobile numbers and Arabic/Persian digits normalize to a canonical number; email is lowercased after validation. Car enquiries require a published, available car. A mapped car determines the branch; contradictory branches are rejected. Other requests use the configured active default branch or branch zero for administrator triage. Test-drive requests require a future `YYYY-MM-DD` / `HH:MM` appointment in the site timezone. This records a request, not a confirmed appointment or vehicle reservation.

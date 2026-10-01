@@ -2,6 +2,10 @@
 /** Front-end authentication and capability-aware account workspace. */
 defined( 'ABSPATH' ) || exit;
 function car_dealer_account_url( $view = 'dashboard' ) { return add_query_arg( 'cd_account', $view, home_url( '/' ) ); }
+add_filter( 'adc_customer_account_url', function ( $url, $fragment = '' ) {
+	$url = car_dealer_account_url();
+	return $fragment ? $url . '#' . sanitize_html_class( $fragment ) : $url;
+}, 10, 2 );
 function car_dealer_account_view() { return isset( $_GET['cd_account'] ) && is_string( $_GET['cd_account'] ) ? sanitize_key( $_GET['cd_account'] ) : ''; }
 function car_dealer_account_field( string $name ) { return isset( $_POST[$name] ) && is_string( $_POST[$name] ) ? wp_unslash( $_POST[$name] ) : ''; }
 add_action( 'init', function () { add_role( 'car_dealer_customer', 'عميل المعرض', array( 'read' => true ) ); } );

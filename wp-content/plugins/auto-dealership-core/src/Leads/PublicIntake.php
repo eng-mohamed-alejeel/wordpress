@@ -10,7 +10,26 @@ defined( 'ABSPATH' ) || exit;
 
 /** One public boundary for REST enquiries and the theme's contact/test-drive forms. */
 final class PublicIntake {
+	private static bool $booted = false;
+
 	public static function enabled(): bool { return (bool) apply_filters( 'adc_core_public_intake_enabled', true ); }
+
+	public static function owns_theme_actions(): bool { return self::enabled(); }
+
+	public static function boot(): void {
+		if ( self::$booted || ! self::enabled() ) { return; }
+		self::$booted = true;
+		add_action( 'wp_ajax_car_dealer_contact', array( self::class, 'handle_message' ) );
+		add_action( 'wp_ajax_nopriv_car_dealer_contact', array( self::class, 'handle_message' ) );
+		add_action( 'wp_ajax_car_dealer_booking', array( self::class, 'handle_booking' ) );
+		add_action( 'wp_ajax_nopriv_car_dealer_booking', array( self::class, 'handle_booking' ) );
+		add_action( 'wp_ajax_car_dealer_lead', array( self::class, 'handle_lead' ) );
+		add_action( 'wp_ajax_nopriv_car_dealer_lead', array( self::class, 'handle_lead' ) );
+	}
+
+	public static function handle_message(): void { self::handle_theme( 'message' ); }
+	public static function handle_booking(): void { self::handle_theme( 'booking' ); }
+	public static function handle_lead(): void { self::handle_theme( 'lead' ); }
 
 	public static function enqueue(): void {
 		if ( self::enabled() ) {
@@ -63,6 +82,9 @@ final class PublicIntake {
 
 	/** Theme adapter retains nonce, logged-in identity and existing response shape. */
 	public static function handle_theme( string $type ): void {
+		if ( ! in_array( $type, array( 'message', 'booking', 'lead' ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'نوع الطلب غير صالح.', 'auto-dealership-core' ) ), 400 );
+		}
 		check_ajax_referer( 'car_dealer_frontend', 'nonce' );
 		$input = wp_unslash( $_POST );
 		$language = isset( $input['lang'] ) && is_scalar( $input['lang'] ) && 'en' === sanitize_key( (string) $input['lang'] ) ? 'en' : 'ar';
@@ -71,8 +93,8 @@ final class PublicIntake {
 			$input['name'] = $user->display_name; $input['email'] = $user->user_email;
 			$input['mobile'] = get_user_meta( $user->ID, 'car_dealer_phone', true );
 		} else { $input['mobile'] = $input['phone'] ?? ''; }
-		$input['request_kind'] = $input['lead_type'] ?? 'contact';
-		$result = self::submit( $input, $type );
+		$input['request_kind'] = $input['lead_type'] ?? $input['type'] ?? 'contact';
+		$result = self::submit( $input, 'lead' === $type ? '' : $type );
 		if ( is_wp_error( $result ) ) {
 			$message = $result->get_error_message();
 			if ( 'en' === $language ) {
@@ -87,7 +109,7 @@ final class PublicIntake {
 		$data = array( 'message'=>'en' === $language ? 'Your request has been received successfully.' : __( 'تم استلام طلبك بنجاح.', 'auto-dealership-core' ) );
 		if ( 'booking' === $type ) {
 			$data['booking_id'] = $result['legacy_request_id'];
-			$data['account_url'] = is_user_logged_in() && function_exists( 'car_dealer_account_url' ) ? car_dealer_account_url() . '#customer-bookings' : '';
+			$data['account_url'] = is_user_logged_in() ? esc_url_raw( (string) apply_filters( 'adc_customer_account_url', '', 'customer-bookings' ) ) : '';
 		}
 		wp_send_json_success( $data );
 	}

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.28.0
+ * Version: 1.29.0
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,12 +10,13 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.28.0' );
+define( 'ADC_VERSION', '1.29.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
 require_once ADC_PATH . 'src/Core/Capabilities.php';
 require_once ADC_PATH . 'src/Core/ConfigurationService.php';
+require_once ADC_PATH . 'src/Content/ContentRegistry.php';
 require_once ADC_PATH . 'src/Audit/AuditLog.php';
 require_once ADC_PATH . 'src/Database/SchemaInspector.php';
 require_once ADC_PATH . 'src/Database/Schema.php';
@@ -51,7 +52,9 @@ require_once ADC_PATH . 'src/Branches/BranchService.php';
 require_once ADC_PATH . 'src/Leads/LeadService.php';
 require_once ADC_PATH . 'src/Leads/ContactIdentity.php';
 require_once ADC_PATH . 'src/Leads/CustomerIdentity.php';
+require_once ADC_PATH . 'src/Leads/LegacyEngagementStore.php';
 require_once ADC_PATH . 'src/Leads/PublicIntake.php';
+require_once ADC_PATH . 'src/Leads/MarketingSubscription.php';
 require_once ADC_PATH . 'src/Leads/RequestWorkflow.php';
 require_once ADC_PATH . 'src/Pricing/Money.php';
 require_once ADC_PATH . 'src/Pricing/PricingPolicy.php';
@@ -101,6 +104,34 @@ require_once ADC_PATH . 'src/API/Routes.php';
 
 register_activation_hook( ADC_FILE, array( 'AutoDealership\\Core\\Capabilities', 'activate' ) );
 register_activation_hook( ADC_FILE, array( 'AutoDealership\\Database\\Schema', 'install' ) );
+register_activation_hook( ADC_FILE, array( 'AutoDealership\\Content\\ContentRegistry', 'activate' ) );
+register_activation_hook( ADC_FILE, array( 'AutoDealership\\Leads\\LegacyEngagementStore', 'install' ) );
+
+\AutoDealership\Content\ContentRegistry::boot();
+
+/** Public ownership facade for replaceable themes and compatibility adapters. */
+if ( ! function_exists( 'adc_core_owns_content_registry' ) ) {
+	function adc_core_owns_content_registry( string $object = '' ): bool {
+		return \AutoDealership\Content\ContentRegistry::owns( $object );
+	}
+}
+
+/** Public ownership facades keep themes independent from plugin implementation classes. */
+if ( ! function_exists( 'adc_core_owns_public_intake_actions' ) ) {
+	function adc_core_owns_public_intake_actions(): bool {
+		return \AutoDealership\Leads\PublicIntake::owns_theme_actions();
+	}
+}
+if ( ! function_exists( 'adc_core_owns_legacy_engagement_schema' ) ) {
+	function adc_core_owns_legacy_engagement_schema(): bool {
+		return \AutoDealership\Leads\LegacyEngagementStore::owns_schema();
+	}
+}
+if ( ! function_exists( 'adc_core_owns_marketing_subscription_actions' ) ) {
+	function adc_core_owns_marketing_subscription_actions(): bool {
+		return \AutoDealership\Leads\MarketingSubscription::owns_theme_actions();
+	}
+}
 
 add_action( 'plugins_loaded', static function (): void {
 	if ( get_option( 'adc_roles_version' ) !== ADC_VERSION ) {
@@ -123,6 +154,9 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\API\\ResponseContract', 'b
 add_action( 'plugins_loaded', array( 'AutoDealership\\API\\OpenApiSpecification', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Security\\SecurityAudit', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\CustomerIdentity', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\LegacyEngagementStore', 'boot' ), 5 );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\PublicIntake', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\MarketingSubscription', 'boot' ) );
 add_action( 'wp_enqueue_scripts', array( 'AutoDealership\\Leads\\PublicIntake', 'enqueue' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Database\\SchemaGuard', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Inventory\\PublicCatalog', 'boot' ) );

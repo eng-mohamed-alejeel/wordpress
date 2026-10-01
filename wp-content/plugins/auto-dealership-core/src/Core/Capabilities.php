@@ -5,6 +5,16 @@ defined( 'ABSPATH' ) || exit;
 
 /** Registers scoped dealership roles and capabilities. */
 final class Capabilities {
+	private const CONTENT_CAPABILITIES = array(
+		'edit_car', 'read_car', 'delete_car', 'edit_cars', 'edit_others_cars', 'publish_cars',
+		'read_private_cars', 'delete_cars', 'delete_private_cars', 'delete_published_cars',
+		'delete_others_cars', 'edit_private_cars', 'edit_published_cars',
+		'edit_car_offer', 'read_car_offer', 'delete_car_offer', 'edit_car_offers', 'edit_others_car_offers',
+		'publish_car_offers', 'read_private_car_offers', 'delete_car_offers', 'delete_private_car_offers',
+		'delete_published_car_offers', 'delete_others_car_offers', 'edit_private_car_offers', 'edit_published_car_offers',
+		'manage_car_brands', 'assign_car_brands', 'manage_car_categories', 'assign_car_categories',
+	);
+
 	private const ROLE_CAPABILITIES = array(
 		'dealership_sales' => array( 'read', 'adc_view_workspace', 'adc_view_own_leads', 'adc_manage_own_leads', 'adc_create_reservations' ),
 		'dealership_sales_manager' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_create_reservations', 'adc_review_discounts', 'adc_manage_reservations', 'adc_approve_sales', 'adc_cancel_sales', 'adc_approve_delivery', 'adc_process_returns', 'adc_view_reports' ),
@@ -62,7 +72,7 @@ final class Capabilities {
 	}
 
 	private static function all_capabilities(): array {
-		$caps = array();
+		$caps = self::CONTENT_CAPABILITIES;
 		foreach ( self::ROLE_CAPABILITIES as $role_caps ) {
 			$caps = array_merge( $caps, $role_caps );
 		}

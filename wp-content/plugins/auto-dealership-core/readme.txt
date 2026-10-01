@@ -1,11 +1,13 @@
 === Auto Dealership Core ===
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 1.28.0
+Stable tag: 1.29.0
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The existing theme remains active as a compatibility layer during staged migration.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
+
+Version 1.29.0 begins the theme/plugin ownership cutover. The plugin now owns registration of the existing `car` and `car_offer` post types, `car_brand` and `car_category` taxonomies, their stable rewrite slugs and the legacy-compatible metadata contract. It also owns the existing public lead/contact/booking AJAX names, the locked compatibility-table lifecycle and an explicit-consent audited newsletter handler. Public ownership facades let the active theme suppress duplicate registrations and writers while retaining presentation, account URL adaptation and its temporary metadata editor. Rewrite rules are flushed only on activation or a versioned registry upgrade. No content or sample business record is created, moved or deleted.
 
 Version 1.28.0 adds the supplier and restricted vehicle-acquisition foundation, missing vehicle profile fields, finance provider-attempt lineage, expanded dealership roles, account-security audit events, request correlation, an enveloped v2 REST contract and generated OpenAPI 3.1 discovery. Schema 1.17.0 is additive. No supplier, vehicle or sample business data is created; purchase-order policy and automatic landed-cost rules remain disabled pending approval. Verification for this increment is pending.
 

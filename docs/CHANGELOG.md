@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.29.0 — Plugin-owned public content registry
+
+- Moved ownership of the existing `car` and `car_offer` registrations plus `car_brand` and `car_category` into `AutoDealership\\Content\\ContentRegistry`, preserving public slugs, archives, REST visibility, supports and vehicle capability mapping. Offers now use dedicated content capabilities instead of generic post-editing permissions; this slice provisions them only to administrators.
+- Declared the legacy-compatible car/offer metadata keys without exposing them through REST or changing their stored values. Operational inventory remains authoritative in plugin tables; posts remain the editorial/public projection.
+- Added the stable `adc_core_owns_content_registry()` facade. The active theme now skips its duplicate content registration and theme rewrite flush while retaining its current templates and temporary metadata editor for the later single-write-path slice.
+- Added a versioned rewrite lifecycle and collision notice. Activation or a registry-version upgrade performs the flush; ordinary requests do not.
+- Added the custom vehicle/taxonomy capabilities to administrator provisioning. No dealership content, reference value, page or sample business record is inserted, moved or deleted. Verification has not been run for this increment.
+- Moved the existing `car_dealer_lead`, `car_dealer_contact` and `car_dealer_booking` AJAX action names to `PublicIntake`. The theme registers its prior handlers only when the plugin ownership switch is explicitly disabled, so one writer is active at a time.
+- Added a plugin-owned, versioned and installation-locked compatibility schema for messages, bookings and newsletter subscriptions. Message/booking copies remain transitional dependencies of the current account/request workflow and are written only inside the plugin's audited intake transaction.
+- Added an audited newsletter boundary with explicit opt-in, honeypot, canonical email validation and the shared atomic public-intake rate policy. The theme keeps only the rendered form and consent label.
+- Replaced the plugin-to-theme account URL call with the `adc_customer_account_url` presentation filter.
+
 ## 1.28.0 — Business model, RBAC and API contract foundation
 
 - Added an additive supplier directory and restricted vehicle acquisition model covering supplier, origin, cylinders, customs reference, arrival date, explicit purchase/additional/total costs, wholesale price, video, image gallery, acquisition documents and internal notes.

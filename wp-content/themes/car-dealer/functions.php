@@ -69,6 +69,10 @@ add_filter( 'wp_nav_menu_args', function ( $args ) {
 } );
 
 function car_dealer_register_content() {
+	if ( function_exists( 'adc_core_owns_content_registry' ) && adc_core_owns_content_registry() ) {
+		return;
+	}
+
 	register_post_type( 'car', array(
 		'labels' => array(
 			'name' => __( 'السيارات', 'car-dealer' ),
@@ -107,6 +111,10 @@ function car_dealer_register_content() {
 add_action( 'init', 'car_dealer_register_content' );
 
 function car_dealer_maybe_flush_rewrites() {
+	if ( function_exists( 'adc_core_owns_content_registry' ) && adc_core_owns_content_registry() ) {
+		return;
+	}
+
 	$version = wp_get_theme()->get( 'Version' ) . '-autobrands-2';
 	if ( get_option( 'car_dealer_rewrite_version' ) === $version ) { return; }
 	car_dealer_register_content();
@@ -247,8 +255,10 @@ function car_dealer_ajax_handler() {
 	wp_mail( $to, $subject, $body );
 	wp_send_json_success( array( 'message' => __( 'تم إرسال طلبك بنجاح', 'car-dealer' ) ) );
 }
-add_action( 'wp_ajax_car_dealer_lead', 'car_dealer_ajax_handler' );
-add_action( 'wp_ajax_nopriv_car_dealer_lead', 'car_dealer_ajax_handler' );
+if ( ! function_exists( 'adc_core_owns_public_intake_actions' ) || ! adc_core_owns_public_intake_actions() ) {
+	add_action( 'wp_ajax_car_dealer_lead', 'car_dealer_ajax_handler' );
+	add_action( 'wp_ajax_nopriv_car_dealer_lead', 'car_dealer_ajax_handler' );
+}
 
 function car_dealer_shortcode_cars( $atts ) {
 	$atts = shortcode_atts( array( 'count' => 6, 'featured' => '' ), $atts );

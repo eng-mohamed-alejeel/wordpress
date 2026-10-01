@@ -1,6 +1,8 @@
-# CRM intake and request workflow — 1.15.0–1.27.0
+# CRM intake and request workflow — 1.15.0–1.29.0
 
 Intake was implemented 2026-09-27; linked request workflow and bounded account identity/consolidation followed on 2026-09-28. Browser/integration acceptance is recorded in the 1.17–1.22 reports, and atomic public request protection in `VERIFICATION-1.27.0.md`. The intentionally empty business database remains the deployment baseline; no sample customers, branches or historical imports are required by these increments. Account linkage and merge eligibility are documented in `CUSTOMER-IDENTITY.md`.
+
+Version 1.29.0 moves ownership of the legacy-named theme AJAX hooks and compatibility-table installation into the plugin. The theme keeps the forms and a guarded rollback handler but does not register a second writer while plugin ownership is enabled. Compatibility message/booking rows remain until the account and request-workflow reads move to a native core projection. Newsletter subscription now requires explicit opt-in and commits through a separate audited plugin handler. Verification of this new ownership slice is pending.
 
 ## Implemented boundary
 

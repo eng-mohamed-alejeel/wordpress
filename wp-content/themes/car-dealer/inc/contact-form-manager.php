@@ -58,8 +58,10 @@ function car_dealer_maybe_install_engagement_tables() {
 	car_dealer_engagement_tables();
 	update_option( 'car_dealer_engagement_tables_version', $version );
 }
-add_action( 'init', 'car_dealer_maybe_install_engagement_tables', 1 );
-add_action( 'after_switch_theme', 'car_dealer_maybe_install_engagement_tables' );
+if ( ! function_exists( 'adc_core_owns_legacy_engagement_schema' ) || ! adc_core_owns_legacy_engagement_schema() ) {
+	add_action( 'init', 'car_dealer_maybe_install_engagement_tables', 1 );
+	add_action( 'after_switch_theme', 'car_dealer_maybe_install_engagement_tables' );
+}
 
 function car_dealer_register_engagement_menu() {
 	add_submenu_page( 'car-dealer-dashboard', __( 'الرسائل', 'car-dealer' ), __( 'الرسائل', 'car-dealer' ), 'manage_car_dealer', 'car-dealer-messages', 'car_dealer_render_messages_page' );
@@ -69,7 +71,6 @@ function car_dealer_register_engagement_menu() {
 add_action( 'admin_menu', 'car_dealer_register_engagement_menu', 20 );
 
 function car_dealer_store_message() {
-	if ( class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled() ) { \AutoDealership\Leads\PublicIntake::handle_theme( 'message' ); return; }
 	check_ajax_referer( 'car_dealer_frontend', 'nonce' );
 	global $wpdb;
 	$lead_type = sanitize_key( wp_unslash( $_POST['lead_type'] ?? 'contact' ) );
@@ -84,11 +85,12 @@ function car_dealer_store_message() {
 	do_action( 'car_dealer_engagement_created', 'message', $wpdb->insert_id );
 	wp_send_json_success( array( 'message' => __( 'تم استلام رسالتك بنجاح.', 'car-dealer' ) ) );
 }
-add_action( 'wp_ajax_car_dealer_contact', 'car_dealer_store_message' );
-add_action( 'wp_ajax_nopriv_car_dealer_contact', 'car_dealer_store_message' );
+if ( ! function_exists( 'adc_core_owns_public_intake_actions' ) || ! adc_core_owns_public_intake_actions() ) {
+	add_action( 'wp_ajax_car_dealer_contact', 'car_dealer_store_message' );
+	add_action( 'wp_ajax_nopriv_car_dealer_contact', 'car_dealer_store_message' );
+}
 
 function car_dealer_store_booking() {
-	if ( class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled() ) { \AutoDealership\Leads\PublicIntake::handle_theme( 'booking' ); return; }
 	check_ajax_referer( 'car_dealer_frontend', 'nonce' );
 	global $wpdb;
 	$car_id = absint( $_POST['car_id'] ?? 0 );
@@ -104,8 +106,10 @@ function car_dealer_store_booking() {
 	do_action( 'car_dealer_engagement_created', 'booking', $booking_id );
 	wp_send_json_success( array( 'message' => 'تم حفظ حجز تجربة القيادة رقم #' . $booking_id . ( is_user_logged_in() ? '. يمكنك متابعته في حسابك.' : '. تم إرساله للمعرض كطلب زائر.' ), 'booking_id' => $booking_id, 'account_url' => is_user_logged_in() ? car_dealer_account_url() . '#customer-bookings' : '' ) );
 }
-add_action( 'wp_ajax_car_dealer_booking', 'car_dealer_store_booking' );
-add_action( 'wp_ajax_nopriv_car_dealer_booking', 'car_dealer_store_booking' );
+if ( ! function_exists( 'adc_core_owns_public_intake_actions' ) || ! adc_core_owns_public_intake_actions() ) {
+	add_action( 'wp_ajax_car_dealer_booking', 'car_dealer_store_booking' );
+	add_action( 'wp_ajax_nopriv_car_dealer_booking', 'car_dealer_store_booking' );
+}
 
 function car_dealer_store_subscriber() {
 	check_ajax_referer( 'car_dealer_frontend', 'nonce' );
@@ -115,8 +119,10 @@ function car_dealer_store_subscriber() {
 	$wpdb->replace( $wpdb->prefix . 'car_dealer_subscribers', array( 'email' => $email, 'status' => 'active', 'created_at' => current_time( 'mysql' ) ) );
 	wp_send_json_success( array( 'message' => __( 'تم الاشتراك بنجاح.', 'car-dealer' ) ) );
 }
-add_action( 'wp_ajax_car_dealer_subscribe', 'car_dealer_store_subscriber' );
-add_action( 'wp_ajax_nopriv_car_dealer_subscribe', 'car_dealer_store_subscriber' );
+if ( ! function_exists( 'adc_core_owns_marketing_subscription_actions' ) || ! adc_core_owns_marketing_subscription_actions() ) {
+	add_action( 'wp_ajax_car_dealer_subscribe', 'car_dealer_store_subscriber' );
+	add_action( 'wp_ajax_nopriv_car_dealer_subscribe', 'car_dealer_store_subscriber' );
+}
 
 /** One authoritative identity for every customer-facing submission. */
 function car_dealer_submission_identity() {
@@ -131,13 +137,13 @@ function car_dealer_customer_form_fields( $email_only = false ) {
  $html = '';
  foreach ( array( 'name' => array( __( 'الاسم', 'car-dealer' ), 'text', 'name' ), 'email' => array( __( 'البريد الإلكتروني', 'car-dealer' ), 'email', 'email' ), 'phone' => array( __( 'الهاتف', 'car-dealer' ), 'tel', 'tel' ) ) as $key => $field ) {
   if ( $email_only && 'email' !== $key ) { continue; }
-  $phone_required = class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled();
+  $phone_required = function_exists( 'adc_core_owns_public_intake_actions' ) && adc_core_owns_public_intake_actions();
   $html .= '<label>' . esc_html( $field[0] ) . '<input name="' . esc_attr( $key ) . '" type="' . esc_attr( $field[1] ) . '"' . ( 'name' !== $key ? ' dir="ltr"' : '' ) . ' autocomplete="' . esc_attr( $field[2] ) . '" value="' . esc_attr( $identity[$key] ) . '"' . ( 'phone' !== $key || $phone_required ? ' required' : '' ) . ( is_user_logged_in() ? ' readonly' : '' ) . '></label>';
  }
  if ( is_user_logged_in() ) {
   $html .= '<p class="cd-profile-form-note">تُرسل بيانات حسابك تلقائياً. <a href="' . esc_url( car_dealer_account_url() ) . '">تحديث بياناتي' . ( ! $email_only && ! $identity['phone'] ? ' وإضافة رقم الهاتف' : '' ) . '</a></p>';
  }
- if ( ! $email_only && class_exists( '\AutoDealership\Leads\PublicIntake' ) && \AutoDealership\Leads\PublicIntake::enabled() ) {
+ if ( ! $email_only && function_exists( 'adc_core_owns_public_intake_actions' ) && adc_core_owns_public_intake_actions() ) {
   $html .= '<input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>';
  }
  return $html;
@@ -168,7 +174,7 @@ if ( ! function_exists( 'car_dealer_booking_form' ) ) {
 }
 if ( ! function_exists( 'car_dealer_newsletter_form' ) ) {
 	function car_dealer_newsletter_form() {
-		echo '<form method="post" class="cd-ajax-form cd-newsletter-form" data-action="car_dealer_subscribe">' . car_dealer_customer_form_fields( true ) . '<button class="btn btn-primary" type="submit">اشترك</button><p class="cd-form-status" role="status"></p></form>';
+		echo '<form method="post" class="cd-ajax-form cd-newsletter-form" data-action="car_dealer_subscribe">' . car_dealer_customer_form_fields( true ) . '<input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" hidden><label class="cd-newsletter-consent"><input type="checkbox" name="consent_marketing" value="1" required> ' . esc_html__( 'أوافق على استلام رسائل وتسويق المعرض ويمكنني إلغاء الاشتراك لاحقًا.', 'car-dealer' ) . '</label><button class="btn btn-primary" type="submit">اشترك</button><p class="cd-form-status" role="status"></p></form>';
 	}
 }
 function car_dealer_render_table_page( string $title, string $table, array $columns ) {
