@@ -2,7 +2,15 @@
 
 Updated: 2026-09-30. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.26.0 (implementation and local acceptance complete)
+## Current increment: 1.27.0 (implementation and local acceptance complete)
+
+- Declared exactly three anonymous core REST pairs and added a regression inventory that rejects any unreviewed anonymous exposure.
+- Replaced best-effort transient throttling with atomic fixed-window InnoDB policies. Stored identity is HMAC-only; storage failure returns 503 and an exceeded policy returns retry-aware 429.
+- Added default-deny forwarded-header handling, bounded trusted exact/CIDR proxies, scheduled bounded cleanup and a restricted aggregate security page.
+- Raised the plugin to 1.27.0 and schema to 1.16.0. No business/reference/sample data, provider, endpoint, credential or outbound request was added.
+- Local acceptance passes 654 isolated database/HTTP checks plus 105 plugin PHP, 41 theme PHP, 8 JavaScript/CommonJS, 48 authorization, 12 money and 16 pricing-policy checks. The intentionally empty source database was never contacted. See `SECURITY-HARDENING.md` and `VERIFICATION-1.27.0.md`.
+
+## Previous increment: 1.26.0
 
 - Added an audited central activation policy. A route stays disabled unless an authorized manager enables it after all safe readiness checks pass; runtime publication rechecks readiness and rejects direct option tampering.
 - Added structured provider results plus the additive `adc_integration_receipts` ledger for pending, accepted, rejected and mismatched acknowledgements. Full remote references remain restricted; operator reads expose SHA-256 prefixes only.
@@ -131,7 +139,7 @@ Updated: 2026-09-30. This records completed increments, not completion of whole 
 3. Local 1.18.0 verification passes 515 database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate form-script checks. Historical claims and financial/documentary merging apply only if later required; no historical import is needed for this empty deployment.
 4. Pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output and delivery document gates are implemented and locally accepted in 1.19.0. Complete provider/ERP reconciliation and business review of the configured values.
 5. Enter actual reference/inventory/editorial values, use **Dealership Core → Catalog cutover** to reconcile and audit every intended public mapping, then activate/review the authoritative catalog. Synthetic Arabic/English responsive journeys, localized AJAX, structural accessibility checks and the 240-vehicle local budget pass; complete human accessibility review and production-like staging load/cache measurement.
-6. The local outbox/retry worker, job monitor, aggregate operational reports, provider-neutral contracts, approved transactional producer catalogue, activation gate, acknowledgement ledger and reconciliation boundary are complete through 1.26.0. Implement provider-specific ERP/payment/finance/message transports, signatures and external alert delivery after contracts and credentials are supplied.
+6. The local outbox/retry worker, job monitor, aggregate operational reports, provider-neutral contracts, approved transactional producer catalogue, activation gate, acknowledgement ledger and reconciliation boundary are complete through 1.26.0; the application public-route inventory and atomic limiter are complete in 1.27.0. Implement provider-specific ERP/payment/finance/message transports, signatures and external alert delivery after contracts and credentials are supplied, then configure the actual proxy/WAF boundary.
 7. Rehearse controlled cutover/rollback and satisfy the security, browser, operational and business release gates. Overall readiness remains FAIL; the full enterprise plan is not complete.
 
 ## Increment 1: central branch authorization

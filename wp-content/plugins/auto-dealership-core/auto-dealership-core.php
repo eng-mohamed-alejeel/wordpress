@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.26.0
+ * Version: 1.27.0
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.26.0' );
+define( 'ADC_VERSION', '1.27.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -32,6 +32,8 @@ require_once ADC_PATH . 'src/Integrations/AcknowledgementService.php';
 require_once ADC_PATH . 'src/Integrations/DomainEventPublisher.php';
 require_once ADC_PATH . 'src/Security/BranchScope.php';
 require_once ADC_PATH . 'src/Security/CustomerScope.php';
+require_once ADC_PATH . 'src/Security/ClientAddress.php';
+require_once ADC_PATH . 'src/Security/PublicRequestGuard.php';
 require_once ADC_PATH . 'src/Reference/ReferenceService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleSpecifications.php';
@@ -70,6 +72,7 @@ require_once ADC_PATH . 'src/Admin/SettingsPage.php';
 require_once ADC_PATH . 'src/Admin/AuditPage.php';
 require_once ADC_PATH . 'src/Admin/OutboxPage.php';
 require_once ADC_PATH . 'src/Admin/IntegrationPage.php';
+require_once ADC_PATH . 'src/Admin/SecurityPage.php';
 require_once ADC_PATH . 'src/Admin/OperationsPages.php';
 require_once ADC_PATH . 'src/Admin/RequestPage.php';
 require_once ADC_PATH . 'src/Admin/CustomerIdentityPage.php';
@@ -118,6 +121,7 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SettingsPage', 'boo
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AuditPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OutboxPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\IntegrationPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SecurityPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OperationsPages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\RequestPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\CustomerIdentityPage', 'boot' ) );
@@ -156,14 +160,19 @@ add_action( 'init', static function (): void {
 	if ( ! wp_next_scheduled( 'adc_process_outbox' ) ) {
 		wp_schedule_event( time() + 5 * MINUTE_IN_SECONDS, 'adc_five_minutes', 'adc_process_outbox' );
 	}
+	if ( ! wp_next_scheduled( 'adc_prune_request_limits' ) ) {
+		wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', 'adc_prune_request_limits' );
+	}
 } );
 add_action( 'adc_expire_reservations', array( 'AutoDealership\\Reservations\\ReservationService', 'expire_due' ) );
 add_action( 'adc_privacy_retention', array( 'AutoDealership\\Privacy\\RetentionService', 'run' ) );
 add_action( 'adc_process_outbox', array( 'AutoDealership\\Operations\\OutboxService', 'run' ) );
+add_action( 'adc_prune_request_limits', array( 'AutoDealership\\Security\\PublicRequestGuard', 'prune' ) );
 register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_expire_reservations' );
 	wp_clear_scheduled_hook( 'adc_privacy_retention' );
 	wp_clear_scheduled_hook( 'adc_process_outbox' );
+	wp_clear_scheduled_hook( 'adc_prune_request_limits' );
 } );
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {

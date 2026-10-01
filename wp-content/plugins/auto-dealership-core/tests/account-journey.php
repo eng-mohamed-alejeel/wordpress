@@ -15,7 +15,7 @@ foreach ( array( 'user_id'=>$journey_user, 'email'=>'browser@example.invalid', '
 $journey_staff_password = wp_generate_password( 28, true, false );
 wp_set_password( $journey_staff_password, $admin );
 update_option( 'adc_default_branch_id', $branch_b['id'] );
-delete_transient( 'adc_lead_rate_' . hash_hmac( 'sha256', '127.0.0.1', wp_salt( 'auth' ) ) );
+$wpdb->delete( Schema::table( 'request_limits' ), array( 'policy_key'=>'intake' ), array( '%s' ) );
 $journey_socket = stream_socket_server( 'tcp://127.0.0.1:0', $errno, $errstr );
 $journey_address = stream_socket_get_name( $journey_socket, false ); fclose( $journey_socket );
 $journey_port = (int) substr( $journey_address, strrpos( $journey_address, ':' ) + 1 );

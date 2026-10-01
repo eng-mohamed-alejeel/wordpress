@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.15.0';
+	public const VERSION = '1.16.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -528,6 +528,16 @@ final class Schema {
 				UNIQUE KEY adapter_reference (adapter_id,reference_hash),
 				KEY status_updated (status,updated_at),
 				KEY event_status (event_key,status)
+			) $collate ENGINE=InnoDB",
+			"CREATE TABLE " . self::table( 'request_limits' ) . " (
+				bucket_key char(64) NOT NULL,
+				policy_key varchar(32) NOT NULL,
+				attempts int(10) unsigned NOT NULL DEFAULT 0,
+				window_started datetime NOT NULL,
+				expires_at datetime NOT NULL,
+				PRIMARY KEY  (bucket_key),
+				KEY expires_at (expires_at),
+				KEY policy_expires (policy_key,expires_at)
 			) $collate ENGINE=InnoDB",
 		);
 

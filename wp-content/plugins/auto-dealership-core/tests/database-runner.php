@@ -45,14 +45,17 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 	require ABSPATH . 'wp-settings.php';
 	add_filter( 'pre_wp_mail', '__return_true' );
-	if ( in_array( $scenario, array( 'reserve', 'migrate', 'crm_intake', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase', 'outbox' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
+	if ( in_array( $scenario, array( 'reserve', 'migrate', 'crm_intake', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase', 'outbox', 'rate_limit' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
 		require __DIR__ . '/../auto-dealership-core.php';
 		wp_set_current_user( $actor );
 		global $wpdb;
 		$wpdb->suppress_errors( true );
 		if ( '1' !== (string) $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 10)', $barrier ) ) ) { exit( 2 ); }
 		$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $barrier ) );
-		if ( 'outbox' === $scenario ) {
+		if ( 'rate_limit' === $scenario ) {
+			$_SERVER['REMOTE_ADDR'] = (string) ( $input['address'] ?? '' );
+			$result = \AutoDealership\Security\PublicRequestGuard::consume( (string) ( $input['policy'] ?? '' ) );
+		} elseif ( 'outbox' === $scenario ) {
 			\AutoDealership\Operations\OutboxService::register_handler( 'test.concurrent', static function (): bool { usleep( 250000 ); return true; } );
 			$result = \AutoDealership\Operations\OutboxService::process_due( 1 );
 		} elseif ( 'migrate' === $scenario ) {

@@ -32,7 +32,8 @@ $crm_counts = static function () use ( $wpdb, $customers, $crm_leads, $crm_messa
 	return array_map( static fn( $table ) => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" ), array( $customers, $crm_leads, $crm_messages, $crm_bookings, $crm_activities, $audit ) );
 };
 $crm_clear_rate = static function (): void {
-	delete_transient( 'adc_lead_rate_' . hash_hmac( 'sha256', (string) ( $_SERVER['REMOTE_ADDR'] ?? 'unknown' ), wp_salt( 'auth' ) ) );
+	global $wpdb;
+	$wpdb->delete( Schema::table( 'request_limits' ), array( 'policy_key'=>'intake' ), array( '%s' ) );
 };
 $crm_submit = static function ( array $input, string $type = 'message' ) use ( $crm_clear_rate ) {
 	$crm_clear_rate();

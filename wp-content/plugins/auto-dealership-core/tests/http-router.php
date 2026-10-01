@@ -42,7 +42,8 @@ require ABSPATH . 'wp-settings.php';
 add_filter( 'pre_wp_mail', '__return_true' );
 if ( $theme_test && '/adc-test-reset-rate' === (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ) ) {
 	if ( ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true ) || ! hash_equals( $session_key, (string) ( $_GET['key'] ?? '' ) ) ) { http_response_code( 403 ); exit; }
-	delete_transient( 'adc_lead_rate_' . hash_hmac( 'sha256', (string) $_SERVER['REMOTE_ADDR'], wp_salt( 'auth' ) ) );
+	global $wpdb;
+	$wpdb->delete( \AutoDealership\Database\Schema::table( 'request_limits' ), array( 'policy_key'=>'intake' ), array( '%s' ) );
 	header( 'Content-Type: text/plain' );
 	echo 'ok';
 	exit;

@@ -4,6 +4,7 @@ namespace AutoDealership\Leads;
 use AutoDealership\Database\Schema;
 use AutoDealership\Inventory\VehicleService;
 use AutoDealership\Pricing\Money;
+use AutoDealership\Security\PublicRequestGuard;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -55,11 +56,8 @@ final class PublicIntake {
 		if ( $post_id ) { $context .= "\nVehicle post: " . $post_id; }
 		if ( $date ) { $context .= "\nRequested appointment: $date $time (" . wp_timezone_string() . ')'; }
 		if ( '' !== $message ) { $context .= "\n" . $message; }
-		$ip = (string) ( $_SERVER['REMOTE_ADDR'] ?? 'unknown' );
-		$rate_key = 'adc_lead_rate_' . hash_hmac( 'sha256', $ip, wp_salt( 'auth' ) );
-		$count = (int) get_transient( $rate_key );
-		if ( $count >= 8 ) { return self::error( 'adc_rate_limited', 429 ); }
-		set_transient( $rate_key, $count + 1, HOUR_IN_SECONDS );
+		$rate = PublicRequestGuard::consume( 'intake' );
+		if ( is_wp_error( $rate ) ) { return $rate; }
 		return LeadService::create_public( array_merge( $identity, array( 'branch_id'=>$branch, 'idempotency_key'=>$key, 'request_kind'=>$kind, 'car_id'=>$post_id, 'date'=>$date, 'time'=>$time, 'message'=>$message ) ), null, $context, $compatibility_type );
 	}
 

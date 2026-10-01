@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.27.0 — Public boundary hardening
+
+- Declared the exact anonymous REST inventory and applied named `public_read` and `intake` policies at the core boundary.
+- Replaced the transient counter with atomic fixed-window InnoDB buckets. Caller identity is HMAC protected; raw addresses and user IDs are not persisted or shown.
+- Added default-deny forwarded-header handling with bounded exact/CIDR trusted-proxy configuration for IPv4 and IPv6.
+- Added bounded hourly cleanup, minimized rate-limit hooks and a capability-restricted aggregate security page.
+- Schema 1.16.0 adds only `adc_request_limits`. Added 13 focused assertions within **654 isolated database/HTTP checks**, including a 12-process race and full anonymous-route inventory. The source database was not contacted and no business/sample data was inserted. See `SECURITY-HARDENING.md` and `VERIFICATION-1.27.0.md`.
+
 ## 1.26.0 — Integration activation and reconciliation readiness
 
 - Added a central fail-closed route policy. Only general managers and administrators can enable a route, every change requires a reason and audit persistence, and provider code may veto but cannot self-enable delivery.

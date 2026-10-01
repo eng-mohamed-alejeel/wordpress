@@ -18,11 +18,21 @@ use AutoDealership\Delivery\DeliveryService;
 use AutoDealership\Payments\PaymentService;
 use AutoDealership\Payments\RefundService;
 use AutoDealership\Pricing\QuoteHistory;
+use AutoDealership\Security\PublicRequestGuard;
 
 defined( 'ABSPATH' ) || exit;
 
 /** Versioned REST boundary. All writes delegate to validated services. */
 final class Routes {
+	/** Explicit anonymous surface. Tests fail when registration and this inventory diverge. */
+	public const PUBLIC_ENDPOINTS = array(
+		'GET /branches' => 'public_read',
+		'GET /vehicles' => 'public_read',
+		'POST /leads'   => 'intake',
+	);
+
+	public static function public_endpoints(): array { return self::PUBLIC_ENDPOINTS; }
+
 	public static function register(): void {
 		register_rest_route( 'auto-dealership/v1', '/customers/(?P<id>\d+)/duplicates', array(
 			'methods'=>'GET', 'permission_callback'=>static fn() => current_user_can( 'manage_options' ),
@@ -71,11 +81,11 @@ final class Routes {
 		register_rest_route( 'auto-dealership/v1', '/cancellations/(?P<id>\d+)/refunds', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_record_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::request_cancellation(absint($r['id']),absint($r['amount']),(string)$r['method'],(string)$r['reference'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'amount'=>array('type'=>'integer','minimum'=>1,'required'=>true),'method'=>array('type'=>'string','enum'=>array('cash_refund','bank_transfer','finance_reversal'),'required'=>true),'reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true)) ) );
 		register_rest_route( 'auto-dealership/v1', '/reservations/(?P<id>\d+)/refunds', array( 'methods'=>'POST','permission_callback'=>static fn()=>current_user_can('adc_record_refunds'),'callback'=>static fn(\WP_REST_Request $r)=>rest_ensure_response(RefundService::request_reservation(absint($r['id']),absint($r['amount']),(string)$r['method'],(string)$r['reference'])),'args'=>array('id'=>array('type'=>'integer','minimum'=>1,'required'=>true),'amount'=>array('type'=>'integer','minimum'=>1,'required'=>true),'method'=>array('type'=>'string','enum'=>array('cash_refund','bank_transfer','finance_reversal'),'required'=>true),'reference'=>array('type'=>'string','minLength'=>1,'maxLength'=>100,'required'=>true)) ) );
 		register_rest_route( 'auto-dealership/v1', '/branches', array(
-			array( 'methods' => 'GET', 'callback' => static fn() => rest_ensure_response( BranchService::public_list() ), 'permission_callback' => '__return_true' ),
+			array( 'methods' => 'GET', 'callback' => static fn() => rest_ensure_response( BranchService::public_list() ), 'permission_callback' => static fn() => PublicRequestGuard::permission( 'public_read' ) ),
 			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_branch' ), 'permission_callback' => static fn() => current_user_can( 'manage_options' ), 'args' => array( 'code' => array( 'required' => true, 'type' => 'string' ), 'name' => array( 'required' => true, 'type' => 'string' ), 'city' => array( 'type' => 'string' ), 'address' => array( 'type' => 'string' ) ) ),
 		) );
 		register_rest_route( 'auto-dealership/v1', '/vehicles', array(
-			array( 'methods' => 'GET', 'callback' => array( self::class, 'catalog' ), 'permission_callback' => '__return_true', 'args' => self::catalog_args() ),
+			array( 'methods' => 'GET', 'callback' => array( self::class, 'catalog' ), 'permission_callback' => static fn() => PublicRequestGuard::permission( 'public_read' ), 'args' => self::catalog_args() ),
 			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_vehicle' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_inventory' ) ),
 		) );
 		register_rest_route( 'auto-dealership/v1', '/vehicles/(?P<id>\d+)/status', array(
@@ -159,7 +169,7 @@ final class Routes {
 			'methods' => 'POST', 'callback' => array( self::class, 'release_delivery' ), 'permission_callback' => static fn() => current_user_can( 'adc_approve_delivery' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ) ),
 		) );
 		register_rest_route( 'auto-dealership/v1', '/leads', array(
-			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_public_lead' ), 'permission_callback' => '__return_true', 'args' => array(
+			array( 'methods' => 'POST', 'callback' => array( self::class, 'create_public_lead' ), 'permission_callback' => array( self::class, 'public_intake_permission' ), 'args' => array(
 				'name'=>array( 'type'=>'string', 'required'=>true ), 'mobile'=>array( 'type'=>'string', 'required'=>true ),
 				'email'=>array( 'type'=>'string' ), 'city'=>array( 'type'=>'string' ), 'branch_id'=>array( 'type'=>'integer', 'minimum'=>0 ),
 				'source'=>array( 'type'=>'string' ), 'consent_marketing'=>array( 'type'=>'boolean' ),
@@ -271,6 +281,9 @@ final class Routes {
 	public static function create_public_lead( \WP_REST_Request $request ) {
 		return rest_ensure_response( \AutoDealership\Leads\PublicIntake::submit( $request->get_params() ) );
 	}
+
+	/** Intake consumes its policy after validation, immediately before persistence. */
+	public static function public_intake_permission(): bool { return true; }
 
 	public static function list_leads( \WP_REST_Request $request ): \WP_REST_Response {
 		return rest_ensure_response( LeadService::list_for_current_user( absint( $request->get_param( 'page' ) ) ?: 1, absint( $request->get_param( 'per_page' ) ) ?: 20 ) );

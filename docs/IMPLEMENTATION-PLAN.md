@@ -154,7 +154,7 @@ Treat the platform as **not production ready** until the final release gate pass
 
 ## Phase 8 — Staff workspace, reports, notifications, and integrations
 
-**Status through 1.26.0:** the durable local outbox, bounded retry/leases, terminal failure visibility, audited operator retry, scheduled-job page, branch-scoped aggregate reports, provider-neutral adapter and readiness contracts, default-disabled transactional producer catalogue, central audited activation gate, durable acknowledgement ledger, asynchronous reconciliation boundary and restricted readiness workspace are implemented and locally accepted. Provider-specific adapters, signature algorithms, templates/consent decisions, credentials, external alert channels and any business-approved specialist financial reports remain.
+**Status through 1.27.0:** the durable local outbox, bounded retry/leases, terminal failure visibility, audited operator retry, scheduled-job page, branch-scoped aggregate reports, provider-neutral adapter and readiness contracts, default-disabled transactional producer catalogue, central audited activation gate, durable acknowledgement ledger, asynchronous reconciliation boundary, restricted readiness workspace, exact anonymous REST inventory and atomic application request policies are implemented and locally accepted. Provider-specific adapters, signature algorithms, templates/consent decisions, credentials, external alert channels, edge/WAF controls and any business-approved specialist financial reports remain.
 
 **Scope:** finish day-to-day operations and controlled system connections.
 
@@ -187,6 +187,8 @@ Treat the platform as **not production ready** until the final release gate pass
 ## Phase 10 — Verification, security review, and production gate
 
 **Scope:** provide evidence for production use rather than relying on implementation claims.
+
+**Implementation note (1.27.0):** the core anonymous REST surface is regression-inventoried, public reads/intake have atomic HMAC-only fixed-window policies, forwarded headers require bounded trusted-proxy CIDRs, and aggregate operations visibility is available. The 654-check isolated suite includes complete route enumeration and a 12-process race. Actual proxy/WAF configuration, production-like abuse/load, dependency/upload/header review and human penetration review remain open.
 
 **Work:**
 - Run PHP lint/static checks, unit/service tests, REST contract tests, database migration tests, capability/branch/SoD tests, workflow tests, privacy tests, and theme browser journeys.

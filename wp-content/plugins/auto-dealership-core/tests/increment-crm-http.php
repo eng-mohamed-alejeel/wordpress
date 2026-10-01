@@ -7,7 +7,7 @@ use AutoDealership\Leads\RequestWorkflow;
 use AutoDealership\Database\Schema;
 
 // HTTP requests share a different REMOTE_ADDR from CLI fixtures.
-delete_transient( 'adc_lead_rate_' . hash_hmac( 'sha256', '127.0.0.1', wp_salt( 'auth' ) ) );
+$wpdb->delete( Schema::table( 'request_limits' ), array( 'policy_key'=>'intake' ), array( '%s' ) );
 $crm_http_auth = $http_auth( $crm_account );
 $crm_http_nonce = trim( $http_request( '/adc-test-nonce?action=car_dealer_frontend', $crm_http_auth )[1] );
 $crm_http_form = array( 'action'=>'car_dealer_contact', 'nonce'=>$crm_http_nonce, 'name'=>'Forged form name', 'email'=>'forged@example.invalid', 'phone'=>'123', 'message'=>'HTTP account enquiry', 'branch_id'=>$branch_b['id'], 'idempotency_key'=>wp_generate_uuid4() );

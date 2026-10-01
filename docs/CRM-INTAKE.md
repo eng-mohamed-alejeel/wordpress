@@ -1,6 +1,6 @@
-# CRM intake and request workflow — 1.15.0–1.17.0
+# CRM intake and request workflow — 1.15.0–1.27.0
 
-Intake implemented 2026-09-27; linked request workflow and bounded account identity/consolidation implemented 2026-09-28. Integration/browser verification is pending. The intentionally empty business database remains the deployment baseline; no sample customers, branches or historical imports are required by these increments. Account linkage and merge eligibility are documented in `CUSTOMER-IDENTITY.md`.
+Intake was implemented 2026-09-27; linked request workflow and bounded account identity/consolidation followed on 2026-09-28. Browser/integration acceptance is recorded in the 1.17–1.22 reports, and atomic public request protection in `VERIFICATION-1.27.0.md`. The intentionally empty business database remains the deployment baseline; no sample customers, branches or historical imports are required by these increments. Account linkage and merge eligibility are documented in `CUSTOMER-IDENTITY.md`.
 
 ## Implemented boundary
 
@@ -17,7 +17,7 @@ Forms load a separate plugin script; the theme's `main.js` is unchanged by this 
 
 The server stores only HMACs of the authentication identity/key and canonical payload. Replays reveal the original lead ID and acknowledgement, never customer details or its current sales stage. A changed payload with the same UUID returns 409. Rotating the WordPress authentication salt changes the key namespace; replay across rotation is not guaranteed. Privacy erasure removes the payload fingerprint, causing old replays to conflict instead of restoring erased data.
 
-Both public entry points share a transient IP counter with an eight-attempt hourly limit and a honeypot. The address comes from `REMOTE_ADDR`, without trusting arbitrary forwarded headers. The transient counter is best effort under concurrency and groups customers behind the same proxy/NAT; production edge rate limiting and proxy configuration remain release work. Validation/rate checks precede replay. This mechanism prevents matching retries that reach persistence; it does not promise acceptance after vehicle availability, appointment time or configuration changes.
+Both public entry points share the atomic `intake` policy with an eight-attempt hourly limit and a honeypot. Validated attempts are assigned exactly through an InnoDB fixed-window bucket before persistence. Anonymous identity starts from `REMOTE_ADDR`; forwarded headers are ignored unless the direct peer matches a bounded exact/CIDR list supplied by `adc_trusted_proxy_cidrs`. Authenticated callers use their WordPress user ID. Only an HMAC bucket is stored. Storage failure returns 503 instead of bypassing protection. Validation/rate checks precede replay. This mechanism prevents matching retries that reach persistence; it does not promise acceptance after vehicle availability, appointment time or configuration changes. Production edge/WAF controls and actual proxy configuration remain release work; see `SECURITY-HARDENING.md`.
 
 ## Privacy and compatibility
 
