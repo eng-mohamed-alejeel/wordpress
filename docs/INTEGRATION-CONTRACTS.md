@@ -1,14 +1,16 @@
-# Integration contracts and domain events
+# Integration contracts, activation and reconciliation
 
-Version 1.25.0 adds a provider-neutral adapter contract and transactional domain-event producers. It does not configure a provider, store credentials, enable a route or send an external request.
+Version 1.26.0 completes the provider-neutral runtime foundation. It does not configure a provider, store credentials, enable a route or send an external request.
 
 ## Safety model
 
 - Every event is disabled by default.
-- An event is published only when a provider plugin registers one adapter for that event and explicitly enables it through `adc_integration_event_enabled`.
-- Activation without a registered route fails closed. When publication is part of a business transaction, the business mutation, audit records and outbox row roll back together.
-- Outbox payloads contain only subject type/ID, branch ID, state, version and the acting user ID. Customer identity, contact values, VIN, references, amounts, credentials and message content are absent.
-- Remote work still runs asynchronously through the durable at-least-once outbox. The business transaction never waits on a provider request.
+- Provider code registers routes but cannot enable them. A general manager or administrator must enable each event through the audited central gate.
+- Activation requires all safe readiness checks: credentials, endpoint, authentication, timeouts, idempotency, acknowledgements and reconciliation.
+- Runtime publication repeats the route and readiness checks. A directly altered WordPress option cannot bypass an incomplete adapter.
+- The filter `adc_integration_event_enabled` may veto an enabled route for provider maintenance or policy. It cannot enable a disabled route.
+- Outbox payloads contain only subject type/ID, branch ID, state, version and optional actor ID. Customer identity, contact values, VIN, amounts, credentials and message content are absent.
+- Remote work and provider polling run asynchronously through the durable outbox. Business and administrator transactions never wait for a provider request.
 
 ## Event catalogue
 
@@ -23,40 +25,92 @@ Version 1.25.0 adds a provider-neutral adapter contract and transactional domain
 | `payment.verified` | payment | verified | Independent receipt verification |
 | `delivery.released` | delivery | delivered | Final controlled release |
 
-Each producer executes inside its owning database transaction. Its deterministic replay identity is derived from the event key, subject ID, state and version.
+Each producer executes inside its owning database transaction. Its replay identity is derived from event key, subject ID, state and version.
 
-## Provider plugin contract
+## Provider adapter
 
-A provider plugin implements `AutoDealership\Integrations\AdapterContract`, then registers during `adc_integrations_register`:
+A provider plugin implements `AdapterContract` and `AdapterReadinessContract`. It implements `ReconciliationContract` when the provider supports status polling.
 
 ```php
+final class ProviderAdapter implements
+	\AutoDealership\Integrations\AdapterContract,
+	\AutoDealership\Integrations\AdapterReadinessContract,
+	\AutoDealership\Integrations\ReconciliationContract {
+
+	public function id(): string { return 'approved-provider'; }
+	public function events(): array { return array( 'finance.submitted' ); }
+	public function environment(): string { return 'sandbox'; }
+
+	public function readiness_checks(): array {
+		return array(
+			'credentials'=>true, 'endpoint'=>true, 'authentication'=>true,
+			'timeouts'=>true, 'idempotency'=>true,
+			'acknowledgements'=>true, 'reconciliation'=>true,
+		);
+	}
+
+	public function deliver( string $event_key, array $payload, array $event ) {
+		// Resolve the minimum current data, enforce consent, send with the stored
+		// idempotency hash, verify the response, then return its opaque reference.
+		return \AutoDealership\Integrations\ProviderResult::pending( 'REMOTE-123' );
+	}
+
+	public function reconcile( string $event_key, string $remote_reference, array $receipt ) {
+		return \AutoDealership\Integrations\ProviderResult::accepted( $remote_reference );
+	}
+}
+
 add_action( 'adc_integrations_register', static function (): void {
-	$adapter = new AcmeDealershipAdapter();
-	\AutoDealership\Integrations\IntegrationRegistry::register( $adapter );
+	\AutoDealership\Integrations\IntegrationRegistry::register( new ProviderAdapter() );
 } );
 ```
 
-The adapter supplies a stable `id()`, an allowlisted `events()` array, and `deliver()`. `deliver()` returns `true` after remote acceptance or `WP_Error` with a safe machine code. It must use the stored outbox idempotency hash as the remote replay key when supported. Exception messages, remote response bodies and secrets must not be persisted.
+Readiness methods return booleans only. They must not return secret names, values, endpoints, tokens or remote response text. Credentials remain in environment variables, a deployment secret manager or another reviewed protected configuration owned by the provider plugin.
 
-After configuration and operational approval, the provider plugin enables only its intended events:
+## Structured results and acknowledgements
+
+`deliver()` and `reconcile()` return one of:
+
+- `ProviderResult::pending( $reference, $safe_code )` when the provider accepted processing but has no final decision;
+- `ProviderResult::accepted( $reference, $safe_code )` for a final acceptance;
+- `ProviderResult::rejected( $reference, $safe_code )` for a final business rejection;
+- `WP_Error` with a safe machine code for a transient or technical failure that the outbox may retry.
+
+Schema 1.15.0 stores the necessary opaque reference in `adc_integration_receipts` for polling and keeps a SHA-256 fingerprint for operator display. The full reference, credentials, payload and remote response body are never rendered in the readiness workspace.
+
+An adapter receiving a webhook must verify its TLS/authentication/signature/timestamp/replay rules first, then call:
 
 ```php
-add_filter( 'adc_integration_event_enabled', static function ( $enabled, $event_key, $payload ) {
-	return 'sale.approved' === $event_key ? true : $enabled;
-}, 10, 3 );
+\AutoDealership\Integrations\AcknowledgementService::receive_acknowledgement(
+	'approved-provider',
+	'finance.submitted',
+	\AutoDealership\Integrations\ProviderResult::accepted( $verified_reference )
+);
 ```
 
-The provider plugin owns endpoint validation, authentication, credential rotation, TLS policy, timeouts, consent/template checks, rate limits, response verification and provider-specific reconciliation. It resolves the minimum current data by the subject ID immediately before delivery.
+An early verified acknowledgement is retained and linked when its matching delivery appears. Exact duplicates are idempotent. Contradictory final states become `mismatch` and require investigation; the system does not silently choose one.
+
+## Activation and operations
+
+Open **Audit Log → جاهزية التكاملات**.
+
+- Auditors may view route and acknowledgement metadata.
+- General managers and administrators may enable/disable a ready route and request reconciliation.
+- Every activation change and reconciliation request requires a reason and an audit record.
+- Reconciliation requests are queued as `integration.reconcile` and executed by the existing five-minute worker.
+- The screen shows scheduler health, safe machine errors and masked reference fingerprints only.
+
+Safe extension hooks include `adc_outbox_failed` for terminal queue failures, `adc_integration_acknowledgement_changed` for safe receipt-state metadata and `adc_integration_event_enabled` for a final provider-owned veto. No external alert destination is configured by Core.
 
 ## Activation gate
 
 Before enabling one event:
 
-1. Approve the provider contract, data fields, purpose, retention and consent/template policy.
-2. Store credentials outside the outbox and confirm access restrictions and rotation.
-3. Implement bounded timeouts, safe error codes and remote idempotency.
-4. Define provider acknowledgement semantics and reconciliation queries.
-5. Exercise success, retry, permanent rejection, duplicate delivery, credential failure and provider outage in staging.
-6. Enable one route, monitor the outbox, and reconcile local subjects against provider acknowledgements before expanding scope.
+1. Approve the provider contract, purpose, minimum fields, retention and consent/template policy.
+2. Store credentials outside source control and confirm access restrictions and rotation.
+3. Implement bounded timeouts, TLS/authentication, safe errors and remote idempotency.
+4. Implement and test response verification, webhook signature/replay protection and reconciliation.
+5. Exercise success, pending, final acceptance, rejection, duplicate callback, contradictory callback, credential failure and outage in staging.
+6. Enable one sandbox route, monitor the outbox and receipt ledger, then reconcile local subjects against provider records before production activation.
 
-Provider adapters, production credentials, external alerts and reconciliation implementations remain pending until actual provider contracts are supplied.
+Provider adapters, production credentials, signature algorithms, consent/templates, staging execution and external alert channels remain pending until actual provider contracts are supplied.

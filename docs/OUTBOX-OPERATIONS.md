@@ -2,7 +2,7 @@
 
 ## Scope
 
-Core 1.23.0 provides a durable local outbox. Version 1.25.0 adds a provider-neutral adapter registry and default-disabled transactional event producers. The outbox accepts minimized domain references, claims due events safely across concurrent workers, retries transient failures with bounded backoff, and exposes failed events to authorized operators. It does not enable any external provider by itself.
+Core 1.23.0 provides a durable local outbox. Version 1.25.0 adds a provider-neutral adapter registry and default-disabled transactional event producers. Version 1.26.0 adds audited activation, structured provider results, durable acknowledgements and asynchronous reconciliation. The outbox accepts minimized domain references, claims due events safely across concurrent workers, retries transient failures with bounded backoff, and exposes failed events to authorized operators. It does not enable any external provider by itself.
 
 No provider credential, endpoint, message template or customer contact value belongs in the outbox payload. Provider adapters and the domain events that feed them are enabled only after their contracts, consent rules and production configuration are approved.
 
@@ -13,7 +13,7 @@ No provider credential, endpoint, message template or customer contact value bel
 - Payloads accept only: `subject_type`, `subject_id`, `branch_id`, `actor_user_id`, `recipient_type`, `recipient_id`, `state`, `version`, `correlation_id`, `locale`, and `occurred_at`.
 - Email, mobile, free text, credentials, tokens, payment data and nested values are rejected.
 - `payload_hash` is verified before dispatch. A mismatch fails terminally without calling an adapter.
-- An adapter returns `true` on success or `WP_Error` on failure. Exception messages are never persisted; only a sanitized error code is retained.
+- An activated ready adapter returns `ProviderResult::pending()`, `accepted()` or `rejected()` with the required opaque provider reference. `WP_Error` means delivery failed and is retried. Legacy `true` remains registration-compatible but cannot satisfy the ready-provider receipt boundary.
 
 Register an adapter during plugin bootstrap:
 
@@ -70,13 +70,13 @@ Before retrying, confirm that the adapter or provider incident is resolved and t
 
 ## Deployment and rollback
 
-Schema 1.14.0 adds nullable idempotency, hash, state, lease, failure and queue indexes to the existing table. The migration is additive and preserves old rows. Take the normal backup before deployment and confirm `Schema::verify()` is empty afterward.
+Schema 1.14.0 adds nullable idempotency, hash, state, lease, failure and queue indexes to the existing table. Schema 1.15.0 adds the separate acknowledgement ledger without changing existing outbox rows. Both migrations are additive. Take the normal backup before deployment and confirm `Schema::verify()` is empty afterward.
 
 Deactivation clears the outbox schedule but preserves queue records. Re-enabling the plugin restores the schedule. Do not delete failed/completed rows during incident review; retention policy for operational events remains a business decision.
 
 ## Current limits
 
 - No ERP, accounting, payment, finance, WhatsApp, email or analytics adapter is active.
-- Reservation, sale, finance, verified-payment and delivery services contain transactional producers, but every route remains disabled until an adapter registers and explicitly enables its event. See `INTEGRATION-CONTRACTS.md`.
-- The administrator page is polling-based and has no external alert delivery.
-- Provider timeout, signature, consent, reconciliation, rate-limit and credential-rotation rules must be defined per adapter before activation.
+- Reservation, sale, finance, verified-payment and delivery services contain transactional producers, but every route remains disabled until an adapter registers, passes readiness and an authorized manager activates its event. See `INTEGRATION-CONTRACTS.md`.
+- The administrator pages are polling-based. Safe failure hooks exist, but no external alert channel is configured.
+- Provider signature, consent, rate-limit and credential-rotation implementations remain specific to the selected adapter.

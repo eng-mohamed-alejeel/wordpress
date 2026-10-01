@@ -21,10 +21,13 @@ final class DomainEventPublisher {
 		);
 		$actor_id = get_current_user_id();
 		if ( $actor_id > 0 ) { $payload['actor_user_id'] = $actor_id; }
-		$enabled = true === apply_filters( 'adc_integration_event_enabled', false, $event_key, $payload );
+		$enabled = IntegrationActivation::is_enabled( $event_key, $payload );
 		if ( ! $enabled ) { return true; }
 		if ( '' === IntegrationRegistry::route( $event_key ) ) {
 			return self::error( 'adc_integration_route_missing', 503 );
+		}
+		if ( empty( IntegrationRegistry::readiness( $event_key )['ready'] ) ) {
+			return self::error( 'adc_integration_not_ready', 503 );
 		}
 		$key = implode( ':', array( 'domain', $event_key, $subject_id, $state, 'v' . $version ) );
 		return OutboxService::enqueue( $event_key, $payload, $key );

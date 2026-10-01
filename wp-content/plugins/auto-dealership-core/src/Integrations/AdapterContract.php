@@ -11,6 +11,6 @@ interface AdapterContract {
 	/** Domain event keys handled by this adapter. */
 	public function events(): array;
 
-	/** Return true on remote acceptance or WP_Error with a safe machine error code. */
+	/** Return ProviderResult, legacy true, or WP_Error with a safe machine error code. */
 	public function deliver( string $event_key, array $payload, array $event );
 }

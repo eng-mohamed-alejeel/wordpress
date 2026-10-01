@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.26.0 — Integration activation and reconciliation readiness
+
+- Added a central fail-closed route policy. Only general managers and administrators can enable a route, every change requires a reason and audit persistence, and provider code may veto but cannot self-enable delivery.
+- Added safe adapter readiness checks for credentials, endpoint, authentication, timeouts, idempotency, acknowledgements and reconciliation without exposing values or secret names.
+- Added structured `ProviderResult` responses and schema 1.15.0's durable acknowledgement ledger. Early acknowledgements link to later deliveries, duplicates remain idempotent, and contradictory final states become visible mismatches.
+- Added optional asynchronous provider polling through `ReconciliationContract`, audited operator requests, bounded outbox execution and safe alert hooks for terminal queue failures.
+- Added the restricted Arabic integration workspace with route state, missing controls, scheduler health, acknowledgement counts, masked reference fingerprints and reconciliation controls.
+- No provider, endpoint, credential, external call or business/reference/sample data was added. Added 19 focused assertions within **640 isolated database/HTTP checks**; the disposable database was removed and the source database was not contacted. See `INTEGRATION-CONTRACTS.md` and `VERIFICATION-1.26.0.md`.
+
 ## 1.25.0 — Provider-neutral integration contracts
 
 - Added a strict runtime adapter contract, one-owner event registry and the `adc_integrations_register` registration boundary.

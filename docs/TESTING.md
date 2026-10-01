@@ -2,6 +2,8 @@
 
 ## Current evidence and independent server mode
 
+On 2026-09-30, version 1.26.0 passed **640 isolated database/HTTP checks** on the independent MariaDB server. Its 19 new assertions cover additive receipt-ledger migration, safe readiness, activation authorization and audit compensation, runtime tamper rejection, durable structured receipts, asynchronous reconciliation, early acknowledgement linking, duplicate idempotency, contradictory-state visibility and reference minimization. Syntax passes across 101 plugin PHP files; the existing 48 authorization, 12 money, 16 pricing-policy, 41 theme PHP and 8 JavaScript/CommonJS checks remain part of the final static regression. The disposable database was removed and the intentionally empty source database was never contacted. See `VERIFICATION-1.26.0.md`.
+
 On 2026-09-30, version 1.25.0 passed **621 isolated database/HTTP checks** on the independent MariaDB server. Its 11 new assertions cover adapter/event validation, default-disabled routing, missing/duplicate routes, deterministic replay, minimized payloads, worker dispatch, service production and transactional rollback on outbox failure. Syntax passes across 94 plugin PHP, 41 theme PHP and 8 JavaScript/CommonJS files; 48 authorization, 12 money and 16 pricing-policy checks also pass. The disposable database was removed and the intentionally empty source database was never contacted. See `VERIFICATION-1.25.0.md`.
 
 Version 1.24.0 previously passed 610 isolated checks for branch-scoped aggregate reports and safe audited exports. See `VERIFICATION-1.24.0.md`.

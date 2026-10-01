@@ -169,7 +169,7 @@ $total_cars = wp_count_posts( 'car' )->publish;
 			<div class="ab-offer-strip ab-offer-strip-v2">
 				<div class="ab-offer-strip-content">
 					<div class="ab-offer-badge"><?php esc_html_e( 'عرض الأسبوع', 'car-dealer' ); ?></div>
-					<h3><?php esc_html_e( 'قسط يبدأ من XXXX ريال', 'car-dealer' ); ?></h3>
+					<h3><?php esc_html_e( 'قسط يبدأ من 500 ريال', 'car-dealer' ); ?></h3>
 					<p><?php esc_html_e( 'عروض تمويلية حصرية مع شروط ميسرة', 'car-dealer' ); ?></p>
 				</div>
 				<a class="btn btn-primary btn-lg" href="<?php echo esc_url( car_dealer_whatsapp_url( 'أريد معرفة عروض AUTO BRANDS الحالية.' ) ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'احصل على العرض', 'car-dealer' ); ?></a>

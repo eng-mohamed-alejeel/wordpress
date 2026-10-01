@@ -100,7 +100,10 @@ final class OutboxService {
 			$attempts = (int) $event['attempts'] + 1;
 			if ( $terminal || $attempts >= self::MAX_ATTEMPTS ) {
 				$failed = $wpdb->query( $wpdb->prepare( "UPDATE $table SET status='failed',attempts=%d,failed_at=%s,last_error=%s,locked_at=NULL,lock_token=NULL WHERE id=%d AND status='processing' AND lock_token=%s", $attempts, $now, mb_substr( $code, 0, 100 ), (int) $event['id'], $token ) );
-				1 === $failed ? ++$summary['failed'] : ++$summary['skipped'];
+				if ( 1 === $failed ) {
+					++$summary['failed'];
+					do_action( 'adc_outbox_failed', array( 'id'=>(int) $event['id'], 'event_key'=>$event['event_key'], 'attempts'=>$attempts, 'error_code'=>$code ) );
+				} else { ++$summary['skipped']; }
 			} else {
 				$delay = self::BACKOFF_SECONDS[ min( count( self::BACKOFF_SECONDS ) - 1, $attempts - 1 ) ];
 				$next = gmdate( 'Y-m-d H:i:s', time() + $delay );

@@ -154,7 +154,7 @@ Treat the platform as **not production ready** until the final release gate pass
 
 ## Phase 8 — Staff workspace, reports, notifications, and integrations
 
-**Status through 1.25.0:** the durable local outbox, bounded retry/leases, terminal failure visibility, audited operator retry, scheduled-job page, branch-scoped aggregate reports, provider-neutral adapter contract and default-disabled transactional producer catalogue are implemented and locally accepted. Provider-specific adapters, templates/consent decisions, acknowledgement reconciliation, external alerts and any business-approved specialist financial reports remain.
+**Status through 1.26.0:** the durable local outbox, bounded retry/leases, terminal failure visibility, audited operator retry, scheduled-job page, branch-scoped aggregate reports, provider-neutral adapter and readiness contracts, default-disabled transactional producer catalogue, central audited activation gate, durable acknowledgement ledger, asynchronous reconciliation boundary and restricted readiness workspace are implemented and locally accepted. Provider-specific adapters, signature algorithms, templates/consent decisions, credentials, external alert channels and any business-approved specialist financial reports remain.
 
 **Scope:** finish day-to-day operations and controlled system connections.
 

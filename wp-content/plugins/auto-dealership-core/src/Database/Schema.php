@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.14.0';
+	public const VERSION = '1.15.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -509,6 +509,25 @@ final class Schema {
 				KEY pending (completed_at,next_attempt_at),
 				KEY queue (status,next_attempt_at,id),
 				KEY lock_token (lock_token)
+			) $collate ENGINE=InnoDB",
+			"CREATE TABLE " . self::table( 'integration_receipts' ) . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				outbox_id bigint(20) unsigned NULL,
+				adapter_id varchar(64) NOT NULL,
+				event_key varchar(100) NOT NULL,
+				remote_reference varchar(190) NOT NULL,
+				reference_hash char(64) NOT NULL,
+				status varchar(16) NOT NULL DEFAULT 'pending',
+				acknowledged_at datetime NULL,
+				last_checked_at datetime NULL,
+				last_error varchar(100) NOT NULL DEFAULT '',
+				created_at datetime NOT NULL,
+				updated_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY outbox_id (outbox_id),
+				UNIQUE KEY adapter_reference (adapter_id,reference_hash),
+				KEY status_updated (status,updated_at),
+				KEY event_status (event_key,status)
 			) $collate ENGINE=InnoDB",
 		);
 

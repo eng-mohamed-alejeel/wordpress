@@ -2,7 +2,17 @@
 
 Updated: 2026-09-30. This records completed increments, not completion of whole phases.
 
-## Current increment: 1.25.0 (implementation and local acceptance complete)
+## Current increment: 1.26.0 (implementation and local acceptance complete)
+
+- Added an audited central activation policy. A route stays disabled unless an authorized manager enables it after all safe readiness checks pass; runtime publication rechecks readiness and rejects direct option tampering.
+- Added structured provider results plus the additive `adc_integration_receipts` ledger for pending, accepted, rejected and mismatched acknowledgements. Full remote references remain restricted; operator reads expose SHA-256 prefixes only.
+- Added verified-webhook intake after adapter-owned signature validation, idempotent duplicates, early acknowledgement linking and contradiction detection.
+- Added optional asynchronous polling through `ReconciliationContract`, audited reconciliation requests, restricted integration capabilities and an Arabic readiness/matching workspace.
+- Raised the plugin to 1.26.0 and schema to 1.15.0. No provider, endpoint, credential, outbound request or source business record was added.
+- Local acceptance passes 640 isolated database/HTTP checks, including 19 focused upgrade, readiness, authorization, activation compensation, receipt, early/duplicate/conflicting acknowledgement, reconciliation and output-minimization assertions. The disposable database was removed and the intentionally empty source database was never contacted. See `VERIFICATION-1.26.0.md`.
+- Real provider adapters, signature algorithms, credentials, consent/templates, provider staging execution and external alert channels remain pending their actual contracts.
+
+## Previous increment: 1.25.0 (implementation and local acceptance complete)
 
 - Added a provider-neutral `AdapterContract`, a one-owner event registry and the `adc_integrations_register` lifecycle hook. Invalid event declarations and duplicate route ownership are rejected.
 - Added default-disabled transactional producers for reservation confirmation, sale approval, finance submission/decisions, verified payments and final delivery release.
@@ -121,7 +131,7 @@ Updated: 2026-09-30. This records completed increments, not completion of whole 
 3. Local 1.18.0 verification passes 515 database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate form-script checks. Historical claims and financial/documentary merging apply only if later required; no historical import is needed for this empty deployment.
 4. Pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output and delivery document gates are implemented and locally accepted in 1.19.0. Complete provider/ERP reconciliation and business review of the configured values.
 5. Enter actual reference/inventory/editorial values, use **Dealership Core → Catalog cutover** to reconcile and audit every intended public mapping, then activate/review the authoritative catalog. Synthetic Arabic/English responsive journeys, localized AJAX, structural accessibility checks and the 240-vehicle local budget pass; complete human accessibility review and production-like staging load/cache measurement.
-6. The local outbox/retry worker, job monitor, aggregate operational reports, provider-neutral contracts and approved transactional producer catalogue are complete through 1.25.0. Implement provider-specific ERP/payment/finance/message adapters, acknowledgement reconciliation and external alerting after contracts and credentials are supplied.
+6. The local outbox/retry worker, job monitor, aggregate operational reports, provider-neutral contracts, approved transactional producer catalogue, activation gate, acknowledgement ledger and reconciliation boundary are complete through 1.26.0. Implement provider-specific ERP/payment/finance/message transports, signatures and external alert delivery after contracts and credentials are supplied.
 7. Rehearse controlled cutover/rollback and satisfy the security, browser, operational and business release gates. Overall readiness remains FAIL; the full enterprise plan is not complete.
 
 ## Increment 1: central branch authorization

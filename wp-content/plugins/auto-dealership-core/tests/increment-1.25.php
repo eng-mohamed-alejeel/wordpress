@@ -4,14 +4,20 @@ if ( PHP_SAPI !== 'cli' || ! defined( 'DB_NAME' ) || ! preg_match( '/\Aadc_verif
 
 use AutoDealership\Database\Schema;
 use AutoDealership\Integrations\AdapterContract;
+use AutoDealership\Integrations\AdapterReadinessContract;
 use AutoDealership\Integrations\DomainEventPublisher;
+use AutoDealership\Integrations\IntegrationActivation;
 use AutoDealership\Integrations\IntegrationRegistry;
+use AutoDealership\Integrations\ProviderResult;
+use AutoDealership\Integrations\ReconciliationContract;
 use AutoDealership\Operations\OutboxService;
 use AutoDealership\Reservations\ReservationService;
 
 $integration_previous_user = get_current_user_id();
 $integration_outbox = Schema::table( 'outbox' );
 $integration_enable = static fn( $enabled, string $event_key ) => 'reservation.confirmed' === $event_key ? true : $enabled;
+$integration_option_sentinel = new stdClass();
+$integration_option_before = get_option( IntegrationActivation::OPTION, $integration_option_sentinel );
 
 try {
 	$invalid_adapter = new class implements AdapterContract {
@@ -30,19 +36,23 @@ try {
 	adc_check( true === $disabled && $before_disabled === (int) $wpdb->get_var( "SELECT COUNT(*) FROM $integration_outbox" ), 'Approved domain events remain disabled by default and create no queue data.' );
 
 	$enable_missing = static fn( $enabled, string $event_key ) => 'sale.approved' === $event_key ? true : $enabled;
+	update_option( IntegrationActivation::OPTION, array( 'sale.approved' ), false );
 	add_filter( 'adc_integration_event_enabled', $enable_missing, 10, 3 );
 	$missing_route = DomainEventPublisher::publish( 'sale.approved', 700002, (int) $branch_a['id'], 'approved' );
 	remove_filter( 'adc_integration_event_enabled', $enable_missing, 10 );
 	adc_check( is_wp_error( $missing_route ) && 'adc_integration_route_missing' === $missing_route->get_error_code(), 'Explicit activation fails closed when no adapter owns the event route.' );
 
-	$adapter = new class implements AdapterContract {
+	$adapter = new class implements AdapterContract, AdapterReadinessContract, ReconciliationContract {
 		public array $deliveries = array();
 		public function id(): string { return 'acceptance-adapter'; }
 		public function events(): array { return array( 'reservation.confirmed' ); }
+		public function environment(): string { return 'sandbox'; }
+		public function readiness_checks(): array { return array_fill_keys( IntegrationRegistry::READINESS_CHECKS, true ); }
 		public function deliver( string $event_key, array $payload, array $event ) {
 			$this->deliveries[] = array( 'event_key'=>$event_key, 'payload'=>$payload, 'event_id'=>(int) $event['id'] );
-			return true;
+			return ProviderResult::accepted( 'acceptance-' . (int) $event['id'] );
 		}
+		public function reconcile( string $event_key, string $remote_reference, array $receipt ) { return ProviderResult::accepted( $remote_reference ); }
 	};
 	$registered = IntegrationRegistry::register( $adapter );
 	adc_check( is_array( $registered ) && 'acceptance-adapter' === IntegrationRegistry::route( 'reservation.confirmed' ), 'A valid adapter owns its declared event route at runtime.' );
@@ -55,6 +65,7 @@ try {
 	$conflict = IntegrationRegistry::register( $conflicting_adapter );
 	adc_check( is_wp_error( $conflict ) && 'adc_integration_route_conflict' === $conflict->get_error_code(), 'A domain event cannot be claimed by two adapters.' );
 
+	update_option( IntegrationActivation::OPTION, array( 'reservation.confirmed' ), false );
 	add_filter( 'adc_integration_event_enabled', $integration_enable, 10, 3 );
 	$queued = DomainEventPublisher::publish( 'reservation.confirmed', 700003, (int) $branch_a['id'], 'confirmed' );
 	$replayed = DomainEventPublisher::publish( 'reservation.confirmed', 700003, (int) $branch_a['id'], 'confirmed' );
@@ -85,6 +96,8 @@ try {
 	adc_check( is_wp_error( $failed_reservation ) && 'available' === $wpdb->get_var( $wpdb->prepare( 'SELECT status FROM ' . Schema::table( 'vehicles' ) . ' WHERE id=%d', $failed_vehicle ) ) && 0 === (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . Schema::table( 'reservations' ) . ' WHERE vehicle_id=%d', $failed_vehicle ) ), 'Enabled outbox persistence failure rolls the business mutation and audit back together.' );
 } finally {
 	remove_filter( 'adc_integration_event_enabled', $integration_enable, 10 );
+	$integration_option_before === $integration_option_sentinel ? delete_option( IntegrationActivation::OPTION ) : update_option( IntegrationActivation::OPTION, $integration_option_before, false );
 	wp_set_current_user( $integration_previous_user );
+	$wpdb->query( 'DELETE FROM ' . Schema::table( 'integration_receipts' ) );
 	$wpdb->query( "DELETE FROM $integration_outbox WHERE event_key IN ('reservation.confirmed','sale.approved')" );
 }
