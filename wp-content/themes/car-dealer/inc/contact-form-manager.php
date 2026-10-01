@@ -68,7 +68,9 @@ function car_dealer_register_engagement_menu() {
 	add_submenu_page( 'car-dealer-dashboard', __( 'حجوزات التجربة', 'car-dealer' ), __( 'حجوزات التجربة', 'car-dealer' ), 'manage_car_dealer', 'car-dealer-bookings', 'car_dealer_render_bookings_page' );
 	add_submenu_page( 'car-dealer-dashboard', __( 'النشرة البريدية', 'car-dealer' ), __( 'النشرة البريدية', 'car-dealer' ), 'manage_car_dealer', 'car-dealer-subscribers', 'car_dealer_render_subscribers_page' );
 }
-add_action( 'admin_menu', 'car_dealer_register_engagement_menu', 20 );
+if ( ! function_exists( 'adc_core_owns_engagement_admin_pages' ) || ! adc_core_owns_engagement_admin_pages() ) {
+	add_action( 'admin_menu', 'car_dealer_register_engagement_menu', 20 );
+}
 
 function car_dealer_store_message() {
 	check_ajax_referer( 'car_dealer_frontend', 'nonce' );

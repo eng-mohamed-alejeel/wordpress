@@ -125,7 +125,9 @@ add_action( 'admin_init', 'car_dealer_maybe_flush_rewrites' );
 add_action( 'after_switch_theme', 'car_dealer_maybe_flush_rewrites' );
 
 function car_dealer_car_meta_box() { add_meta_box( 'car-details', __( 'تفاصيل السيارة', 'car-dealer' ), 'car_dealer_car_meta_box_html', 'car', 'normal', 'high' ); }
-add_action( 'add_meta_boxes', 'car_dealer_car_meta_box' );
+if ( ! function_exists( 'adc_core_owns_vehicle_post_editor' ) || ! adc_core_owns_vehicle_post_editor() ) {
+	add_action( 'add_meta_boxes', 'car_dealer_car_meta_box' );
+}
 
 function car_dealer_car_meta_box_html( $post ) {
 	wp_nonce_field( 'car_dealer_save_car', 'car_dealer_car_nonce' );
@@ -162,7 +164,9 @@ function car_dealer_save_car_meta( $post_id ) {
 	update_post_meta( $post_id, '_car_featured', isset( $_POST['_car_featured'] ) ? '1' : '' );
 	update_post_meta( $post_id, '_car_demand', isset( $_POST['_car_demand'] ) ? 'yes' : '' );
 }
-add_action( 'save_post', 'car_dealer_save_car_meta' );
+if ( ! function_exists( 'adc_core_owns_vehicle_post_editor' ) || ! adc_core_owns_vehicle_post_editor() ) {
+	add_action( 'save_post', 'car_dealer_save_car_meta' );
+}
 
 function car_dealer_format_price( $price ) {
 	if ( ! $price ) { return ''; }
@@ -207,13 +211,14 @@ function car_dealer_inventory_status_label( $status ) {
 }
 
 function car_dealer_comparison_button( $car_id ) {
-	if ( ! function_exists( 'car_dealer_get_comparison' ) ) { return; }
 	$comparison = car_dealer_get_comparison();
-	$in_comparison = in_array( $car_id, $comparison );
+	$in_comparison = in_array( absint( $car_id ), $comparison, true );
+	$add_label = __( 'أضف للمقارنة', 'car-dealer' );
+	$remove_label = __( 'إزالة من المقارنة', 'car-dealer' );
 	?>
-	<a class="btn btn-outline btn-sm <?php echo $in_comparison ? 'is-active' : ''; ?>" href="#" data-compare="<?php echo esc_attr( $car_id ); ?>">
-		<?php echo $in_comparison ? esc_html__( 'إزالة من المقارنة', 'car-dealer' ) : esc_html__( 'أضف للمقارنة', 'car-dealer' ); ?>
-	</a>
+	<button class="btn btn-outline btn-sm cd-compare-button <?php echo $in_comparison ? 'is-active' : ''; ?>" type="button" data-car-id="<?php echo absint( $car_id ); ?>" data-add-label="<?php echo esc_attr( $add_label ); ?>" data-remove-label="<?php echo esc_attr( $remove_label ); ?>" aria-pressed="<?php echo $in_comparison ? 'true' : 'false'; ?>">
+		<?php echo esc_html( $in_comparison ? $remove_label : $add_label ); ?>
+	</button>
 	<?php
 }
 
@@ -279,20 +284,28 @@ function car_dealer_shortcode_cars( $atts ) {
 add_shortcode( 'car_dealer_cars', 'car_dealer_shortcode_cars' );
 
 function car_dealer_shortcode_loan_calculator( $atts ) {
-	$atts = shortcode_atts( array( 'price' => 0 ), $atts );
+	$atts = shortcode_atts( array( 'price' => 0 ), $atts, 'car_dealer_loan_calculator' );
 	$price = absint( $atts['price'] );
+	$model = class_exists( '\\AutoDealership\\Tools\\LoanCalculator' )
+		? \AutoDealership\Tools\LoanCalculator::view_model( $price )
+		: array( 'price'=>$price, 'down_payment'=>0, 'annual_rate'=>'4.50', 'months'=>60, 'max_amount'=>100000000, 'max_months'=>120, 'max_rate'=>'100.00' );
 	ob_start();
 	?>
-	<div class="cd-tool">
+	<div class="cd-tool cd-loan-calculator">
 		<h3><?php esc_html_e( 'حاسبة التمويل', 'car-dealer' ); ?></h3>
 		<?php if ( $price ) : ?><p><?php printf( esc_html__( 'سعر السيارة: %s', 'car-dealer' ), esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ) ); ?></p><?php endif; ?>
-		<div class="cd-ajax-form" data-form-type="loan_calculator">
-			<label><?php esc_html_e( 'مبلغ التمويل', 'car-dealer' ); ?><input type="number" name="amount" value="<?php echo esc_attr( $price ); ?>"></label>
-			<label><?php esc_html_e( 'المدة (سنوات)', 'car-dealer' ); ?><select name="years"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label>
-			<label><?php esc_html_e( 'الدفعة الأولى', 'car-dealer' ); ?><input type="number" name="down_payment" value="0"></label>
+		<form data-loan-calculator>
+			<div class="cd-form-grid">
+				<label><?php esc_html_e( 'سعر السيارة', 'car-dealer' ); ?><input type="number" name="price" data-loan-price value="<?php echo esc_attr( $model['price'] ); ?>" min="1" max="<?php echo esc_attr( $model['max_amount'] ); ?>" required></label>
+				<label><?php esc_html_e( 'الدفعة الأولى', 'car-dealer' ); ?><input type="number" name="down_payment" data-loan-down value="<?php echo esc_attr( $model['down_payment'] ); ?>" min="0" max="<?php echo esc_attr( $model['max_amount'] ); ?>" required></label>
+				<label><?php esc_html_e( 'النسبة السنوية التقديرية %', 'car-dealer' ); ?><input type="number" name="annual_rate" data-loan-rate value="<?php echo esc_attr( $model['annual_rate'] ); ?>" min="0" max="<?php echo esc_attr( $model['max_rate'] ); ?>" step="0.01" required></label>
+				<label><?php esc_html_e( 'المدة بالأشهر', 'car-dealer' ); ?><input type="number" name="months" data-loan-months value="<?php echo esc_attr( $model['months'] ); ?>" min="1" max="<?php echo esc_attr( $model['max_months'] ); ?>" required></label>
+			</div>
 			<button class="btn btn-primary" type="submit"><?php esc_html_e( 'احسب', 'car-dealer' ); ?></button>
-			<div class="cd-loan-result"></div>
-		</div>
+			<p class="cd-loan-result"><?php esc_html_e( 'القسط الشهري التقديري:', 'car-dealer' ); ?> <strong data-loan-result>0 SAR</strong></p>
+			<p data-loan-status role="status"></p>
+			<small><?php esc_html_e( 'هذا تقدير إرشادي وليس عرض تمويل أو موافقة. تعتمد الشروط النهائية على مزود التمويل.', 'car-dealer' ); ?></small>
+		</form>
 	</div>
 	<?php
 	return ob_get_clean();
@@ -327,7 +340,45 @@ function car_dealer_shortcode_testimonials( $atts ) {
 add_shortcode( 'car_dealer_testimonials', 'car_dealer_shortcode_testimonials' );
 
 function car_dealer_get_comparison() {
-	return isset( $_COOKIE['car_dealer_comparison'] ) ? json_decode( stripslashes( $_COOKIE['car_dealer_comparison'] ), true ) : array();
+	if ( class_exists( '\\AutoDealership\\Tools\\VehicleComparison' ) && function_exists( 'adc_core_owns_public_tools_actions' ) && adc_core_owns_public_tools_actions() ) {
+		return \AutoDealership\Tools\VehicleComparison::current();
+	}
+	$raw = isset( $_COOKIE['car_dealer_comparison'] ) && is_string( $_COOKIE['car_dealer_comparison'] ) ? wp_unslash( $_COOKIE['car_dealer_comparison'] ) : '';
+	$ids = json_decode( $raw, true );
+	if ( ! is_array( $ids ) ) { $ids = explode( ',', $raw ); }
+	return array_slice( array_values( array_unique( array_filter( array_map( 'absint', $ids ) ) ) ), 0, 4 );
+}
+
+function car_dealer_shortcode_comparison() {
+	$ids = car_dealer_get_comparison();
+	if ( ! $ids ) { return '<p class="empty-state">' . esc_html__( 'لم تضف سيارات للمقارنة بعد.', 'car-dealer' ) . '</p>'; }
+	$query = new WP_Query( array( 'post_type'=>'car', 'post_status'=>'publish', 'post__in'=>$ids, 'orderby'=>'post__in', 'posts_per_page'=>4 ) );
+	ob_start();
+	echo '<div class="car-grid cd-comparison-grid">';
+	while ( $query->have_posts() ) { $query->the_post(); get_template_part( 'templates/components/car-card' ); }
+	echo '</div>';
+	wp_reset_postdata();
+	return ob_get_clean();
+}
+add_shortcode( 'car_dealer_comparison', 'car_dealer_shortcode_comparison' );
+
+/** Rollback handler used only when plugin ownership is disabled before bootstrap. */
+function car_dealer_legacy_comparison_ajax() {
+	check_ajax_referer( 'car_dealer_frontend', 'nonce' );
+	$car_id = absint( $_POST['car_id'] ?? 0 );
+	if ( ! $car_id || 'car' !== get_post_type( $car_id ) || 'publish' !== get_post_status( $car_id ) ) { wp_send_json_error( array( 'message'=>__( 'السيارة غير صالحة.', 'car-dealer' ) ), 400 ); }
+	$ids = car_dealer_get_comparison();
+	$action = isset( $_POST['compare_action'] ) ? sanitize_key( wp_unslash( $_POST['compare_action'] ) ) : 'add';
+	if ( 'remove' === $action ) { $ids = array_values( array_diff( $ids, array( $car_id ) ) ); }
+	elseif ( ! in_array( $car_id, $ids, true ) && count( $ids ) < 4 ) { $ids[] = $car_id; }
+	$value = wp_json_encode( $ids );
+	setcookie( 'car_dealer_comparison', $value, time() + MONTH_IN_SECONDS, COOKIEPATH ?: '/', COOKIE_DOMAIN, is_ssl(), true );
+	$_COOKIE['car_dealer_comparison'] = $value;
+	wp_send_json_success( array( 'count'=>count( $ids ), 'active'=>in_array( $car_id, $ids, true ), 'message'=>__( 'تم تحديث المقارنة.', 'car-dealer' ) ) );
+}
+if ( ! function_exists( 'adc_core_owns_public_tools_actions' ) || ! adc_core_owns_public_tools_actions() ) {
+	add_action( 'wp_ajax_car_dealer_comparison', 'car_dealer_legacy_comparison_ajax' );
+	add_action( 'wp_ajax_nopriv_car_dealer_comparison', 'car_dealer_legacy_comparison_ajax' );
 }
 
 // تحميل ملف enhanced-stats.css

@@ -11,7 +11,16 @@ Updated: 2026-10-01. This records completed increments, not completion of whole 
 - Added account/login/role/capability audit hooks, `X-Request-ID`, an enveloped `v2` REST contract and an authenticated generated OpenAPI 3.1 description. Compatibility `v1` remains available.
 - Purchase-order workflow, total-cost formula, cost-visibility sign-off, mandatory finance terms and document-retention policy remain explicit business decisions. Automated and database acceptance for 1.28.0 has not been run in this increment.
 
-## Current increment: 1.29.0 (content registry implemented; verification pending)
+## Current increment: 1.29.4 (engagement administration cutover implemented; verification pending)
+
+- Began 1.29-D by moving the existing message, test-drive booking and newsletter administration slugs under the plugin's `adc-workspace` menu. These pages no longer require a theme menu or theme callback.
+- Added a bounded `EngagementQuery` service. Message and booking reads enforce the central active-branch/owner predicate; unmapped history remains administrator-visible and read-only. Subscriber reads require the dedicated `adc_view_marketing_subscribers` capability assigned to marketing, general managers and administrators.
+- Reused the core request workflow for status, reply and appointment updates and return successful submissions to the originating staff list. No legacy theme request writer is reactivated.
+- Added a plugin-owned stylesheet loaded only on the three engagement screens. The theme retains guarded renderer definitions for rollback but does not register their menus while plugin ownership is enabled.
+- Updated the account presentation to recognize plugin staff roles and point its workspace cards at plugin administration URLs. Dormant theme dashboard, CRM, inventory and settings URLs are no longer exposed there.
+- Version 1.29.4 changes no schema contract and creates no business or sample data. Automated, database and browser verification has not been run for this increment.
+
+### Prior ownership slices through 1.29.3
 
 - Repository inventory confirmed that the active theme registered the vehicle content model, saves vehicle metadata, installs legacy engagement tables, handles public writes, registers durable shortcodes and loads account/CRM/customer workflow logic.
 - The target boundary is now explicit: the plugin owns all durable dealership contracts, writes, handlers, permissions and operational administration; the theme owns presentation, templates, public assets and guarded rendering adapters.
@@ -19,7 +28,16 @@ Updated: 2026-10-01. This records completed increments, not completion of whole 
 - The first 1.29-C cutover moves `car_dealer_lead`, contact, booking and newsletter AJAX ownership into the plugin. `PublicIntake` is the active lead boundary; newsletter activation requires explicit consent, honeypot/rate controls and an audit-atomic write.
 - The plugin now owns the three legacy engagement table definitions under a versioned installation lock. Message/booking compatibility copies remain temporarily writable by plugin services because the current account and `RequestWorkflow` views still require their IDs. The theme installer and handlers are guarded and become rollback paths only when the corresponding plugin ownership filter is explicitly disabled.
 - The plugin no longer calls the theme to build a booking account URL; the theme supplies that optional presentation URL through `adc_customer_account_url`.
-- The static active/dormant hook and load baseline is recorded in `THEME-HOOK-INVENTORY.json`. Runtime confirmation remains, followed by vehicle/offer and account/CRM write cutovers, plugin-owned admin screens/assets, public adapters and reversible removal of compatibility hooks.
+- Vehicle and offer post editors now run from the plugin. They preserve the existing keys and nonces, validate bounded values, audit changed field names without recording values, and restore all touched metadata if a write or audit event fails.
+- A mapped vehicle's legacy inventory status is read-only and synchronized from the operational vehicle. Offer eligibility uses the mapped operational vehicle and active branch when present, falls back to the existing post-status contract only for unmapped posts, rejects duplicate mappings and keeps an invalid public offer as a draft.
+- Theme vehicle/offer meta-box, save and admin-column hooks are guarded. Dormant advanced/inventory/offer modules also check the ownership facades before registering duplicate editors or writers.
+- Customer registration, sign-in, profile updates, marketing preferences and booking cancellation now enter through plugin services while the theme retains the account template and URL adapter. The customer role is provisioned by the plugin, and anonymous account attempts use the atomic request limiter.
+- The plugin registers `cd_crm` as private read-only history and audit-retires profiles after an account is linked to a core customer. The legacy theme CRM editor, export, capture, reconciliation and request-update hooks are inactive under the ownership facade; current operations use `LeadService`, `RequestWorkflow` and the `adc-crm` workspace.
+- Public comparison state and finance estimates now enter through `PublicTools`. Comparison accepts the two existing cookie formats, admits at most four vehicles that satisfy the active catalog visibility rules and remains browser-owned. The calculator validates bounded inputs and returns a provider-neutral whole-SAR estimate without creating a lead, finance request or approval.
+- The theme retains the calculator form, comparison button and card-grid markup. Its active JavaScript defers to the plugin asset, and its old comparison AJAX path is registered only when the early ownership filter is disabled.
+- The compatibility-retirement decision is now executable and measurable through `MigrationInventory`: message/bookings remain controlled projections while account, request-workflow and privacy code depends on them; subscribers remain the canonical consent store; `cd_crm` remains private read-only history. The report contains aggregate counts and never exposes customer rows.
+- Removal is blocked until native request history/updates/privacy handling, complete reconciliation, count parity and a backup/rollback rehearsal are accepted. This increment performs no drop, delete, conversion or automatic backfill.
+- The static active/dormant hook and load baseline is recorded in `THEME-HOOK-INVENTORY.json`. Runtime confirmation remains, followed by plugin-owned admin assets, public adapters and reversible removal of compatibility hooks.
 - Existing identifiers and records are preserved. Dormant theme files will be classified before reuse or removal. No business record, reference value, page or sample content will be inserted by this increment.
 - Detailed scope and acceptance gates: `THEME-PLUGIN-SEPARATION.md`. Automated, database and browser verification has not been run for this increment.
 
@@ -155,7 +173,7 @@ Updated: 2026-10-01. This records completed increments, not completion of whole 
 
 ### Remaining ordered delivery work
 
-1. Complete pending acceptance for 1.28.0 and the implemented 1.29 registry/public-intake slices, then continue 1.29-C with vehicle/offer metadata and account/CRM single-write paths. Preserve identifiers and maintain one active writer throughout.
+1. Complete pending acceptance for 1.28.0 and the implemented 1.29.0–1.29.4 ownership slices, then continue 1.29-D with the remaining operational navigation/dashboard and dormant administration classification. Preserve identifiers and maintain one active owner throughout.
 2. Prepare the new-installation setup using actual branch, brand, location and staff assignments when supplied. Current-state backup/restore passed; no historical restore/import is required.
 3. Local 1.18.0 verification passes 515 database/HTTP checks, 33 real-theme Chromium checks plus three post-journey database assertions, and seven separate form-script checks. Historical claims and financial/documentary merging apply only if later required; no historical import is needed for this empty deployment.
 4. Pricing fees/promotions/discount tiers, reservation deposit policy, branded quote output and delivery document gates are implemented and locally accepted in 1.19.0. Complete provider/ERP reconciliation and business review of the configured values.

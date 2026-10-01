@@ -34,7 +34,9 @@ function car_dealer_register_offers() {
 		'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
 	) );
 }
-add_action( 'init', 'car_dealer_register_offers' );
+if ( ! function_exists( 'adc_core_owns_content_registry' ) || ! adc_core_owns_content_registry( 'car_offer' ) ) {
+	add_action( 'init', 'car_dealer_register_offers' );
+}
 
 function car_dealer_offer_available_cars( $selected_id = 0 ) {
 	$args = array(
@@ -81,12 +83,16 @@ function car_dealer_offer_admin_notice() {
 	delete_transient( $key );
 	echo '<div class="notice notice-error is-dismissible"><p>' . esc_html( $message ) . '</p></div>';
 }
-add_action( 'admin_notices', 'car_dealer_offer_admin_notice' );
+if ( ! function_exists( 'adc_core_owns_offer_post_editor' ) || ! adc_core_owns_offer_post_editor() ) {
+	add_action( 'admin_notices', 'car_dealer_offer_admin_notice' );
+}
 
 function car_dealer_offer_meta_box() {
 	add_meta_box( 'car-offer-details', __( 'تفاصيل العرض', 'car-dealer' ), 'car_dealer_offer_meta_box_html', 'car_offer', 'normal', 'high' );
 }
-add_action( 'add_meta_boxes', 'car_dealer_offer_meta_box' );
+if ( ! function_exists( 'adc_core_owns_offer_post_editor' ) || ! adc_core_owns_offer_post_editor() ) {
+	add_action( 'add_meta_boxes', 'car_dealer_offer_meta_box' );
+}
 
 function car_dealer_offer_meta_box_html( $post ) {
 	wp_nonce_field( 'car_dealer_save_offer', 'car_dealer_offer_nonce' );
@@ -238,7 +244,9 @@ function car_dealer_save_offer_meta( $post_id ) {
 	foreach ( array( '_offer_old_price', '_offer_new_price', '_offer_monthly_payment' ) as $key ) { update_post_meta( $post_id, $key, absint( $_POST[ $key ] ?? 0 ) ); }
 	update_post_meta( $post_id, '_offer_expires', sanitize_text_field( wp_unslash( $_POST['_offer_expires'] ?? '' ) ) );
 }
-add_action( 'save_post_car_offer', 'car_dealer_save_offer_meta' );
+if ( ! function_exists( 'adc_core_owns_offer_post_editor' ) || ! adc_core_owns_offer_post_editor() ) {
+	add_action( 'save_post_car_offer', 'car_dealer_save_offer_meta' );
+}
 
 function car_dealer_offer_admin_columns( $columns ) {
 	$updated = array();
@@ -250,7 +258,9 @@ function car_dealer_offer_admin_columns( $columns ) {
 	}
 	return $updated;
 }
-add_filter( 'manage_car_offer_posts_columns', 'car_dealer_offer_admin_columns' );
+if ( ! function_exists( 'adc_core_owns_offer_post_editor' ) || ! adc_core_owns_offer_post_editor() ) {
+	add_filter( 'manage_car_offer_posts_columns', 'car_dealer_offer_admin_columns' );
+}
 
 function car_dealer_offer_admin_column_content( $column, $post_id ) {
 	if ( 'offer_car' !== $column ) {
@@ -272,7 +282,9 @@ function car_dealer_offer_admin_column_content( $column, $post_id ) {
 	}
 	echo '<br><span class="cd-status cd-status-' . esc_attr( sanitize_html_class( $status ) ) . '">' . esc_html( car_dealer_inventory_status_label( $status ) ) . '</span>';
 }
-add_action( 'manage_car_offer_posts_custom_column', 'car_dealer_offer_admin_column_content', 10, 2 );
+if ( ! function_exists( 'adc_core_owns_offer_post_editor' ) || ! adc_core_owns_offer_post_editor() ) {
+	add_action( 'manage_car_offer_posts_custom_column', 'car_dealer_offer_admin_column_content', 10, 2 );
+}
 
 function car_dealer_offer_card( $offer_id ) {
 	$monthly = get_post_meta( $offer_id, '_offer_monthly_payment', true );

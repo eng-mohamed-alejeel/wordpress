@@ -6,22 +6,24 @@ function car_dealer_crm_stages() {
  return array( 'new' => 'عميل جديد', 'contacted' => 'تم التواصل', 'visit' => 'زيارة / تجربة قيادة', 'proposal' => 'عرض سعر', 'negotiation' => 'تفاوض', 'won' => 'تم البيع', 'lost' => 'فرصة مغلقة' );
 }
 function car_dealer_crm_url( $args = array() ) { return add_query_arg( $args, admin_url( 'admin.php?page=car-dealer-crm' ) ); }
-add_action( 'init', function () {
- register_post_type( 'cd_crm', array( 'public' => false, 'publicly_queryable' => false, 'show_ui' => false, 'show_in_rest' => false, 'rewrite' => false, 'query_var' => false, 'supports' => array( 'title' ), 'capability_type' => 'post', 'map_meta_cap' => false, 'capabilities' => array( 'edit_post' => 'manage_car_dealer', 'read_post' => 'manage_car_dealer', 'delete_post' => 'manage_car_dealer', 'edit_posts' => 'manage_car_dealer', 'edit_others_posts' => 'manage_car_dealer', 'publish_posts' => 'manage_car_dealer', 'read_private_posts' => 'manage_car_dealer', 'delete_posts' => 'manage_car_dealer', 'create_posts' => 'do_not_allow' ) ) );
-} );
-add_filter( 'map_meta_cap', function ( $caps, $cap, $user_id, $args ) {
- if ( ! in_array( $cap, array( 'read_post', 'edit_post', 'delete_post' ), true ) || empty( $args[0] ) ) { return $caps; }
- $post = get_post( absint( $args[0] ) );
- if ( ! $post || 'cd_crm' !== $post->post_type || ! car_dealer_crm_is_retired( $post->ID ) ) { return $caps; }
- $user = get_userdata( $user_id );
- return 'read_post' === $cap && $user && ! empty( $user->allcaps['manage_options'] ) ? array( 'manage_options' ) : array( 'do_not_allow' );
-}, 20, 4 );
-add_action( 'admin_menu', function () {
- add_submenu_page( 'car-dealer-dashboard', 'إدارة العملاء CRM', 'إدارة العملاء CRM', 'manage_car_dealer', 'car-dealer-crm', 'car_dealer_crm_page' );
-} );
-add_action( 'admin_enqueue_scripts', function ( $hook ) {
- if ( false !== strpos( $hook, 'car-dealer' ) ) { wp_enqueue_style( 'car-dealer-crm', get_template_directory_uri() . '/assets/css/crm.css', array(), filemtime( __DIR__ . '/../assets/css/crm.css' ) ); }
-} );
+if ( ! function_exists( 'adc_core_owns_legacy_crm_workflow' ) || ! adc_core_owns_legacy_crm_workflow() ) {
+ add_action( 'init', function () {
+  register_post_type( 'cd_crm', array( 'public' => false, 'publicly_queryable' => false, 'show_ui' => false, 'show_in_rest' => false, 'rewrite' => false, 'query_var' => false, 'supports' => array( 'title' ), 'capability_type' => 'post', 'map_meta_cap' => false, 'capabilities' => array( 'edit_post' => 'manage_car_dealer', 'read_post' => 'manage_car_dealer', 'delete_post' => 'manage_car_dealer', 'edit_posts' => 'manage_car_dealer', 'edit_others_posts' => 'manage_car_dealer', 'publish_posts' => 'manage_car_dealer', 'read_private_posts' => 'manage_car_dealer', 'delete_posts' => 'manage_car_dealer', 'create_posts' => 'do_not_allow' ) ) );
+ } );
+ add_filter( 'map_meta_cap', function ( $caps, $cap, $user_id, $args ) {
+  if ( ! in_array( $cap, array( 'read_post', 'edit_post', 'delete_post' ), true ) || empty( $args[0] ) ) { return $caps; }
+  $post = get_post( absint( $args[0] ) );
+  if ( ! $post || 'cd_crm' !== $post->post_type || ! car_dealer_crm_is_retired( $post->ID ) ) { return $caps; }
+  $user = get_userdata( $user_id );
+  return 'read_post' === $cap && $user && ! empty( $user->allcaps['manage_options'] ) ? array( 'manage_options' ) : array( 'do_not_allow' );
+ }, 20, 4 );
+ add_action( 'admin_menu', function () {
+  add_submenu_page( 'car-dealer-dashboard', 'إدارة العملاء CRM', 'إدارة العملاء CRM', 'manage_car_dealer', 'car-dealer-crm', 'car_dealer_crm_page' );
+ } );
+ add_action( 'admin_enqueue_scripts', function ( $hook ) {
+  if ( false !== strpos( $hook, 'car-dealer' ) ) { wp_enqueue_style( 'car-dealer-crm', get_template_directory_uri() . '/assets/css/crm.css', array(), filemtime( __DIR__ . '/../assets/css/crm.css' ) ); }
+ } );
+}
 function car_dealer_crm_meta( $id, $key ) { return get_post_meta( $id, '_crm_' . $key, true ); }
 function car_dealer_crm_retired_customer_id( $id ) { return absint( car_dealer_crm_meta( $id, 'retired_core_customer_id' ) ); }
 function car_dealer_crm_is_retired( $id ) { return metadata_exists( 'post', $id, '_crm_retired_core_customer_id' ) || '1' === (string) car_dealer_crm_meta( $id, 'privacy_erased' ); }
@@ -38,8 +40,10 @@ function car_dealer_retire_account_crm_profiles( $user_id, $customer_id ) {
   car_dealer_crm_log( $id, 'تم اعتزال الملف القديم بعد ربط الحساب بملف Core #' . $customer_id . '. أصبح السجل للقراءة الإدارية فقط.' );
  }
 }
-add_action( 'adc_customer_account_linked', 'car_dealer_retire_account_crm_profiles', 10, 2 );
-add_action( 'adc_customer_profile_synced', 'car_dealer_retire_account_crm_profiles', 10, 2 );
+if ( ! function_exists( 'adc_core_owns_legacy_crm_workflow' ) || ! adc_core_owns_legacy_crm_workflow() ) {
+ add_action( 'adc_customer_account_linked', 'car_dealer_retire_account_crm_profiles', 10, 2 );
+ add_action( 'adc_customer_profile_synced', 'car_dealer_retire_account_crm_profiles', 10, 2 );
+}
 /** Retire pre-1.18 account profiles in bounded administrator batches without contact matching. */
 function car_dealer_reconcile_retired_crm_profiles() {
  if ( ! current_user_can( 'manage_options' ) || ! class_exists( '\\AutoDealership\\Database\\Schema' ) || ! \AutoDealership\Database\Schema::is_ready() ) { return; }
@@ -48,7 +52,9 @@ function car_dealer_reconcile_retired_crm_profiles() {
  $rows = $wpdb->get_results( "SELECT account.meta_value user_id,c.id customer_id,MIN(p.ID) first_id FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} account ON account.post_id=p.ID AND account.meta_key='_crm_user_id' INNER JOIN $customers c ON c.account_user_id=CAST(account.meta_value AS UNSIGNED) AND c.merged_into_id IS NULL LEFT JOIN {$wpdb->postmeta} retired ON retired.post_id=p.ID AND retired.meta_key IN ('_crm_retired_core_customer_id','_crm_privacy_erased') WHERE p.post_type='cd_crm' AND p.post_status='private' AND retired.meta_id IS NULL GROUP BY account.meta_value,c.id ORDER BY first_id ASC LIMIT 100", ARRAY_A ) ?: array();
  foreach ( $rows as $row ) { car_dealer_retire_account_crm_profiles( absint( $row['user_id'] ), absint( $row['customer_id'] ) ); }
 }
-add_action( 'admin_init', 'car_dealer_reconcile_retired_crm_profiles', 30 );
+if ( ! function_exists( 'adc_core_owns_legacy_crm_workflow' ) || ! adc_core_owns_legacy_crm_workflow() ) {
+ add_action( 'admin_init', 'car_dealer_reconcile_retired_crm_profiles', 30 );
+}
 function car_dealer_crm_record( $id ) {
  $post = get_post( $id );
  if ( ! $post || 'cd_crm' !== $post->post_type || 'private' !== $post->post_status ) { wp_die( 'ملف العميل غير موجود.', '', array( 'response' => 404 ) ); }
@@ -95,9 +101,12 @@ function car_dealer_crm_save() {
  } else { wp_die( 'الإجراء غير صالح.' ); }
  wp_safe_redirect( car_dealer_crm_url( array( 'customer' => $id, 'saved' => 1 ) ) ); exit;
 }
-add_action( 'admin_post_car_dealer_crm', 'car_dealer_crm_save' );
+if ( ! function_exists( 'adc_core_owns_legacy_crm_workflow' ) || ! adc_core_owns_legacy_crm_workflow() ) {
+ add_action( 'admin_post_car_dealer_crm', 'car_dealer_crm_save' );
+}
 
-add_action( 'admin_post_car_dealer_crm_export', function () {
+if ( ! function_exists( 'adc_core_owns_legacy_crm_workflow' ) || ! adc_core_owns_legacy_crm_workflow() ) {
+ add_action( 'admin_post_car_dealer_crm_export', function () {
  if ( ! current_user_can( 'manage_car_dealer' ) ) { wp_die( 'ليست لديك صلاحية.', '', array( 'response' => 403 ) ); }
  check_admin_referer( 'car_dealer_crm' );
  nocache_headers();
@@ -121,7 +130,8 @@ add_action( 'admin_post_car_dealer_crm_export', function () {
   }
  } while ( count( $rows ) === 200 );
  fclose( $stream ); exit;
-} );
+ } );
+}
 
 /** Source IDs make repeated imports safe; identical emails share a customer file. */
 function car_dealer_crm_capture( $type, $row ) {
@@ -167,12 +177,14 @@ function car_dealer_crm_import() {
  }
  return $count;
 }
-add_action( 'car_dealer_engagement_created', function ( $type, $id ) {
- global $wpdb;
- $suffix = 'booking' === $type ? 'bookings' : 'messages';
- $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}car_dealer_{$suffix} WHERE id = %d", $id ) );
- if ( $row ) { car_dealer_crm_capture( $type, $row ); }
-}, 10, 2 );
+if ( ! function_exists( 'adc_core_owns_legacy_crm_workflow' ) || ! adc_core_owns_legacy_crm_workflow() ) {
+ add_action( 'car_dealer_engagement_created', function ( $type, $id ) {
+  global $wpdb;
+  $suffix = 'booking' === $type ? 'bookings' : 'messages';
+  $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}car_dealer_{$suffix} WHERE id = %d", $id ) );
+  if ( $row ) { car_dealer_crm_capture( $type, $row ); }
+ }, 10, 2 );
+}
 function car_dealer_crm_form_start( $action, $id = 0 ) {
  echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="car_dealer_crm"><input type="hidden" name="crm_action" value="' . esc_attr( $action ) . '"><input type="hidden" name="id" value="' . absint( $id ) . '">';
  wp_nonce_field( 'car_dealer_crm' );

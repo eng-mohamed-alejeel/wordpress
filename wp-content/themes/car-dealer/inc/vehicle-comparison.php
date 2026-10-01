@@ -3,21 +3,27 @@
 defined( 'ABSPATH' ) || exit;
 
 function car_dealer_get_comparison_list() {
+	if ( class_exists( '\\AutoDealership\\Tools\\VehicleComparison' ) && function_exists( 'adc_core_owns_public_tools_actions' ) && adc_core_owns_public_tools_actions() ) {
+		return \AutoDealership\Tools\VehicleComparison::current();
+	}
 	$raw = isset( $_COOKIE['car_dealer_compare'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['car_dealer_compare'] ) ) : '';
 	$ids = array_filter( array_map( 'absint', explode( ',', $raw ) ) );
 	return array_slice( array_values( array_unique( $ids ) ), 0, 4 );
 }
 
 function car_dealer_set_comparison_list( $ids ) {
+	if ( function_exists( 'adc_core_owns_public_tools_actions' ) && adc_core_owns_public_tools_actions() ) { return; }
 	$value = implode( ',', array_slice( array_values( array_unique( array_map( 'absint', $ids ) ) ), 0, 4 ) );
 	setcookie( 'car_dealer_compare', $value, time() + MONTH_IN_SECONDS, COOKIEPATH ?: '/', COOKIE_DOMAIN, is_ssl(), true );
 	$_COOKIE['car_dealer_compare'] = $value;
 }
 
-function car_dealer_comparison_button( $car_id = 0 ) {
-	$car_id = $car_id ? absint( $car_id ) : get_the_ID();
-	if ( ! $car_id ) { return; }
-	printf( '<button class="btn btn-outline cd-compare-button" type="button" data-car-id="%1$d">%2$s</button>', esc_attr( $car_id ), esc_html__( 'أضف للمقارنة', 'car-dealer' ) );
+if ( ! function_exists( 'car_dealer_comparison_button' ) ) {
+	function car_dealer_comparison_button( $car_id = 0 ) {
+		$car_id = $car_id ? absint( $car_id ) : get_the_ID();
+		if ( ! $car_id ) { return; }
+		printf( '<button class="btn btn-outline cd-compare-button" type="button" data-car-id="%1$d">%2$s</button>', esc_attr( $car_id ), esc_html__( 'أضف للمقارنة', 'car-dealer' ) );
+	}
 }
 
 function car_dealer_ajax_comparison() {
@@ -31,8 +37,10 @@ function car_dealer_ajax_comparison() {
 	car_dealer_set_comparison_list( $list );
 	wp_send_json_success( array( 'count' => count( car_dealer_get_comparison_list() ), 'message' => __( 'تم تحديث المقارنة', 'car-dealer' ) ) );
 }
-add_action( 'wp_ajax_car_dealer_comparison', 'car_dealer_ajax_comparison' );
-add_action( 'wp_ajax_nopriv_car_dealer_comparison', 'car_dealer_ajax_comparison' );
+if ( ! function_exists( 'adc_core_owns_public_tools_actions' ) || ! adc_core_owns_public_tools_actions() ) {
+	add_action( 'wp_ajax_car_dealer_comparison', 'car_dealer_ajax_comparison' );
+	add_action( 'wp_ajax_nopriv_car_dealer_comparison', 'car_dealer_ajax_comparison' );
+}
 
 function car_dealer_comparison_shortcode() {
 	$ids = car_dealer_get_comparison_list();
@@ -45,4 +53,6 @@ function car_dealer_comparison_shortcode() {
 	wp_reset_postdata();
 	return ob_get_clean();
 }
-add_shortcode( 'car_dealer_comparison', 'car_dealer_comparison_shortcode' );
+if ( ! shortcode_exists( 'car_dealer_comparison' ) ) {
+	add_shortcode( 'car_dealer_comparison', 'car_dealer_comparison_shortcode' );
+}

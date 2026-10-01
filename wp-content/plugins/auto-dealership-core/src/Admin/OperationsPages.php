@@ -23,7 +23,7 @@ final class OperationsPages {
 	}
 
 	public static function menu(): void {
-		if ( current_user_can( 'adc_view_inventory' ) || current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) ) {
+		if ( current_user_can( 'adc_view_inventory' ) || current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'adc_view_marketing_subscribers' ) ) {
 			add_menu_page( __( 'Dealership Operations', 'auto-dealership-core' ), __( 'Dealership Operations', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-workspace', array( self::class, 'render' ), 'dashicons-car', 57 );
 		}
 		if ( current_user_can( 'adc_view_inventory' ) ) {
@@ -41,6 +41,10 @@ final class OperationsPages {
 		if ( ! current_user_can( 'adc_view_inventory' ) ) {
 			if ( current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) ) {
 				self::render_leads();
+				return;
+			}
+			if ( current_user_can( 'adc_view_marketing_subscribers' ) ) {
+				EngagementPages::render_subscribers();
 				return;
 			}
 			wp_die( esc_html__( 'لا تملك صلاحية عرض المخزون.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );

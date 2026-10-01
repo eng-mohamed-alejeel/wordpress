@@ -4,14 +4,16 @@ namespace AutoDealership\Leads;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Owns the temporary compatibility tables used by account request views.
+ * Owns the controlled compatibility projections used by account request views.
  *
- * New writes enter through plugin services only. The tables remain until the
- * account and request workflow no longer require legacy request identifiers.
+ * New writes enter through plugin services only. Message/booking storage stays
+ * available until native account/request/privacy reads replace it. Subscribers
+ * are a separate canonical consent store and are not a disposable copy.
  */
 final class LegacyEngagementStore {
 	public const VERSION = '1.3.0';
 	public const OPTION_VERSION = 'adc_legacy_engagement_version';
+	public const RETIREMENT_DECISION = 'retain_controlled_compatibility';
 
 	public static function owns_schema(): bool {
 		return true;

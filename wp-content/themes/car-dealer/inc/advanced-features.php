@@ -5,7 +5,9 @@ defined( 'ABSPATH' ) || exit;
 function car_dealer_advanced_meta_box() {
 	add_meta_box( 'car-advanced-details', __( 'ميزات العرض', 'car-dealer' ), 'car_dealer_advanced_meta_box_html', 'car', 'side', 'default' );
 }
-add_action( 'add_meta_boxes', 'car_dealer_advanced_meta_box' );
+if ( ! function_exists( 'adc_core_owns_vehicle_post_editor' ) || ! adc_core_owns_vehicle_post_editor() ) {
+	add_action( 'add_meta_boxes', 'car_dealer_advanced_meta_box' );
+}
 
 function car_dealer_advanced_meta_box_html( $post ) {
 	wp_nonce_field( 'car_dealer_save_advanced', 'car_dealer_advanced_nonce' );
@@ -25,7 +27,9 @@ function car_dealer_save_advanced_meta( $post_id ) {
 		update_post_meta( $post_id, '_car_features', sanitize_textarea_field( wp_unslash( $_POST['_car_features'] ) ) );
 	}
 }
-add_action( 'save_post_car', 'car_dealer_save_advanced_meta' );
+if ( ! function_exists( 'adc_core_owns_vehicle_post_editor' ) || ! adc_core_owns_vehicle_post_editor() ) {
+	add_action( 'save_post_car', 'car_dealer_save_advanced_meta' );
+}
 
 function car_dealer_manage_car_columns( $columns ) {
 	$columns['car_price'] = __( 'السعر', 'car-dealer' );

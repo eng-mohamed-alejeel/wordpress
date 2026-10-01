@@ -8,11 +8,14 @@ add_filter( 'adc_customer_account_url', function ( $url, $fragment = '' ) {
 }, 10, 2 );
 function car_dealer_account_view() { return isset( $_GET['cd_account'] ) && is_string( $_GET['cd_account'] ) ? sanitize_key( $_GET['cd_account'] ) : ''; }
 function car_dealer_account_field( string $name ) { return isset( $_POST[$name] ) && is_string( $_POST[$name] ) ? wp_unslash( $_POST[$name] ) : ''; }
-add_action( 'init', function () { add_role( 'car_dealer_customer', 'عميل المعرض', array( 'read' => true ) ); } );
+if ( ! function_exists( 'adc_core_owns_customer_account_actions' ) || ! adc_core_owns_customer_account_actions() ) {
+ add_action( 'init', function () { add_role( 'car_dealer_customer', 'عميل المعرض', array( 'read' => true ) ); } );
+}
 function car_dealer_account_kind( WP_User $user ) {
  if ( user_can( $user, 'manage_options' ) ) { return 'administrator'; }
- if ( user_can( $user, 'edit_others_cars' ) && user_can( $user, 'manage_car_dealer' ) ) { return 'manager'; }
- if ( user_can( $user, 'manage_car_dealer' ) ) { return 'sales'; }
+ if ( user_can( $user, 'adc_view_branch_leads' ) || ( user_can( $user, 'edit_others_cars' ) && user_can( $user, 'manage_car_dealer' ) ) ) { return 'manager'; }
+ if ( user_can( $user, 'adc_view_own_leads' ) || user_can( $user, 'manage_car_dealer' ) ) { return 'sales'; }
+ if ( user_can( $user, 'adc_view_workspace' ) ) { return 'staff'; }
  return 'customer';
 }
 function car_dealer_account_links() {
@@ -46,6 +49,9 @@ add_action( 'admin_init', function () {
 } );
 
 function car_dealer_account_process( string $view ) {
+  if ( function_exists( 'adc_core_owns_customer_account_actions' ) && adc_core_owns_customer_account_actions() && class_exists( '\AutoDealership\Accounts\CustomerAccount' ) ) {
+   return \AutoDealership\Accounts\CustomerAccount::process_request( $view );
+  }
   if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) { return ''; }
   if ( ! wp_verify_nonce( car_dealer_account_field( '_wpnonce' ), 'cd_account_' . $view ) ) { return 'انتهت صلاحية النموذج. حدّث الصفحة وحاول مجدداً.'; }
   if ( 'dashboard' === $view && is_user_logged_in() ) {

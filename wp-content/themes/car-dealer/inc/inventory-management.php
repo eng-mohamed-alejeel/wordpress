@@ -5,7 +5,9 @@ defined( 'ABSPATH' ) || exit;
 function car_dealer_inventory_meta_box() {
 	add_meta_box( 'car-inventory', __( 'حالة المخزون', 'car-dealer' ), 'car_dealer_inventory_meta_box_html', 'car', 'side', 'high' );
 }
-add_action( 'add_meta_boxes', 'car_dealer_inventory_meta_box' );
+if ( ! function_exists( 'adc_core_owns_vehicle_post_editor' ) || ! adc_core_owns_vehicle_post_editor() ) {
+	add_action( 'add_meta_boxes', 'car_dealer_inventory_meta_box' );
+}
 
 function car_dealer_inventory_meta_box_html( $post ) {
 	wp_nonce_field( 'car_dealer_save_inventory', 'car_dealer_inventory_nonce' );
@@ -30,7 +32,9 @@ function car_dealer_save_inventory_meta( $post_id ) {
 	update_post_meta( $post_id, '_car_inventory_status', sanitize_key( wp_unslash( $_POST['_car_inventory_status'] ?? 'available' ) ) );
 	update_post_meta( $post_id, '_car_special_offer', isset( $_POST['_car_special_offer'] ) ? 1 : 0 );
 }
-add_action( 'save_post_car', 'car_dealer_save_inventory_meta' );
+if ( ! function_exists( 'adc_core_owns_vehicle_post_editor' ) || ! adc_core_owns_vehicle_post_editor() ) {
+	add_action( 'save_post_car', 'car_dealer_save_inventory_meta' );
+}
 
 function car_dealer_inventory_columns( $columns ) {
 	$columns['inventory_status'] = __( 'حالة المخزون', 'car-dealer' );

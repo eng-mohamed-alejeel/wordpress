@@ -18,6 +18,7 @@ final class MigrationInventory {
 			'vehicles' => self::vehicles( $fallback_branch ),
 			'crm' => self::crm(),
 			'offers' => self::offers(),
+			'compatibility_retirement' => CompatibilityRetirement::report(),
 			'sources' => self::sources(),
 		);
 	}
@@ -84,7 +85,7 @@ final class MigrationInventory {
 		return array(
 			'post_types' => array( 'car' => 'vehicle inventory', 'car_offer' => 'offers pending target model', 'cd_crm' => 'legacy CRM compatibility' ),
 			'tables' => array( 'car_dealer_messages' => 'CRM lead intake', 'car_dealer_bookings' => 'test-drive lead intake', 'car_dealer_subscribers' => 'separate marketing-consent purpose' ),
-			'write_paths' => array( 'car post editor', 'car_offer post editor', 'car_dealer_contact AJAX', 'car_dealer_booking AJAX', 'car_dealer_subscribe AJAX', 'car_dealer_crm admin actions' ),
+			'write_paths' => array( 'plugin vehicle editor', 'plugin offer editor', 'PublicIntake compatibility AJAX', 'MarketingSubscription compatibility AJAX', 'CustomerAccount', 'LeadService and RequestWorkflow', 'PublicTools browser comparison state' ),
 		);
 	}
 }

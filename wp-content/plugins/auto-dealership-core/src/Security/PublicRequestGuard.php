@@ -10,6 +10,7 @@ final class PublicRequestGuard {
 	public const POLICIES = array(
 		'intake'      => array( 'limit'=>8, 'window'=>3600 ),
 		'public_read' => array( 'limit'=>120, 'window'=>60 ),
+		'account_auth'=> array( 'limit'=>10, 'window'=>900 ),
 	);
 
 	public static function table(): string { return Schema::table( 'request_limits' ); }

@@ -11,6 +11,7 @@ defined( 'ABSPATH' ) || exit;
 final class CustomerIdentity {
 	private const PREFERENCE_META = 'adc_marketing_consent';
 	private const PREFERENCE_AT_META = 'adc_marketing_consent_at';
+	private static bool $profile_sync_suspended = false;
 
 	public static function boot(): void {
 		add_action( 'profile_update', array( self::class, 'profile_updated' ), 20, 2 );
@@ -20,10 +21,25 @@ final class CustomerIdentity {
 		add_action( 'wp_login', array( self::class, 'account_login' ), 20, 2 );
 	}
 
-	public static function profile_updated( int $user_id, $old_user_data = null ): void { self::sync_account_profile( $user_id ); }
-	public static function account_login( string $login, \WP_User $user ): void { self::sync_account_profile( (int) $user->ID ); }
+	public static function profile_updated( int $user_id, $old_user_data = null ): void {
+		if ( ! self::$profile_sync_suspended ) { self::sync_account_profile( $user_id ); }
+	}
+	public static function account_login( string $login, \WP_User $user ): void {
+		if ( ! self::$profile_sync_suspended ) { self::sync_account_profile( (int) $user->ID ); }
+	}
 	public static function profile_meta_updated( $meta_id, int $user_id, string $key, $value = null ): void {
-		if ( 'car_dealer_phone' === $key ) { self::sync_account_profile( $user_id ); }
+		if ( ! self::$profile_sync_suspended && 'car_dealer_phone' === $key ) { self::sync_account_profile( $user_id ); }
+	}
+
+	/** Runs account-table changes without recursively starting profile synchronization. */
+	public static function without_profile_sync( callable $callback ) {
+		$before = self::$profile_sync_suspended;
+		self::$profile_sync_suspended = true;
+		try {
+			return $callback();
+		} finally {
+			self::$profile_sync_suspended = $before;
+		}
 	}
 
 	/** Return the current account's explicit marketing preference without exposing another account. */
@@ -69,6 +85,65 @@ final class CustomerIdentity {
 		self::clean_account_cache( $user_id );
 		do_action( 'adc_customer_preferences_updated', $user_id, (int) ( $row['id'] ?? 0 ), $marketing );
 		return array( 'consent_marketing'=>$marketing, 'recorded_at'=>$recorded_at, 'linked_customer_id'=>(int) ( $row['id'] ?? 0 ) );
+	}
+
+	/** Atomically updates the signed-in account profile and any linked core customer. */
+	public static function update_account_profile( int $user_id, string $name, string $mobile ) {
+		global $wpdb;
+		if ( $user_id < 1 || get_current_user_id() !== $user_id ) { return self::error( 'adc_identity_forbidden', 403 ); }
+		$name = sanitize_text_field( $name );
+		$mobile = ContactIdentity::normalize_mobile( $mobile, false );
+		$name_length = function_exists( 'mb_strlen' ) ? mb_strlen( $name ) : strlen( $name );
+		if ( '' === $name || $name_length > 250 || is_wp_error( $mobile ) ) { return self::error( 'adc_identity_invalid', 400 ); }
+		if ( ! Schema::is_ready() ) { return self::error( 'adc_identity_unavailable', 503 ); }
+		foreach ( array( $wpdb->users, $wpdb->usermeta ) as $table ) {
+			if ( 'InnoDB' !== $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $table ) ) ) { return self::error( 'adc_identity_unavailable', 503 ); }
+		}
+		if ( ! Transaction::begin() ) { return self::error( 'adc_identity_unavailable', 503 ); }
+		$user = $wpdb->get_row( $wpdb->prepare( "SELECT ID,display_name,user_email FROM {$wpdb->users} WHERE ID=%d FOR UPDATE", $user_id ), ARRAY_A );
+		$customer = $wpdb->get_row( $wpdb->prepare( 'SELECT id,merged_into_id,full_name,mobile,email FROM ' . Schema::table( 'customers' ) . ' WHERE account_user_id=%d FOR UPDATE', $user_id ), ARRAY_A );
+		if ( $wpdb->last_error || ! $user || ( $customer && $customer['merged_into_id'] ) ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_identity_unavailable', 503 ); }
+		$old_mobile = (string) get_user_meta( $user_id, 'car_dealer_phone', true );
+		$email = strtolower( sanitize_email( $user['user_email'] ) );
+		$fields = array();
+		if ( (string) $user['display_name'] !== $name ) { $fields[] = 'display_name'; }
+		if ( $old_mobile !== $mobile ) { $fields[] = 'phone'; }
+		if ( $customer && (string) $customer['full_name'] !== $name ) { $fields[] = 'customer_full_name'; }
+		if ( $customer && (string) $customer['mobile'] !== $mobile ) { $fields[] = 'customer_mobile'; }
+		if ( $customer && strtolower( (string) $customer['email'] ) !== $email ) { $fields[] = 'customer_email'; }
+		$fields = array_values( array_unique( $fields ) );
+		if ( ! $fields ) { $wpdb->query( 'ROLLBACK' ); return array( 'updated'=>false, 'linked_customer_id'=>(int) ( $customer['id'] ?? 0 ) ); }
+
+		$ok = true;
+		if ( in_array( 'display_name', $fields, true ) ) {
+			$ok = 1 === $wpdb->update( $wpdb->users, array( 'display_name'=>$name ), array( 'ID'=>$user_id ), array( '%s' ), array( '%d' ) );
+		}
+		if ( $ok && in_array( 'phone', $fields, true ) ) {
+			$meta_result = self::without_profile_sync( static fn() => update_user_meta( $user_id, 'car_dealer_phone', $mobile ) );
+			$ok = false !== $meta_result && (string) get_user_meta( $user_id, 'car_dealer_phone', true ) === $mobile;
+		}
+		if ( $ok && $customer ) {
+			$ok = false !== $wpdb->update(
+				Schema::table( 'customers' ),
+				array( 'full_name'=>$name, 'mobile'=>$mobile, 'email'=>$email, 'updated_at'=>current_time( 'mysql', true ) ),
+				array( 'id'=>(int) $customer['id'] )
+			);
+		}
+		$subject_type = $customer ? 'customer' : 'account';
+		$subject_id = $customer ? (int) $customer['id'] : $user_id;
+		if ( ! $ok ) {
+			$wpdb->query( 'ROLLBACK' );
+			self::clean_account_cache( $user_id );
+			return self::error( 'adc_identity_unavailable', 503 );
+		}
+		$committed = Transaction::commit( static fn() => AuditLog::record( 'customer.account_profile_updated', $subject_type, $subject_id, '', array( 'changed_fields'=>array() ), array( 'changed_fields'=>$fields ) ) );
+		if ( ! $committed ) {
+			self::clean_account_cache( $user_id );
+			return self::error( 'adc_identity_unavailable', 503 );
+		}
+		self::clean_account_cache( $user_id );
+		if ( $customer ) { do_action( 'adc_customer_profile_synced', $user_id, (int) $customer['id'] ); }
+		return array( 'updated'=>true, 'linked_customer_id'=>(int) ( $customer['id'] ?? 0 ), 'fields'=>$fields );
 	}
 
 	/** Immediately refresh an existing account-linked customer; never creates or claims one. */

@@ -16,6 +16,10 @@ The core plugin has three deliberately anonymous relative method/route pairs, ex
 
 `PublicRequestGuard` uses an InnoDB row per policy, fixed window and caller identity. `INSERT ... ON DUPLICATE KEY UPDATE` assigns the attempt atomically; the connection-local result determines whether that exact request is accepted. A storage or schema error fails closed with `adc_rate_unavailable` (503). An exceeded policy returns `adc_rate_limited` (429) with `retry_after` metadata.
 
+Version 1.29.1 adds the `account_auth` policy for the theme-compatible sign-in and registration boundary: ten attempts per resolved caller in a 15-minute window. The same opaque atomic storage rules apply; profile and preference updates remain authenticated and nonce protected.
+
+Version 1.29.2 places comparison changes and calculator estimates behind plugin-owned nonces and the existing `public_read` atomic policy. Comparison values are bounded to four public post IDs and finance-estimate inputs are bounded before calculation; neither endpoint creates a business record.
+
 Caller identity is the authenticated WordPress user ID or a resolved network address. It is combined with the policy/window and stored only as an HMAC-SHA256 bucket key using the WordPress authentication salt. Raw addresses, user IDs and forwarded chains are not stored in `adc_request_limits`, returned by the API, sent to the rate-limit hook, or shown in the administrator page. Salt rotation naturally creates new opaque buckets.
 
 The fixed window is an application safety control. Production edge/WAF limits, distributed denial-of-service controls and capacity protection remain deployment responsibilities.

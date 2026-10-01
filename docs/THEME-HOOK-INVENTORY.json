@@ -1,8 +1,16 @@
 {
-  "inventory_version": "1.0.0",
+  "inventory_version": "1.4.0",
   "recorded_at": "2026-10-01",
   "theme": "car-dealer",
   "plugin": "auto-dealership-core",
+  "compatibility_retirement": {
+    "decision": "retain_controlled_compatibility",
+    "message_booking_role": "required_request_projection",
+    "subscriber_role": "canonical_marketing_consent_store",
+    "legacy_crm_role": "private_read_only_history",
+    "aggregate_readiness": "AutoDealership\\Migration\\CompatibilityRetirement::report",
+    "drop_allowed": false
+  },
   "active_theme_require_chain": [
     "functions.php",
     "inc/contact-form-manager.php",
@@ -29,17 +37,24 @@
     {
       "identifiers": ["cd_crm"],
       "source": "inc/crm.php",
-      "target": "plugin legacy CRM reader and retirement bridge",
-      "status": "theme_owned_compatibility_pending"
+      "target": "AutoDealership\\Leads\\LegacyCrmBridge",
+      "status": "plugin_owned_private_read_only_history"
     }
   ],
   "active_business_paths": [
     {
       "hooks": ["add_meta_boxes", "save_post"],
       "source": "functions.php",
-      "current_behavior": "renders and writes legacy car post metadata",
-      "target": "plugin content editor backed by inventory and catalog services",
-      "status": "pending_1.29-C"
+      "current_behavior": "plugin renders and writes compatibility car metadata; mapped inventory status is read-only and follows the operational vehicle",
+      "target": "AutoDealership\\Content\\VehiclePostEditor",
+      "status": "plugin_owned_with_guarded_theme_rollback"
+    },
+    {
+      "hooks": ["add_meta_boxes_car_offer", "save_post_car_offer", "manage_car_offer_posts_columns"],
+      "source": "inc/offers.php",
+      "current_behavior": "plugin validates offer linkage and owns offer metadata plus linked-car offer flags",
+      "target": "AutoDealership\\Content\\OfferPostEditor",
+      "status": "plugin_owned_dormant_theme_source_guarded"
     },
     {
       "hooks": ["wp_ajax_car_dealer_lead", "wp_ajax_nopriv_car_dealer_lead"],
@@ -63,25 +78,40 @@
       "status": "plugin_owned_with_guarded_theme_rollback"
     },
     {
+      "hooks": ["admin_menu", "admin_enqueue_scripts"],
+      "identifiers": ["car-dealer-messages", "car-dealer-bookings", "car-dealer-subscribers"],
+      "source": "inc/contact-form-manager.php",
+      "current_behavior": "plugin renders bounded, capability-scoped engagement lists and enqueues a screen-only plugin stylesheet",
+      "target": "AutoDealership\\Admin\\EngagementPages and AutoDealership\\Leads\\EngagementQuery",
+      "status": "plugin_owned_with_guarded_theme_menu_rollback"
+    },
+    {
       "hooks": ["init", "admin_init", "template_redirect", "login_redirect", "show_admin_bar"],
       "source": "inc/accounts.php",
-      "current_behavior": "creates customer role and processes account/profile/password actions",
-      "target": "plugin account controller and customer role lifecycle",
-      "status": "pending_1.29-C"
+      "current_behavior": "theme renders and routes the account workspace; plugin processes registration, sign-in, profile, preferences and booking cancellation",
+      "target": "AutoDealership\\Accounts\\CustomerAccount and plugin capability lifecycle",
+      "status": "plugin_owned_writes_theme_presentation"
     },
     {
       "hooks": ["admin_post_car_dealer_crm", "admin_post_car_dealer_crm_export", "admin_init", "adc_customer_account_linked", "adc_customer_profile_synced", "car_dealer_engagement_created"],
       "source": "inc/crm.php",
-      "current_behavior": "writes, exports, captures and retires legacy CRM posts",
-      "target": "plugin CRM services plus read-only legacy retirement bridge",
-      "status": "pending_1.29-C"
+      "current_behavior": "plugin CRM services are active; cd_crm is plugin-registered read-only history with audited retirement",
+      "target": "LeadService, RequestWorkflow and LegacyCrmBridge",
+      "status": "plugin_owned_theme_handlers_guarded"
     },
     {
       "hooks": ["profile_update", "wp_login", "added_user_meta", "updated_user_meta", "deleted_user_meta", "admin_post_car_dealer_request_update", "admin_init"],
       "source": "inc/customer-workflow.php",
-      "current_behavior": "synchronizes legacy customer profiles and updates requests",
+      "current_behavior": "CustomerIdentity synchronizes linked customers and RequestWorkflow owns mapped request updates; unmapped history is read-only",
       "target": "CustomerIdentity and RequestWorkflow",
-      "status": "pending_1.29-C"
+      "status": "plugin_owned_theme_handlers_guarded"
+    },
+    {
+      "hooks": ["wp_ajax_car_dealer_comparison", "wp_ajax_nopriv_car_dealer_comparison", "wp_ajax_car_dealer_loan_calculator", "wp_ajax_nopriv_car_dealer_loan_calculator"],
+      "source": "functions.php plus dormant inc/vehicle-comparison.php and inc/loan-calculator.php",
+      "current_behavior": "plugin validates public comparison state and provider-neutral installment estimates; theme renders buttons, forms and card grids",
+      "target": "AutoDealership\\Tools\\VehicleComparison, LoanCalculator and PublicTools",
+      "status": "plugin_owned_decisions_theme_presentation_guarded_rollback"
     },
     {
       "hooks": ["admin_init", "after_switch_theme"],
@@ -93,7 +123,7 @@
   ],
   "durable_shortcodes": [
     {
-      "names": ["car_dealer_cars", "car_dealer_loan_calculator", "car_dealer_testimonials"],
+      "names": ["car_dealer_cars", "car_dealer_loan_calculator", "car_dealer_comparison", "car_dealer_testimonials"],
       "source": "functions.php",
       "target": "plugin registration with theme view adapters",
       "status": "pending_1.29-E"

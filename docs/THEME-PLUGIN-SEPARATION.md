@@ -6,7 +6,7 @@ Make `auto-dealership-core` the stable owner of dealership data, business rules,
 
 The cutover must preserve the current post type slugs, taxonomy slugs, post meta keys, URLs, shortcodes and legacy request identifiers. The intentionally empty business database must remain empty; this work does not create branches, brands, vehicles, customers, suppliers, offers or sample content.
 
-This is the immediate implementation increment after 1.28.0 and is tracked as **1.29.0 — theme/plugin ownership cutover**. The content-registry/compatibility-bridge code slice is implemented; its verification and the remaining slices are pending.
+This is the immediate implementation sequence after 1.28.0 and is currently tracked as **1.29.4 — plugin-owned engagement administration**. The registry, public-intake, vehicle/offer editor, account/CRM single-write, public comparison/calculator and compatibility-decision slices are implemented. The first administration slice now owns the message, booking and newsletter staff pages and their screen-only asset; verification and the remaining administration/public-adapter slices remain pending.
 
 ## Current repository finding
 
@@ -20,7 +20,7 @@ The active theme bootstrap currently loads these files directly:
 - `inc/public-catalog.php`
 - `inc/schema-markup.php`
 
-The theme source still contains compatibility definitions for `car`, `car_brand`, `car_category`, legacy engagement tables and public AJAX handlers, but the implemented plugin ownership facades now suppress those registrations and writers during normal operation. Vehicle metadata saving, the hidden CRM post type, account/customer mutations, durable shortcodes and public catalog adapters remain active theme responsibilities pending their later slices.
+The theme source still contains guarded compatibility definitions, but plugin ownership facades suppress their registrations and writers during normal operation. Vehicle/offer editors and account/customer/CRM/request mutations are plugin-owned. The hidden `cd_crm` type is registered by the plugin as private read-only history. Message, booking and newsletter staff pages are plugin-owned under their existing slugs, and the active account template points staff to core workspaces. Durable shortcodes and public catalog presentation adapters remain pending their later slices.
 
 Several other `inc/` files contain business or administration code but are not referenced by the current theme require chain. They must be classified as dormant, externally loaded or obsolete before any move. Copying them into the plugin without that check would reactivate duplicate hooks and handlers.
 
@@ -103,20 +103,22 @@ The plugin must never load a file from the theme or call a theme function. The t
 
 ### 1.29-C — Single write path
 
-**Implementation status:** public lead/contact/booking/subscription actions and compatibility-table installation are plugin-owned. Vehicle/offer metadata, account/CRM mutations and final retirement of compatibility copies remain pending.
+**Implementation status:** public lead/contact/booking/subscription actions, compatibility-table installation, vehicle/offer editors, account/CRM/request mutations and comparison/calculator decisions are plugin-owned. Controlled retirement is implemented as a retain decision with measured exit gates: no compatibility store is dropped while active code or privacy behavior depends on it.
 
-1. Move vehicle metadata/editor writes behind plugin validation and operational state rules.
+1. Move vehicle metadata/editor writes behind plugin validation and operational state rules. **Implemented:** mapped inventory status is read-only, unmapped compatibility values are validated, and failed audit persistence restores the previous metadata.
 2. Make `PublicIntake` the sole writer for messages, enquiries and test-drive requests while preserving compatibility action names.
-3. Make plugin CRM/account/customer workflow services the sole writers. Theme forms submit to supported plugin interfaces.
-4. Move offer, comparison and calculator decisions into plugin services where retained.
-5. Disable theme table installation and direct email dispatch after the plugin path is active. Preserve legacy tables read-only until the existing migration/retention policy permits removal.
+3. Make plugin CRM/account/customer workflow services the sole writers. Theme forms submit to supported plugin interfaces. **Implemented:** the existing account form delegates to `CustomerAccount`; `CustomerIdentity` and `RequestWorkflow` own updates; legacy `cd_crm` records are read-only history.
+4. Move offer, comparison and calculator decisions into plugin services where retained. **Implemented:** offer linkage uses operational availability when mapped and compensates persistence failures; comparison accepts prior cookie formats but admits only publicly eligible vehicles; the calculator returns a bounded provider-neutral estimate and does not create a finance request.
+5. Disable theme table installation and direct email dispatch after the plugin path is active. Keep historical rows read-only; allow only the controlled plugin projection writes still required by account/request/privacy behavior until a native replacement satisfies the retirement gates.
 6. Audit every cutover write and preserve branch, ownership, replay, consent and privacy behavior.
 
 **Exit condition:** theme PHP performs no dealership database writes, role/capability mutation, operational email dispatch, cron work or business AJAX/admin-post handling.
 
+**Compatibility decision:** `car_dealer_messages` and `car_dealer_bookings` remain plugin-written controlled projections until native account history, request updates and privacy handling replace them. `car_dealer_subscribers` is a canonical consent store and requires a separately approved successor. `cd_crm` remains private read-only history. `CompatibilityRetirement::report()` exposes aggregate readiness and permanently returns `can_drop_request_tables=false` for this contract version; removal requires a later reviewed implementation that satisfies every reported exit requirement.
+
 ### 1.29-D — Operational administration
 
-1. Move dealership dashboard, CRM, vehicle/editor, engagement and workflow pages to plugin Admin modules.
+1. Move dealership dashboard, CRM, vehicle/editor, engagement and workflow pages to plugin Admin modules. **In progress:** CRM/workflow/inventory modules were already plugin-owned; 1.29.4 adds the existing engagement page slugs through `EngagementPages` and `EngagementQuery`.
 2. Move the CSS/JavaScript used only by those plugin pages into plugin assets and enqueue it only on owned screens.
 3. Replace theme counters and direct SQL with scoped plugin query services.
 4. Retain WordPress editorial editing where appropriate, but enforce plugin validation on dealership fields.
@@ -139,6 +141,7 @@ The plugin must never load a file from the theme or call a theme function. The t
 1. Enable each ownership switch independently; never run old and new writers together.
 2. Compare registered hooks/routes, public URLs and bounded record counts before and after each switch.
 3. Rehearse rollback by restoring the prior owner flag without changing identifiers or deleting records.
+   Vehicle/offer editor rollback flags are `adc_core_vehicle_post_editor_enabled` and `adc_core_offer_post_editor_enabled`. Account/legacy CRM rollback flags are `adc_core_customer_account_enabled` and `adc_core_legacy_crm_bridge_enabled`. Public comparison/calculator rollback uses `adc_core_public_tools_enabled`. Set them before plugin bootstrap so guarded theme hooks resume without changing identifiers.
 4. Remove compatibility code only after the new owner passes acceptance and the rollback window closes.
 5. Classify dormant files and remove them in a separate reviewed change; do not mix deletion with ownership transfer.
 
@@ -165,4 +168,4 @@ The implemented **1.29-B content registry and compatibility bridge** follows the
 4. Guard and then remove theme registration only after the plugin path is present.
 5. Record rewrite migration version in the plugin without creating content or flushing on normal requests.
 
-The public-intake portion of 1.29-C is implemented. The remaining 1.29-C work starts with vehicle/offer metadata writes, followed by account and legacy CRM mutations; each handoff must retain exactly one active writer.
+The public-intake, vehicle/offer metadata, account/CRM/request, comparison/calculator and controlled compatibility-decision portions of 1.29-C are implemented. The first 1.29-D slice is also implemented for engagement pages and staff account links. The next slice consolidates the remaining operational navigation/dashboard and records a final disposition for dormant administration modules; each handoff must retain exactly one active owner.

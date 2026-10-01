@@ -33,7 +33,7 @@ get_header();
 </div>
 <?php endif; ?>
 </form></div></section>
-<?php else : $user = wp_get_current_user(); $kind = car_dealer_account_kind( $user ); $labels = array( 'administrator' => 'مدير الموقع', 'manager' => 'مدير المعرض', 'sales' => 'مستشار المبيعات', 'customer' => 'حساب العميل' ); ?>
+<?php else : $user = wp_get_current_user(); $kind = car_dealer_account_kind( $user ); $labels = array( 'administrator' => 'مدير الموقع', 'manager' => 'مدير المعرض', 'sales' => 'مستشار المبيعات', 'staff' => 'موظف المعرض', 'customer' => 'حساب العميل' ); ?>
 <header class="cd-account-welcome"><div><span><?php echo esc_html( $labels[$kind] ); ?></span><h1>مرحباً، <?php echo esc_html( $user->display_name ); ?></h1><p>كل ما تحتاجه لإدارة حسابك في مكان واحد.</p></div><a class="btn" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>">تسجيل الخروج</a></header>
 <?php if ( isset( $_GET['saved'] ) ) : ?><p class="cd-account-notice" role="status">تم تحديث بياناتك.</p><?php endif; ?>
 <?php if ( isset( $_GET['preferences_saved'] ) ) : ?><p class="cd-account-notice" role="status">تم حفظ تفضيلات التواصل التسويقي.</p><?php endif; ?>
@@ -42,14 +42,21 @@ get_header();
 <section class="cd-account-panel"><h2>مساحة العمل</h2><div class="cd-account-tools">
 <?php
 $tools = array(
- array( 'manage_car_dealer', 'admin.php?page=car-dealer-dashboard', 'داشبورد المعرض', 'نظرة عامة على نشاط المعرض' ),
- array( 'manage_car_dealer', 'admin.php?page=car-dealer-crm' . ( 'sales' === $kind ? '&mine=1' : '' ), 'العملاء والمتابعات', 'sales' === $kind ? 'العملاء المسندون إليك' : 'إدارة علاقات العملاء وفرص البيع' ),
- array( 'edit_cars', 'admin.php?page=car-dealer-add-car', 'إضافة سيارة', 'إضافة سيارة جديدة إلى المعرض' ),
- array( 'edit_others_cars', 'admin.php?page=car-dealer-inventory', 'تقرير المخزون', 'متابعة توفر السيارات وحالاتها' ),
- array( 'manage_options', 'admin.php?page=car-dealer-users', 'المستخدمون والصلاحيات', 'إدارة أدوار فريق العمل' ),
- array( 'manage_options', 'admin.php?page=car-dealer-settings', 'إعدادات المعرض', 'تخصيص بيانات الموقع' ),
+ array( 'adc_view_workspace', 'admin.php?page=adc-workspace', 'مساحة عمليات المعرض', 'الوصول إلى العمليات المسموح بها حسب دورك وفرعك' ),
+ array( array( 'adc_view_own_leads', 'adc_view_branch_leads' ), 'admin.php?page=adc-crm', 'العملاء والمتابعات', 'sales' === $kind ? 'العملاء المسندون إليك' : 'إدارة علاقات العملاء وفرص البيع' ),
+ array( array( 'adc_view_own_leads', 'adc_view_branch_leads' ), 'admin.php?page=car-dealer-messages', 'رسائل العملاء', 'متابعة طلبات التواصل والبيع الواقعة ضمن نطاقك' ),
+ array( array( 'adc_view_own_leads', 'adc_view_branch_leads' ), 'admin.php?page=car-dealer-bookings', 'حجوزات التجربة', 'متابعة مواعيد تجربة القيادة الواقعة ضمن نطاقك' ),
+ array( 'adc_view_marketing_subscribers', 'admin.php?page=car-dealer-subscribers', 'النشرة البريدية', 'عرض موافقات الاشتراك التسويقي الحالية' ),
+ array( 'edit_cars', 'post-new.php?post_type=car', 'إضافة سيارة منشورة', 'إنشاء صفحة السيارة التحريرية في الموقع' ),
+ array( 'adc_view_inventory', 'admin.php?page=adc-workspace', 'المخزون التشغيلي', 'متابعة المركبات وحالاتها التشغيلية' ),
+ array( 'manage_options', 'users.php', 'المستخدمون والصلاحيات', 'إدارة حسابات فريق العمل' ),
+ array( 'manage_options', 'admin.php?page=adc-settings', 'إعدادات المنصة', 'إدارة إعدادات ووحدات منصة المعرض' ),
 );
-foreach ( $tools as $tool ) { if ( current_user_can( $tool[0] ) ) { echo '<a href="' . esc_url( admin_url( $tool[1] ) ) . '"><strong>' . esc_html( $tool[2] ) . '</strong><span>' . esc_html( $tool[3] ) . '</span></a>'; } }
+foreach ( $tools as $tool ) {
+	$capabilities = (array) $tool[0];
+	$allowed = (bool) array_filter( $capabilities, 'current_user_can' );
+	if ( $allowed ) { echo '<a href="' . esc_url( admin_url( $tool[1] ) ) . '"><strong>' . esc_html( $tool[2] ) . '</strong><span>' . esc_html( $tool[3] ) . '</span></a>'; }
+}
 ?>
 </div></section>
 <?php else : ?>

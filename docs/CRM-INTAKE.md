@@ -4,6 +4,10 @@ Intake was implemented 2026-09-27; linked request workflow and bounded account i
 
 Version 1.29.0 moves ownership of the legacy-named theme AJAX hooks and compatibility-table installation into the plugin. The theme keeps the forms and a guarded rollback handler but does not register a second writer while plugin ownership is enabled. Compatibility message/booking rows remain until the account and request-workflow reads move to a native core projection. Newsletter subscription now requires explicit opt-in and commits through a separate audited plugin handler. Verification of this new ownership slice is pending.
 
+Version 1.29.1 moves the existing customer account mutations into `CustomerAccount`, provisions the customer role in the plugin and disables the theme's legacy CRM/request writers. `cd_crm` remains registered as private read-only history; linked profiles are audit-retired without creating or deleting CRM records. Unmapped compatibility requests are now read-only while plugin ownership is active. Verification of this ownership slice is pending.
+
+Version 1.29.3 formalizes the controlled-retirement decision. Message and booking tables remain required plugin-written projections because account history, request status/reply/appointment changes and privacy/retention still read them. Subscriber storage remains the canonical consent store. `CompatibilityRetirement::report()` exposes aggregate totals, linked/unmapped/active counts and explicit removal gates; it never returns customer records and does not mutate storage.
+
 ## Implemented boundary
 
 - `PublicIntake` validates public REST and theme contact/test-drive requests. `ContactIdentity` normalizes Saudi numbers, Arabic/Persian digits and email and requires explicit marketing consent.
@@ -37,7 +41,7 @@ Messages move from new to read/completed/cancelled, or read to completed/cancell
 
 Request text and appointment changes are recorded in erasable activity notes. The audit contains the request reference, old/new status, activity ID, changed field names and customer/staff action classification. A compatibility update, activity insert, lead update or audit failure rolls back the operation. The compatibility table must be InnoDB.
 
-Theme request tables, related-request lists and dashboard message/booking counters use the core view scope in SQL, including pagination totals. Unmapped legacy requests lack a branch/owner relationship and are limited to administrators for staff access; their original customer-owned cancellation remains available. Core sales roles use the CRM form without requiring the theme's `manage_car_dealer` capability. Old CRM profile contents and other legacy screens are not converted by this change.
+Theme request tables, related-request lists and dashboard message/booking counters use the core view scope in SQL, including pagination totals. Unmapped legacy requests lack a branch/owner relationship and are read-only while the 1.29.1 ownership boundary is enabled. Core sales roles use the plugin CRM form without requiring the theme's `manage_car_dealer` capability. Old CRM profile contents are preserved as private history and are not converted into active records.
 
 The authenticated-request reconciliation cursor now advances past core-owned requests without recreating legacy CRM records. Schema/storage lookup errors stop processing rather than treating a mapped request as legacy. Disabling the public intake switch does not disable authorization/auditing of already-linked requests.
 

@@ -16,7 +16,7 @@ Treat the platform as **not production ready** until the final release gate pass
 
 **Implementation note (1.28.0):** the additive supplier directory, restricted vehicle acquisition fields, finance-attempt lineage, expanded role matrix, account-security audit hooks, request IDs, compatible v1/enveloped v2 contracts and generated OpenAPI 3.1 discovery are implemented. Purchase-order workflow, automatic total-cost policy, mandatory provider terms, retention decisions and 1.28 acceptance verification remain open. See `BUSINESS-MODEL-1.28.md`.
 
-**Current increment (1.29.0):** complete the theme/plugin ownership cutover before adding more theme-bound workflows. The first slice implements the plugin content registry, stable metadata contract, rewrite lifecycle and theme collision guard; verification is pending. Next, the plugin will take the remaining writes, handlers, durable shortcodes and operational administration while `car-dealer` retains templates, layout, public assets and presentation adapters. The ordered inventory, ownership matrix, rollback rules and acceptance gates are defined in `THEME-PLUGIN-SEPARATION.md`. This increment preserves all existing identifiers and inserts no business or sample data.
+**Current increment (1.29.4):** the first 1.29-D operational-administration slice is implemented; verification is pending. Message, test-drive booking and newsletter staff pages now belong to the plugin under their existing URLs, use scoped query services and plugin assets, and expose newsletter consent records only through a dedicated marketing capability. The active account template links staff to plugin workspaces. Continue 1.29-D with the remaining operational navigation/dashboard and dormant-module classification, followed by durable shortcodes/public adapters. This increment preserves all existing identifiers and inserts no business or sample data.
 
 ## Delivery rules
 
@@ -151,7 +151,7 @@ Treat the platform as **not production ready** until the final release gate pass
 - Link published vehicle posts to core inventory with explicit mapping. Hide unavailable/inactive-branch vehicles and prevent unmapped/private operational records from public display.
 - Complete SEO structured data, metadata, image sizing/lazy loading, caching strategy, accessible keyboard/focus states, contrast, labels, and form errors.
 - Move remaining public-facing business rules out of theme into plugin APIs/services, leaving templates, rendering and navigation in the theme.
-- Execute the 1.29.0 ownership cutover in `THEME-PLUGIN-SEPARATION.md`: move content registration and durable public contracts first, then enforce a single plugin write path, then move operational administration, and only then slim the theme adapters.
+- Execute the 1.29.x ownership cutover in `THEME-PLUGIN-SEPARATION.md`: move content registration and durable public contracts first, then enforce a single plugin write path, then move operational administration, and only then slim the theme adapters.
 
 **Deliverables:** approved content/page matrix; bilingual design review; authoritative catalog; SEO/accessibility/performance review; completed theme/plugin ownership matrix and cutover checklist.
 

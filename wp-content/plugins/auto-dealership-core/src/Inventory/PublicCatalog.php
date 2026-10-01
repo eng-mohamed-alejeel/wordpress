@@ -127,6 +127,26 @@ final class PublicCatalog {
 		return $cache[ $post_id ];
 	}
 
+	/** Matches the catalog query's public-visibility rule for comparison and other adapters. */
+	public static function is_post_publicly_eligible( int $post_id ): bool {
+		if ( $post_id < 1 || 'car' !== get_post_type( $post_id ) || 'publish' !== get_post_status( $post_id ) ) {
+			return false;
+		}
+		if ( get_option( 'adc_db_version' ) !== Schema::VERSION ) {
+			return ! self::is_authoritative();
+		}
+		if ( self::vehicle_for_post( $post_id ) ) {
+			return true;
+		}
+		if ( self::is_authoritative() ) {
+			return false;
+		}
+
+		global $wpdb;
+		$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . Schema::table( 'vehicles' ) . ' WHERE public_post_id=%d', $post_id ) );
+		return ! $wpdb->last_error && 0 === (int) $count;
+	}
+
 	/** Public REST/read-model list. Monetary filters use stored minor units. */
 	public static function catalog( array $raw_filters = array() ): array {
 		global $wpdb;

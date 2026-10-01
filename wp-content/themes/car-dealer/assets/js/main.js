@@ -36,18 +36,25 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  document.querySelectorAll('.cd-compare-button').forEach(function (button) {
-    button.addEventListener('click', function () {
-      var data = new FormData();
-      data.append('action', 'car_dealer_comparison');
-      data.append('compare_action', 'add');
-      data.append('car_id', button.dataset.carId);
-      data.append('nonce', window.carDealer ? window.carDealer.nonce : '');
-      fetch(window.carDealer.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
-        .then(function (response) { return response.json(); })
-        .then(function (result) { button.textContent = result.success ? 'تمت الإضافة' : 'تعذر الإضافة'; });
+  if (!window.adcPublicTools) {
+    document.querySelectorAll('.cd-compare-button').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var data = new FormData();
+        data.append('action', 'car_dealer_comparison');
+        data.append('compare_action', button.getAttribute('aria-pressed') === 'true' ? 'remove' : 'add');
+        data.append('car_id', button.dataset.carId);
+        data.append('nonce', window.carDealer ? window.carDealer.nonce : '');
+        fetch(window.carDealer.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
+          .then(function (response) { return response.json(); })
+          .then(function (result) {
+            if (!result.success) { button.textContent = 'تعذر تحديث المقارنة'; return; }
+            button.setAttribute('aria-pressed', result.data.active ? 'true' : 'false');
+            button.classList.toggle('is-active', !!result.data.active);
+            button.textContent = result.data.active ? button.dataset.removeLabel : button.dataset.addLabel;
+          });
+      });
     });
-  });
+  }
 
   function updateLoan(box) {
     var price = Number(box.querySelector('[data-loan-price]').value || 0);
@@ -59,12 +66,15 @@ document.addEventListener('DOMContentLoaded', function () {
     box.querySelector('[data-loan-result]').textContent = Math.round(payment).toLocaleString('ar-SA') + ' ر.س';
   }
 
-  document.querySelectorAll('[data-loan-calculator]').forEach(function (box) {
-    box.querySelectorAll('input').forEach(function (input) {
-      input.addEventListener('input', function () { updateLoan(box); });
+  if (!window.adcPublicTools) {
+    document.querySelectorAll('[data-loan-calculator]').forEach(function (box) {
+      box.addEventListener('submit', function (event) { event.preventDefault(); updateLoan(box); });
+      box.querySelectorAll('input').forEach(function (input) {
+        input.addEventListener('input', function () { updateLoan(box); });
+      });
+      updateLoan(box);
     });
-    updateLoan(box);
-  });
+  }
 });
 
 /* ── Back to Top Button ── */

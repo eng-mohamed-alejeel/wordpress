@@ -30,10 +30,12 @@ function car_dealer_sync_customer_profile( $user_id ) {
  update_post_meta( $id, '_crm_email', $user->user_email );
  update_post_meta( $id, '_crm_phone', get_user_meta( $user_id, 'car_dealer_phone', true ) );
 }
-add_action( 'profile_update', 'car_dealer_sync_customer_profile' );
-add_action( 'wp_login', function ( $login, $user ) { car_dealer_sync_customer_profile( $user->ID ); }, 10, 2 );
-foreach ( array( 'added_user_meta', 'updated_user_meta' ) as $hook ) {
- add_action( $hook, function ( $meta_id, $user_id, $key ) { if ( 'car_dealer_phone' === $key ) { car_dealer_sync_customer_profile( $user_id ); } }, 10, 3 );
+if ( ! function_exists( 'adc_core_owns_customer_account_actions' ) || ! adc_core_owns_customer_account_actions() ) {
+ add_action( 'profile_update', 'car_dealer_sync_customer_profile' );
+ add_action( 'wp_login', function ( $login, $user ) { car_dealer_sync_customer_profile( $user->ID ); }, 10, 2 );
+ foreach ( array( 'added_user_meta', 'updated_user_meta' ) as $hook ) {
+  add_action( $hook, function ( $meta_id, $user_id, $key ) { if ( 'car_dealer_phone' === $key ) { car_dealer_sync_customer_profile( $user_id ); } }, 10, 3 );
+ }
 }
 function car_dealer_request_crm( $type, $row ) {
  $ids = get_posts( array( 'post_type' => 'cd_crm', 'post_status' => 'private', 'meta_key' => '_crm_origin_' . $type . '_' . $row->id, 'meta_value' => '1', 'numberposts' => 1, 'fields' => 'ids' ) );
@@ -52,6 +54,9 @@ function car_dealer_update_request( $type, $id, $data, $customer = false ) {
   if ( $lead_id ) {
    $result = \AutoDealership\Leads\RequestWorkflow::update( $lead_id, (array) $data, (bool) $customer );
    return is_wp_error( $result ) ? $result : true;
+  }
+  if ( function_exists( 'adc_core_owns_legacy_crm_workflow' ) && adc_core_owns_legacy_crm_workflow() ) {
+   return new WP_Error( 'legacy_read_only', 'هذا سجل تاريخي غير مرتبط بمسار Core، وهو متاح للقراءة فقط.' );
   }
   // Unmapped records have no branch/owner relationship; administrator triage only.
   if ( ! $customer && ! current_user_can( 'manage_options' ) ) { return new WP_Error( 'forbidden', 'السجل القديم غير مرتبط بفرع. يلزم مسؤول النظام.' ); }
@@ -91,20 +96,23 @@ function car_dealer_update_request( $type, $id, $data, $customer = false ) {
  }
  return true;
 }
-add_action( 'admin_post_car_dealer_request_update', function () {
+if ( ! function_exists( 'adc_core_owns_legacy_crm_workflow' ) || ! adc_core_owns_legacy_crm_workflow() ) {
+ add_action( 'admin_post_car_dealer_request_update', function () {
  if ( ! current_user_can( 'manage_car_dealer' ) ) { wp_die( 'ليست لديك صلاحية.', '', array( 'response' => 403 ) ); }
  check_admin_referer( 'car_dealer_request_update' );
  $type = sanitize_key( car_dealer_account_field( 'request_type' ) );
  $result = car_dealer_update_request( $type, absint( car_dealer_account_field( 'request_id' ) ), array( 'status' => car_dealer_account_field( 'status' ), 'customer_reply' => car_dealer_account_field( 'customer_reply' ), 'requested_date' => car_dealer_account_field( 'requested_date' ), 'requested_time' => car_dealer_account_field( 'requested_time' ) ) );
  if ( is_wp_error( $result ) ) { wp_die( esc_html( $result->get_error_message() ), '', array( 'back_link' => true ) ); }
  wp_safe_redirect( admin_url( 'admin.php?page=car-dealer-' . ( 'booking' === $type ? 'bookings' : 'messages' ) . '&updated=1' ) ); exit;
-} );
+ } );
+}
 function car_dealer_request_admin_actions( $type, $row ) {
  $row = (object) $row;
  if ( class_exists( '\AutoDealership\Leads\RequestWorkflow' ) ) {
   $lead_id = \AutoDealership\Leads\RequestWorkflow::linked_lead( (string) $type, (int) $row->id );
   if ( is_wp_error( $lead_id ) ) { echo '<p>' . esc_html( $lead_id->get_error_message() ) . '</p>'; return; }
   if ( $lead_id ) { \AutoDealership\Admin\RequestPage::render( $lead_id ); return; }
+  if ( function_exists( 'adc_core_owns_legacy_crm_workflow' ) && adc_core_owns_legacy_crm_workflow() ) { echo '<p>هذا سجل تاريخي غير مرتبط بمسار Core، وهو متاح للقراءة فقط.</p>'; return; }
   if ( ! current_user_can( 'manage_options' ) ) { return; }
  }
  $crm = car_dealer_request_crm( $type, $row );
@@ -160,7 +168,9 @@ function car_dealer_reconcile_customer_requests() {
   }
  }
 }
-add_action( 'admin_init', 'car_dealer_reconcile_customer_requests' );
+if ( ! function_exists( 'adc_core_owns_legacy_crm_workflow' ) || ! adc_core_owns_legacy_crm_workflow() ) {
+ add_action( 'admin_init', 'car_dealer_reconcile_customer_requests' );
+}
 add_action( 'wp_enqueue_scripts', function () {
  if ( ! is_user_logged_in() ) { return; }
  $user = wp_get_current_user();

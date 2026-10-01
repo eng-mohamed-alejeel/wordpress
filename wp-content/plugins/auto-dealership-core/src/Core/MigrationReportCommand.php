@@ -14,7 +14,7 @@ final class MigrationReportCommand {
 		if ( isset( $report['error'] ) ) { \WP_CLI::error( $report['error'] ); }
 		if ( 'json' === $format ) { \WP_CLI::log( wp_json_encode( $report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) ); }
 		else {
-			foreach ( array( 'vehicles','crm','offers' ) as $section ) { \WP_CLI::log( strtoupper( $section ) . ': ' . wp_json_encode( $report[ $section ] ) ); }
+			foreach ( array( 'vehicles','crm','offers','compatibility_retirement' ) as $section ) { \WP_CLI::log( strtoupper( $section ) . ': ' . wp_json_encode( $report[ $section ] ) ); }
 		}
 		$issues = (int) $report['vehicles']['drifted'] + (int) $report['vehicles']['invalid_identity'] + (int) $report['vehicles']['workflow_blocked'] + (int) $report['vehicles']['unresolved_branch'] + (int) $report['vehicles']['vin_conflict'] + (int) $report['vehicles']['stock_conflict'] + (int) $report['offers']['unlinked_or_orphaned'];
 		if ( isset( $assoc_args['fail-on-issues'] ) && $issues > 0 ) { \WP_CLI::error( "Migration report found $issues blocking records." ); }

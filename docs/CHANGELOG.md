@@ -1,16 +1,53 @@
 # Changelog
 
+## 1.29.4 — Plugin-owned engagement administration
+
+- Added plugin-owned staff pages for the existing `car-dealer-messages`, `car-dealer-bookings` and `car-dealer-subscribers` slugs under `adc-workspace`; the pages remain available when the presentation theme changes.
+- Added `EngagementQuery` as the bounded read boundary. Message and booking rows use the existing branch/owner lead predicate, while subscriber access requires the new `adc_view_marketing_subscribers` capability granted only to marketing, general managers and administrators.
+- Reused `RequestWorkflow` and `RequestPage` for all request changes. Successful changes now return to the originating message or booking list, and unmapped historical rows remain read-only.
+- Added a plugin-only administration stylesheet enqueued solely on the three owned screens. The active theme now suppresses its duplicate menu registration through `adc_core_owns_engagement_admin_pages`; the early `adc_core_engagement_admin_enabled` filter retains a rollback path.
+- Updated the active account presentation to recognize core staff roles and link to plugin workspaces instead of dormant theme dashboard, CRM, inventory and settings URLs. This cutover creates no customer, request, subscription or sample record. Verification has not been run for this slice.
+
+## 1.29.3 — Controlled compatibility-retirement decision
+
+- Added `CompatibilityRetirement` as a read-only aggregate readiness report within the migration inventory. It records table presence/engine, total/core-linked/unmapped/active request counts and legacy CRM retirement totals without exposing customer data.
+- Formally retained message and booking tables as controlled request projections because account history, status/reply/appointment updates, privacy export/erasure, retention and historical migration still depend on them.
+- Classified `car_dealer_subscribers` as the current canonical marketing-consent store rather than a disposable request copy. It cannot be retired until an approved consent repository replaces it.
+- Kept `cd_crm` as private read-only history. Pending account-ID-based retirement is reported separately; no contact-based claim, post conversion or deletion was added.
+- Defined the removal gates: native account/request reads and writes, native privacy handling, complete historical reconciliation, aggregate count parity, and accepted backup/rollback rehearsal. No table, row, identifier or sample record is created, changed or removed by the report. Verification has not been run for this slice.
+
+## 1.29.2 — Plugin-owned comparison and finance estimate decisions
+
+- Added `LoanCalculator` as the bounded provider-neutral installment estimate service. It validates vehicle price, down payment, annual percentage and term, returns whole-SAR estimate fields and explicitly marks the result as an estimate rather than an approval or provider offer.
+- Added `VehicleComparison` as the owner of comparison selection rules. It accepts both existing cookie formats, keeps at most four unique vehicles and validates every addition against the same public-catalog eligibility boundary used by the selected catalog mode.
+- Added plugin-owned `car_dealer_comparison` and `car_dealer_loan_calculator` AJAX handlers with nonce and shared atomic public-read rate protection, plus a plugin asset for the public interactions.
+- Preserved the existing shortcode and comparison action identifiers. The theme continues to render the calculator form, comparison button and car cards while its JavaScript and guarded rollback handler no longer define the active business decisions.
+- Comparison remains browser-owned and does not create an audit or database record. The calculator does not create a lead, finance request or business record. Added the early rollback filter `adc_core_public_tools_enabled`; schema remains 1.17.0 and verification has not been run for this slice.
+
+## 1.29.1 — Plugin-owned customer account and CRM write boundary
+
+- Added `CustomerAccount` as the owner of the existing front-end registration, sign-in, profile, preference and booking-cancellation form contract. The theme keeps account routing and markup while delegating every mutation to the plugin.
+- Added an atomic `account_auth` request policy, retained the existing privacy-consent and honeypot fields, and provisioned the stable `car_dealer_customer` role through plugin activation/version upgrades instead of theme `init`.
+- Added an audit-atomic account profile update that changes WordPress display name/phone and any linked core customer together. Audit data records changed field names only; failed writes or audit persistence roll back the transaction.
+- Registered `cd_crm` through `LegacyCrmBridge` as private read-only history. Linked legacy profiles are retired through compensating audited metadata writes; no legacy profile, lead or sample record is created.
+- Disabled the theme's legacy CRM registration, editor/export/capture/reconciliation handlers, account-profile hooks and unmapped request writers while plugin ownership is active. Core `LeadService`, `RequestWorkflow`, `CustomerIdentity` and the plugin CRM workspace remain the active operational paths.
+- Added early rollback filters `adc_core_customer_account_enabled` and `adc_core_legacy_crm_bridge_enabled`. Schema remains 1.17.0. Verification has not been run for this slice.
+
 ## 1.29.0 — Plugin-owned public content registry
 
 - Moved ownership of the existing `car` and `car_offer` registrations plus `car_brand` and `car_category` into `AutoDealership\\Content\\ContentRegistry`, preserving public slugs, archives, REST visibility, supports and vehicle capability mapping. Offers now use dedicated content capabilities instead of generic post-editing permissions; this slice provisions them only to administrators.
 - Declared the legacy-compatible car/offer metadata keys without exposing them through REST or changing their stored values. Operational inventory remains authoritative in plugin tables; posts remain the editorial/public projection.
-- Added the stable `adc_core_owns_content_registry()` facade. The active theme now skips its duplicate content registration and theme rewrite flush while retaining its current templates and temporary metadata editor for the later single-write-path slice.
+- Added the stable `adc_core_owns_content_registry()` facade. The active theme now skips its duplicate content registration and theme rewrite flush while retaining its current templates and guarded rollback definitions.
 - Added a versioned rewrite lifecycle and collision notice. Activation or a registry-version upgrade performs the flush; ordinary requests do not.
 - Added the custom vehicle/taxonomy capabilities to administrator provisioning. No dealership content, reference value, page or sample business record is inserted, moved or deleted. Verification has not been run for this increment.
 - Moved the existing `car_dealer_lead`, `car_dealer_contact` and `car_dealer_booking` AJAX action names to `PublicIntake`. The theme registers its prior handlers only when the plugin ownership switch is explicitly disabled, so one writer is active at a time.
 - Added a plugin-owned, versioned and installation-locked compatibility schema for messages, bookings and newsletter subscriptions. Message/booking copies remain transitional dependencies of the current account/request workflow and are written only inside the plugin's audited intake transaction.
 - Added an audited newsletter boundary with explicit opt-in, honeypot, canonical email validation and the shared atomic public-intake rate policy. The theme keeps only the rendered form and consent label.
 - Replaced the plugin-to-theme account URL call with the `adc_customer_account_url` presentation filter.
+- Moved the active vehicle compatibility editor into `AutoDealership\\Content\\VehiclePostEditor`. The editor preserves existing keys/nonces, validates price/year/mileage/text/status fields, treats mapped operational status as read-only and records only changed field names in audit history.
+- Added `PostMetaStore` as a compensating writer: a failed metadata write or failed audit event restores the exact previous value or absence across every touched post/key.
+- Moved offer linkage and durable fields into `AutoDealership\\Content\\OfferPostEditor`. Mapped vehicles must be uniquely linked, operationally available and assigned to an active branch; unmapped posts retain the legacy empty/available compatibility rule. Invalid public offers remain drafts.
+- Added vehicle/offer ownership facades, early rollback filters and guards around the active theme editor plus dormant offer, advanced-feature and inventory writers. Existing identifiers and presentation helpers remain unchanged. Verification has not been run for this slice.
 
 ## 1.28.0 — Business model, RBAC and API contract foundation
 
