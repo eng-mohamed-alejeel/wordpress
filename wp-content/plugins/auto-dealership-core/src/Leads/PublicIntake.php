@@ -34,6 +34,14 @@ final class PublicIntake {
 	public static function enqueue(): void {
 		if ( self::enabled() ) {
 			wp_enqueue_script( 'adc-public-intake', plugins_url( 'assets/js/public-intake.js', ADC_FILE ), array(), ADC_VERSION, true );
+			wp_localize_script( 'adc-public-intake', 'adcPublicIntake', array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'car_dealer_frontend' ),
+				'sendingLabel' => __( 'جاري الإرسال…', 'auto-dealership-core' ),
+				'errorLabel' => __( 'تعذر إرسال الطلب الآن.', 'auto-dealership-core' ),
+				'unconfirmedLabel' => __( 'لم يتم تأكيد حفظ الطلب. حاول مجددًا.', 'auto-dealership-core' ),
+				'accountLabel' => __( 'عرض الطلب في حسابي', 'auto-dealership-core' ),
+			) );
 		}
 	}
 

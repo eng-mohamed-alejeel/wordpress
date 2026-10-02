@@ -10,15 +10,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
-/* ═══════════════════════════════════════════════════════
-   إنشاء صفحات تلقائية عند تنشيط الثيم
-   ═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   تعريفات صفحات العرض لأداة الإعداد الصريحة في الإضافة
+   ═══════════════════════════════════════════════════════════ */
 
-function car_dealer_create_about_contact_pages() {
-	$pages = array(
+function car_dealer_editorial_page_blueprints( $blueprints ) {
+	$blueprints = is_array( $blueprints ) ? $blueprints : array();
+	return array_merge( $blueprints, array(
 		'finance' => array(
 			'title' => 'التمويل',
-			'content' => '<section class="ab-page-band"><h1>حلول تمويل AUTO BRANDS</h1><p>تمويل بنكي وتمويل شركات مع متطلبات واضحة وطريقة تقديم سهلة.</p></section>[car_dealer_loan_calculator][car_dealer_contact_form]',
+			'content' => '<section class="ab-page-band"><h1>تقدير التمويل</h1><p>استخدم الحاسبة لتقدير القسط مبدئيًا. تعتمد الخيارات والشروط الفعلية على مزود التمويل عند توفره.</p></section>[car_dealer_loan_calculator][car_dealer_contact_form]',
 		),
 		'about' => array(
 			'title' => 'من نحن',
@@ -31,6 +32,7 @@ function car_dealer_create_about_contact_pages() {
 [ab_cta_section]
 [ab_testimonials_section]
 ',
+			'template' => 'page-about.php',
 		),
 		'contact' => array(
 			'title' => 'تواصل معنا',
@@ -42,60 +44,36 @@ function car_dealer_create_about_contact_pages() {
 [ab_faq_section]
 [ab_social_section]
 ',
+			'template' => 'page-contact.php',
 		),
-	);
-	foreach ( $pages as $slug => $page ) {
-		$existing = get_page_by_path( $slug );
-		if ( $existing ) {
-			wp_update_post( array(
-				'ID' => $existing->ID,
-				'post_title' => $page['title'],
-				'post_content' => $page['content'],
-			) );
-		} else {
-			wp_insert_post( array(
-				'post_type' => 'page',
-				'post_status' => 'publish',
-				'post_name' => $slug,
-				'post_title' => $page['title'],
-				'post_content' => $page['content'],
-			) );
-		}
-	}
+	) );
 }
-add_action( 'admin_init', 'car_dealer_create_about_contact_pages' );
-add_action( 'after_switch_theme', 'car_dealer_create_about_contact_pages' );
-
+add_filter( 'adc_editorial_page_blueprints', 'car_dealer_editorial_page_blueprints' );
 
 /* ═══════════════════════════════════════════════════════
    Shortcode: [ab_hero_section] - البطل الرئيسي لمن نحن
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_hero() {
+	$catalog_url = car_dealer_archive_url( 'car' );
+	$contact_url = car_dealer_page_url( 'contact' );
 	ob_start(); ?>
 <section class="ab-about-hero">
 	<div class="container">
 		<div class="ab-about-hero-inner">
 			<div class="ab-about-hero-text">
 				<p class="eyebrow">من نحن</p>
-				<h1>AUTO BRANDS من أفضل معارض السيارات في المملكة العربية السعودية</h1>
-				<h1>وإحدى شركات ناصر مطر المطيري للسيارات</h1>
-				<p class="ab-about-hero-desc">نفخر بتقديم خدمات سيارات متكاملة تشمل البيع، التمويل، وضمان ما بعد البيع. فريقنا من المحترفين في مجال السيارات لخدمتك بأعلى مستوى.</p>
+				<h1>AUTO BRANDS للسيارات</h1>
+				<p>إحدى شركات ناصر مطر المطيري للسيارات</p>
+				<p class="ab-about-hero-desc">نقدّم معلومات السيارات المنشورة ووسائل التواصل مع فريق المعرض. تتحدد أي خدمات إضافية وشروطها بحسب الاتفاق المتاح لكل سيارة.</p>
 				<div class="ab-actions">
-					<a href="cars" class="btn btn-primary btn-lg">
+					<?php if ( $catalog_url ) : ?><a href="<?php echo esc_url( $catalog_url ); ?>" class="btn btn-primary btn-lg">
 						<span>استكشف سياراتنا</span>
 						<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-					</a>
-					<a href="contact" class="btn btn-outline btn-lg">
+					</a><?php endif; ?>
+					<?php if ( $contact_url ) : ?><a href="<?php echo esc_url( $contact_url ); ?>" class="btn btn-outline btn-lg">
 						<span>تواصل معنا</span>
 						<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-					</a>
-				</div>
-			</div>
-			<div class="ab-about-hero-panel">
-				<div class="ab-hero-panel-inner">
-					<span class="ab-panel-label">سنوات الخبرة</span>
-					<strong class="ab-panel-number">25+</strong>
-					<span class="ab-panel-sub">في تجارة السيارات</span>
+					</a><?php endif; ?>
 				</div>
 			</div>
 		</div>
@@ -104,7 +82,7 @@ function car_dealer_shortcode_ab_hero() {
 <?php
 	return ob_get_clean();
 }
-add_shortcode( 'ab_hero_section', 'car_dealer_shortcode_ab_hero' );
+car_dealer_register_shortcode_adapter( 'ab_hero_section', 'car_dealer_shortcode_ab_hero' );
 
 
 /* ═══════════════════════════════════════════════════════
@@ -127,14 +105,14 @@ function car_dealer_shortcode_ab_mission_vision() {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
 				</div>
 				<h3>رسالتنا</h3>
-				<p>نقدم سيارات عالية الجودة بأسعار تنافسية مع شفافية كاملة في جميع التعاملات. هدفنا الأول هو رضا العميل دائماً، وتقديم خدمات ما بعد بيع لا مثيل لها.</p>
+				<p>نهدف إلى عرض معلومات السيارات وأسعارها المنشورة بوضوح، وتيسير التواصل مع فريق المعرض.</p>
 			</div>
 			<div class="ab-mission-card ab-mission-vision">
 				<div class="ab-mission-icon">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 				</div>
 				<h3>رؤيتنا</h3>
-				<p>أن نكون المزود الأول لبيع السيارات في المملكة العربية السعودية، ونوسع نطاق خدماتنا لتغطي جميع احتياجات العملاء من البيع إلى التمويل.</p>
+				<p>تطوير تجربة واضحة لاختيار السيارة ومتابعة الطلب من الاستفسار حتى إتمام البيع.</p>
 			</div>
 		</div>
 	</div>
@@ -142,57 +120,17 @@ function car_dealer_shortcode_ab_mission_vision() {
 <?php
 	return ob_get_clean();
 }
-add_shortcode( 'ab_mission_vision', 'car_dealer_shortcode_ab_mission_vision' );
+car_dealer_register_shortcode_adapter( 'ab_mission_vision', 'car_dealer_shortcode_ab_mission_vision' );
 
 
 /* ═══════════════════════════════════════════════════════
    Shortcode: [ab_stats_section] - الإحصائيات
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_stats() {
-	ob_start(); ?>
-<section class="ab-stats-section ab-section">
-	<div class="container">
-		<div class="ab-stats-grid">
-			<div class="ab-stat-item">
-				<strong class="ab-stat-number" data-count="5000">0</strong>
-				<span class="ab-stat-label">سيارة مباعة</span>
-			</div>
-			<div class="ab-stat-item">
-				<strong class="ab-stat-number" data-count="3500">0</strong>
-				<span class="ab-stat-label">عميل سعيد</span>
-			</div>
-			<div class="ab-stat-item">
-				<strong class="ab-stat-number" data-count="25">0</strong>
-				<span class="ab-stat-label">سنة خبرة</span>
-			</div>
-			<div class="ab-stat-item">
-				<strong class="ab-stat-number" data-count="800">0</strong>
-				<span class="ab-stat-label">سيارة متاحة</span>
-			</div>
-		</div>
-	</div>
-</section>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-	document.querySelectorAll('.ab-stat-number[data-count]').forEach(function(el) {
-		var target = parseInt(el.dataset.count);
-		var duration = 2000;
-		var start = performance.now();
-		function update(now) {
-			var elapsed = now - start;
-			var progress = Math.min(elapsed / duration, 1);
-			var eased = 1 - Math.pow(1 - progress, 3);
-			el.textContent = Math.floor(eased * target).toLocaleString('en-US');
-			if (progress < 1) requestAnimationFrame(update);
-		}
-		requestAnimationFrame(update);
-	});
-});
-</script>
-<?php
-	return ob_get_clean();
+	// Publish metrics only after actual figures and their source are approved.
+	return '';
 }
-add_shortcode( 'ab_stats_section', 'car_dealer_shortcode_ab_stats' );
+car_dealer_register_shortcode_adapter( 'ab_stats_section', 'car_dealer_shortcode_ab_stats' );
 
 
 /* ═══════════════════════════════════════════════════════
@@ -215,16 +153,16 @@ function car_dealer_shortcode_ab_values() {
 				<div class="ab-feature-icon">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 				</div>
-				<h3>ضمان الجودة</h3>
-				<p>كل سيارة لدينا تخضع لفحص دقيق ومعايير صارمة للجودة قبل البيع</p>
+				<h3>معلومات السيارة</h3>
+				<p>اطّلع على المواصفات والحالة المنشورة لكل سيارة، واطلب الوثائق والتفاصيل قبل الشراء.</p>
 			</div>
 			<div class="ab-feature-card">
 				<span class="ab-feature-num">02</span>
 				<div class="ab-feature-icon">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
 				</div>
-				<h3>أسعار تنافسية</h3>
-				<p>أفضل الأسعار في السوق مع عروض تمويل مرنة تناسب الجميع</p>
+				<h3>أسعار منشورة</h3>
+				<p>قارن الأسعار المعروضة واستفسر عن الشروط المتاحة لكل سيارة.</p>
 			</div>
 			<div class="ab-feature-card">
 				<span class="ab-feature-num">03</span>
@@ -232,7 +170,7 @@ function car_dealer_shortcode_ab_values() {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
 				</div>
 				<h3>خدمة عملاء ممتازة</h3>
-				<p>فريق دعم فني متاح على مدار الساعة للإجابة على جميع استفساراتك</p>
+				<p>يمكنك إرسال استفسارك عبر قنوات التواصل المتاحة وسيتابعه فريق المعرض.</p>
 			</div>
 			<div class="ab-feature-card">
 				<span class="ab-feature-num">04</span>
@@ -240,15 +178,15 @@ function car_dealer_shortcode_ab_values() {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
 				</div>
 				<h3>تسليم سريع</h3>
-				<p>نضمن لك تسليم السيارة في أقرب وقت مع جميع الأوراق الرسمية</p>
+				<p>تُحدد خطوات التسليم ومستنداته في اتفاق البيع المعتمد.</p>
 			</div>
 			<div class="ab-feature-card">
 				<span class="ab-feature-num">05</span>
 				<div class="ab-feature-icon">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
 				</div>
-				<h3>توثيق كامل</h3>
-				<p>توثيق قانوني كامل لجميع العمليات مع ضمانات قانونية لحماية العميل</p>
+				<h3>تفاصيل مكتوبة</h3>
+				<p>راجع مستندات البيع والضمان والشروط المتاحة قبل الموافقة النهائية.</p>
 			</div>
 		</div>
 	</div>
@@ -256,7 +194,7 @@ function car_dealer_shortcode_ab_values() {
 <?php
 	return ob_get_clean();
 }
-add_shortcode( 'ab_values_section', 'car_dealer_shortcode_ab_values' );
+car_dealer_register_shortcode_adapter( 'ab_values_section', 'car_dealer_shortcode_ab_values' );
 
 
 /* ═══════════════════════════════════════════════════════
@@ -303,23 +241,22 @@ function car_dealer_shortcode_ab_team() {
 			<h3>' . esc_html( $member['name'] ) . '</h3>
 			<p class="ab-team-role">' . esc_html( $member['role'] ) . '</p>
 			<p class="ab-team-experience">' . esc_html( $member['experience'] ) . '</p>
-			<div class="ab-team-social">
-				<a href="#" aria-label="اتصل بـ ' . esc_html( $member['name'] ) . '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></a>
-				<a href="#" aria-label="رسالة لـ ' . esc_html( $member['name'] ) . '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>
-			</div>
 		</div>';
 	}
 
 	$output .= '</div></div></section>';
 	return $output;
 }
-add_shortcode( 'ab_team_section', 'car_dealer_shortcode_ab_team' );
+car_dealer_register_shortcode_adapter( 'ab_team_section', 'car_dealer_shortcode_ab_team' );
 
 
 /* ═══════════════════════════════════════════════════════
    Shortcode: [ab_cta_section] - دعوة للعمل
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_cta() {
+	$contact_url = car_dealer_page_url( 'contact' );
+	$whatsapp_url = car_dealer_whatsapp_url( 'مرحباً، أود الاستفسار عن سيارة.' );
+	if ( ! $contact_url && '#' === $whatsapp_url ) { return ''; }
 	ob_start(); ?>
 <section class="ab-cta-v2">
 	<div class="container">
@@ -328,15 +265,15 @@ function car_dealer_shortcode_ab_cta() {
 				<svg viewBox="0 0 64 64" fill="currentColor"><path d="M32 4C16.536 4 4 16.536 4 32c0 5.336 1.392 10.36 3.84 14.72L4 60l13.76-3.68A27.84 27.84 0 0032 60c15.464 0 28-12.536 28-28S47.464 4 32 4z"/></svg>
 			</div>
 			<h2>جاهز لتجربة سيارة جديدة؟</h2>
-			<p>تواصل معنا اليوم واحصل على استشارة مجانية وعرض سعر مخصص يناسب احتياجاتك</p>
+			<p>تواصل مع فريق المعرض للاستفسار عن السيارات والشروط المتاحة.</p>
 			<div class="ab-actions">
-				<a href="contact" class="btn btn-primary btn-lg">
+				<?php if ( $contact_url ) : ?><a href="<?php echo esc_url( $contact_url ); ?>" class="btn btn-primary btn-lg">
 					<span>تواصل معنا الآن</span>
 					<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-				</a>
-				<a href="https://wa.me" class="btn btn-chrome btn-lg" target="_blank" rel="noopener">
+				</a><?php endif; ?>
+				<?php if ( '#' !== $whatsapp_url ) : ?><a href="<?php echo esc_url( $whatsapp_url ); ?>" class="btn btn-chrome btn-lg" target="_blank" rel="noopener">
 					<span>تواصل عبر واتساب</span>
-				</a>
+				</a><?php endif; ?>
 			</div>
 		</div>
 	</div>
@@ -344,61 +281,17 @@ function car_dealer_shortcode_ab_cta() {
 <?php
 	return ob_get_clean();
 }
-add_shortcode( 'ab_cta_section', 'car_dealer_shortcode_ab_cta' );
+car_dealer_register_shortcode_adapter( 'ab_cta_section', 'car_dealer_shortcode_ab_cta' );
 
 
 /* ═══════════════════════════════════════════════════════
    Shortcode: [ab_testimonials_section] - آراء العملاء
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_testimonials() {
-	$testimonials = array(
-		array(
-			'content' => 'تجربة شراء ممتازة، فريق محترف وسيارات بجودة عالية. أنصح بها بشدة!',
-			'author' => 'أحمد محمد',
-			'location' => 'الرياض',
-		),
-		array(
-			'content' => 'أفضل وكالة سيارات تعاملت معها، خدمة ما بعد البيع ممتازة وضمان حقيقي.',
-			'author' => 'سارة علي',
-			'location' => 'جدة',
-		),
-		array(
-			'content' => 'الأسعار مناسبة والخدمة لا تُصدّق. شكراً لفريق AUTO BRANDS على كل شيء.',
-			'author' => 'خالد عبدالله',
-			'location' => 'الدمام',
-		),
-	);
-
-	$output = '<section class="ab-testimonials-section ab-section"><div class="container">';
-	$output .= '<div class="section-heading section-heading-center"><div><p class="eyebrow">آراء عملائنا</p><h2>ماذا يقول عملاؤنا</h2><p class="section-subtitle">آراء حقيقية من عملاء راضين</p></div></div>';
-	$output .= '<div class="cd-testimonial-grid">';
-
-	foreach ( $testimonials as $t ) {
-		$output .= '
-		<div class="cd-testimonial">
-			<div class="cd-testimonial-stars">
-				<span class="star-icon">
-					<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-					<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-					<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-					<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-					<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-				</span>
-			</div>
-			<blockquote>
-				<p>' . esc_html( $t['content'] ) . '</p>
-			</blockquote>
-			<div class="cd-testimonial-author">
-				<strong>' . esc_html( $t['author'] ) . '</strong>
-				<span>' . esc_html( $t['location'] ) . '</span>
-			</div>
-		</div>';
-	}
-
-	$output .= '</div></div></section>';
-	return $output;
+	// Render only approved, real customer endorsements when a content source exists.
+	return '';
 }
-add_shortcode( 'ab_testimonials_section', 'car_dealer_shortcode_ab_testimonials' );
+car_dealer_register_shortcode_adapter( 'ab_testimonials_section', 'car_dealer_shortcode_ab_testimonials' );
 
 
 /* ═══════════════════════════════════════════════════════
@@ -420,112 +313,38 @@ function car_dealer_shortcode_ab_contact_hero() {
 <?php
 	return ob_get_clean();
 }
-add_shortcode( 'ab_contact_hero', 'car_dealer_shortcode_ab_contact_hero' );
+car_dealer_register_shortcode_adapter( 'ab_contact_hero', 'car_dealer_shortcode_ab_contact_hero' );
 
 
 /* ═══════════════════════════════════════════════════════
    Shortcode: [ab_contact_grid] - بطاقات التواصل
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_contact_grid() {
-	ob_start(); ?>
-<section class="ab-contact-grid-section ab-section">
-	<div class="container">
-		<div class="ab-contact-grid">
-			<div class="ab-contact-info-card">
-				<div class="ab-contact-info-icon">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-				</div>
-				<h3>العنوان</h3>
-				<p>جدة، المملكة العربية السعودية</p>
-				<p class="ab-contact-detail-text">حي الجوهرة، مبنى المعرض الرئيسي</p>
-			</div>
-			<div class="ab-contact-info-card">
-				<div class="ab-contact-info-icon">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-				</div>
-				<h3>الهاتف</h3>
-				<p><a href="tel:0500000000" class="ab-contact-link">05xxxxxxxx</a></p>
-				<p class="ab-contact-detail-text">متاح على مدار الأسبوع</p>
-			</div>
-			<div class="ab-contact-info-card">
-				<div class="ab-contact-info-icon">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-				</div>
-				<h3>البريد الإلكتروني</h3>
-				<p><a href="mailto:info@example.com" class="ab-contact-link">info@example.com</a></p>
-				<p class="ab-contact-detail-text">نرد خلال 24 ساعة</p>
-			</div>
-			<div class="ab-contact-info-card">
-				<div class="ab-contact-info-icon">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-				</div>
-				<h3>ساعات العمل</h3>
-				<p>أحد - الخميس: 9 ص - 5 م</p>
-				<p class="ab-contact-detail-text">الجمعة والسبت: مغلق</p>
-			</div>
-		</div>
-	</div>
-</section>
-<?php
-	return ob_get_clean();
+	$options = car_dealer_theme_options();
+	$items = array();
+	if ( $options['address'] ) { $items[] = array( 'العنوان', esc_html( $options['address'] ) ); }
+	$phone = preg_replace( '/[^0-9+]/', '', (string) $options['phone'] );
+	if ( $phone ) { $items[] = array( 'الهاتف', '<a class="ab-contact-link" href="tel:' . esc_attr( $phone ) . '">' . esc_html( $options['phone'] ) . '</a>' ); }
+	if ( is_email( $options['email'] ) ) { $items[] = array( 'البريد الإلكتروني', '<a class="ab-contact-link" href="mailto:' . esc_attr( $options['email'] ) . '">' . esc_html( $options['email'] ) . '</a>' ); }
+	if ( ! $items ) { return ''; }
+	$html = '<section class="ab-contact-grid-section ab-section"><div class="container"><div class="ab-contact-grid">';
+	foreach ( $items as $item ) { $html .= '<div class="ab-contact-info-card"><h3>' . esc_html( $item[0] ) . '</h3><p>' . $item[1] . '</p></div>'; }
+	return $html . '</div></div></section>';
 }
-add_shortcode( 'ab_contact_grid', 'car_dealer_shortcode_ab_contact_grid' );
+car_dealer_register_shortcode_adapter( 'ab_contact_grid', 'car_dealer_shortcode_ab_contact_grid' );
 
 
 /* ═══════════════════════════════════════════════════════
    Shortcode: [ab_contact_map] - الخريطة
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_contact_map() {
-	ob_start(); ?>
-<section class="ab-contact-map-section ab-section">
-	<div class="container">
-		<div class="section-heading section-heading-center">
-			<div>
-				<p class="eyebrow">الموقع</p>
-				<h2>إطلع على الخريطة</h2>
-				<p class="section-subtitle">زورنا في مواقعنا الرئيسية</p>
-			</div>
-		</div>
-		<div class="ab-contact-map-wrapper">
-			<div class="ab-contact-map-container">
-				<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7428.016017601441!2d39.25553820000001!3d21.428930200000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c3cb694962223b%3A0x8372fff0d972b009!2z2KfZiNiq2Ygg2KjYsdin2YbYr9iyINmE2YTYs9mK2KfYsdin2Kog2YHYsdi5INis2K_YqSAtIEF1dG8gQnJhbmRz!5e0!3m2!1sar!2ssa!4v1790577714908!5m2!1sar!2ssa" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="موقعنا في جدة"></iframe>
-				<div class="ab-contact-map-overlay">
-					<div class="ab-contact-map-info">
-						<div class="ab-contact-map-pin">
-							<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
-						</div>
-						<div>
-							<h3>مكتبنا الرئيسي</h3>
-							<p>جدة، المملكة العربية السعودية</p>
-							<p class="ab-contact-detail-text">حي الجوهرة، مبنى المعرض الرئيسي</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="ab-contact-map-wrapper">
-			<div class="ab-contact-map-container">
-				<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7428.016017601441!2d39.25553820000001!3d21.428930200000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c3cb694962223b%3A0x8372fff0d972b009!2z2KfZiNiq2Ygg2KjYsdin2YbYr9iyINmE2YTYs9mK2KfYsdin2Kog2YHYsdi5INis2K_YqSAtIEF1dG8gQnJhbmRz!5e0!3m2!1sar!2ssa!4v1790577714908!5m2!1sar!2ssa" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="موقعنا في مكة المكرمة"></iframe>
-				<div class="ab-contact-map-overlay">
-					<div class="ab-contact-map-info">
-						<div class="ab-contact-map-pin">
-							<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
-						</div>
-						<div>
-							<h3>فرع مكة الكرمة</h3>
-							<p>مكة المكرمة، المملكة العربية السعودية</p>
-							<p class="ab-contact-detail-text">مدية  السيارات، مبنى المعرض الفرع الثاني</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
-<?php
-	return ob_get_clean();
+	$options = car_dealer_theme_options();
+	$address = trim( (string) $options['address'] );
+	if ( '' === $address ) { return ''; }
+	$url = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $address );
+	return '<section class="ab-contact-map-section ab-section"><div class="container"><div class="section-heading section-heading-center"><h2>' . esc_html__( 'الموقع', 'car-dealer' ) . '</h2></div><p>' . esc_html( $address ) . '</p><p><a class="btn btn-outline" href="' . esc_url( $url ) . '" target="_blank" rel="noopener">' . esc_html__( 'عرض الموقع على الخريطة', 'car-dealer' ) . '</a></p></div></section>';
 }
-add_shortcode( 'ab_contact_map', 'car_dealer_shortcode_ab_contact_map' );
+car_dealer_register_shortcode_adapter( 'ab_contact_map', 'car_dealer_shortcode_ab_contact_map' );
 
 
 /* ═══════════════════════════════════════════════════════
@@ -550,7 +369,7 @@ function car_dealer_shortcode_ab_contact_form() {
 <?php
 	return ob_get_clean();
 }
-add_shortcode( 'ab_contact_form_section', 'car_dealer_shortcode_ab_contact_form' );
+car_dealer_register_shortcode_adapter( 'ab_contact_form_section', 'car_dealer_shortcode_ab_contact_form' );
 
 
 /* ═══════════════════════════════════════════════════════
@@ -560,15 +379,15 @@ function car_dealer_shortcode_ab_faq() {
 	$faqs = array(
 		array(
 			'q' => 'ما هي سياسات الضمان المتوفرة لديكم؟',
-			'a' => 'نوفر ضمان شامل يصل إلى 5 سنوات على جميع السيارات المباعة.',
+			'a' => 'تختلف تغطية الضمان ومدته حسب السيارة والجهة المزوّدة. اطلب التفاصيل المكتوبة قبل إتمام الشراء.',
 		),
 		array(
 			'q' => 'هل تقدمون خدمات التمويل؟',
-			'a' => 'نعم، نقدم خيارات تمويل مرنة بمعدلات فائدة تنافسية وتقسيط يصل إلى 5 سنوات.',
+			'a' => 'تُعرض خيارات التمويل وشروطها بعد توفر مزود معتمد ودراسة الطلب. الحاسبة في الموقع تقديرية فقط.',
 		),
 		array(
 			'q' => 'هل يمكنني تجربة قيادة السيارة؟',
-			'a' => 'بالتأكيد! نقدم تجارب قيادة مجانية في جميع فروعنا. احجز موعدك الآن.',
+			'a' => 'يمكنك إرسال طلب تجربة قيادة، ويؤكد المعرض الموعد والتوفر قبل الزيارة.',
 		),
 		array(
 			'q' => 'ما هي خدمات ما بعد البيع؟',
@@ -614,7 +433,7 @@ function car_dealer_shortcode_ab_faq() {
 
 	return $output;
 }
-add_shortcode( 'ab_faq_section', 'car_dealer_shortcode_ab_faq' );
+car_dealer_register_shortcode_adapter( 'ab_faq_section', 'car_dealer_shortcode_ab_faq' );
 
 
 /* ═══════════════════════════════════════════════════════
@@ -657,7 +476,7 @@ function car_dealer_shortcode_ab_social() {
 <?php
 	return ob_get_clean();
 }
-add_shortcode( 'ab_social_section', 'car_dealer_shortcode_ab_social' );
+car_dealer_register_shortcode_adapter( 'ab_social_section', 'car_dealer_shortcode_ab_social' );
 
 
 /* ═══════════════════════════════════════════════════════

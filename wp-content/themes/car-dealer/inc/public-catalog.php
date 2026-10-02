@@ -4,9 +4,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Catalog language is explicit and URL-bound; Arabic remains the safe default. */
 function car_dealer_catalog_language(): string {
-	$value = $_REQUEST['lang'] ?? 'ar';
-	$value = is_scalar( $value ) ? sanitize_key( wp_unslash( (string) $value ) ) : 'ar';
-	return 'en' === $value ? 'en' : 'ar';
+	return function_exists( 'adc_catalog_language' ) ? adc_catalog_language() : 'ar';
 }
 
 function car_dealer_catalog_direction(): string {
@@ -14,13 +12,7 @@ function car_dealer_catalog_direction(): string {
 }
 
 function car_dealer_catalog_is_request(): bool {
-	if ( wp_doing_ajax() ) {
-		return isset( $_REQUEST['lang'] ) && 'en' === car_dealer_catalog_language();
-	}
-	if ( ! did_action( 'wp' ) ) {
-		return false;
-	}
-	return is_post_type_archive( 'car' ) || is_singular( 'car' );
+	return function_exists( 'adc_catalog_is_request' ) && adc_catalog_is_request();
 }
 
 /** English catalog copy while the Arabic source remains the default theme language. */
@@ -83,24 +75,15 @@ function car_dealer_catalog_ngettext( string $translation, string $single, strin
 add_filter( 'ngettext', 'car_dealer_catalog_ngettext', 10, 5 );
 
 function car_dealer_catalog_localized_url( string $url, string $language = '' ): string {
-	$language = in_array( $language, array( 'ar', 'en' ), true ) ? $language : car_dealer_catalog_language();
-	return 'en' === $language ? add_query_arg( 'lang', 'en', $url ) : remove_query_arg( 'lang', $url );
+	return function_exists( 'adc_catalog_localized_url' ) ? adc_catalog_localized_url( $url, $language ) : $url;
 }
 
 function car_dealer_catalog_language_url( string $language ): string {
-	$base = is_singular( 'car' ) ? get_permalink() : get_post_type_archive_link( 'car' );
-	if ( is_post_type_archive( 'car' ) ) {
-		$allowed = array( 'search', 'brand', 'model', 'trim', 'min_year', 'max_year', 'min_price', 'max_price', 'min_mileage', 'max_mileage', 'body_type', 'fuel_type', 'transmission', 'engine_size', 'drivetrain', 'exterior_color', 'interior_color', 'branch_id', 'condition', 'sort', 'paged' );
-		foreach ( $allowed as $key ) {
-			if ( isset( $_GET[ $key ] ) && is_scalar( $_GET[ $key ] ) && '' !== (string) $_GET[ $key ] ) {
-				$base = add_query_arg( $key, sanitize_text_field( wp_unslash( (string) $_GET[ $key ] ) ), $base );
-			}
-		}
-	}
-	return car_dealer_catalog_localized_url( $base, $language );
+	return function_exists( 'adc_catalog_language_url' ) ? adc_catalog_language_url( $language ) : '';
 }
 
 function car_dealer_catalog_language_switch(): void {
+	if ( ! function_exists( 'adc_catalog_language_url' ) ) { return; }
 	$current = car_dealer_catalog_language();
 	?>
 	<nav class="catalog-language-switch" aria-label="<?php echo esc_attr( 'en' === $current ? 'Catalog language' : 'لغة الكتالوج' ); ?>">
@@ -114,7 +97,8 @@ function car_dealer_catalog_format_price( $price ): string {
 	if ( ! $price ) {
 		return '';
 	}
-	return 'en' === car_dealer_catalog_language() ? 'SAR ' . number_format( (float) $price ) : car_dealer_format_price( $price );
+	$amount = (float) $price;
+	return 'en' === car_dealer_catalog_language() ? 'SAR ' . number_format( $amount, floor( $amount ) === $amount ? 0 : 2 ) : car_dealer_format_price( $price );
 }
 
 function car_dealer_catalog_distance( $distance ): string {
@@ -133,78 +117,6 @@ function car_dealer_catalog_value_label( string $value ): string {
 	return $labels[ strtolower( $value ) ] ?? $value;
 }
 
-function car_dealer_catalog_is_authoritative(): bool {
-	return class_exists( '\AutoDealership\Inventory\PublicCatalog' ) && \AutoDealership\Inventory\PublicCatalog::is_authoritative();
+function car_dealer_vehicle_view( int $post_id, bool $preview = false ): ?array {
+	return function_exists( 'adc_public_vehicle_view' ) ? adc_public_vehicle_view( $post_id, $preview ) : null;
 }
-
-function car_dealer_public_vehicle( $post_id = 0 ): ?array {
-	$post_id = $post_id ? absint( $post_id ) : get_the_ID();
-	if ( ! $post_id || ! class_exists( '\AutoDealership\Inventory\PublicCatalog' ) ) {
-		return null;
-	}
-	return \AutoDealership\Inventory\PublicCatalog::vehicle_for_post( $post_id );
-}
-
-function car_dealer_catalog_filter_options(): array {
-	if ( ! car_dealer_catalog_is_authoritative() ) {
-		return array();
-	}
-	return \AutoDealership\Inventory\PublicCatalog::filter_options();
-}
-
-/** Converts the plugin's integer minor-unit price to the theme's display unit. */
-function car_dealer_catalog_price( array $vehicle ): float {
-	return isset( $vehicle['retail_price'] ) ? ( (int) $vehicle['retail_price'] / 100 ) : 0.0;
-}
-
-function car_dealer_catalog_features( array $vehicle ): array {
-	$features = array();
-	foreach ( array( 'interior_features', 'exterior_features', 'safety_features' ) as $field ) {
-		if ( empty( $vehicle[ $field ] ) ) {
-			continue;
-		}
-		$parts = preg_split( '/\r\n|\r|\n/', (string) $vehicle[ $field ] );
-		$features = array_merge( $features, array_filter( array_map( 'trim', $parts ) ) );
-	}
-	return array_values( array_unique( $features ) );
-}
-
-function car_dealer_catalog_has_active_filters(): bool {
-	if ( ! is_post_type_archive( 'car' ) ) {
-		return false;
-	}
-	foreach ( array( 'search', 'brand', 'model', 'trim', 'min_year', 'max_year', 'min_price', 'max_price', 'min_mileage', 'max_mileage', 'body_type', 'fuel_type', 'transmission', 'engine_size', 'drivetrain', 'exterior_color', 'interior_color', 'branch_id', 'condition', 'sort' ) as $key ) {
-		if ( isset( $_GET[ $key ] ) && is_scalar( $_GET[ $key ] ) && '' !== (string) $_GET[ $key ] && ! ( 'sort' === $key && 'newest' === $_GET[ $key ] ) ) {
-			return true;
-		}
-	}
-	return false;
-}
-
-function car_dealer_catalog_robots( array $robots ): array {
-	if ( car_dealer_catalog_is_authoritative() && car_dealer_catalog_has_active_filters() ) {
-		$robots['noindex'] = true;
-		$robots['follow'] = true;
-	}
-	return $robots;
-}
-add_filter( 'wp_robots', 'car_dealer_catalog_robots' );
-
-function car_dealer_catalog_canonical(): void {
-	if ( ! car_dealer_catalog_is_request() ) {
-		return;
-	}
-	if ( is_post_type_archive( 'car' ) && car_dealer_catalog_is_authoritative() && ( car_dealer_catalog_has_active_filters() || 'en' === car_dealer_catalog_language() ) ) {
-		echo '<link rel="canonical" href="' . esc_url( car_dealer_catalog_localized_url( get_post_type_archive_link( 'car' ) ) ) . '">' . "\n";
-	}
-	$base = is_singular( 'car' ) ? get_permalink() : get_post_type_archive_link( 'car' );
-	echo '<link rel="alternate" hreflang="ar" href="' . esc_url( car_dealer_catalog_localized_url( $base, 'ar' ) ) . '">' . "\n";
-	echo '<link rel="alternate" hreflang="en" href="' . esc_url( car_dealer_catalog_localized_url( $base, 'en' ) ) . '">' . "\n";
-	echo '<link rel="alternate" hreflang="x-default" href="' . esc_url( car_dealer_catalog_localized_url( $base, 'ar' ) ) . '">' . "\n";
-}
-add_action( 'wp_head', 'car_dealer_catalog_canonical', 9 );
-
-function car_dealer_catalog_singular_canonical( string $url, WP_Post $post ): string {
-	return 'car' === $post->post_type ? car_dealer_catalog_localized_url( $url ) : $url;
-}
-add_filter( 'get_canonical_url', 'car_dealer_catalog_singular_canonical', 10, 2 );

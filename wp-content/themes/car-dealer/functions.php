@@ -21,21 +21,26 @@ function car_dealer_register_page_templates( $templates ) {
 }
 add_filter( 'theme_page_templates', 'car_dealer_register_page_templates', 10, 4 );
 
+/** Attach appearance to a durable shortcode registered by the core plugin. */
+function car_dealer_register_shortcode_adapter( $tag, $callback, $accepts_atts = false, $accepts_model = false ) {
+	add_filter( 'adc_shortcode_' . sanitize_key( $tag ) . '_html', static function ( $fallback, $model, $atts, $content, $registered_tag ) use ( $callback, $accepts_atts, $accepts_model ) {
+		if ( ! is_callable( $callback ) ) { return $fallback; }
+		$args = array();
+		if ( $accepts_atts ) { $args[] = is_array( $atts ) ? $atts : array(); }
+		if ( $accepts_model ) { $args[] = is_array( $model ) ? $model : array(); }
+		$rendered = call_user_func_array( $callback, $args );
+		return is_string( $rendered ) ? $rendered : $fallback;
+	}, 10, 5 );
+}
+
 // تحميل ملفات صفحات من نحن وتواصل معنا (يجب تحميل contact-form-manager أولاً حتى يعمل الـ shortcode)
 require_once get_template_directory() . '/inc/contact-form-manager.php';
 require_once get_template_directory() . '/inc/about-contact-pages.php';
 
-// تحميل نظام تسجيل الدخول والتسجيل (حساب المستخدم)
+// واجهة الحساب والكتالوج تستخدم واجهات الإضافة العامة فقط.
 require_once get_template_directory() . '/inc/accounts.php';
-require_once get_template_directory() . '/inc/crm.php';
-require_once get_template_directory() . '/inc/customer-workflow.php';
 require_once get_template_directory() . '/inc/public-catalog.php';
-require_once get_template_directory() . '/inc/schema-markup.php';
-
-function car_dealer_get_setting( $setting, $default = '', $type = 'display' ) {
-	$settings = get_option( 'car_dealer_settings', array() );
-	return isset( $settings[ $setting ] ) ? $settings[ $setting ] : $default;
-}
+require_once get_template_directory() . '/inc/customization-manager.php';
 
 function car_dealer_assets() {
 	$version = wp_get_theme()->get( 'Version' ); $uri = get_template_directory_uri();
@@ -47,15 +52,12 @@ function car_dealer_assets() {
 	wp_enqueue_style( 'car-dealer-about', $uri . '/assets/css/pages/_about.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_style( 'car-dealer-contact', $uri . '/assets/css/pages/_contact.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_script( 'car-dealer-main-js', $uri . '/assets/js/main.js', array(), filemtime( get_template_directory() . '/assets/js/main.js' ), true );
-	wp_localize_script( 'car-dealer-main-js', 'carDealer', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'nonce' => wp_create_nonce( 'car_dealer_frontend' ) ) );
 	
 	// Cookie Consent
 	wp_enqueue_style( 'car-dealer-cookies', $uri . '/assets/css/components/_cookies.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/components/_cookies.css' ) );
 	wp_enqueue_script( 'car-dealer-cookie-consent', $uri . '/assets/js/cookie-consent.js', array(), filemtime( get_template_directory() . '/assets/js/cookie-consent.js' ), true );
 	wp_localize_script( 'car-dealer-cookie-consent', 'cdCookieConfig', array( 'templateUri' => $uri ) );
 	
-	// Footer Pro
-	wp_enqueue_style( 'car-dealer-footer', $uri . '/assets/css/layout/_footer.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/layout/_footer.css' ) );
 }
 add_action( 'wp_enqueue_scripts', 'car_dealer_assets' );
 add_filter( 'wp_nav_menu_args', function ( $args ) {
@@ -68,131 +70,72 @@ add_filter( 'wp_nav_menu_args', function ( $args ) {
   return $args;
 } );
 
-function car_dealer_register_content() {
-	if ( function_exists( 'adc_core_owns_content_registry' ) && adc_core_owns_content_registry() ) {
-		return;
-	}
-
-	register_post_type( 'car', array(
-		'labels' => array(
-			'name' => __( 'السيارات', 'car-dealer' ),
-			'singular_name' => __( 'سيارة', 'car-dealer' ),
-			'menu_name' => __( 'السيارات', 'car-dealer' ),
-			'name_admin_bar' => __( 'سيارة', 'car-dealer' ),
-			'add_new' => __( 'إضافة سيارة', 'car-dealer' ),
-			'add_new_item' => __( 'إضافة سيارة جديدة', 'car-dealer' ),
-			'new_item' => __( 'سيارة جديدة', 'car-dealer' ),
-			'edit_item' => __( 'تعديل السيارة', 'car-dealer' ),
-			'view_item' => __( 'عرض السيارة', 'car-dealer' ),
-			'all_items' => __( 'كل السيارات', 'car-dealer' ),
-			'search_items' => __( 'البحث في السيارات', 'car-dealer' ),
-			'not_found' => __( 'لا توجد سيارات', 'car-dealer' ),
-			'not_found_in_trash' => __( 'لا توجد سيارات في سلة المهملات', 'car-dealer' ),
-			'featured_image' => __( 'صورة السيارة الرئيسية', 'car-dealer' ),
-			'set_featured_image' => __( 'تعيين صورة السيارة', 'car-dealer' ),
-			'remove_featured_image' => __( 'إزالة صورة السيارة', 'car-dealer' ),
-			'use_featured_image' => __( 'استخدام كصورة السيارة', 'car-dealer' ),
-			'item_published' => __( 'تم نشر السيارة', 'car-dealer' ),
-			'item_updated' => __( 'تم تحديث السيارة', 'car-dealer' ),
-		),
-		'public' => true,
-		'has_archive' => true,
-		'rewrite' => array( 'slug' => 'cars' ),
-		'menu_icon' => 'dashicons-car',
-		'show_in_menu' => 'car-dealer-dashboard',
-		'show_in_rest' => true,
-		'capability_type' => array( 'car', 'cars' ),
-		'map_meta_cap' => true,
-		'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt', 'custom-fields' ),
-	) );
-	register_taxonomy( 'car_brand', 'car', array( 'labels' => array( 'name' => __( 'الماركات', 'car-dealer' ), 'singular_name' => __( 'ماركة', 'car-dealer' ), 'add_new_item' => __( 'إضافة ماركة جديدة', 'car-dealer' ), 'edit_item' => __( 'تعديل الماركة', 'car-dealer' ), 'search_items' => __( 'البحث في الماركات', 'car-dealer' ) ), 'public' => true, 'show_in_rest' => true, 'rewrite' => array( 'slug' => 'car-brand' ), 'capabilities' => array( 'manage_terms' => 'manage_car_brands', 'edit_terms' => 'manage_car_brands', 'delete_terms' => 'manage_car_brands', 'assign_terms' => 'assign_car_brands' ) ) );
-	register_taxonomy( 'car_category', 'car', array( 'labels' => array( 'name' => __( 'الفئات', 'car-dealer' ), 'singular_name' => __( 'فئة', 'car-dealer' ), 'add_new_item' => __( 'إضافة فئة جديدة', 'car-dealer' ), 'edit_item' => __( 'تعديل الفئة', 'car-dealer' ), 'search_items' => __( 'البحث في الفئات', 'car-dealer' ) ), 'public' => true, 'hierarchical' => true, 'show_in_rest' => true, 'rewrite' => array( 'slug' => 'car-category' ), 'capabilities' => array( 'manage_terms' => 'manage_car_categories', 'edit_terms' => 'manage_car_categories', 'delete_terms' => 'manage_car_categories', 'assign_terms' => 'assign_car_categories' ) ) );
-}
-add_action( 'init', 'car_dealer_register_content' );
-
-function car_dealer_maybe_flush_rewrites() {
-	if ( function_exists( 'adc_core_owns_content_registry' ) && adc_core_owns_content_registry() ) {
-		return;
-	}
-
-	$version = wp_get_theme()->get( 'Version' ) . '-autobrands-2';
-	if ( get_option( 'car_dealer_rewrite_version' ) === $version ) { return; }
-	car_dealer_register_content();
-	flush_rewrite_rules( false );
-	update_option( 'car_dealer_rewrite_version', $version );
-}
-add_action( 'admin_init', 'car_dealer_maybe_flush_rewrites' );
-add_action( 'after_switch_theme', 'car_dealer_maybe_flush_rewrites' );
-
-function car_dealer_car_meta_box() { add_meta_box( 'car-details', __( 'تفاصيل السيارة', 'car-dealer' ), 'car_dealer_car_meta_box_html', 'car', 'normal', 'high' ); }
-if ( ! function_exists( 'adc_core_owns_vehicle_post_editor' ) || ! adc_core_owns_vehicle_post_editor() ) {
-	add_action( 'add_meta_boxes', 'car_dealer_car_meta_box' );
-}
-
-function car_dealer_car_meta_box_html( $post ) {
-	wp_nonce_field( 'car_dealer_save_car', 'car_dealer_car_nonce' );
-	$text_fields = array(
-		'_car_price' => __( 'السعر', 'car-dealer' ),
-		'_car_monthly_payment' => __( 'القسط الشهري', 'car-dealer' ),
-		'_car_year' => __( 'سنة الصنع', 'car-dealer' ),
-		'_car_model' => __( 'الموديل', 'car-dealer' ),
-		'_car_color' => __( 'اللون', 'car-dealer' ),
-		'_car_kilometers' => __( 'الممشي (كم)', 'car-dealer' ),
-		'_car_transmission' => __( 'ناقل الحركة', 'car-dealer' ),
-		'_car_fuel_type' => __( 'نوع الوقود', 'car-dealer' ),
-		'_car_condition' => __( 'الحالة', 'car-dealer' ),
-		'_car_inventory_status' => __( 'حالة المخزون', 'car-dealer' ),
-	);
-	foreach ( $text_fields as $key => $label ) {
-		$value = get_post_meta( $post->ID, $key, true );
-		echo '<p><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><br><input type="text" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" style="width:100%"></p>';
-	}
-	$features = get_post_meta( $post->ID, '_car_features', true );
-	echo '<p><label for="_car_features">' . esc_html__( 'المزايا (سطر لكل ميزة)', 'car-dealer' ) . '</label><br><textarea id="_car_features" name="_car_features" rows="5" style="width:100%">' . esc_textarea( $features ) . '</textarea></p>';
-	echo '<p><label for="_car_featured"><input type="checkbox" id="_car_featured" name="_car_featured" value="1" ' . checked( get_post_meta( $post->ID, '_car_featured', true ), '1', false ) . '> ' . esc_html__( 'سيارة مميزة', 'car-dealer' ) . '</label></p>';
-	echo '<p><label for="_car_demand"><input type="checkbox" id="_car_demand" name="_car_demand" value="yes" ' . checked( get_post_meta( $post->ID, '_car_demand', true ), 'yes', false ) . '> ' . esc_html__( 'سيارة مطلوبة', 'car-dealer' ) . '</label></p>';
-}
-
-function car_dealer_save_car_meta( $post_id ) {
-	if ( ! isset( $_POST['car_dealer_car_nonce'] ) || ! wp_verify_nonce( $_POST['car_dealer_car_nonce'], 'car_dealer_save_car' ) ) { return; }
-	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) { return; }
-	if ( ! current_user_can( 'edit_post', $post_id ) ) { return; }
-	$fields = array( '_car_price', '_car_monthly_payment', '_car_year', '_car_model', '_car_color', '_car_kilometers', '_car_transmission', '_car_fuel_type', '_car_condition', '_car_inventory_status', '_car_features' );
-	foreach ( $fields as $field ) {
-		if ( isset( $_POST[ $field ] ) ) { update_post_meta( $post_id, $field, sanitize_text_field( $_POST[ $field ] ) ); }
-	}
-	update_post_meta( $post_id, '_car_featured', isset( $_POST['_car_featured'] ) ? '1' : '' );
-	update_post_meta( $post_id, '_car_demand', isset( $_POST['_car_demand'] ) ? 'yes' : '' );
-}
-if ( ! function_exists( 'adc_core_owns_vehicle_post_editor' ) || ! adc_core_owns_vehicle_post_editor() ) {
-	add_action( 'save_post', 'car_dealer_save_car_meta' );
-}
-
 function car_dealer_format_price( $price ) {
 	if ( ! $price ) { return ''; }
-	return number_format( $price ) . ' ريال';
+	$amount = (float) $price;
+	return number_format( $amount, floor( $amount ) === $amount ? 0 : 2 ) . ' ريال';
 }
 
 function car_dealer_whatsapp_url( $message = '' ) {
-	$phone = get_option( 'car_dealer_whatsapp', '' );
+	$options = car_dealer_theme_options();
+	$phone = preg_replace( '/\D+/', '', (string) ( $options['whatsapp'] ?: get_option( 'car_dealer_whatsapp', '' ) ) );
 	if ( ! $phone ) { return '#'; }
 	return 'https://wa.me/' . $phone . '?text=' . urlencode( $message );
 }
 
+/** Resolve editorial links by slug; an intentionally empty site has no fixed page IDs. */
+function car_dealer_page_url( string $slug ): string {
+	$page = get_page_by_path( sanitize_title( $slug ), OBJECT, 'page' );
+	return $page instanceof WP_Post && 'publish' === $page->post_status ? (string) get_permalink( $page ) : '';
+}
+
+/** Return an archive link only while its plugin-owned content type is registered. */
+function car_dealer_archive_url( string $post_type ): string {
+	$url = post_type_exists( $post_type ) ? get_post_type_archive_link( $post_type ) : false;
+	return is_string( $url ) ? $url : '';
+}
+
+function car_dealer_footer_social_links(): void {
+	$options = car_dealer_theme_options();
+	$links = array_filter( array( 'facebook' => $options['facebook'], 'instagram' => $options['instagram'] ) );
+	$phone = preg_replace( '/\D+/', '', (string) $options['whatsapp'] );
+	if ( ! $links && ! $phone ) { return; }
+	echo '<div class="cd-social-links">';
+	foreach ( $links as $label => $url ) {
+		echo '<a href="' . esc_url( $url ) . '" target="_blank" rel="noopener">' . esc_html( ucfirst( $label ) ) . '</a>';
+	}
+	if ( $phone ) { echo '<a href="' . esc_url( 'https://wa.me/' . $phone ) . '" target="_blank" rel="noopener">WhatsApp</a>'; }
+	echo '</div>';
+}
+
+/** Public offers and editorial previews use plugin read models. */
+function car_dealer_offer_view( int $post_id, bool $preview = false ): ?array {
+	if ( $preview && function_exists( 'adc_public_offer_preview' ) ) {
+		return adc_public_offer_preview( $post_id );
+	}
+	return function_exists( 'adc_public_offer_view' ) ? adc_public_offer_view( $post_id ) : null;
+}
+
 function car_dealer_offer_card( $post_id = null ) {
 	if ( ! $post_id ) { $post_id = get_the_ID(); }
-	$monthly = get_post_meta( $post_id, '_offer_monthly_payment', true );
-	$new_price = get_post_meta( $post_id, '_offer_new_price', true );
-	$old_price = get_post_meta( $post_id, '_offer_old_price', true );
+	$offer = car_dealer_offer_view( (int) $post_id );
+	if ( ! $offer ) { return; }
+	$monthly = $offer['monthly_payment'];
+	$new_price = $offer['price'];
+	$old_price = $offer['old_price'];
+	$url = $offer['url'];
+	$title = $offer['title'];
+	$image = get_the_post_thumbnail( $post_id, 'medium_large' );
+	if ( ! $image ) { $image = get_the_post_thumbnail( $offer['car_id'], 'medium_large' ); }
 	?>
 	<article class="offer-card">
-		<?php if ( has_post_thumbnail( $post_id ) ) : ?>
-			<a class="offer-image" href="<?php echo esc_url( get_permalink( $post_id ) ); ?>">
-				<?php echo get_the_post_thumbnail( $post_id, 'medium_large' ); ?>
+		<?php if ( $image ) : ?>
+			<a class="offer-image" href="<?php echo esc_url( $url ); ?>">
+				<?php echo $image; ?>
 			</a>
 		<?php endif; ?>
 		<div class="offer-content">
-			<h3><a href="<?php echo esc_url( get_permalink( $post_id ) ); ?>"><?php echo esc_html( get_the_title( $post_id ) ); ?></a></h3>
+			<h3><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $title ); ?></a></h3>
 			<?php if ( $old_price ) : ?><p class="offer-old"><?php echo esc_html( car_dealer_format_price( $old_price ) ); ?></p><?php endif; ?>
 			<?php if ( $new_price ) : ?><p class="offer-price"><?php echo esc_html( car_dealer_format_price( $new_price ) ); ?></p><?php endif; ?>
 			<?php if ( $monthly ) : ?><p class="car-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
@@ -246,49 +189,37 @@ function car_dealer_booking_form( $car_id ) {
 	car_dealer_render_booking_form( absint( $car_id ) );
 }
 
-function car_dealer_ajax_handler() {
-	check_ajax_referer( 'car_dealer_frontend', 'nonce' );
-	$type = sanitize_text_field( $_POST['type'] ?? '' );
-	$car_id = absint( $_POST['car_id'] ?? 0 );
-	$name = sanitize_text_field( $_POST['name'] ?? '' );
-	$phone = sanitize_text_field( $_POST['phone'] ?? '' );
-	$message = sanitize_textarea_field( $_POST['message'] ?? '' );
-	if ( ! $name || ! $phone ) { wp_send_json_error( array( 'message' => __( 'يرجى إدخال الاسم والجوال', 'car-dealer' ) ) ); }
-	$to = get_option( 'admin_email' );
-	$subject = sprintf( __( 'طلب جديد: %s', 'car-dealer' ), $type );
-	$body = sprintf( "الاسم: %s\nالجوال: %s\nالسيارة: %s\nملاحظات: %s", $name, $phone, get_the_title( $car_id ), $message );
-	wp_mail( $to, $subject, $body );
-	wp_send_json_success( array( 'message' => __( 'تم إرسال طلبك بنجاح', 'car-dealer' ) ) );
-}
-if ( ! function_exists( 'adc_core_owns_public_intake_actions' ) || ! adc_core_owns_public_intake_actions() ) {
-	add_action( 'wp_ajax_car_dealer_lead', 'car_dealer_ajax_handler' );
-	add_action( 'wp_ajax_nopriv_car_dealer_lead', 'car_dealer_ajax_handler' );
-}
-
-function car_dealer_shortcode_cars( $atts ) {
-	$atts = shortcode_atts( array( 'count' => 6, 'featured' => '' ), $atts );
-	$args = array( 'post_type' => 'car', 'posts_per_page' => min( 48, max( 1, absint( $atts['count'] ) ) ) );
-	if ( function_exists( 'car_dealer_catalog_is_authoritative' ) && car_dealer_catalog_is_authoritative() ) {
-		$args['adc_public_catalog'] = true;
-		$args['adc_catalog_filters'] = array( 'sort' => 'newest' );
-	} elseif ( '' !== $atts['featured'] ) {
-		$args['meta_query'] = array( array( 'key' => '_car_featured', 'value' => absint( $atts['featured'] ) ) );
-	}
-	$query = new WP_Query( $args );
+function car_dealer_render_shortcode_car_ids( $post_ids, $classes = 'car-grid' ) {
+	$post_ids = array_values( array_filter( array_map( 'absint', (array) $post_ids ) ) );
+	if ( ! $post_ids ) { return ''; }
+	global $post;
 	ob_start();
-	if ( $query->have_posts() ) : ?>
-		<div class="car-grid"><?php while ( $query->have_posts() ) { $query->the_post(); get_template_part( 'templates/components/car-card' ); } wp_reset_postdata(); ?></div>
-	<?php endif;
+	echo '<div class="' . esc_attr( $classes ) . '">';
+	foreach ( $post_ids as $post_id ) {
+		$post = get_post( $post_id );
+		if ( ! $post instanceof WP_Post || 'car' !== $post->post_type || 'publish' !== $post->post_status ) { continue; }
+		setup_postdata( $post );
+		get_template_part( 'templates/components/car-card' );
+	}
+	echo '</div>';
+	wp_reset_postdata();
 	return ob_get_clean();
 }
-add_shortcode( 'car_dealer_cars', 'car_dealer_shortcode_cars' );
 
-function car_dealer_shortcode_loan_calculator( $atts ) {
+function car_dealer_shortcode_cars( $atts, $model = array() ) {
+	if ( isset( $model['post_ids'] ) && is_array( $model['post_ids'] ) ) {
+		return car_dealer_render_shortcode_car_ids( $model['post_ids'] );
+	}
+	return '';
+}
+car_dealer_register_shortcode_adapter( 'car_dealer_cars', 'car_dealer_shortcode_cars', true, true );
+
+function car_dealer_shortcode_loan_calculator( $atts, $model = array() ) {
 	$atts = shortcode_atts( array( 'price' => 0 ), $atts, 'car_dealer_loan_calculator' );
 	$price = absint( $atts['price'] );
-	$model = class_exists( '\\AutoDealership\\Tools\\LoanCalculator' )
-		? \AutoDealership\Tools\LoanCalculator::view_model( $price )
-		: array( 'price'=>$price, 'down_payment'=>0, 'annual_rate'=>'4.50', 'months'=>60, 'max_amount'=>100000000, 'max_months'=>120, 'max_rate'=>'100.00' );
+	if ( ! isset( $model['price'], $model['down_payment'], $model['annual_rate'], $model['months'], $model['max_amount'], $model['max_months'], $model['max_rate'] ) ) {
+		return '';
+	}
 	ob_start();
 	?>
 	<div class="cd-tool cd-loan-calculator">
@@ -310,79 +241,21 @@ function car_dealer_shortcode_loan_calculator( $atts ) {
 	<?php
 	return ob_get_clean();
 }
-add_shortcode( 'car_dealer_loan_calculator', 'car_dealer_shortcode_loan_calculator' );
+car_dealer_register_shortcode_adapter( 'car_dealer_loan_calculator', 'car_dealer_shortcode_loan_calculator', true, true );
 
 function car_dealer_shortcode_testimonials( $atts ) {
-	$atts = shortcode_atts( array( 'count' => 3 ), $atts );
-	ob_start();
-	?>
-	<div class="cd-testimonials">
-		<div class="container">
-			<div class="cd-testimonial-grid">
-				<div class="cd-testimonial">
-					<p><?php esc_html_e( 'تجربة شراء ممتازة، فريق محترف وسيارات بجودة عالية.', 'car-dealer' ); ?></p>
-					<strong><?php esc_html_e( 'أحمد محمد', 'car-dealer' ); ?></strong>
-				</div>
-				<div class="cd-testimonial">
-					<p><?php esc_html_e( 'أفضل وكالة سيارات تعاملت معها، أنصح بها بشدة.', 'car-dealer' ); ?></p>
-					<strong><?php esc_html_e( 'سارة علي', 'car-dealer' ); ?></strong>
-				</div>
-				<div class="cd-testimonial">
-					<p><?php esc_html_e( 'خدمة ما بعد البيع ممتازة وضمان حقيقي.', 'car-dealer' ); ?></p>
-					<strong><?php esc_html_e( 'خالد عبدالله', 'car-dealer' ); ?></strong>
-				</div>
-			</div>
-		</div>
-	</div>
-	<?php
-	return ob_get_clean();
+	// Keep the shortcode contract without presenting invented customer endorsements.
+	return '';
 }
-add_shortcode( 'car_dealer_testimonials', 'car_dealer_shortcode_testimonials' );
+car_dealer_register_shortcode_adapter( 'car_dealer_testimonials', 'car_dealer_shortcode_testimonials', true, false );
 
 function car_dealer_get_comparison() {
-	if ( class_exists( '\\AutoDealership\\Tools\\VehicleComparison' ) && function_exists( 'adc_core_owns_public_tools_actions' ) && adc_core_owns_public_tools_actions() ) {
-		return \AutoDealership\Tools\VehicleComparison::current();
-	}
-	$raw = isset( $_COOKIE['car_dealer_comparison'] ) && is_string( $_COOKIE['car_dealer_comparison'] ) ? wp_unslash( $_COOKIE['car_dealer_comparison'] ) : '';
-	$ids = json_decode( $raw, true );
-	if ( ! is_array( $ids ) ) { $ids = explode( ',', $raw ); }
-	return array_slice( array_values( array_unique( array_filter( array_map( 'absint', $ids ) ) ) ), 0, 4 );
+	return function_exists( 'adc_public_comparison_ids' ) ? adc_public_comparison_ids() : array();
 }
 
-function car_dealer_shortcode_comparison() {
-	$ids = car_dealer_get_comparison();
+function car_dealer_shortcode_comparison( $model = array() ) {
+	$ids = isset( $model['post_ids'] ) && is_array( $model['post_ids'] ) ? $model['post_ids'] : car_dealer_get_comparison();
 	if ( ! $ids ) { return '<p class="empty-state">' . esc_html__( 'لم تضف سيارات للمقارنة بعد.', 'car-dealer' ) . '</p>'; }
-	$query = new WP_Query( array( 'post_type'=>'car', 'post_status'=>'publish', 'post__in'=>$ids, 'orderby'=>'post__in', 'posts_per_page'=>4 ) );
-	ob_start();
-	echo '<div class="car-grid cd-comparison-grid">';
-	while ( $query->have_posts() ) { $query->the_post(); get_template_part( 'templates/components/car-card' ); }
-	echo '</div>';
-	wp_reset_postdata();
-	return ob_get_clean();
+	return car_dealer_render_shortcode_car_ids( $ids, 'car-grid cd-comparison-grid' );
 }
-add_shortcode( 'car_dealer_comparison', 'car_dealer_shortcode_comparison' );
-
-/** Rollback handler used only when plugin ownership is disabled before bootstrap. */
-function car_dealer_legacy_comparison_ajax() {
-	check_ajax_referer( 'car_dealer_frontend', 'nonce' );
-	$car_id = absint( $_POST['car_id'] ?? 0 );
-	if ( ! $car_id || 'car' !== get_post_type( $car_id ) || 'publish' !== get_post_status( $car_id ) ) { wp_send_json_error( array( 'message'=>__( 'السيارة غير صالحة.', 'car-dealer' ) ), 400 ); }
-	$ids = car_dealer_get_comparison();
-	$action = isset( $_POST['compare_action'] ) ? sanitize_key( wp_unslash( $_POST['compare_action'] ) ) : 'add';
-	if ( 'remove' === $action ) { $ids = array_values( array_diff( $ids, array( $car_id ) ) ); }
-	elseif ( ! in_array( $car_id, $ids, true ) && count( $ids ) < 4 ) { $ids[] = $car_id; }
-	$value = wp_json_encode( $ids );
-	setcookie( 'car_dealer_comparison', $value, time() + MONTH_IN_SECONDS, COOKIEPATH ?: '/', COOKIE_DOMAIN, is_ssl(), true );
-	$_COOKIE['car_dealer_comparison'] = $value;
-	wp_send_json_success( array( 'count'=>count( $ids ), 'active'=>in_array( $car_id, $ids, true ), 'message'=>__( 'تم تحديث المقارنة.', 'car-dealer' ) ) );
-}
-if ( ! function_exists( 'adc_core_owns_public_tools_actions' ) || ! adc_core_owns_public_tools_actions() ) {
-	add_action( 'wp_ajax_car_dealer_comparison', 'car_dealer_legacy_comparison_ajax' );
-	add_action( 'wp_ajax_nopriv_car_dealer_comparison', 'car_dealer_legacy_comparison_ajax' );
-}
-
-// تحميل ملف enhanced-stats.css
-function add_enhanced_stats_css() {
-	wp_enqueue_style('enhanced-stats', get_template_directory_uri() . '/enhanced-stats.css');
-}
-add_action('wp_enqueue_scripts', 'add_enhanced_stats_css');
+car_dealer_register_shortcode_adapter( 'car_dealer_comparison', 'car_dealer_shortcode_comparison', false, true );

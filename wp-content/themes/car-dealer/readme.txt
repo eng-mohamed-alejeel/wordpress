@@ -1,60 +1,13 @@
-== Car Dealer ==
+=== Car Dealer ===
+Version: 1.29.13
+Requires WordPress: 6.7 or newer
+Requires PHP: 8.0 or newer
+Companion plugin: Auto Dealership Core 1.29.13 or newer
 
-معلومات عامة عن القالب:
+This theme owns layout, public styles, navigation, forms and page templates. The companion plugin owns dealership content types, vehicle and offer read models, shortcodes, public request handlers, accounts, permissions and staff operations.
 
-Car Dealer هو قالب WordPress مصمم خصيصًا لمواقع معارض السيارات. يوفر القالب تصميماً متجاوباً وجذاباً يعرض السيارات بطريقة احترافية وسهلة الاستخدام.
+Activate Auto Dealership Core before publishing dealership pages. Without it, catalog, offer, account and request areas show an unavailable message and no theme business handler or database installer runs.
 
-المميزات الرئيسية:
+Appearance > مظهر المعرض stores optional colors, public contact details and social links. Empty fields are omitted from public pages. Editorial pages are prepared only through the plugin's explicit setup screen and are created as drafts when selected by an administrator. This theme does not create sample cars, offers, customers or pages on activation.
 
-- تصميم متجاوب يعمل على جميع الأجهزة
-- دعم لأنواع المقالات المخصصة (السيارات)
-- تصنيفات للماركات وفئات السيارات
-- حقول مخصصة لتفاصيل السيارات (السعر، سنة التصنيع، المسافة المقطوعة، ناقل الحركة، نوع الوقود)
-- فلترة السيارات حسب الفئات
-- نموذج اتصال متقدم
-- تصميم عصري وجذاب
-
-متطلبات القالب:
-
-- WordPress 6.7 أو أحدث
-- PHP 7.2 أو أحدث
-- دعم لـ post thumbnails
-
-التثبيت:
-
-1. قم بتنزيل القالب وفك الضغط عنه
-2. قم برفع المجلد "car-dealer" إلى مجلد "wp-content/themes" الخاص بتثبيت WordPress
-3. من لوحة تحكم WordPress، اذهب إلى "المظاهر > المظاهر" واختر "Car Dealer"
-4. بعد تفعيل القالب، يمكنك إضافة تصنيفات وفئات جديدة للسيارات من خلال "السيارات > فئات السيارات" و"السيارات > ماركات السيارات"
-
-الاستخدام:
-
-1. إضافة سيارة جديدة:
-   - اذهب إلى "السيارات > إضافة جديد"
-   - أدخل عنوان السيارة والوصف
-   - أرفع صور السيارة
-   - املأ تفاصيل السيارات في الحقل المخصص أسفل محرر المحتوى
-   - اختر الفئة والماركة المناسبة
-   - انشر السيارة
-
-2. إضافة فئة أو ماركة جديدة:
-   - اذهب إلى "السيارات > فئات السيارات" أو "السيارات > ماركات السيارات"
-   - انقر على "إضافة جديد"
-   - أدخل اسم الفئة أو الماركة وانقر على "إضافة جديد"
-
-3. تخصيص القالب:
-   - من "المظهر > تخصيص"، يمكنك تعديل الألوان والخطوط والصور
-   - يمكنك أيضاً تعديل القوائم من "المظهر > القوائم"
-
-الدعم:
-
-إذا واجهت أي مشاكل في استخدام القالب، يمكنك التواصل معنا عبر البريد الإلكتروني support@cardealer.com
-
-الترخيص:
-
-هذا القالب مرخص بموجب ترخيص GPL v2 أو أحدث. يمكنك استخدامه وتعديله وتوزيعه بحرية.
-
-التغييرات:
-
-1.0 - الإصدار الأول
-- الإصدار الأول من القالب
+The theme uses plugin facade functions documented in docs/THEME-ADAPTER-API.md. Former business sources are preserved under docs/archive/car-dealer outside the deployable theme. They are historical source, not an operational rollback path.

@@ -3,17 +3,17 @@
 defined( 'ABSPATH' ) || exit;
 
 $id         = get_the_ID();
-$vehicle    = function_exists( 'car_dealer_public_vehicle' ) ? car_dealer_public_vehicle( $id ) : null;
-$price      = $vehicle ? car_dealer_catalog_price( $vehicle ) : get_post_meta( $id, '_car_price', true );
-$year       = $vehicle ? $vehicle['model_year'] : get_post_meta( $id, '_car_year', true );
-$kilometers = $vehicle ? $vehicle['mileage'] : get_post_meta( $id, '_car_kilometers', true );
-$monthly    = get_post_meta( $id, '_car_monthly_payment', true );
-$featured   = get_post_meta( $id, '_car_featured', true );
-$status     = $vehicle ? $vehicle['status'] : ( get_post_meta( $id, '_car_inventory_status', true ) ?: 'available' );
-$brands     = get_the_terms( $id, 'car_brand' );
-$categories = get_the_terms( $id, 'car_category' );
-$brand_name = $vehicle ? $vehicle['brand'] : ( ! is_wp_error( $brands ) && ! empty( $brands ) ? $brands[0]->name : '' );
-$category   = $vehicle ? $vehicle['body_type'] : ( ! is_wp_error( $categories ) && ! empty( $categories ) ? $categories[0]->slug : '' );
+$view       = car_dealer_vehicle_view( $id, is_preview() );
+if ( ! $view ) { return; }
+$vehicle    = $view['vehicle'];
+$price      = $view['price'];
+$year       = $view['year'];
+$kilometers = $view['kilometers'];
+$monthly    = $view['monthly'];
+$featured   = $view['featured'];
+$status     = $view['status'];
+$brand_name = $view['brand_name'];
+$category   = $view['category'];
 $permalink  = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer_catalog_localized_url( get_permalink( $id ) ) : get_permalink( $id );
 ?>
 <article class="car-card" data-category="<?php echo esc_attr( $category ); ?>">

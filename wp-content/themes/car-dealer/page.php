@@ -10,19 +10,8 @@
 get_header(); ?>
 
 <div class="container">
-	<div id="primary" class="content-area">
-		<?php
-		// إضافة محتوى مخصص للصفحات إذا كان موجوداً
-		if ( function_exists( 'car_dealer_get_setting' ) ) {
-			$custom_page_content = car_dealer_get_setting( 'custom_page_content', '', 'display' );
-			if ( ! empty( $custom_page_content ) ) {
-				echo '<div class="custom-page-content">';
-				echo wp_kses_post( $custom_page_content );
-				echo '</div>';
-			}
-		}
-		?>
-		<main id="main" class="site-main">
+	<div class="content-area">
+		<div id="main" class="page-content">
 
 			<?php
 			while ( have_posts() ) :
@@ -73,8 +62,8 @@ get_header(); ?>
 
 			<?php endwhile; // End of the loop. ?>
 
-		</main><!-- #main -->
-	</div><!-- #primary -->
+		</div><!-- #main -->
+	</div><!-- .content-area -->
 </div><!-- .container -->
 
 <?php get_footer(); ?>

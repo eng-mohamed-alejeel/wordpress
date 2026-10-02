@@ -1,20 +1,26 @@
-﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„Ù…ØªØºÙŠØ±Ø§Øª Ø§Ù„Ù…ÙˆØ­Ø¯Ø© (Unified Variables)
-   ØªÙØ³ØªÙˆØ±Ø¯ Ù…Ù† Ø¬Ù…ÙŠØ¹ Ù…Ù„ÙØ§Øª CSS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — Main Stylesheet (Minified)
+   تم إنشاؤه تلقائياً بواسطة build-css.js
+   ═══════════════════════════════════════════════════════ */
+
+/* ── abstracts/_variables.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — المتغيرات الموحدة (Unified Variables)
+   تُستورد من جميع ملفات CSS
+   ═══════════════════════════════════════════════════════ */
 
 :root {
-  /* â”€â”€ Ø§Ù„Ø£Ù„ÙˆØ§Ù† Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© (cd-color-) â”€â”€ */
-  --cd-color-primary: #1A365D;      /* Ø£Ø²Ø±Ù‚ Ø¯Ø§ÙƒÙ† */
-  --cd-color-accent: #D02B2B;       /* Ø£Ø­Ù…Ø± ØªÙØ§Ø¹Ù„ÙŠ */
-  --cd-color-secondary: #2B4C7E;    /* ÙƒØ­Ù„ÙŠ Ø¨Ø§Ù‡Øª */
-  --cd-color-bg: #F3F4F6;           /* Ø®Ù„ÙÙŠØ© Ø±Ù…Ø§Ø¯ÙŠØ© ÙØ§ØªØ­Ø© */
-  --cd-color-surface: #FFFFFF;       /* Ø³Ø·Ø­ Ø£Ø¨ÙŠØ¶ */
-  --cd-color-muted: #627D98;        /* Ù†Øµ Ø«Ø§Ù†ÙˆÙŠ */
-  --cd-color-line: #D9E2EC;          /* Ø­Ø¯ÙˆØ¯ */
-  --cd-color-text: #1E293B;          /* Ù†Øµ Ø£Ø³Ø§Ø³ÙŠ */
+  /* ── الألوان الأساسية (cd-color-) ── */
+  --cd-color-primary: #1A365D;      /* أزرق داكن */
+  --cd-color-accent: #D02B2B;       /* أحمر تفاعلي */
+  --cd-color-secondary: #2B4C7E;    /* كحلي باهت */
+  --cd-color-bg: #F3F4F6;           /* خلفية رمادية فاتحة */
+  --cd-color-surface: #FFFFFF;       /* سطح أبيض */
+  --cd-color-muted: #627D98;        /* نص ثانوي */
+  --cd-color-line: #D9E2EC;          /* حدود */
+  --cd-color-text: #1E293B;          /* نص أساسي */
 
-  /* â”€â”€ Ø£Ù„ÙˆØ§Ù† AUTO BRANDS (ab-color-) â”€â”€ */
+  /* ── ألوان AUTO BRANDS (ab-color-) ── */
   --ab-color-blue: #0669D9;
   --ab-color-red: #E21D2F;
   --ab-color-black: #05070B;
@@ -22,13 +28,13 @@
   --ab-color-metal: #D8DDE6;
   --ab-color-chrome: linear-gradient(135deg, #ffffff 0%, #b9c3d0 34%, #f7f9fc 52%, #7d8794 100%);
 
-  /* â”€â”€ Ø§Ù„Ø£Ù„ÙˆØ§Ù† Ø§Ù„Ø¯Ù„Ø§Ù„ÙŠØ© â”€â”€ */
+  /* ── الألوان الدلالية ── */
   --cd-color-success: #2F855A;
   --cd-color-warning: #D69E2E;
   --cd-color-error: #E53E3E;
   --cd-color-info: #3182CE;
 
-  /* â”€â”€ Ø§Ù„Ø®Ø·ÙˆØ· â”€â”€ */
+  /* ── الخطوط ── */
   --cd-font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --cd-font-size-xs: 0.75rem;
   --cd-font-size-sm: 0.875rem;
@@ -41,7 +47,7 @@
   --cd-font-size-4xl: 3rem;
   --cd-font-size-5xl: 4rem;
 
-  /* â”€â”€ Ø§Ù„Ù…Ø³Ø§ÙØ§Øª â”€â”€ */
+  /* ── المسافات ── */
   --cd-spacing-xs: 0.25rem;
   --cd-spacing-sm: 0.5rem;
   --cd-spacing-md: 1rem;
@@ -51,46 +57,47 @@
   --cd-spacing-3xl: 4rem;
   --cd-spacing-4xl: 5rem;
 
-  /* â”€â”€ Ø§Ù„Ø§Ù†Ø­Ù†Ø§Ø¡Ø§Øª â”€â”€ */
+  /* ── الانحناءات ── */
   --cd-radius-sm: 6px;
   --cd-radius-md: 8px;
   --cd-radius-lg: 12px;
   --cd-radius-xl: 16px;
   --cd-radius-full: 999px;
 
-  /* â”€â”€ Ø§Ù„Ø¸Ù„Ø§Ù„ â”€â”€ */
+  /* ── الظلال ── */
   --cd-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
   --cd-shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
   --cd-shadow-lg: 0 18px 50px rgba(15, 23, 42, 0.09);
   --cd-shadow-xl: 0 28px 90px rgba(0, 0, 0, 0.45);
 
-  /* â”€â”€ Ø§Ù„Ø§Ù†ØªÙ‚Ø§Ù„Ø§Øª â”€â”€ */
+  /* ── الانتقالات ── */
   --cd-transition-fast: 0.15s ease;
   --cd-transition-base: 0.2s ease;
   --cd-transition-slow: 0.3s ease;
 
-  /* â”€â”€ Ø­Ø¯ÙˆØ¯ â”€â”€ */
+  /* ── حدود ── */
   --cd-border-width: 1px;
   --cd-border-style: solid;
 
-  /* â”€â”€ Ø§Ù„ØªØ±ÙˆÙŠØ³Ø© â”€â”€ */
+  /* ── الترويسة ── */
   --cd-header-height: 76px;
   --cd-header-bg: rgba(255, 255, 255, 0.96);
   --cd-header-border: 1px solid var(--cd-color-line);
 
-  /* â”€â”€ Ø§Ù„Ø­Ø§ÙˆÙŠØ© â”€â”€ */
+  /* ── الحاوية ── */
   --cd-container-max: 1200px;
   --cd-container-padding: 15px;
 
-  /* â”€â”€ Ù†Ù‚Ø§Ø· Ø§Ù„ØªÙˆÙ‚Ù â”€â”€ */
+  /* ── نقاط التوقف ── */
   --cd-breakpoint-sm: 600px;
   --cd-breakpoint-md: 900px;
   --cd-breakpoint-lg: 1200px;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ† (Reset)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── base/_reset.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — إعادة تعيين (Reset)
+   ═══════════════════════════════════════════════════════ */
 
 *,
 *::before,
@@ -101,10 +108,6 @@
 html {
   direction: rtl;
   scroll-behavior: smooth;
-}
-
-html[dir="ltr"] {
-  direction: ltr;
 }
 
 body {
@@ -172,7 +175,7 @@ hr {
   margin: var(--cd-spacing-xl) 0;
 }
 
-/* â”€â”€ Ø¥Ù…ÙƒØ§Ù†ÙŠØ© Ø§Ù„ÙˆØµÙˆÙ„ â”€â”€ */
+/* ── إمكانية الوصول ── */
 .screen-reader-text {
   position: absolute;
   width: 1px;
@@ -185,15 +188,16 @@ hr {
   word-wrap: normal;
 }
 
-/* â”€â”€ Ø§Ù„ØªØ±ÙƒÙŠØ² â”€â”€ */
+/* ── التركيز ── */
 :focus-visible {
   outline: 2px solid var(--cd-color-accent);
   outline-offset: 2px;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„Ø·Ø¨Ø§Ø¹Ø© (Typography)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── base/_typography.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الطباعة (Typography)
+   ═══════════════════════════════════════════════════════ */
 
 h1 { font-size: var(--cd-font-size-4xl); }
 h2 { font-size: var(--cd-font-size-3xl); }
@@ -235,9 +239,10 @@ h6 { font-size: var(--cd-font-size-md); }
   font-weight: 700;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„Ø£Ø²Ø±Ø§Ø± (Buttons)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── components/_buttons.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الأزرار (Buttons)
+   ═══════════════════════════════════════════════════════ */
 
 .btn {
   display: inline-flex;
@@ -282,7 +287,7 @@ h6 { font-size: var(--cd-font-size-md); }
   box-shadow: 0 6px 20px rgba(208, 43, 43, 0.35);
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ø£Ø²Ø±Ø§Ø± â”€â”€ */
+/* ── أيقونات الأزرار ── */
 .btn-icon {
   width: 18px;
   height: 18px;
@@ -297,7 +302,7 @@ h6 { font-size: var(--cd-font-size-md); }
   transform: translateX(3px);
 }
 
-/* â”€â”€ Ø£Ø­Ø¬Ø§Ù… Ø§Ù„Ø£Ø²Ø±Ø§Ø± â”€â”€ */
+/* ── أحجام الأزرار ── */
 .btn-sm {
   padding: 0.5rem 1.1rem;
   font-size: var(--cd-font-size-sm);
@@ -334,7 +339,7 @@ h6 { font-size: var(--cd-font-size-md); }
   height: 22px;
 }
 
-/* â”€â”€ Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ø£Ø²Ø±Ø§Ø± â”€â”€ */
+/* ── أنواع الأزرار ── */
 .btn-primary {
   background: var(--cd-color-accent);
   border-color: var(--cd-color-accent);
@@ -405,9 +410,10 @@ h6 { font-size: var(--cd-font-size-md); }
   align-items: center;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª (Cards)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── components/_cards.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — البطاقات (Cards)
+   ═══════════════════════════════════════════════════════ */
 
 .car-grid {
   display: grid;
@@ -649,7 +655,7 @@ h6 { font-size: var(--cd-font-size-md); }
   }
 }
 
-/* â”€â”€ Ø¹Ø±Ø¶ Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„Ø¹Ø±Ø¶ â”€â”€ */
+/* ── عرض بطاقة العرض ── */
 .offer-card {
   overflow: hidden;
   border: 1px solid #dfe5ef;
@@ -704,9 +710,10 @@ h6 { font-size: var(--cd-font-size-md); }
   margin-top: -0.35rem;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„Ù†Ù…Ø§Ø°Ø¬ (Forms)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── components/_forms.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — النماذج (Forms)
+   ═══════════════════════════════════════════════════════ */
 
 .cd-ajax-form {
   display: grid;
@@ -808,17 +815,18 @@ h6 { font-size: var(--cd-font-size-md); }
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ø­ØªØ±Ø§ÙÙŠØ© (Professional Icons)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── components/_icons.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — أيقونات احترافية (Professional Icons)
+   ═══════════════════════════════════════════════════════ */
 
-/* â”€â”€ Ø­Ø¬Ù… Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª SVG Ø§Ù„Ø¹Ø§Ù…Ø© â”€â”€ */
+/* ── حجم أيقونات SVG العامة ── */
 svg {
   display: inline-block;
   vertical-align: middle;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„ØªØ±ÙˆÙŠØ³Ø© â”€â”€ */
+/* ── أيقونات الترويسة ── */
 .main-navigation svg,
 .header-search svg {
   width: 20px;
@@ -830,14 +838,14 @@ svg {
   stroke-linejoin: round;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª â”€â”€ */
+/* ── أيقونات البطاقات ── */
 .car-card svg,
 .car-image-placeholder svg {
   display: block;
   margin: 0 auto;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª â”€â”€ */
+/* ── أيقونات الإشعارات ── */
 .cd-social-share svg {
   width: 16px;
   height: 16px;
@@ -848,7 +856,7 @@ svg {
   stroke-linejoin: round;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„ÙˆØ§Ø¬Ù‡Ø© Ø§Ù„Ø¯Ø§Ø¹Ù…Ø© â”€â”€ */
+/* ── أيقونات الواجهة الداعمة ── */
 .wp-block-file a::before {
   content: "";
   display: inline-block;
@@ -864,7 +872,7 @@ svg {
   -webkit-mask-position: center;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„ØªØ­Ù…ÙŠÙ„ â”€â”€ */
+/* ── أيقونات التحميل ── */
 .loading-icon {
   display: inline-block;
   width: 24px;
@@ -879,7 +887,7 @@ svg {
   to { transform: rotate(360deg); }
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ø­Ø§Ù„Ø© â”€â”€ */
+/* ── أيقونات الحالة ── */
 .cd-status-icon {
   display: inline-flex;
   align-items: center;
@@ -905,7 +913,7 @@ svg {
   color: #991b1b;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ù…ÙŠØ²Ø§Øª â”€â”€ */
+/* ── أيقونات الميزات ── */
 .ab-feature-icon {
   position: relative;
   display: grid;
@@ -939,7 +947,7 @@ svg {
   transform: scale(1.1);
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª CTA â”€â”€ */
+/* ── أيقونات CTA ── */
 .ab-cta-icon {
   display: grid;
   place-items: center;
@@ -971,7 +979,7 @@ svg {
   50% { box-shadow: 0 0 45px rgba(37, 211, 102, 0.25); }
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ø¨Ø­Ø« â”€â”€ */
+/* ── أيقونات البحث ── */
 .header-search svg {
   color: var(--cd-color-primary);
   transition: color var(--cd-transition-fast);
@@ -981,7 +989,7 @@ svg {
   color: var(--cd-color-accent);
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„ØªØ°ÙŠÙŠÙ„ â”€â”€ */
+/* ── أيقونات التذييل ── */
 .site-footer svg {
   width: 20px;
   height: 20px;
@@ -990,7 +998,7 @@ svg {
   fill: none;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª â”€â”€ */
+/* ── أيقونات الإشعارات ── */
 .cd-notification-icon {
   display: inline-flex;
   align-items: center;
@@ -1004,7 +1012,7 @@ svg {
   font-weight: 700;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„ÙÙ„Ø§ØªØ± â”€â”€ */
+/* ── أيقونات الفلاتر ── */
 .filter-bar svg {
   width: 18px;
   height: 18px;
@@ -1013,7 +1021,7 @@ svg {
   fill: none;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„ØªÙ†Ù‚Ù„ â”€â”€ */
+/* ── أيقونات التنقل ── */
 .menu-toggle svg {
   width: 24px;
   height: 24px;
@@ -1022,7 +1030,7 @@ svg {
   fill: none;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„ØªØ°ÙŠÙŠÙ„ Ø§Ù„Ø¹Ø§Ø¦Ù… â”€â”€ */
+/* ── أيقونات التذييل العائم ── */
 .ab-float-wa svg {
   width: 28px;
   height: 28px;
@@ -1039,7 +1047,7 @@ svg {
   stroke-linejoin: round;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ø±ÙˆØ§Ø¨Ø· â”€â”€ */
+/* ── أيقونات الروابط ── */
 .cd-social-links svg {
   width: 18px;
   height: 18px;
@@ -1050,7 +1058,7 @@ svg {
   stroke-linejoin: round;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª ÙÙŠ Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ… â”€â”€ */
+/* ── أيقونات البطاقات في لوحة التحكم ── */
 .cd-stat-card .dashicons {
   display: grid;
   place-items: center;
@@ -1064,7 +1072,7 @@ svg {
   text-align: center;
 }
 
-/* â”€â”€ ØªØ£Ø«ÙŠØ±Ø§Øª Ø§Ù„Ø­Ø±ÙƒØ© Ù„Ù„Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª â”€â”€ */
+/* ── تأثيرات الحركة للأيقونات ── */
 @keyframes ab-icon-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
@@ -1086,7 +1094,7 @@ svg {
   animation-delay: 1.5s;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ù†Ø¬ÙˆÙ… â”€â”€ */
+/* ── أيقونات النجوم ── */
 .star-icon {
   display: inline-flex;
   gap: 0.25rem;
@@ -1099,7 +1107,7 @@ svg {
   fill: currentColor;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„ØªØµÙ†ÙŠÙ â”€â”€ */
+/* ── أيقونات التصنيف ── */
 .category-icon {
   display: inline-flex;
   align-items: center;
@@ -1120,7 +1128,7 @@ svg {
   fill: none;
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„ØªØ­Ù…ÙŠÙ„ â”€â”€ */
+/* ── أيقونات التحميل ── */
 .loading-spinner {
   display: inline-block;
   width: 20px;
@@ -1135,7 +1143,7 @@ svg {
   to { transform: rotate(360deg); }
 }
 
-/* â”€â”€ Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø§Ù„Ù…ÙˆØ¯Ø§Ù„ â”€â”€ */
+/* ── أيقونات المودال ── */
 .modal-close svg {
   width: 24px;
   height: 24px;
@@ -1152,9 +1160,10 @@ svg {
   transform: rotate(90deg);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„Ø£Ø²Ø±Ø§Ø± Ø§Ù„Ø¹Ø§Ø¦Ù…Ø© (Floating Buttons)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── components/_floating.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الأزرار العائمة (Floating Buttons)
+   ═══════════════════════════════════════════════════════ */
 
 .ab-float-wa {
   position: fixed;
@@ -1238,11 +1247,12 @@ svg {
   color: #fff;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„ØªØ±ÙˆÙŠØ³Ø© (Header)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── layout/_header.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الترويسة (Header)
+   ═══════════════════════════════════════════════════════ */
 
-/* â”€â”€ Ø¹Ù†Ø§ØµØ± Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ© â”€â”€ */
+/* ── عناصر القائمة الرئيسية ── */
 .main-navigation {
   display: flex;
   align-items: center;
@@ -1291,7 +1301,7 @@ svg {
   width: 100%;
 }
 
-/* ─── روابط القائمة العلوية (تسجيل الدخول / تسجيل الخروج) ─── */
+/* ── روابط حساب المستخدم في القائمة ── */
 .main-navigation .cd-account-link,
 .main-navigation .cd-logout-link {
   display: flex;
@@ -1330,7 +1340,7 @@ svg {
   background: rgba(208, 43, 43, 0.05);
 }
 
-/* â”€â”€ Ø±Ø§Ø¨Ø· Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ© ÙÙŠ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© â”€â”€ */
+/* ── رابط الرئيسية في القائمة ── */
 .main-navigation ul li.menu-item-home {
   margin-inline-end: var(--cd-spacing-sm);
 }
@@ -1346,7 +1356,7 @@ svg {
   font-size: var(--cd-font-size-md);
 }
 
-/* â”€â”€ ÙØµÙ„ Ø±ÙˆØ§Ø¨Ø· Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© â”€â”€ */
+/* ── فصل روابط القائمة ── */
 .main-navigation .menu-item-separator {
   width: 1px;
   height: 24px;
@@ -1490,36 +1500,193 @@ svg {
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„ØªØ°ÙŠÙŠÙ„ (Footer)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── layout/_footer.css ── */
+/* ═══════════════════════════════════════════════════════
+    Car Dealer — التذييل الاحترافي (Footer Pro)
+    ═══════════════════════════════════════════════════════ */
 
+/* ─── الخلفية الأساسية ─── */
 .site-footer {
-  background: var(--cd-color-primary);
+  background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 50%, #0d1b2a 100%);
   color: var(--cd-color-surface);
   padding: var(--cd-spacing-3xl) 0 var(--cd-spacing-xl);
   margin-top: var(--cd-spacing-3xl);
+  position: relative;
+  overflow: hidden;
 }
 
-.footer-content {
+/* ─── تأثير زخرفي ─── */
+.site-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--cd-color-accent), var(--cd-color-secondary), var(--cd-color-accent));
+}
+
+.site-footer::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(208, 43, 43, 0.08) 0%, transparent 70%);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* ─── الحاوية ─── */
+.footer-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── الشبكة الرئيسية ─── */
+.footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: var(--cd-spacing-2xl);
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: var(--cd-spacing-3xl);
+  padding-bottom: var(--cd-spacing-3xl);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.footer-brand {
-  color: var(--cd-color-surface);
-  font-size: var(--cd-font-size-lg);
+/* ─── أعمدة الفوتر ─── */
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cd-spacing-lg);
+}
+
+/* ─── العناوين ─── */
+.footer-title {
+  font-size: var(--cd-font-size-base);
   font-weight: 800;
+  color: var(--cd-color-surface);
+  margin: 0;
+  padding-bottom: var(--cd-spacing-sm);
+  border-bottom: 2px solid var(--cd-color-accent);
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.cd-contact-list {
+/* ─── وصف العلامة التجارية ─── */
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cd-color-surface);
+  font-size: var(--cd-font-size-xl);
+  font-weight: 800;
+  text-decoration: none;
+  margin-bottom: var(--cd-spacing-sm);
+  transition: opacity var(--cd-transition-base);
+}
+
+.footer-brand:hover {
+  opacity: 0.85;
+}
+
+.footer-brand img {
+  height: 40px;
+  width: auto;
+}
+
+.footer-description {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-sm);
+  line-height: 1.8;
+  margin: 0;
+}
+
+/* ─── معلومات الاتصال ─── */
+.footer-contact .cd-contact-list {
   display: grid;
-  gap: 0.35rem;
-  margin: var(--cd-spacing-md) 0;
+  gap: 0.5rem;
+  margin: 0;
   padding: 0;
   list-style: none;
-  color: var(--cd-color-line);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-sm);
+}
+
+.footer-contact .cd-contact-list li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.footer-contact .cd-contact-list li span {
+  color: var(--cd-color-muted);
+  min-width: 60px;
+}
+
+/* ─── الروابط ─── */
+.footer-links {
+  display: grid;
+  gap: 0.6rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-links li {
+  margin: 0;
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--cd-transition-base);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  line-height: 1.6;
+}
+
+.footer-links a:hover {
+  color: var(--cd-color-accent);
+  padding-left: 4px;
+}
+
+.footer-links a svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity var(--cd-transition-base);
+}
+
+.footer-links a:hover svg {
+  opacity: 1;
+}
+
+/* ─── الروابط القانونية ─── */
+.footer-legal-links {
+  padding-top: var(--cd-spacing-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: var(--cd-spacing-sm);
+}
+
+.footer-legal-links a {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.footer-legal-links a:hover {
+  color: var(--cd-color-accent);
+}
+
+/* ─── وسائل التواصل الاجتماعي ─── */
+.footer-social {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .cd-social-links {
@@ -1527,36 +1694,161 @@ svg {
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
-  margin-top: var(--cd-spacing-md);
 }
 
 .cd-social-links a {
-  padding: 0.4rem 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   border-radius: var(--cd-radius-full);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--cd-color-surface);
   font-size: var(--cd-font-size-sm);
+  text-decoration: none;
+  transition: all var(--cd-transition-base);
+}
+
+.cd-social-links a:hover {
+  background: var(--cd-color-accent);
+  border-color: var(--cd-color-accent);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(208, 43, 43, 0.3);
+}
+
+/* ─── نشرة الأخبار ─── */
+.footer-newsletter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cd-spacing-sm);
+}
+
+.footer-newsletter p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--cd-font-size-sm);
+  margin: 0;
+}
+
+.footer-newsletter form {
+  display: flex;
+  gap: 8px;
+}
+
+.footer-newsletter input[type="email"] {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--cd-radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--cd-color-surface);
+  font-size: var(--cd-font-size-sm);
+  outline: none;
+  transition: border-color var(--cd-transition-base);
+  min-width: 0;
+}
+
+.footer-newsletter input[type="email"]:focus {
+  border-color: var(--cd-color-accent);
+}
+
+.footer-newsletter input[type="email"]::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.footer-newsletter button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--cd-radius-md);
+  background: var(--cd-color-accent);
+  color: var(--cd-color-surface);
+  font-weight: 700;
+  font-size: var(--cd-font-size-sm);
+  cursor: pointer;
+  transition: all var(--cd-transition-base);
+  white-space: nowrap;
+}
+
+.footer-newsletter button:hover {
+  background: #b32222;
+  transform: translateY(-2px);
+}
+
+/* ─── شريط الحقوق ─── */
+.footer-bottom {
+  margin-top: var(--cd-spacing-3xl);
+  padding-top: var(--cd-spacing-xl);
+}
+
+.footer-bottom-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--cd-spacing-md);
 }
 
 .footer-copyright {
-  text-align: center;
-  margin-top: var(--cd-spacing-2xl);
-  padding-top: var(--cd-spacing-xl);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--cd-color-muted);
+  color: rgba(255, 255, 255, 0.4);
   font-size: var(--cd-font-size-sm);
+  margin: 0;
+  line-height: 1.6;
 }
 
-@media (max-width: 600px) {
-  .footer-content {
-    grid-template-columns: 1fr;
+/* ─── responsive ─── */
+@media (max-width: 1024px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--cd-spacing-2xl);
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„Ø´Ø¨ÙƒØ© ÙˆØ§Ù„Ø­Ø§ÙˆÙŠØ© (Grid & Container)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+@media (max-width: 600px) {
+  .site-footer {
+    padding: var(--cd-spacing-xl) 0 var(--cd-spacing-lg);
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: var(--cd-spacing-xl);
+    text-align: center;
+  }
+
+  .footer-brand {
+    justify-content: center;
+  }
+
+  .footer-contact .cd-contact-list li {
+    justify-content: center;
+  }
+
+  .footer-links {
+    justify-items: center;
+  }
+
+  .footer-social {
+    justify-content: center;
+  }
+
+  .footer-bottom-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-newsletter form {
+    flex-direction: column;
+  }
+
+  .footer-newsletter button {
+    width: 100%;
+  }
+}
+
+/* ── layout/_grid.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الشبكة والحاوية (Grid & Container)
+   ═══════════════════════════════════════════════════════ */
 
 .container {
   width: 100%;
@@ -1663,9 +1955,10 @@ svg {
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ© (Home)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── pages/_home.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الصفحة الرئيسية (Home)
+   ═══════════════════════════════════════════════════════ */
 
 .hero,
 .archive-hero {
@@ -1741,42 +2034,6 @@ svg {
   color: var(--cd-color-muted);
 }
 
-.catalog-language-switch {
-  display: inline-flex;
-  gap: 0.35rem;
-  align-items: center;
-  margin-bottom: var(--cd-spacing-md);
-  padding: 0.25rem;
-  border: 1px solid currentColor;
-  border-radius: var(--cd-radius-full);
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.catalog-language-switch a {
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--cd-radius-full);
-  color: inherit;
-  text-decoration: none;
-}
-
-.catalog-language-switch a[aria-current="page"] {
-  color: var(--cd-color-primary);
-  background: var(--cd-color-surface);
-  font-weight: 800;
-}
-
-.archive-content .catalog-language-switch {
-  color: var(--cd-color-primary);
-  background: var(--cd-color-surface);
-}
-
-[dir="ltr"] .filter-bar,
-[dir="ltr"] .car-card,
-[dir="ltr"] .car-single,
-[dir="ltr"] .ab-lead-tools {
-  text-align: left;
-}
-
 .empty-state {
   padding: var(--cd-spacing-xl);
   text-align: center;
@@ -1838,9 +2095,10 @@ svg {
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” ØµÙØ­Ø§Øª Ø§Ù„Ø³ÙŠØ§Ø±Ø§Øª (Cars)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── pages/_cars.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — صفحات السيارات (Cars)
+   ═══════════════════════════════════════════════════════ */
 
 .car-features {
   margin-top: var(--cd-spacing-xl);
@@ -1906,9 +2164,10 @@ svg {
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” ØµÙØ­Ø© Ø§Ù„Ø­Ø³Ø§Ø¨ (Account)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── pages/_account.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — صفحة الحساب (Account)
+   ═══════════════════════════════════════════════════════ */
 
 .account-layout {
   display: grid;
@@ -2019,271 +2278,33 @@ svg {
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ… (Admin Dashboard)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-
-/* â”€â”€ Ù…ØªØºÙŠØ±Ø§Øª Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ… â”€â”€ */
-:root {
-  --cd-admin-navy: #1A365D;
-  --cd-admin-blue: #2B6CB0;
-  --cd-admin-blue-dark: #2C5282;
-  --cd-admin-blue-soft: #EBF8FF;
-  --cd-admin-red: #E53E3E;
-  --cd-admin-black: #1A202C;
-  --cd-admin-ink: #2D3748;
-  --cd-admin-muted: #718096;
-  --cd-admin-line: #E2E8F0;
-  --cd-admin-bg: #F7FAFC;
-  --cd-admin-white: #FFFFFF;
-  --cd-admin-radius-lg: 12px;
-  --cd-admin-radius-md: 8px;
-  --cd-admin-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-  --cd-admin-shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-/* â”€â”€ Ù‡ÙŠÙƒÙ„ Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ… â”€â”€ */
-.cd-admin-wrap {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  min-height: 100vh;
-  background: var(--cd-admin-bg);
-}
-
-.cd-admin-sidebar {
-  background: var(--cd-admin-navy);
-  color: var(--cd-admin-white);
-  padding: var(--cd-spacing-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--cd-spacing-xs);
-}
-
-.cd-admin-sidebar a {
-  color: rgba(255, 255, 255, 0.8);
-  padding: 0.6rem 1rem;
-  border-radius: var(--cd-admin-radius-md);
-  font-weight: 500;
-  transition: background var(--cd-transition-fast), color var(--cd-transition-fast);
-}
-
-.cd-admin-sidebar a:hover,
-.cd-admin-sidebar a.is-active {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--cd-admin-white);
-}
-
-.cd-admin-main {
-  padding: var(--cd-spacing-2xl);
-  overflow-x: auto;
-}
-
-.cd-admin-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--cd-spacing-xl);
-  padding-bottom: var(--cd-spacing-lg);
-  border-bottom: 1px solid var(--cd-admin-line);
-}
-
-.cd-admin-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--cd-spacing-lg);
-  margin-bottom: var(--cd-spacing-2xl);
-}
-
-.cd-admin-card {
-  background: var(--cd-admin-white);
-  border: 1px solid var(--cd-admin-line);
-  border-radius: var(--cd-admin-radius-lg);
-  padding: var(--cd-spacing-lg);
-  box-shadow: var(--cd-admin-shadow-soft);
-}
-
-.cd-admin-card h3 {
-  margin: 0 0 var(--cd-spacing-sm);
-  font-size: var(--cd-font-size-sm);
-  color: var(--cd-admin-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.cd-admin-card .cd-admin-number {
-  font-size: var(--cd-font-size-3xl);
-  font-weight: 800;
-  color: var(--cd-admin-navy);
-}
-
-.cd-admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--cd-admin-white);
-  border-radius: var(--cd-admin-radius-lg);
-  overflow: hidden;
-  box-shadow: var(--cd-admin-shadow-soft);
-}
-
-.cd-admin-table th,
-.cd-admin-table td {
-  padding: var(--cd-spacing-md) var(--cd-spacing-lg);
-  text-align: start;
-  border-bottom: 1px solid var(--cd-admin-line);
-}
-
-.cd-admin-table th {
-  background: var(--cd-admin-bg);
-  font-weight: 700;
-  color: var(--cd-admin-ink);
-  font-size: var(--cd-font-size-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.cd-admin-table tr:hover td {
-  background: var(--cd-admin-blue-soft);
-}
-
-.cd-admin-badge {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: var(--cd-radius-full);
-  font-size: var(--cd-font-size-xs);
-  font-weight: 700;
-}
-
-.cd-admin-badge--success {
-  background: #C6F6D5;
-  color: #276749;
-}
-
-.cd-admin-badge--warning {
-  background: #FEFCBF;
-  color: #975A16;
-}
-
-.cd-admin-badge--danger {
-  background: #FED7D7;
-  color: #9B2C2C;
-}
-
-.cd-admin-badge--info {
-  background: #BEE3F8;
-  color: #2A4365;
-}
-
-/* â”€â”€ Ù†Ù…Ø§Ø°Ø¬ Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ… â”€â”€ */
-.cd-admin-form {
-  background: var(--cd-admin-white);
-  border: 1px solid var(--cd-admin-line);
-  border-radius: var(--cd-admin-radius-lg);
-  padding: var(--cd-spacing-xl);
-  max-width: 800px;
-}
-
-.cd-admin-form-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--cd-spacing-lg);
-  margin-bottom: var(--cd-spacing-lg);
-}
-
-.cd-admin-form-row label {
-  display: grid;
-  gap: 0.4rem;
-  font-weight: 600;
-  color: var(--cd-admin-ink);
-}
-
-.cd-admin-form-row input,
-.cd-admin-form-row select,
-.cd-admin-form-row textarea {
-  width: 100%;
-  min-height: 40px;
-  border: 1px solid var(--cd-admin-line);
-  border-radius: var(--cd-admin-radius-md);
-  padding: 0.5rem 0.75rem;
-  box-sizing: border-box;
-}
-
-.cd-admin-form-row textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.cd-admin-form-actions {
-  display: flex;
-  gap: var(--cd-spacing-md);
-  margin-top: var(--cd-spacing-xl);
-  padding-top: var(--cd-spacing-lg);
-  border-top: 1px solid var(--cd-admin-line);
-}
-
-/* â”€â”€ Ù…Ø³Ø§Ø­Ø© Ø§Ù„Ø¹Ù…Ù„ â”€â”€ */
-.cd-workspace-tabs {
-  display: flex;
-  gap: var(--cd-spacing-xs);
-  margin-bottom: var(--cd-spacing-lg);
-  border-bottom: 2px solid var(--cd-admin-line);
-}
-
-.cd-workspace-tab {
-  padding: 0.75rem 1.25rem;
-  border-radius: var(--cd-admin-radius-md) var(--cd-admin-radius-md) 0 0;
-  font-weight: 600;
-  color: var(--cd-admin-muted);
-  transition: color var(--cd-transition-fast), background var(--cd-transition-fast);
-}
-
-.cd-workspace-tab:hover {
-  color: var(--cd-admin-navy);
-  background: var(--cd-admin-bg);
-}
-
-.cd-workspace-tab.is-active {
-  color: var(--cd-admin-navy);
-  background: var(--cd-admin-white);
-  border-bottom: 2px solid var(--cd-admin-navy);
-  margin-bottom: -2px;
-}
-
-.cd-workspace-panel {
-  background: var(--cd-admin-white);
-  border: 1px solid var(--cd-admin-line);
-  border-radius: var(--cd-admin-radius-lg);
-  padding: var(--cd-spacing-xl);
-}
-
-/* â”€â”€ Responsive â”€â”€ */
-@media (max-width: 900px) {
-  .cd-admin-wrap {
-    grid-template-columns: 1fr;
-  }
-
-  .cd-admin-sidebar {
-    flex-direction: row;
-    overflow-x: auto;
-    padding: var(--cd-spacing-sm);
-  }
-
-  .cd-admin-sidebar a {
-    white-space: nowrap;
-  }
-
-  .cd-admin-form-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø§Ù„ØµÙØ­Ø§Øª Ø§Ù„Ø¹Ø§Ù…Ø© (Page)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ── pages/_page.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — الصفحات العامة (Page)
+   ═══════════════════════════════════════════════════════ */
 
 .content-area {
   max-width: 800px;
   margin: 0 auto;
   padding: var(--cd-spacing-3xl) var(--cd-spacing-md);
+}
+
+/* ── عرض المحتوى في صفحات القوالب المخصصة ── */
+.page-template-about .content-area,
+.page-template-contact .content-area {
+  max-width: 100%;
+  padding: 0;
+}
+
+.page-template-about .entry-header,
+.page-template-contact .entry-header {
+  display: none;
+}
+
+.page-template-about .entry-content,
+.page-template-contact .entry-content {
+  max-width: 100%;
+  padding: 0;
 }
 
 .entry-header {
@@ -2423,11 +2444,137 @@ svg {
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Car Dealer â€” Ø³Ù…Ø© AUTO BRANDS (Premium Cinematic)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════════════════════════════════
+    Car Dealer — صفحات الخصوصية والشروط
+    ═══════════════════════════════════════════════════════ */
 
-/* â”€â”€ Hero â”€â”€ */
+/* ─── تذييل الصفحات ─── */
+.page-privacy .entry-header,
+.page-terms .entry-header {
+  text-align: center;
+  padding: var(--cd-spacing-3xl) var(--cd-spacing-lg) var(--cd-spacing-2xl);
+  background: linear-gradient(135deg, var(--cd-color-primary), var(--cd-color-secondary));
+  border-radius: var(--cd-radius-xl);
+  margin-bottom: var(--cd-spacing-3xl);
+  color: var(--cd-color-surface);
+}
+
+.page-privacy .entry-title,
+.page-terms .entry-title {
+  color: var(--cd-color-surface);
+  font-size: var(--cd-font-size-3xl);
+}
+
+.page-privacy .entry-date,
+.page-terms .entry-date {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--cd-font-size-sm);
+  margin-top: var(--cd-spacing-sm);
+  display: block;
+}
+
+/* ─── محتوى الخصوصية والشروط ─── */
+.page-privacy .entry-content,
+.page-terms .entry-content {
+  font-size: var(--cd-font-size-base);
+  line-height: 2;
+  direction: rtl;
+}
+
+.page-privacy .entry-content h3,
+.page-terms .entry-content h3 {
+  color: var(--cd-color-primary);
+  font-size: var(--cd-font-size-xl);
+  margin-top: var(--cd-spacing-2xl);
+  margin-bottom: var(--cd-spacing-md);
+  padding-bottom: var(--cd-spacing-sm);
+  border-bottom: 2px solid var(--cd-color-accent);
+  display: inline-block;
+}
+
+.page-privacy .entry-content p,
+.page-terms .entry-content p {
+  color: var(--cd-color-text);
+  line-height: 1.9;
+}
+
+.page-privacy .entry-content ul,
+.page-terms .entry-content ul {
+  padding-inline-start: 1.5rem;
+  margin-bottom: var(--cd-spacing-lg);
+}
+
+.page-privacy .entry-content li,
+.page-terms .entry-content li {
+  margin-bottom: var(--cd-spacing-sm);
+  color: var(--cd-color-text);
+  line-height: 1.8;
+}
+
+.page-privacy .entry-content a,
+.page-terms .entry-content a {
+  color: var(--cd-color-accent);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.page-privacy .entry-content a:hover,
+.page-terms .entry-content a:hover {
+  color: #b32222;
+}
+
+.page-privacy .entry-content em,
+.page-terms .entry-content em {
+  color: var(--cd-color-muted);
+  font-size: var(--cd-font-size-sm);
+  display: block;
+  text-align: center;
+  margin-top: var(--cd-spacing-xl);
+  padding: var(--cd-spacing-md);
+  background: var(--cd-color-bg);
+  border-radius: var(--cd-radius-md);
+}
+
+/* ─── بطاقة إضافية للتنزيل ─── */
+.page-privacy .cd-page-actions,
+.page-terms .cd-page-actions {
+  display: flex;
+  gap: var(--cd-spacing-md);
+  justify-content: center;
+  margin: var(--cd-spacing-3xl) 0;
+  flex-wrap: wrap;
+}
+
+.page-privacy .cd-page-actions .btn,
+.page-terms .cd-page-actions .btn {
+  min-width: 200px;
+}
+
+/* ─── responsive ─── */
+@media (max-width: 600px) {
+  .page-privacy .entry-header,
+  .page-terms .entry-header {
+    padding: var(--cd-spacing-xl) var(--cd-spacing-md) var(--cd-spacing-xl);
+    border-radius: 0;
+  }
+
+  .page-privacy .entry-title,
+  .page-terms .entry-title {
+    font-size: var(--cd-font-size-2xl);
+  }
+
+  .page-privacy .entry-content h3,
+  .page-terms .entry-content h3 {
+    font-size: var(--cd-font-size-lg);
+  }
+}
+
+/* ── themes/_auto-brands.css ── */
+/* ═══════════════════════════════════════════════════════
+   Car Dealer — سمة AUTO BRANDS (Premium Cinematic)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Hero ── */
 .ab-hero,
 .archive-hero,
 .ab-car-hero {
@@ -2529,7 +2676,7 @@ svg {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* â”€â”€ Hero Stats â”€â”€ */
+/* ── Hero Stats ── */
 .ab-hero-stats {
   display: flex;
   align-items: center;
@@ -2564,7 +2711,7 @@ svg {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* â”€â”€ Hero Panel Inner â”€â”€ */
+/* ── Hero Panel Inner ── */
 .ab-hero-panel-inner {
   display: grid;
   gap: 0.5rem;
@@ -2589,7 +2736,7 @@ svg {
   color: #d8dde6;
 }
 
-/* â”€â”€ Scroll Hint â”€â”€ */
+/* ── Scroll Hint ── */
 .ab-hero-scroll-hint {
   position: absolute;
   bottom: 32px;
@@ -2618,7 +2765,7 @@ svg {
   50% { transform: translateX(-50%) translateY(8px); }
 }
 
-/* â”€â”€ Sections â”€â”€ */
+/* ── Sections ── */
 .ab-section {
   padding: var(--cd-spacing-4xl) 0;
 }
@@ -2647,7 +2794,7 @@ svg {
   background: linear-gradient(180deg, #f4f6f9, #fff);
 }
 
-/* â”€â”€ Section Heading V2 â”€â”€ */
+/* ── Section Heading V2 ── */
 .section-heading-v2 {
   text-align: start;
 }
@@ -2732,7 +2879,7 @@ svg {
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* â”€â”€ Feature Grid V2 â”€â”€ */
+/* ── Feature Grid V2 ── */
 .ab-feature-grid-v2 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2829,7 +2976,7 @@ svg {
   line-height: 1.7;
 }
 
-/* â”€â”€ Car Grid Variants â”€â”€ */
+/* ── Car Grid Variants ── */
 .car-grid-featured,
 .car-grid-latest,
 .car-grid-demand {
@@ -2842,14 +2989,14 @@ svg {
   grid-template-columns: repeat(4, 1fr);
 }
 
-/* â”€â”€ Offer Grid V2 â”€â”€ */
+/* ── Offer Grid V2 ── */
 .offer-grid-v2 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--cd-spacing-lg);
 }
 
-/* â”€â”€ Offer Strip V2 â”€â”€ */
+/* ── Offer Strip V2 ── */
 .ab-offer-strip-v2 {
   display: flex;
   align-items: center;
@@ -2905,7 +3052,7 @@ svg {
   font-size: var(--cd-font-size-sm);
 }
 
-/* â”€â”€ Finance V2 â”€â”€ */
+/* ── Finance V2 ── */
 .ab-finance-v2 {
   padding: var(--cd-spacing-4xl) 0;
   color: var(--cd-color-surface);
@@ -2977,7 +3124,7 @@ svg {
   transform: translateY(-2px);
 }
 
-/* â”€â”€ CTA V2 â”€â”€ */
+/* ── CTA V2 ── */
 .ab-cta-v2 {
   padding: var(--cd-spacing-4xl) 0;
   color: var(--cd-color-surface);
@@ -3046,7 +3193,7 @@ svg {
   line-height: 1.7;
 }
 
-/* â”€â”€ Empty State V2 â”€â”€ */
+/* ── Empty State V2 ── */
 .empty-state-v2 {
   display: grid;
   place-items: center;
@@ -3065,7 +3212,7 @@ svg {
   fill: none;
 }
 
-/* â”€â”€ Inventory / Offers Hero â”€â”€ */
+/* ── Inventory / Offers Hero ── */
 .ab-inventory-hero {
   min-height: 400px;
 }
@@ -3078,7 +3225,7 @@ svg {
   min-height: 500px;
 }
 
-/* â”€â”€ Car Single Monthly â”€â”€ */
+/* ── Car Single Monthly ── */
 .car-single-monthly {
   color: var(--ab-color-blue);
   font-weight: 800;
@@ -3086,7 +3233,7 @@ svg {
   margin-top: -0.35rem;
 }
 
-/* â”€â”€ Pagination â”€â”€ */
+/* ── Pagination ── */
 .pagination {
   display: flex;
   justify-content: center;
@@ -3130,7 +3277,7 @@ svg {
   background: transparent;
 }
 
-/* â”€â”€ Responsive â”€â”€ */
+/* ── Responsive ── */
 @media (max-width: 900px) {
   .ab-hero-grid,
   .ab-car-hero-grid,
@@ -3197,3 +3344,4 @@ svg {
     grid-template-columns: 1fr;
   }
 }
+

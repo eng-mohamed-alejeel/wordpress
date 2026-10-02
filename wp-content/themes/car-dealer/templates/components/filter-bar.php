@@ -4,21 +4,20 @@ defined( 'ABSPATH' ) || exit;
 $get = static function ( $key ) {
 	return isset( $_GET[ $key ] ) && is_scalar( $_GET[ $key ] ) ? sanitize_text_field( wp_unslash( $_GET[ $key ] ) ) : '';
 };
-$archive_url = get_post_type_archive_link( 'car' );
-$authoritative = function_exists( 'car_dealer_catalog_is_authoritative' ) && car_dealer_catalog_is_authoritative();
+$archive_url = car_dealer_archive_url( 'car' );
+$filter_model = function_exists( 'adc_catalog_filter_options' ) ? adc_catalog_filter_options() : array();
+$authoritative = 'authoritative' === ( $filter_model['mode'] ?? '' );
 
 if ( ! $authoritative ) {
-	$categories = get_terms( array( 'taxonomy' => 'car_category', 'hide_empty' => true ) );
-	$brands = get_terms( array( 'taxonomy' => 'car_brand', 'hide_empty' => true ) );
-	$categories = is_wp_error( $categories ) ? array() : $categories;
-	$brands = is_wp_error( $brands ) ? array() : $brands;
+	$categories = $filter_model['categories'] ?? array();
+	$brands = $filter_model['brands'] ?? array();
 	?>
 	<form class="filter-bar ab-filter" method="get" action="<?php echo esc_url( $archive_url ); ?>">
 		<?php if ( ! get_option( 'permalink_structure' ) ) : ?><input type="hidden" name="post_type" value="car"><?php endif; ?>
 		<?php if ( function_exists( 'car_dealer_catalog_language' ) && 'en' === car_dealer_catalog_language() ) : ?><input type="hidden" name="lang" value="en"><?php endif; ?>
 		<label><span><?php esc_html_e( 'بحث', 'car-dealer' ); ?></span><input type="search" name="s" value="<?php echo esc_attr( get_search_query() ); ?>" placeholder="<?php esc_attr_e( 'الماركة أو الموديل', 'car-dealer' ); ?>"></label>
-		<label><span><?php esc_html_e( 'الماركة', 'car-dealer' ); ?></span><select name="car_brand"><option value=""><?php esc_html_e( 'كل الماركات', 'car-dealer' ); ?></option><?php foreach ( $brands as $term ) : ?><option value="<?php echo esc_attr( $term->slug ); ?>" <?php selected( get_query_var( 'car_brand' ), $term->slug ); ?>><?php echo esc_html( $term->name ); ?></option><?php endforeach; ?></select></label>
-		<label><span><?php esc_html_e( 'نوع السيارة', 'car-dealer' ); ?></span><select name="car_category"><option value=""><?php esc_html_e( 'كل الأنواع', 'car-dealer' ); ?></option><?php foreach ( $categories as $term ) : ?><option value="<?php echo esc_attr( $term->slug ); ?>" <?php selected( get_query_var( 'car_category' ), $term->slug ); ?>><?php echo esc_html( $term->name ); ?></option><?php endforeach; ?></select></label>
+		<label><span><?php esc_html_e( 'الماركة', 'car-dealer' ); ?></span><select name="car_brand"><option value=""><?php esc_html_e( 'كل الماركات', 'car-dealer' ); ?></option><?php foreach ( $brands as $term ) : ?><option value="<?php echo esc_attr( $term['slug'] ); ?>" <?php selected( get_query_var( 'car_brand' ), $term['slug'] ); ?>><?php echo esc_html( $term['name'] ); ?></option><?php endforeach; ?></select></label>
+		<label><span><?php esc_html_e( 'نوع السيارة', 'car-dealer' ); ?></span><select name="car_category"><option value=""><?php esc_html_e( 'كل الأنواع', 'car-dealer' ); ?></option><?php foreach ( $categories as $term ) : ?><option value="<?php echo esc_attr( $term['slug'] ); ?>" <?php selected( get_query_var( 'car_category' ), $term['slug'] ); ?>><?php echo esc_html( $term['name'] ); ?></option><?php endforeach; ?></select></label>
 		<label><span><?php esc_html_e( 'الموديل', 'car-dealer' ); ?></span><input name="model" value="<?php echo esc_attr( $get( 'model' ) ); ?>" placeholder="Camry"></label>
 		<label><span><?php esc_html_e( 'السنة من', 'car-dealer' ); ?></span><input type="number" min="1900" max="2200" name="min_year" value="<?php echo esc_attr( $get( 'min_year' ) ); ?>"></label>
 		<label><span><?php esc_html_e( 'السعر إلى', 'car-dealer' ); ?></span><input type="number" min="0" name="max_price" value="<?php echo esc_attr( $get( 'max_price' ) ); ?>"></label>
@@ -30,7 +29,7 @@ if ( ! $authoritative ) {
 	return;
 }
 
-$options = car_dealer_catalog_filter_options();
+$options = $filter_model['options'] ?? array();
 $select = static function ( $name, $label, array $values, $current, $all_label ) {
 	?>
 	<label><span><?php echo esc_html( $label ); ?></span><select name="<?php echo esc_attr( $name ); ?>"><option value=""><?php echo esc_html( $all_label ); ?></option><?php foreach ( $values as $value ) : ?><option value="<?php echo esc_attr( $value ); ?>" <?php selected( $current, (string) $value ); ?>><?php echo esc_html( function_exists( 'car_dealer_catalog_value_label' ) ? car_dealer_catalog_value_label( (string) $value ) : $value ); ?></option><?php endforeach; ?></select></label>

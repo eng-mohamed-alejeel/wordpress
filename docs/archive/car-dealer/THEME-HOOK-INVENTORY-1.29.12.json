@@ -1,0 +1,219 @@
+{
+  "inventory_version": "1.12.0",
+  "recorded_at": "2026-10-02",
+  "theme": "car-dealer",
+  "plugin": "auto-dealership-core",
+  "compatibility_retirement": {
+    "decision": "retain_controlled_compatibility",
+    "message_booking_role": "required_request_projection",
+    "subscriber_role": "canonical_marketing_consent_store",
+    "legacy_crm_role": "private_read_only_history",
+    "aggregate_readiness": "AutoDealership\\Migration\\CompatibilityRetirement::report",
+    "drop_allowed": false
+  },
+  "operational_administration": {
+    "workspace": "AutoDealership\\Admin\\WorkspacePage",
+    "workspace_slug": "adc-workspace",
+    "inventory_slug": "adc-inventory",
+    "assets": ["auto-dealership-core/assets/css/admin-workspace.css", "auto-dealership-core/assets/css/admin-engagement.css"],
+    "dormant_theme_classification": "THEME-ADMIN-CLASSIFICATION.md",
+    "status": "plugin_owned_verification_pending"
+  },
+  "active_theme_require_chain": [
+    "functions.php",
+    "inc/contact-form-manager.php",
+    "inc/about-contact-pages.php",
+    "inc/accounts.php",
+    "inc/public-catalog.php"
+  ],
+  "conditional_theme_require_chain": [
+    "inc/theme-legacy-core.php",
+    "inc/engagement-legacy.php",
+    "inc/account-legacy-actions.php",
+    "inc/account-legacy-requests.php",
+    "inc/catalog-legacy-policy.php",
+    "inc/offer-legacy-view.php",
+    "inc/crm.php",
+    "inc/customer-workflow.php",
+    "inc/schema-markup.php"
+  ],
+  "content_contracts": [
+    {
+      "identifiers": ["car", "car_brand", "car_category"],
+      "source": "conditional inc/theme-legacy-core.php",
+      "target": "AutoDealership\\Content\\ContentRegistry",
+      "status": "plugin_owned_theme_guarded"
+    },
+    {
+      "identifiers": ["car_offer"],
+      "source": "inc/offers.php",
+      "target": "AutoDealership\\Content\\ContentRegistry",
+      "status": "plugin_owned_source_file_dormant"
+    },
+    {
+      "identifiers": ["cd_crm"],
+      "source": "inc/crm.php",
+      "target": "AutoDealership\\Leads\\LegacyCrmBridge",
+      "status": "plugin_owned_private_read_only_history"
+    }
+  ],
+  "active_business_paths": [
+    {
+      "hooks": ["add_meta_boxes", "save_post"],
+      "source": "conditional inc/theme-legacy-core.php",
+      "current_behavior": "plugin renders and writes compatibility car metadata; mapped inventory status is read-only and follows the operational vehicle",
+      "target": "AutoDealership\\Content\\VehiclePostEditor",
+      "status": "plugin_owned_with_guarded_theme_rollback"
+    },
+    {
+      "hooks": ["add_meta_boxes_car_offer", "save_post_car_offer", "manage_car_offer_posts_columns"],
+      "source": "inc/offers.php",
+      "current_behavior": "plugin validates offer linkage and owns offer metadata plus linked-car offer flags",
+      "target": "AutoDealership\\Content\\OfferPostEditor",
+      "status": "plugin_owned_dormant_theme_source_guarded"
+    },
+    {
+      "hooks": ["wp_ajax_car_dealer_lead", "wp_ajax_nopriv_car_dealer_lead"],
+      "source": "conditional inc/theme-legacy-core.php",
+      "current_behavior": "plugin creates canonical intake; conditional theme rollback sends direct email",
+      "target": "PublicIntake compatibility endpoint and outbox policy",
+      "status": "plugin_owned_core_intake_with_guarded_theme_rollback"
+    },
+    {
+      "hooks": ["init", "after_switch_theme"],
+      "source": "conditional inc/engagement-legacy.php",
+      "current_behavior": "plugin owns engagement schema; the old theme installer loads only under early rollback",
+      "target": "plugin legacy engagement compatibility reader",
+      "status": "plugin_owned_compatibility_schema"
+    },
+    {
+      "hooks": ["wp_ajax_car_dealer_contact", "wp_ajax_nopriv_car_dealer_contact", "wp_ajax_car_dealer_booking", "wp_ajax_nopriv_car_dealer_booking", "wp_ajax_car_dealer_subscribe", "wp_ajax_nopriv_car_dealer_subscribe"],
+      "source": "conditional inc/engagement-legacy.php",
+      "current_behavior": "plugin owns public engagement writes; old theme AJAX writers load only under early rollback",
+      "target": "PublicIntake and plugin-managed subscription contract",
+      "status": "plugin_owned_with_guarded_theme_rollback"
+    },
+    {
+      "hooks": ["admin_menu", "admin_enqueue_scripts"],
+      "identifiers": ["car-dealer-messages", "car-dealer-bookings", "car-dealer-subscribers"],
+      "source": "conditional inc/engagement-legacy.php",
+      "current_behavior": "plugin renders bounded, capability-scoped engagement lists and enqueues a screen-only plugin stylesheet",
+      "target": "AutoDealership\\Admin\\EngagementPages and AutoDealership\\Leads\\EngagementQuery",
+      "status": "plugin_owned_with_guarded_theme_menu_rollback"
+    },
+    {
+      "hooks": ["init", "admin_init", "template_redirect", "login_redirect", "show_admin_bar"],
+      "source": "inc/accounts.php; conditional inc/account-legacy-actions.php and inc/account-legacy-requests.php",
+      "current_behavior": "theme renders and routes the account workspace; plugin owns writes, account category, customer-only admin decision and scoped message/booking history; legacy writers, capability rules and SQL load only under early rollback switches",
+      "target": "AutoDealership\\Accounts\\CustomerAccount, CustomerRequestView and plugin capability lifecycle",
+      "status": "plugin_owned_writes_and_request_reads_theme_presentation"
+    },
+    {
+      "hooks": ["admin_post_car_dealer_crm", "admin_post_car_dealer_crm_export", "admin_init", "adc_customer_account_linked", "adc_customer_profile_synced", "car_dealer_engagement_created"],
+      "source": "conditional inc/crm.php",
+      "current_behavior": "plugin CRM services are active; cd_crm is plugin-registered read-only history with audited retirement; old theme workflow file is not loaded in normal operation",
+      "target": "LeadService, RequestWorkflow and LegacyCrmBridge",
+      "status": "plugin_owned_theme_handlers_guarded"
+    },
+    {
+      "hooks": ["profile_update", "wp_login", "added_user_meta", "updated_user_meta", "deleted_user_meta", "admin_post_car_dealer_request_update", "admin_init"],
+      "source": "conditional inc/customer-workflow.php",
+      "current_behavior": "CustomerIdentity synchronizes linked customers and RequestWorkflow owns mapped request updates; unmapped history is read-only; old theme workflow file loads only for rollback",
+      "target": "CustomerIdentity and RequestWorkflow",
+      "status": "plugin_owned_theme_handlers_guarded"
+    },
+    {
+      "hooks": ["wp_ajax_car_dealer_comparison", "wp_ajax_nopriv_car_dealer_comparison", "wp_ajax_car_dealer_loan_calculator", "wp_ajax_nopriv_car_dealer_loan_calculator"],
+      "source": "conditional inc/theme-legacy-core.php plus dormant inc/vehicle-comparison.php and inc/loan-calculator.php",
+      "current_behavior": "plugin validates public comparison state and provider-neutral installment estimates; theme renders buttons, forms and card grids",
+      "target": "AutoDealership\\Tools\\VehicleComparison, LoanCalculator and PublicTools",
+      "status": "plugin_owned_decisions_theme_presentation_guarded_rollback"
+    },
+    {
+      "hooks": ["adc_editorial_page_blueprints"],
+      "source": "inc/about-contact-pages.php",
+      "current_behavior": "theme supplies presentation blueprints without writing; plugin reports status and creates only selected missing drafts after an explicit administrator request",
+      "target": "AutoDealership\\Content\\EditorialPageSetup and AutoDealership\\Admin\\EditorialSetupPage",
+      "status": "plugin_owned_explicit_audited_setup_existing_pages_preserved"
+    }
+  ],
+  "durable_shortcodes": [
+    {
+      "names": ["car_dealer_cars", "car_dealer_loan_calculator", "car_dealer_comparison", "car_dealer_testimonials"],
+      "source": "functions.php",
+      "target": "AutoDealership\\Content\\PublicShortcodes with theme HTML filters",
+      "status": "plugin_owned_registration_and_view_models_theme_render_adapter"
+    },
+    {
+      "names": ["car_dealer_contact_form"],
+      "source": "inc/contact-form-manager.php",
+      "target": "AutoDealership\\Content\\PublicShortcodes and Leads\\PublicIntake with theme form adapter",
+      "status": "plugin_owned_registration_model_and_submission_theme_render_adapter"
+    },
+    {
+      "names": ["ab_hero_section", "ab_mission_vision", "ab_stats_section", "ab_values_section", "ab_team_section", "ab_cta_section", "ab_testimonials_section", "ab_contact_hero", "ab_contact_grid", "ab_contact_map", "ab_contact_form_section", "ab_faq_section", "ab_social_section"],
+      "source": "inc/about-contact-pages.php",
+      "target": "plugin-owned names with theme presentation filters or later block migration",
+      "status": "plugin_owned_registration_theme_presentation_adapter"
+    }
+  ],
+  "active_read_and_presentation_adapters": [
+    {
+      "source": "inc/contact-form-manager.php",
+      "hooks": ["adc_shortcode_car_dealer_contact_form_html"],
+      "target": "PublicShortcodes supplies the durable contact model and PublicIntake handles submission; theme renders contact, lead, booking and newsletter forms",
+      "status": "plugin_owned_business_theme_form_presentation"
+    },
+    {
+      "source": "functions.php, archive-car_offer.php and single-car_offer.php; lazy inc/offer-legacy-view.php for previews or rollback",
+      "hooks": ["posts_clauses", "template_redirect"],
+      "target": "PublicOfferView filters and counts eligible archive offers, decides linked-car eligibility, valid prices and expiry; theme renders cards and detail markup",
+      "status": "plugin_owned_offer_model_theme_render_adapter_guarded_rollback"
+    },
+    {
+      "source": "inc/accounts.php and templates/account.php",
+      "hooks": [],
+      "target": "CustomerAccount supplies account category and admin redirect decision; CustomerRequestView supplies bounded account-owned rows and cancellation eligibility; theme renders the table",
+      "status": "plugin_owned_customer_request_model_theme_render_adapter_guarded_rollback"
+    },
+    {
+      "source": "inc/public-catalog.php; conditional inc/catalog-legacy-policy.php",
+      "hooks": ["gettext", "ngettext"],
+      "target": "CatalogPresentation owns language/SEO; old URL and SEO hooks load only for rollback; theme retains translated presentation copy and switch markup",
+      "status": "plugin_owned_policy_theme_presentation_adapter_guarded_rollback"
+    },
+    {
+      "source": "inc/schema-markup.php",
+      "hooks": [],
+      "target": "PublicStructuredData owns the active JSON-LD emitter; old theme file loads only under the early rollback flag",
+      "status": "plugin_owned_guarded_theme_rollback"
+    }
+  ],
+  "dormant_or_unreferenced_business_files": [
+    "inc/admin-dashboard.php",
+    "inc/admin-workspace.php",
+    "inc/advanced-features.php",
+    "inc/advanced-search.php",
+    "inc/auto-pages.php",
+    "inc/customization-manager.php",
+    "inc/inventory-management.php",
+    "inc/loan-calculator.php",
+    "inc/offers.php",
+    "inc/performance-optimization.php",
+    "inc/social-media-integration.php",
+    "inc/testimonials.php",
+    "inc/vehicle-comparison.php",
+    "inc/vehicle-editor.php",
+    "inc/vehicle-list.php",
+    "inc/white-label.php"
+  ],
+  "presentation_owned_by_theme": [
+    "theme supports and image sizes",
+    "page templates",
+    "navigation",
+    "public CSS and visual JavaScript",
+    "archive and single templates",
+    "template components",
+    "card and form markup"
+  ]
+}

@@ -1,0 +1,96 @@
+.adc-workspace {
+	max-width: 1320px;
+}
+
+.adc-workspace-hero {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	margin: 20px 0 28px;
+	padding: 26px 30px;
+	border-radius: 14px;
+	color: #fff;
+	background: linear-gradient(135deg, #172554, #1d4ed8);
+}
+
+.adc-workspace-hero span:first-child {
+	display: block;
+	margin-bottom: 5px;
+	opacity: .78;
+}
+
+.adc-workspace-hero h1,
+.adc-workspace-hero p {
+	margin: 0;
+	color: inherit;
+}
+
+.adc-workspace-hero p {
+	margin-top: 8px;
+	opacity: .88;
+}
+
+.adc-workspace-hero > .dashicons {
+	width: 54px;
+	height: 54px;
+	font-size: 54px;
+}
+
+.adc-workspace-section {
+	margin-bottom: 30px;
+}
+
+.adc-workspace-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+	gap: 14px;
+}
+
+.adc-workspace-card {
+	display: grid;
+	grid-template-columns: 36px 1fr;
+	gap: 5px 12px;
+	min-height: 94px;
+	padding: 18px;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	color: #1d2327;
+	background: #fff;
+	text-decoration: none;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+.adc-workspace-card:hover,
+.adc-workspace-card:focus {
+	border-color: #2271b1;
+	color: #135e96;
+	box-shadow: 0 3px 12px rgba(34, 113, 177, .12);
+}
+
+.adc-workspace-card .dashicons {
+	grid-row: 1 / span 2;
+	width: 32px;
+	height: 32px;
+	font-size: 32px;
+	color: #2271b1;
+}
+
+.adc-workspace-card strong {
+	font-size: 15px;
+}
+
+.adc-workspace-card small {
+	line-height: 1.55;
+	color: #50575e;
+}
+
+@media (max-width: 782px) {
+	.adc-workspace-hero {
+		padding: 22px;
+	}
+
+	.adc-workspace-hero > .dashicons {
+		display: none;
+	}
+}

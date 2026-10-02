@@ -8,15 +8,8 @@ add_filter( 'adc_customer_account_url', function ( $url, $fragment = '' ) {
 }, 10, 2 );
 function car_dealer_account_view() { return isset( $_GET['cd_account'] ) && is_string( $_GET['cd_account'] ) ? sanitize_key( $_GET['cd_account'] ) : ''; }
 function car_dealer_account_field( string $name ) { return isset( $_POST[$name] ) && is_string( $_POST[$name] ) ? wp_unslash( $_POST[$name] ) : ''; }
-if ( ! function_exists( 'adc_core_owns_customer_account_actions' ) || ! adc_core_owns_customer_account_actions() ) {
- add_action( 'init', function () { add_role( 'car_dealer_customer', 'عميل المعرض', array( 'read' => true ) ); } );
-}
 function car_dealer_account_kind( WP_User $user ) {
- if ( user_can( $user, 'manage_options' ) ) { return 'administrator'; }
- if ( user_can( $user, 'adc_view_branch_leads' ) || ( user_can( $user, 'edit_others_cars' ) && user_can( $user, 'manage_car_dealer' ) ) ) { return 'manager'; }
- if ( user_can( $user, 'adc_view_own_leads' ) || user_can( $user, 'manage_car_dealer' ) ) { return 'sales'; }
- if ( user_can( $user, 'adc_view_workspace' ) ) { return 'staff'; }
- return 'customer';
+ return function_exists( 'adc_customer_account_kind' ) ? adc_customer_account_kind( $user ) : 'customer';
 }
 function car_dealer_account_links() {
   if ( is_user_logged_in() ) {
@@ -35,7 +28,10 @@ add_filter( 'wp_nav_menu_items', function ( $items, $args ) {
   return $items;
 }, 20, 2 );
 function car_dealer_account_menu_fallback() {
-  echo '<ul id="primary-menu"><li><a href="' . esc_url( home_url( '/' ) ) . '">الرئيسية</a></li><li><a href="' . esc_url( get_post_type_archive_link( 'car' ) ) . '">السيارات</a></li>' . car_dealer_account_links() . '</ul>';
+  $catalog_url = car_dealer_archive_url( 'car' );
+  echo '<ul id="primary-menu"><li><a href="' . esc_url( home_url( '/' ) ) . '">الرئيسية</a></li>';
+  if ( $catalog_url ) { echo '<li><a href="' . esc_url( $catalog_url ) . '">السيارات</a></li>'; }
+  echo car_dealer_account_links() . '</ul>';
 }
 add_action( 'wp_enqueue_scripts', function () { wp_enqueue_style( 'car-dealer-account', get_template_directory_uri() . '/assets/css/account.css', array( 'car-dealer-main' ), filemtime( __DIR__ . '/../assets/css/account.css' ) ); } );
 add_filter( 'login_redirect', function ( $redirect, $requested, $user ) {
@@ -45,74 +41,16 @@ add_filter( 'show_admin_bar', function ( $show ) { return is_user_logged_in() &&
 add_action( 'admin_init', function () {
  if ( ! is_user_logged_in() || wp_doing_ajax() || ( $GLOBALS['pagenow'] ?? '' ) === 'admin-post.php' ) { return; }
  $user = wp_get_current_user();
- if ( array_intersect( array( 'car_dealer_customer', 'subscriber' ), $user->roles ) && ! current_user_can( 'edit_posts' ) && ! current_user_can( 'manage_car_dealer' ) ) { wp_safe_redirect( car_dealer_account_url() ); exit; }
+ $redirect = function_exists( 'adc_customer_account_should_redirect_admin' ) && adc_customer_account_should_redirect_admin( $user );
+ if ( $redirect ) { wp_safe_redirect( car_dealer_account_url() ); exit; }
 } );
 
 function car_dealer_account_process( string $view ) {
-  if ( function_exists( 'adc_core_owns_customer_account_actions' ) && adc_core_owns_customer_account_actions() && class_exists( '\AutoDealership\Accounts\CustomerAccount' ) ) {
-   return \AutoDealership\Accounts\CustomerAccount::process_request( $view );
-  }
-  if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) { return ''; }
-  if ( ! wp_verify_nonce( car_dealer_account_field( '_wpnonce' ), 'cd_account_' . $view ) ) { return 'انتهت صلاحية النموذج. حدّث الصفحة وحاول مجدداً.'; }
-  if ( 'dashboard' === $view && is_user_logged_in() ) {
-	$account_action = car_dealer_account_field( 'account_action' );
-   if ( 'cancel_booking' === car_dealer_account_field( 'account_action' ) ) {
-    $result = car_dealer_update_request( 'booking', absint( car_dealer_account_field( 'request_id' ) ), array(), true );
-    if ( is_wp_error( $result ) ) { return $result->get_error_message(); }
-    wp_safe_redirect( add_query_arg( 'request_updated', 1, car_dealer_account_url() ) ); exit;
-   }
-	if ( 'save_preferences' === $account_action ) {
-	 if ( ! class_exists( '\\AutoDealership\\Leads\\CustomerIdentity' ) || ! in_array( car_dealer_account_field( 'consent_marketing' ), array( '0', '1' ), true ) ) { return 'تعذر حفظ التفضيلات. اختر أحد الخيارين وحاول مجدداً.'; }
-	 $result = \AutoDealership\Leads\CustomerIdentity::update_preferences( '1' === car_dealer_account_field( 'consent_marketing' ) );
-	 if ( is_wp_error( $result ) ) { return $result->get_error_message(); }
-	 wp_safe_redirect( add_query_arg( 'preferences_saved', 1, car_dealer_account_url() ) ); exit;
-	}
-   $name = sanitize_text_field( car_dealer_account_field( 'display_name' ) );
-   if ( ! $name ) { return 'يرجى إدخال الاسم.'; }
-	$phone = sanitize_text_field( car_dealer_account_field( 'phone' ) );
-	if ( class_exists( '\\AutoDealership\\Leads\\ContactIdentity' ) ) {
-	 $phone = \AutoDealership\Leads\ContactIdentity::normalize_mobile( $phone, false );
-	 if ( is_wp_error( $phone ) ) { return 'أدخل رقم هاتف صحيحاً بصيغة محلية أو دولية.'; }
-	}
-   $result = wp_update_user( array( 'ID' => get_current_user_id(), 'display_name' => $name ) );
-   if ( is_wp_error( $result ) ) { return 'تعذر تحديث البيانات.'; }
-   update_user_meta( get_current_user_id(), 'car_dealer_phone', $phone );
-	if ( class_exists( '\\AutoDealership\\Leads\\CustomerIdentity' ) ) {
-	 $synced = \AutoDealership\Leads\CustomerIdentity::sync_account_profile( get_current_user_id() );
-	 if ( is_wp_error( $synced ) ) { return 'تم تحديث الحساب، لكن تعذرت مزامنة ملف العميل. حاول الحفظ مجدداً.'; }
-	}
-   wp_safe_redirect( add_query_arg( 'saved', 1, car_dealer_account_url() ) ); exit;
-  }
-  if ( ! in_array( $view, array( 'login', 'register' ), true ) || is_user_logged_in() ) { return ''; }
-  $limit_key = 'cd_auth_' . hash( 'sha256', ( $_SERVER['REMOTE_ADDR'] ?? '' ) . wp_salt() );
-  $attempts = (int) get_transient( $limit_key );
-  if ( $attempts >= 10 ) { return 'محاولات كثيرة. يرجى المحاولة بعد 15 دقيقة.'; }
-  set_transient( $limit_key, $attempts + 1, 15 * MINUTE_IN_SECONDS );
-  if ( 'login' === $view ) {
-   $user = wp_signon( array( 'user_login' => sanitize_text_field( car_dealer_account_field( 'login' ) ), 'user_password' => car_dealer_account_field( 'password' ), 'remember' => (bool) car_dealer_account_field( 'remember' ) ), is_ssl() );
-   if ( is_wp_error( $user ) ) { return 'تعذر تسجيل الدخول. تحقق من بياناتك أو استخدم استعادة كلمة المرور.'; }
-  } else {
-   $name = sanitize_text_field( car_dealer_account_field( 'display_name' ) );
-   $email = sanitize_email( car_dealer_account_field( 'email' ) );
-   $password = car_dealer_account_field( 'password' );
-   if ( car_dealer_account_field( 'company_website' ) ) { return 'تعذر إنشاء الحساب.'; }
-    if ( empty( $_POST['privacy_consent'] ) ) { return 'يجب الموافقة على سياسة الخصوصية وشروط الاستخدام لإنشاء حساب.'; }
-   if ( ! $name || ! is_email( $email ) || strlen( $password ) < 10 || strlen( $password ) > 4096 || $password !== car_dealer_account_field( 'password_confirm' ) ) { return 'أدخل اسماً وبريداً صحيحاً وكلمة مرور من 10 أحرف على الأقل مع تأكيد مطابق.'; }
-   if ( email_exists( $email ) ) { return 'تعذر استخدام هذا البريد. جرّب تسجيل الدخول أو استعادة كلمة المرور.'; }
-	$phone = sanitize_text_field( car_dealer_account_field( 'phone' ) );
-	if ( class_exists( '\\AutoDealership\\Leads\\ContactIdentity' ) ) {
-	 $phone = \AutoDealership\Leads\ContactIdentity::normalize_mobile( $phone, false );
-	 if ( is_wp_error( $phone ) ) { return 'أدخل رقم هاتف صحيحاً بصيغة محلية أو دولية.'; }
-	}
-	$id = wp_insert_user( array( 'user_login' => 'customer_' . wp_generate_password( 20, false ), 'user_email' => $email, 'user_pass' => $password, 'display_name' => $name, 'role' => 'car_dealer_customer' ) );
-   if ( is_wp_error( $id ) ) { return 'تعذر إنشاء الحساب. حاول مجدداً أو تواصل مع المعرض.'; }
-	update_user_meta( $id, 'car_dealer_phone', $phone );
-   wp_set_current_user( $id ); wp_set_auth_cookie( $id, false, is_ssl() );
-   do_action( 'wp_login', get_userdata( $id )->user_login, get_userdata( $id ) );
-  }
-  if ( 'login' === $view ) { delete_transient( $limit_key ); }
-  wp_safe_redirect( car_dealer_account_url() ); exit;
+ return function_exists( 'adc_core_owns_customer_account_actions' ) && adc_core_owns_customer_account_actions() && function_exists( 'adc_customer_account_process' )
+  ? adc_customer_account_process( $view )
+  : __( 'خدمة الحساب غير متاحة حاليًا. يرجى المحاولة لاحقًا.', 'car-dealer' );
 }
+
 add_action( 'template_redirect', function () {
  $view = car_dealer_account_view();
  if ( ! $view ) { return; }
@@ -127,38 +65,60 @@ add_action( 'template_redirect', function () {
 } );
 add_filter( 'pre_get_document_title', function ( $title ) { return car_dealer_account_view() ? 'حسابي — ' . get_bloginfo( 'name' ) : $title; } );
 
-/** Ownership uses authenticated user IDs, never a submitted email address. */
-function car_dealer_account_requests(string $type, int $page = 1 ): array {
- global $wpdb;
- if ( ! get_current_user_id() ) { return array(); }
- $suffix = 'bookings' === $type ? 'bookings' : 'messages';
- return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}car_dealer_{$suffix} WHERE user_id = %d ORDER BY id DESC LIMIT 11 OFFSET %d", get_current_user_id(), ( max( 1, $page ) - 1 ) * 10 ) ) ?: array();
-}
-function car_dealer_account_request_table(string $type ) {
- $param = 'bookings' === $type ? 'booking_page' : 'message_page';
- $page = max( 1, absint( $_GET[$param] ?? 1 ) );
- $rows = car_dealer_account_requests( $type, $page ); $more = count( $rows ) > 10;
- $statuses = car_dealer_request_statuses( 'bookings' === $type ? 'booking' : 'message' );
- echo '<section class="cd-account-panel" id="' . ( 'bookings' === $type ? 'customer-bookings' : 'customer-messages' ) . '"><h2>' . ( 'bookings' === $type ? 'حجوزات تجربة القيادة' : 'طلباتي ورسائلي' ) . '</h2>';
- if ( ! $rows ) { echo '<p>لا توجد طلبات حتى الآن. ستظهر هنا الطلبات التي ترسلها أثناء تسجيل الدخول.</p>'; }
- else {
-  echo '<p class="cd-account-table-hint">مرّر الجدول أفقيًا لعرض بقية التفاصيل.</p>';
-  echo '<div class="cd-account-table" role="region" tabindex="0" aria-label="' . esc_attr( 'bookings' === $type ? 'جدول حجوزات تجربة القيادة' : 'جدول الطلبات والرسائل' ) . '"><table><thead><tr><th scope="col">الطلب</th><th scope="col">السيارة</th><th scope="col">التاريخ</th><th scope="col">الحالة</th></tr></thead><tbody>';
-  foreach ( array_slice( $rows, 0, 10 ) as $row ) {
-   $car = $row->car_id && 'publish' === get_post_status( $row->car_id ) ? '<a href="' . esc_url( get_permalink( $row->car_id ) ) . '">' . esc_html( get_the_title( $row->car_id ) ) . '</a>' : esc_html( $row->car_id ? 'السيارة غير متاحة حالياً' : 'طلب عام' );
-   echo '<tr><td>#' . absint( $row->id ) . ( 'bookings' === $type ? '<br>' . esc_html( $row->requested_date . ' ' . $row->requested_time ) : '<br>' . nl2br( esc_html( $row->message ) ) ) . '</td><td>' . $car . '</td><td>' . esc_html( $row->created_at ) . '</td><td>' . esc_html( $statuses[$row->status] ?? 'قيد المتابعة' );
-   if ( ! empty( $row->customer_reply ) ) { echo '<p><strong>رد المعرض:</strong><br>' . nl2br( esc_html( $row->customer_reply ) ) . '</p>'; }
-   if ( ! empty( $row->updated_at ) ) { echo '<small>آخر تحديث: ' . esc_html( $row->updated_at ) . '</small>'; }
-   if ( 'bookings' === $type && in_array( $row->status, array( 'pending', 'confirmed' ), true ) ) {
-    echo '<form method="post" action="' . esc_url( car_dealer_account_url() ) . '">'; wp_nonce_field( 'cd_account_dashboard' );
-    echo '<input type="hidden" name="account_action" value="cancel_booking"><input type="hidden" name="request_id" value="' . absint( $row->id ) . '"><button class="btn" type="submit">إلغاء الحجز</button></form>';
+function car_dealer_account_request_table( string $type ): void { car_dealer_account_request_table_core( $type ); }
+
+/** The plugin supplies account-scoped rows and action eligibility; this theme renders them. */
+function car_dealer_account_request_table_core( string $type ): void {
+ if ( ! function_exists( 'adc_customer_request_page' ) || ! function_exists( 'adc_core_owns_customer_request_view' ) || ! adc_core_owns_customer_request_view() ) {
+  echo '<section class="cd-account-panel"><h2>' . esc_html__( 'طلباتي', 'car-dealer' ) . '</h2><p role="status">' . esc_html__( 'سجل الطلبات غير متاح حاليًا.', 'car-dealer' ) . '</p></section>';
+  return;
+ }
+ $bookings = 'bookings' === $type;
+ $param = $bookings ? 'booking_page' : 'message_page';
+ $page = max( 1, absint( $_GET[ $param ] ?? 1 ) );
+ $result = adc_customer_request_page( $type, $page );
+ echo '<section class="cd-account-panel" id="' . ( $bookings ? 'customer-bookings' : 'customer-messages' ) . '"><h2>' . esc_html( $bookings ? 'حجوزات تجربة القيادة' : 'طلباتي ورسائلي' ) . '</h2>';
+ if ( is_wp_error( $result ) ) {
+  echo '<p role="alert">' . esc_html( $result->get_error_message() ) . '</p></section>';
+  return;
+ }
+ $items = $result['items'];
+ if ( ! $items ) {
+  echo '<p>' . esc_html__( 'لا توجد طلبات في هذه الصفحة حاليًا.', 'car-dealer' ) . '</p>';
+ } else {
+  echo '<p class="cd-account-table-hint">' . esc_html__( 'مرّر الجدول أفقيًا لعرض بقية التفاصيل.', 'car-dealer' ) . '</p>';
+  echo '<div class="cd-account-table" role="region" tabindex="0" aria-label="' . esc_attr( $bookings ? 'جدول حجوزات تجربة القيادة' : 'جدول الطلبات والرسائل' ) . '"><table><thead><tr><th scope="col">الطلب</th><th scope="col">السيارة</th><th scope="col">التاريخ</th><th scope="col">الحالة</th></tr></thead><tbody>';
+  foreach ( $items as $item ) {
+   echo '<tr><td>#' . absint( $item['id'] ) . '<br>';
+   echo $bookings ? esc_html( trim( $item['requested_date'] . ' ' . $item['requested_time'] ) ) : nl2br( esc_html( $item['message'] ) );
+   echo '</td><td>';
+   if ( $item['car_url'] ) {
+    echo '<a href="' . esc_url( $item['car_url'] ) . '">' . esc_html( $item['car_title'] ) . '</a>';
+   } else {
+    echo esc_html( $item['car_id'] ? 'السيارة غير متاحة حاليًا' : 'طلب عام' );
+   }
+   echo '</td><td>' . esc_html( $item['created_at'] ) . '</td><td>' . esc_html( $item['status_label'] );
+   if ( $item['customer_reply'] ) {
+    echo '<p><strong>رد المعرض:</strong><br>' . nl2br( esc_html( $item['customer_reply'] ) ) . '</p>';
+   }
+   if ( $item['updated_at'] ) {
+    echo '<small>آخر تحديث: ' . esc_html( $item['updated_at'] ) . '</small>';
+   }
+   if ( $item['can_cancel'] ) {
+    echo '<form method="post" action="' . esc_url( car_dealer_account_url() ) . '">';
+    wp_nonce_field( 'cd_account_dashboard' );
+    echo '<input type="hidden" name="account_action" value="cancel_booking"><input type="hidden" name="request_id" value="' . absint( $item['id'] ) . '"><button class="btn" type="submit">إلغاء الحجز</button></form>';
    }
    echo '</td></tr>';
   }
   echo '</tbody></table></div>';
  }
  echo '<div class="cd-account-actions">';
- if ( $page > 1 ) { echo '<a href="' . esc_url( add_query_arg( $param, $page - 1, car_dealer_account_url() ) ) . '">السابق</a>'; }
- if ( $more ) { echo '<a href="' . esc_url( add_query_arg( $param, $page + 1, car_dealer_account_url() ) ) . '">التالي</a>'; }
+ if ( $result['page'] > 1 ) {
+  echo '<a href="' . esc_url( add_query_arg( $param, $result['page'] - 1, car_dealer_account_url() ) ) . '">السابق</a>';
+ }
+ if ( $result['has_more'] ) {
+  echo '<a href="' . esc_url( add_query_arg( $param, $result['page'] + 1, car_dealer_account_url() ) ) . '">التالي</a>';
+ }
  echo '</div></section>';
 }

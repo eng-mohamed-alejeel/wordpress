@@ -1,5 +1,72 @@
 # Changelog
 
+## 1.29.13 — Deployable theme cleanup
+
+- Added plugin read models for vehicle cards/details, authorized offer previews, bounded home-page selections, compatibility/authoritative filter choices and account workspace targets. The home page no longer selects business records or invents customer counts, financing offers, brand counts, response times or universal warranty terms; empty inventory sections stay hidden.
+- Removed all theme business PHP and AJAX/finance JavaScript fallbacks from the active load chain. Archived former theme handlers, dormant administration modules, unused statistics styling, old admin assets and historical checks under `docs/archive/car-dealer` without loading them.
+- Activated theme-only appearance/contact settings under Appearance, removed fixed page IDs, broken relative links, empty team-contact links and fabricated contact/map placeholders, and rebuilt public CSS without the old admin module. Missing plugin services now produce unavailable states instead of theme-side writes; archive links are omitted when their plugin-owned content types are unavailable. Prices retain fractional riyals when the operational record contains halalas.
+- No business data, editorial pages or sample records were created. Runtime, browser, database and theme-switch acceptance remain pending; rollback now restores a matching earlier theme/plugin release rather than toggling an owner flag.
+
+## 1.29.12 — Account decisions and remaining public fallback isolation
+
+- `CustomerAccount` now classifies the account workspace and decides whether a customer-only user should be redirected from the admin area. The theme retains labels and navigation; the previous capability rules are loaded only with the account rollback file.
+- Moved the old catalog language, URL and SEO policy into conditional `catalog-legacy-policy.php`. The active catalog file delegates those decisions to the plugin and retains English copy, formatting and the visual language switch.
+- Moved shortcode car selection, comparison-cookie decoding and finance-form defaults into the theme's conditional compatibility file. Raw offer metadata reads for rollback and editorial previews now use the lazy `offer-legacy-view.php` helper; published offer cards and details use the plugin model.
+- Preserved existing identifiers and preview behavior. No schema, business record or sample content is created. Runtime, database, browser and theme-switch acceptance remain pending.
+
+## 1.29.11 — Conditional legacy CRM and engagement loading
+
+- Moved the theme's former engagement table installer, public AJAX writers and staff list SQL into `inc/engagement-legacy.php`. `inc/contact-form-manager.php` now keeps the form renderers and identity presentation, loading the compatibility file only when an applicable plugin owner is disabled before theme bootstrap.
+- Made the old `inc/crm.php` and `inc/customer-workflow.php` theme require path conditional on the corresponding account, request, intake, marketing, engagement or CRM ownership switch. The plugin remains the active owner of these workflows in normal operation.
+- Moved the theme's old car content registration, vehicle metadata editor, direct-email lead AJAX handler and comparison AJAX handler from `functions.php` to conditional `inc/theme-legacy-core.php`; active card, shortcode and form rendering remain in the theme.
+- Kept legacy slugs, actions and rollback code available. No schema migration, business record or sample content is created by this source change. Runtime, browser, database and theme-switch acceptance are pending.
+
+## 1.29.10 — Offer archive pagination and account adapter cleanup
+
+- The plugin now restricts the main public `car_offer` archive query to published offers with a positive price, a valid unexpired date and a publicly eligible linked car. WordPress counts and paginates the same eligible rows that offer cards render, including compatibility and authoritative catalog modes.
+- Moved the account theme's former role, authentication/profile mutation and direct-SQL request history paths into separate compatibility files. They load only when their corresponding plugin ownership switch is disabled before bootstrap; the active account file retains routing and presentation.
+- Kept existing identifiers and early rollback flags. No schema or business/content records are changed or created. Runtime, database, browser and theme-switch acceptance remain pending.
+
+## 1.29.9 — Public offer and customer request read models
+
+- Added `PublicOfferView` as the plugin-owned read model for published, unexpired offers with a positive whole-SAR price and a publicly eligible linked vehicle. It normalizes old and monthly prices, supplies public URLs and image fallback, and marks invalid singular offers as 404 while preserving staff previews.
+- Converted active offer cards and single-offer templates to render the plugin model. The archive suppresses ineligible cards and still exposes pagination when a page contains only suppressed entries. Legacy metadata reads remain a guarded rollback path.
+- Added `CustomerRequestView` for bounded, authenticated account history from retained message and booking projections. It selects only display fields, scopes by the current account ID, fails closed on missing schema/storage, and offers cancellation only for an active booking linked to that same account's core customer.
+- The account table now renders the plugin's rows and status/action decisions; its direct SQL path is a guarded rollback. The account contact form uses the durable plugin shortcode contract. No schema or content records are created. Runtime/database/browser acceptance remains pending.
+
+## 1.29.8 — Catalog language, SEO and structured-data ownership
+
+- Added `CatalogPresentation` as the plugin owner of URL-bound Arabic/English catalog language, allowlisted language-switch URLs, filtered-archive indexing, canonical links and language alternatives. The theme's active language switch uses plugin facades; its duplicate SEO hooks are guarded for plugin-inactive compatibility only.
+- Added `PublicStructuredData` as the plugin-owned JSON-LD emitter for eligible public vehicles and valid linked offers. Missing prices are omitted rather than fabricated; unavailable cars, unpublished or expired offers and offers without a valid price do not receive an in-stock offer claim.
+- Guarded the theme require for `inc/schema-markup.php` so structured data has one active emitter and remains available after a theme switch. Independent early ownership flags retain controlled theme rollback without duplicate hooks; the old file remains for later reviewed cleanup.
+- The shortcode contact view model now uses the shared catalog language policy. No schema, business record, page or sample content is created. Runtime and browser acceptance remain pending.
+
+## 1.29.7 — Plugin-owned public shortcode contracts
+
+- Added `PublicShortcodes` as the sole active registrar for all 18 durable shortcode names, including cars, comparison, finance calculator, contact form and the stored `ab_*` page-section names.
+- Added bounded plugin view models for eligible car IDs, comparison selection, calculator limits/defaults and authenticated contact-form identity. Cars and comparison no longer execute their domain query in the active theme renderer.
+- Converted `car-dealer` callbacks into `adc_shortcode_{tag}_html` presentation filters. The existing markup remains active, while the ownership filter and theme fallback retain a controlled rollback path without duplicate registration.
+- Added neutral stock-theme fallbacks for cars, comparison, finance calculation and contact intake. Presentation-only `ab_*` and testimonial output stays empty without an adapter because no approved independent content repository exists.
+- Moved contact, booking and newsletter browser submission to the plugin public-intake asset, including the existing nonce/action response contract, retry-stable idempotency keys and duplicate-submit prevention. The theme handler now runs only during rollback.
+- Removed hard-coded fictional testimonials from both active theme shortcode renderers. The shortcode names remain registered and render no testimonial section until approved customer content is supplied.
+- Documented the adapter API, model shapes, fallbacks and rollback in `THEME-ADAPTER-API.md`. Updated the plugin to 1.29.7; schema remains 1.17.0 and no content, business or sample record is created by this cutover. Verification has not been run.
+
+## 1.29.6 — Explicit editorial page setup
+
+- Removed the active theme's `admin_init` and `after_switch_theme` page writer. Visiting administration or changing themes can no longer create pages or overwrite manually edited titles and content.
+- Added the plugin-owned `EditorialPageSetup` service and `adc-editorial-setup` administrator screen. It reads bounded theme presentation blueprints, reports existing/missing pages, and creates only selected missing pages as drafts after a nonce-protected request with a recorded reason.
+- Made page creation idempotent and serialized. Existing pages in every status are preserved, all selected writes and the minimized audit event commit together, and a failure rolls the batch back.
+- Converted dormant `inc/auto-pages.php` into an inert compatibility include so loading it later cannot restore automatic page writes. Privacy and terms pages remain excluded because approved legal copy has not been supplied.
+- Updated the plugin to 1.29.6. Schema remains 1.17.0; the upgrade and normal requests create no editorial, business or sample records. Verification has not been run.
+
+## 1.29.5 — Unified plugin operations workspace
+
+- Added `WorkspacePage` as the theme-independent home for `adc-workspace`. Its navigation cards are produced from the current user's capabilities and link to the existing plugin CRM, engagement, inventory, purchasing, approval, finance, delivery, reporting, audit and settings screens.
+- Moved the operational inventory page from the workspace root to `adc-inventory`; vehicle create, transition, location and VIN actions now return to that route. The active account template uses the same route.
+- Added a screen-only plugin workspace stylesheet without copying the dormant theme dashboard styles or JavaScript.
+- Classified `admin-dashboard.php`, `admin-workspace.php`, `inventory-management.php`, `advanced-features.php` and their administration assets. They are not in the active theme require chain and remain inert until separate rollback-window cleanup; their direct writers, role mutation and projection counters were not copied.
+- Updated the plugin to 1.29.5. Schema remains 1.17.0, and this slice creates no business, editorial or sample data. Verification has not been run.
+
 ## 1.29.4 — Plugin-owned engagement administration
 
 - Added plugin-owned staff pages for the existing `car-dealer-messages`, `car-dealer-bookings` and `car-dealer-subscribers` slugs under `adc-workspace`; the pages remain available when the presentation theme changes.

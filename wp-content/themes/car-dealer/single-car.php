@@ -3,21 +3,21 @@
 while ( have_posts() ) :
 	the_post();
 	$id           = get_the_ID();
-	$vehicle      = function_exists( 'car_dealer_public_vehicle' ) ? car_dealer_public_vehicle( $id ) : null;
-	$price        = $vehicle ? car_dealer_catalog_price( $vehicle ) : get_post_meta( $id, '_car_price', true );
-	$monthly      = get_post_meta( $id, '_car_monthly_payment', true );
-	$year         = $vehicle ? $vehicle['model_year'] : get_post_meta( $id, '_car_year', true );
-	$model        = $vehicle ? $vehicle['model'] : get_post_meta( $id, '_car_model', true );
-	$color        = $vehicle ? $vehicle['exterior_color'] : get_post_meta( $id, '_car_color', true );
-	$kilometers   = $vehicle ? $vehicle['mileage'] : get_post_meta( $id, '_car_kilometers', true );
-	$transmission = $vehicle ? $vehicle['transmission'] : get_post_meta( $id, '_car_transmission', true );
-	$fuel         = $vehicle ? $vehicle['fuel_type'] : get_post_meta( $id, '_car_fuel_type', true );
-	$condition    = $vehicle ? $vehicle['condition_key'] : get_post_meta( $id, '_car_condition', true );
-	$status       = $vehicle ? $vehicle['status'] : ( get_post_meta( $id, '_car_inventory_status', true ) ?: 'available' );
-	$features_meta = get_post_meta( $id, '_car_features', true );
-	$features     = $vehicle && function_exists( 'car_dealer_catalog_features' ) ? car_dealer_catalog_features( $vehicle ) : ( is_array( $features_meta ) ? array_filter( array_map( 'trim', $features_meta ) ) : array_filter( array_map( 'trim', explode( "\n", (string) $features_meta ) ) ) );
-	$brands       = get_the_terms( $id, 'car_brand' );
-	$brand_name   = $vehicle ? $vehicle['brand'] : ( ! is_wp_error( $brands ) && ! empty( $brands ) ? $brands[0]->name : '' );
+	$view         = car_dealer_vehicle_view( $id, is_preview() );
+	if ( ! $view ) { echo '<div class="container empty-state">' . esc_html__( 'بيانات السيارة غير متاحة حاليًا.', 'car-dealer' ) . '</div>'; continue; }
+	$vehicle      = $view['vehicle'];
+	$price        = $view['price'];
+	$monthly      = $view['monthly'];
+	$year         = $view['year'];
+	$model        = $view['model'];
+	$color        = $view['color'];
+	$kilometers   = $view['kilometers'];
+	$transmission = $view['transmission'];
+	$fuel         = $view['fuel'];
+	$condition    = $view['condition'];
+	$status       = $view['status'];
+	$features     = $view['features'];
+	$brand_name   = $view['brand_name'];
 	$catalog_language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
 	$catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl';
 	$wa_message   = 'en' === $catalog_language ? sprintf( 'Hello AUTO BRANDS, I would like to ask about %s', get_the_title() ) : sprintf( 'مرحباً AUTO BRANDS، أريد الاستفسار عن %s', get_the_title() );
@@ -37,7 +37,7 @@ while ( have_posts() ) :
 					<a class="btn btn-primary" href="#request-price"><?php esc_html_e( 'اطلب السعر', 'car-dealer' ); ?></a>
 					<a class="btn btn-outline" href="#book-drive"><?php esc_html_e( 'احجز تجربة قيادة', 'car-dealer' ); ?></a>
 					<a class="btn btn-outline" href="#finance-request"><?php esc_html_e( 'اطلب تمويل', 'car-dealer' ); ?></a>
-					<a class="btn btn-chrome" href="<?php echo esc_url( car_dealer_whatsapp_url( $wa_message ) ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a>
+					<?php $wa_link = car_dealer_whatsapp_url( $wa_message ); if ( '#' !== $wa_link ) : ?><a class="btn btn-chrome" href="<?php echo esc_url( $wa_link ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a><?php endif; ?>
 				</div>
 				<?php if ( function_exists( 'car_dealer_comparison_button' ) ) { car_dealer_comparison_button( $id ); } ?>
 			</div>

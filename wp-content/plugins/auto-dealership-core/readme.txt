@@ -1,11 +1,29 @@
 === Auto Dealership Core ===
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 1.29.4
+Stable tag: 1.29.13
 
-Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The existing theme remains active as a compatibility layer during staged migration.
+Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The Car Dealer theme is a presentation adapter for this plugin.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
+
+Version 1.29.13 gives the theme read-only vehicle, offer preview, home-page selection, catalog filter and account workspace models. The theme no longer loads legacy business handlers or registers dealership shortcodes. Former dormant theme sources and admin assets are preserved outside the deployable theme in docs/archive/car-dealer. Public contact information appears only when configured. The source update creates no business data or sample content; runtime and theme-switch acceptance are pending.
+
+Version 1.29.12 makes the plugin the source of account workspace classification and customer-only admin redirect decisions. The theme keeps account labels, navigation and markup. Legacy catalog URL/SEO rules, shortcode inventory selection, comparison-cookie decoding, finance-form defaults and raw offer reads now live in conditional compatibility files; offer previews retain their prior editorial fields. No schema, business content or sample data is created by this source update.
+
+Version 1.29.11 isolates the theme's former engagement schema installer, public AJAX handlers and staff list queries in a compatibility-only file. The active contact file retains form markup and identity presentation. The theme loads its old CRM and request workflow files only when a corresponding plugin ownership path is disabled before bootstrap. Former theme content registration, vehicle editor, direct-email lead handler and comparison AJAX handler also live in a conditional compatibility file. Identifiers and rollback behavior are preserved; no schema or business content is changed by this source update.
+
+Version 1.29.10 makes the public offer archive query count only eligible offers, so page links match rendered offer cards. The account theme adapter now loads its old authentication, role and direct-SQL request paths only when the corresponding plugin owner is disabled before bootstrap. The plugin and theme retain their existing identifiers and controlled rollback switches. This increment changes no schema or content and creates no sample data.
+
+Version 1.29.9 adds plugin-owned public offer and customer-account request read models. Offer cards and details consume eligible, unexpired linked offers with real prices; invalid public offer details return 404. Customer history is bounded and account-scoped, and cancellation appears only for an active booking linked to the signed-in core customer. The theme retains presentation and guarded rollback code. No schema, content or sample records are created.
+
+Version 1.29.8 moves URL-bound catalog language, canonical/hreflang/robots policy and public vehicle/offer structured-data values to plugin services. The theme keeps the language switch and catalog presentation, delegates language URLs to plugin facades, and no longer loads its duplicate JSON-LD emitter. Structured offers require a published, unexpired offer linked to an eligible car with an actual positive price. No schema or sample data changes are included.
+
+Version 1.29.7 begins the public-adapter slice by moving registration of all 18 durable dealership shortcodes to `PublicShortcodes`. The plugin supplies bounded cars, comparison, calculator and contact-form view models plus safe stock-theme fallbacks, while `car-dealer` now attaches presentation filters and retains direct registration only for rollback. Public contact, booking and newsletter form submission is served by the plugin asset with retry-stable idempotency and no duplicate theme handler. No schema, content or sample data changes are included.
+
+Version 1.29.6 removes automatic editorial-page inserts and updates from theme administration and theme-switch requests. The active theme now supplies presentation blueprints through a filter, while the plugin provides an administrator-only, nonce-protected and audited setup screen that creates selected missing pages as drafts. Existing pages are always preserved, the dormant duplicate writer is inert, and no page or database record is created by the upgrade itself.
+
+Version 1.29.5 adds a theme-independent, role-aware operations home under `adc-workspace`. It links only to modules allowed by the current user's capabilities and moves the operational inventory list to `adc-inventory`, including all post-action redirects and the active theme account link. Dormant theme dashboard, workspace, inventory and advanced administration sources were classified and were not copied or activated. No schema or business data changes are included.
 
 Version 1.29.4 begins plugin-owned operational administration. The existing message, test-drive booking and newsletter page slugs now run under the plugin workspace with bounded service queries, branch/owner scope, a dedicated subscriber capability and plugin-only styling. Request updates return to their originating list, while the theme page registration remains a guarded rollback path. No engagement, customer or sample record is created or changed by the cutover itself.
 

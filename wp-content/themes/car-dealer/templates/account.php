@@ -1,13 +1,17 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 $view = car_dealer_account_view(); $error = $GLOBALS['cd_account_error'] ?? '';
+$core_available = function_exists( 'adc_customer_account_process' ) && function_exists( 'adc_core_owns_customer_account_actions' ) && adc_core_owns_customer_account_actions();
+$catalog_url = car_dealer_archive_url( 'car' );
 get_header();
 ?>
 <div class="container cd-account" dir="rtl" lang="ar">
-<?php if ( $error ) : ?><div class="cd-account-notice is-error" role="alert"><?php echo esc_html( $error ); ?></div><?php endif; ?>
-<?php if ( 'dashboard' !== $view ) : $register = 'register' === $view; ?>
+<?php if ( $error && $core_available ) : ?><div class="cd-account-notice is-error" role="alert"><?php echo esc_html( $error ); ?></div><?php endif; ?>
+<?php if ( ! $core_available ) : ?>
+<section class="cd-account-panel"><h1><?php esc_html_e( 'الحساب غير متاح حاليًا', 'car-dealer' ); ?></h1><p><?php esc_html_e( 'خدمة المعرض غير متاحة. يرجى المحاولة لاحقًا.', 'car-dealer' ); ?></p></section>
+<?php elseif ( 'dashboard' !== $view ) : $register = 'register' === $view; ?>
 <section class="cd-auth-card">
-<div class="cd-auth-intro"><span>أهلاً بك في <?php echo esc_html( get_bloginfo( 'name' ) ); ?></span><h1><?php echo $register ? 'ابدأ رحلتك معنا' : 'سعداء بعودتك'; ?></h1><p>حساب واحد لمتابعة طلباتك وحجوزات تجربة القيادة والتواصل مع المعرض.</p><a href="<?php echo esc_url( get_post_type_archive_link( 'car' ) ); ?>">استكشف السيارات ←</a></div>
+<div class="cd-auth-intro"><span>أهلاً بك في <?php echo esc_html( get_bloginfo( 'name' ) ); ?></span><h1><?php echo $register ? 'ابدأ رحلتك معنا' : 'سعداء بعودتك'; ?></h1><p>حساب واحد لمتابعة طلباتك وحجوزات تجربة القيادة والتواصل مع المعرض.</p><?php if ( $catalog_url ) : ?><a href="<?php echo esc_url( $catalog_url ); ?>">استكشف السيارات ←</a><?php endif; ?></div>
 <div class="cd-auth-form"><nav class="cd-auth-tabs" aria-label="الحساب"><a <?php echo ! $register ? 'aria-current="page"' : ''; ?> href="<?php echo esc_url( car_dealer_account_url( 'login' ) ); ?>">تسجيل الدخول</a><a <?php echo $register ? 'aria-current="page"' : ''; ?> href="<?php echo esc_url( car_dealer_account_url( 'register' ) ); ?>">إنشاء حساب</a></nav>
 <form method="post" action="<?php echo esc_url( car_dealer_account_url( $view ) ); ?>">
 <?php wp_nonce_field( 'cd_account_' . $view ); ?>
@@ -23,7 +27,7 @@ get_header();
 <?php if ( $register ) : ?><small>استخدم 10 أحرف على الأقل.</small><label>تأكيد كلمة المرور<input name="password_confirm" type="password" autocomplete="new-password" minlength="10" required></label>
 <label class="cd-auth-consent">
   <input type="checkbox" name="privacy_consent" required>
-  <span>أوافق على <a href="<?php echo esc_url( get_privacy_policy_url() ); ?>">سياسة الخصوصية</a> و <a href="<?php echo esc_url( get_permalink( 29 ) ); ?>">شروط الاستخدام</a></span>
+  <span>أوافق على <?php $privacy_url = get_privacy_policy_url(); $terms_url = car_dealer_page_url( 'terms' ); ?><?php if ( $privacy_url ) : ?><a href="<?php echo esc_url( $privacy_url ); ?>">سياسة الخصوصية</a><?php else : ?>سياسة الخصوصية<?php endif; ?> و <?php if ( $terms_url ) : ?><a href="<?php echo esc_url( $terms_url ); ?>">شروط الاستخدام</a><?php else : ?>شروط الاستخدام<?php endif; ?></span>
 </label>
 <?php else : ?><label class="cd-auth-remember"><input name="remember" type="checkbox" value="1"> تذكرني</label><?php endif; ?>
 <button class="btn btn-primary" type="submit"><?php echo $register ? 'إنشاء حساب' : 'تسجيل الدخول'; ?></button>
@@ -42,27 +46,26 @@ get_header();
 <section class="cd-account-panel"><h2>مساحة العمل</h2><div class="cd-account-tools">
 <?php
 $tools = array(
- array( 'adc_view_workspace', 'admin.php?page=adc-workspace', 'مساحة عمليات المعرض', 'الوصول إلى العمليات المسموح بها حسب دورك وفرعك' ),
- array( array( 'adc_view_own_leads', 'adc_view_branch_leads' ), 'admin.php?page=adc-crm', 'العملاء والمتابعات', 'sales' === $kind ? 'العملاء المسندون إليك' : 'إدارة علاقات العملاء وفرص البيع' ),
- array( array( 'adc_view_own_leads', 'adc_view_branch_leads' ), 'admin.php?page=car-dealer-messages', 'رسائل العملاء', 'متابعة طلبات التواصل والبيع الواقعة ضمن نطاقك' ),
- array( array( 'adc_view_own_leads', 'adc_view_branch_leads' ), 'admin.php?page=car-dealer-bookings', 'حجوزات التجربة', 'متابعة مواعيد تجربة القيادة الواقعة ضمن نطاقك' ),
- array( 'adc_view_marketing_subscribers', 'admin.php?page=car-dealer-subscribers', 'النشرة البريدية', 'عرض موافقات الاشتراك التسويقي الحالية' ),
- array( 'edit_cars', 'post-new.php?post_type=car', 'إضافة سيارة منشورة', 'إنشاء صفحة السيارة التحريرية في الموقع' ),
- array( 'adc_view_inventory', 'admin.php?page=adc-workspace', 'المخزون التشغيلي', 'متابعة المركبات وحالاتها التشغيلية' ),
- array( 'manage_options', 'users.php', 'المستخدمون والصلاحيات', 'إدارة حسابات فريق العمل' ),
- array( 'manage_options', 'admin.php?page=adc-settings', 'إعدادات المنصة', 'إدارة إعدادات ووحدات منصة المعرض' ),
+ array( 'workspace', 'admin.php?page=adc-workspace', 'مساحة عمليات المعرض', 'الوصول إلى العمليات المسموح بها حسب دورك وفرعك' ),
+ array( 'crm', 'admin.php?page=adc-crm', 'العملاء والمتابعات', 'sales' === $kind ? 'العملاء المسندون إليك' : 'إدارة علاقات العملاء وفرص البيع' ),
+ array( 'messages', 'admin.php?page=car-dealer-messages', 'رسائل العملاء', 'متابعة طلبات التواصل والبيع الواقعة ضمن نطاقك' ),
+ array( 'bookings', 'admin.php?page=car-dealer-bookings', 'حجوزات التجربة', 'متابعة مواعيد تجربة القيادة الواقعة ضمن نطاقك' ),
+ array( 'subscribers', 'admin.php?page=car-dealer-subscribers', 'النشرة البريدية', 'عرض موافقات الاشتراك التسويقي الحالية' ),
+ array( 'car_editor', 'post-new.php?post_type=car', 'إضافة سيارة منشورة', 'إنشاء صفحة السيارة التحريرية في الموقع' ),
+ array( 'inventory', 'admin.php?page=adc-inventory', 'المخزون التشغيلي', 'متابعة المركبات وحالاتها التشغيلية' ),
+ array( 'users', 'users.php', 'المستخدمون والصلاحيات', 'إدارة حسابات فريق العمل' ),
+ array( 'settings', 'admin.php?page=adc-settings', 'إعدادات المنصة', 'إدارة إعدادات ووحدات منصة المعرض' ),
 );
+$allowed_targets = function_exists( 'adc_customer_workspace_targets' ) ? adc_customer_workspace_targets( $user ) : array();
 foreach ( $tools as $tool ) {
-	$capabilities = (array) $tool[0];
-	$allowed = (bool) array_filter( $capabilities, 'current_user_can' );
-	if ( $allowed ) { echo '<a href="' . esc_url( admin_url( $tool[1] ) ) . '"><strong>' . esc_html( $tool[2] ) . '</strong><span>' . esc_html( $tool[3] ) . '</span></a>'; }
+	if ( in_array( $tool[0], $allowed_targets, true ) ) { echo '<a href="' . esc_url( admin_url( $tool[1] ) ) . '"><strong>' . esc_html( $tool[2] ) . '</strong><span>' . esc_html( $tool[3] ) . '</span></a>'; }
 }
 ?>
 </div></section>
 <?php else : ?>
-<div class="cd-account-actions"><a class="btn btn-primary" href="<?php echo esc_url( get_post_type_archive_link( 'car' ) ); ?>">تصفح السيارات واحجز تجربة قيادة</a></div>
+<?php if ( $catalog_url ) : ?><div class="cd-account-actions"><a class="btn btn-primary" href="<?php echo esc_url( $catalog_url ); ?>">تصفح السيارات واحجز تجربة قيادة</a></div><?php endif; ?>
 <?php car_dealer_account_request_table( 'messages' ); car_dealer_account_request_table( 'bookings' ); ?>
-<section class="cd-account-panel"><h2>إرسال رسالة إلى المعرض</h2><p>ستظهر الرسالة ورد المعرض ضمن طلباتك في هذه الصفحة.</p><?php echo car_dealer_contact_form_shortcode(); ?></section>
+<section class="cd-account-panel"><h2>إرسال رسالة إلى المعرض</h2><p>ستظهر الرسالة ورد المعرض ضمن طلباتك في هذه الصفحة.</p><?php echo do_shortcode( '[car_dealer_contact_form]' ); ?></section>
 <?php endif; ?>
 <section class="cd-account-panel"><h2>بياناتي الشخصية</h2><form class="cd-account-profile" method="post" action="<?php echo esc_url( car_dealer_account_url() ); ?>">
 <?php wp_nonce_field( 'cd_account_dashboard' ); ?>
@@ -70,8 +73,8 @@ foreach ( $tools as $tool ) {
 <label>الهاتف<input name="phone" type="tel" autocomplete="tel" dir="ltr" value="<?php echo esc_attr( get_user_meta( $user->ID, 'car_dealer_phone', true ) ); ?>"></label>
 <p>البريد الإلكتروني: <bdi><?php echo esc_html( $user->user_email ); ?></bdi></p><div class="cd-account-actions"><button class="btn btn-primary">حفظ البيانات</button><a href="<?php echo esc_url( wp_lostpassword_url( car_dealer_account_url( 'login' ) ) ); ?>">إعادة تعيين كلمة المرور</a></div>
 </form></section>
-<?php if ( 'customer' === $kind && class_exists( '\AutoDealership\Leads\CustomerIdentity' ) ) :
-$preferences = \AutoDealership\Leads\CustomerIdentity::current_preferences();
+<?php if ( 'customer' === $kind && function_exists( 'adc_customer_current_preferences' ) ) :
+$preferences = adc_customer_current_preferences();
 if ( ! is_wp_error( $preferences ) ) : ?>
 <section class="cd-account-panel cd-account-preferences" id="communication-preferences"><h2>تفضيلات التواصل</h2>
 <p>اختر ما إذا كنت ترغب في استقبال عروض وأخبار تسويقية. رسائل الطلبات والحجوزات والخدمة اللازمة لتنفيذ طلبك لا تتأثر بهذا الاختيار.</p>

@@ -23,11 +23,12 @@ final class OperationsPages {
 	}
 
 	public static function menu(): void {
-		if ( current_user_can( 'adc_view_inventory' ) || current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'adc_view_marketing_subscribers' ) ) {
-			add_menu_page( __( 'Dealership Operations', 'auto-dealership-core' ), __( 'Dealership Operations', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-workspace', array( self::class, 'render' ), 'dashicons-car', 57 );
+		if ( current_user_can( 'adc_view_workspace' ) ) {
+			add_menu_page( __( 'مساحة عمليات المعرض', 'auto-dealership-core' ), __( 'عمليات المعرض', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-workspace', array( WorkspacePage::class, 'render' ), 'dashicons-car', 57 );
+			add_submenu_page( 'adc-workspace', __( 'مساحة العمل', 'auto-dealership-core' ), __( 'مساحة العمل', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-workspace', array( WorkspacePage::class, 'render' ) );
 		}
 		if ( current_user_can( 'adc_view_inventory' ) ) {
-			add_submenu_page( 'adc-workspace', __( 'Inventory', 'auto-dealership-core' ), __( 'Inventory', 'auto-dealership-core' ), 'adc_view_inventory', 'adc-workspace', array( self::class, 'render' ) );
+			add_submenu_page( 'adc-workspace', __( 'المخزون التشغيلي', 'auto-dealership-core' ), __( 'المخزون', 'auto-dealership-core' ), 'adc_view_inventory', 'adc-inventory', array( self::class, 'render' ) );
 		}
 		if ( current_user_can( 'adc_transfer_inventory' ) ) {
 			add_submenu_page( 'adc-workspace', __( 'Branch Transfers', 'auto-dealership-core' ), __( 'Branch Transfers', 'auto-dealership-core' ), 'adc_transfer_inventory', 'adc-transfers', array( self::class, 'render_transfers' ) );
@@ -39,14 +40,6 @@ final class OperationsPages {
 
 	public static function render(): void {
 		if ( ! current_user_can( 'adc_view_inventory' ) ) {
-			if ( current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) ) {
-				self::render_leads();
-				return;
-			}
-			if ( current_user_can( 'adc_view_marketing_subscribers' ) ) {
-				EngagementPages::render_subscribers();
-				return;
-			}
 			wp_die( esc_html__( 'لا تملك صلاحية عرض المخزون.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );
 		}
 		$vehicles = VehicleService::list_for_current_user( max( 1, absint( $_GET['paged'] ?? 1 ) ) );
@@ -161,14 +154,14 @@ final class OperationsPages {
 		foreach ( array( 'vin', 'stock_number', 'brand', 'model', 'trim', 'condition', 'model_year', 'branch_id', 'retail_price' ) as $key ) {
 			$data[ $key ] = isset( $_POST[ $key ] ) ? sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) : '';
 		}
-		self::redirect( 'adc-workspace', VehicleService::create( $data ) );
+		self::redirect( 'adc-inventory', VehicleService::create( $data ) );
 	}
 
 	public static function transition_vehicle(): void {
 		$id = absint( $_POST['id'] ?? 0 );
 		check_admin_referer( 'adc_transition_vehicle_' . $id );
 		$result = VehicleService::transition( $id, sanitize_key( wp_unslash( $_POST['status'] ?? '' ) ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) );
-		self::redirect( 'adc-workspace', $result );
+		self::redirect( 'adc-inventory', $result );
 	}
 
 	public static function transfer_vehicle(): void {
@@ -178,8 +171,8 @@ final class OperationsPages {
 		self::redirect( 'adc-transfers', $result );
 	}
 
-	public static function move_vehicle_location(): void { $id = absint( $_POST['id'] ?? 0 ); check_admin_referer( 'adc_move_vehicle_location_' . $id ); self::redirect( 'adc-workspace', VehicleService::move_location( $id, absint( $_POST['location_id'] ?? 0 ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) ) ); }
-	public static function change_vehicle_vin(): void { $id = absint( $_POST['id'] ?? 0 ); check_admin_referer( 'adc_change_vehicle_vin_' . $id ); self::redirect( 'adc-workspace', VehicleService::change_vin( $id, sanitize_text_field( wp_unslash( $_POST['vin'] ?? '' ) ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) ) ); }
+	public static function move_vehicle_location(): void { $id = absint( $_POST['id'] ?? 0 ); check_admin_referer( 'adc_move_vehicle_location_' . $id ); self::redirect( 'adc-inventory', VehicleService::move_location( $id, absint( $_POST['location_id'] ?? 0 ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) ) ); }
+	public static function change_vehicle_vin(): void { $id = absint( $_POST['id'] ?? 0 ); check_admin_referer( 'adc_change_vehicle_vin_' . $id ); self::redirect( 'adc-inventory', VehicleService::change_vin( $id, sanitize_text_field( wp_unslash( $_POST['vin'] ?? '' ) ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) ) ); }
 
 	public static function update_lead_stage(): void {
 		$id = absint( $_POST['lead_id'] ?? 0 );

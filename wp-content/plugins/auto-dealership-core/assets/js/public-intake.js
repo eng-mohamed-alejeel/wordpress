@@ -1,8 +1,14 @@
-/* Keep the same key after a failed submission, until the form payload changes. */
 (function () {
     'use strict';
+    if (!window.adcPublicIntake) return;
+
+    const config = window.adcPublicIntake;
     const requests = new WeakMap();
-    const selector = '.cd-ajax-form[data-action="car_dealer_contact"], .cd-ajax-form[data-action="car_dealer_booking"]';
+    const selector = [
+        '.cd-ajax-form[data-action="car_dealer_contact"]',
+        '.cd-ajax-form[data-action="car_dealer_booking"]',
+        '.cd-ajax-form[data-action="car_dealer_subscribe"]'
+    ].join(', ');
 
     function uuid() {
         if (!window.crypto || !window.crypto.getRandomValues) return '';
@@ -13,10 +19,7 @@
         return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join('-');
     }
 
-    // Capture runs before the theme's submit handler constructs FormData.
-    document.addEventListener('submit', function (event) {
-        const form = event.target;
-        if (!(form instanceof HTMLFormElement) || !form.matches(selector)) return;
+    function requestKey(form) {
         const payload = JSON.stringify(Array.from(new FormData(form)).filter(entry => !['idempotency_key', 'nonce'].includes(entry[0])));
         let request = requests.get(form);
         if (!request || request.payload !== payload) {
@@ -32,6 +35,55 @@
             form.appendChild(field);
         }
         field.value = request.key;
+    }
+
+    function status(form, message, success) {
+        const node = form.querySelector('.cd-form-status');
+        if (!node) return;
+        node.textContent = message;
+        node.setAttribute('role', success ? 'status' : 'alert');
+    }
+
+    function accountLink(form, url) {
+        if (!url) return;
+        const node = form.querySelector('.cd-form-status');
+        if (!node) return;
+        const link = document.createElement('a');
+        link.href = url;
+        link.textContent = ' ' + config.accountLabel + ' ←';
+        node.appendChild(link);
+    }
+
+    document.addEventListener('submit', function (event) {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || !form.matches(selector)) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (form.dataset.adcSubmitting === '1') return;
+
+        requestKey(form);
+        const data = new FormData(form);
+        data.append('action', form.dataset.action || '');
+        data.append('nonce', config.nonce || '');
+        form.dataset.adcSubmitting = '1';
+        form.querySelectorAll('[type="submit"]').forEach(button => { button.disabled = true; });
+        status(form, config.sendingLabel, true);
+
+        fetch(config.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
+            .then(response => response.json())
+            .then(result => {
+                const message = result.data && result.data.message ? result.data.message : config.unconfirmedLabel;
+                status(form, message, !!result.success);
+                if (!result.success) return;
+                accountLink(form, result.data && result.data.account_url ? result.data.account_url : '');
+                requests.delete(form);
+                form.reset();
+            })
+            .catch(() => status(form, config.errorLabel, false))
+            .finally(() => {
+                delete form.dataset.adcSubmitting;
+                form.querySelectorAll('[type="submit"]').forEach(button => { button.disabled = false; });
+            });
     }, true);
 
     document.addEventListener('reset', function (event) {

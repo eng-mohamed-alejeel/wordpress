@@ -9,13 +9,15 @@
 	</div>
 </section>
 <div class="container archive-content" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
-	<?php get_template_part( 'templates/components/filter-bar' ); ?>
+	<?php if ( ! function_exists( 'adc_public_vehicle_view' ) ) : ?>
+		<p class="empty-state" role="status"><?php esc_html_e( 'كتالوج السيارات غير متاح حاليًا. يرجى المحاولة لاحقًا.', 'car-dealer' ); ?></p>
+	<?php else : get_template_part( 'templates/components/filter-bar' ); ?>
 	<?php if ( have_posts() ) : ?>
 		<p class="catalog-result-count" role="status" aria-live="polite"><?php printf( esc_html( _n( 'سيارة واحدة مطابقة', '%s سيارة مطابقة', (int) $GLOBALS['wp_query']->found_posts, 'car-dealer' ) ), esc_html( number_format_i18n( (int) $GLOBALS['wp_query']->found_posts ) ) ); ?></p>
 		<div class="car-grid"><?php while ( have_posts() ) { the_post(); get_template_part( 'templates/components/car-card' ); } ?></div>
 		<div class="pagination"><?php the_posts_pagination( array( 'prev_text' => __( 'السابق', 'car-dealer' ), 'next_text' => __( 'التالي', 'car-dealer' ) ) ); ?></div>
 	<?php else : ?>
 		<p class="empty-state"><?php esc_html_e( 'لا توجد سيارات مطابقة للبحث.', 'car-dealer' ); ?></p>
-	<?php endif; ?>
+	<?php endif; endif; ?>
 </div>
 <?php get_footer(); ?>

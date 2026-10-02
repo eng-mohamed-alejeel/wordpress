@@ -10,6 +10,7 @@ const path = require('path');
 
 const cssDir = path.join(__dirname, 'assets', 'css');
 const outputFile = path.join(cssDir, 'main.min.css');
+const expandedFile = path.join(cssDir, 'main.css');
 
 // ترتيب الملفات للدمج
 const files = [
@@ -19,6 +20,7 @@ const files = [
   'components/_buttons.css',
   'components/_cards.css',
   'components/_forms.css',
+  'components/_icons.css',
   'components/_floating.css',
   'layout/_header.css',
   'layout/_footer.css',
@@ -26,7 +28,7 @@ const files = [
   'pages/_home.css',
   'pages/_cars.css',
   'pages/_account.css',
-  'pages/_admin.css',
+  'pages/_page.css',
   'themes/_auto-brands.css',
 ];
 
@@ -70,6 +72,7 @@ function minify(css) {
 const minified = minify(combined);
 
 // كتابة الملف
+fs.writeFileSync(expandedFile, combined, 'utf8');
 fs.writeFileSync(outputFile, minified, 'utf8');
 
 console.log('✅ تم إنشاء ملف main.min.css بنجاح');

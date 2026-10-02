@@ -1,4 +1,4 @@
-$cssDir = "C:\xampp\htdocs\wordpress\wp-content\themes\car-dealer\assets\css"
+$cssDir = Join-Path $PSScriptRoot 'assets/css'
 $files = @(
   "abstracts/_variables.css",
   "base/_reset.css",
@@ -14,7 +14,6 @@ $files = @(
   "pages/_home.css",
   "pages/_cars.css",
   "pages/_account.css",
-  "pages/_admin.css",
   "pages/_page.css",
   "themes/_auto-brands.css"
 )

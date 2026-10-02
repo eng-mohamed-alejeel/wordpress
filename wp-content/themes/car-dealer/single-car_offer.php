@@ -1,8 +1,15 @@
 <?php get_header(); ?>
-<?php while ( have_posts() ) : the_post(); $monthly = get_post_meta( get_the_ID(), '_offer_monthly_payment', true ); $new = get_post_meta( get_the_ID(), '_offer_new_price', true ); $old = get_post_meta( get_the_ID(), '_offer_old_price', true ); $car_id = absint( get_post_meta( get_the_ID(), '_offer_car_id', true ) ); ?>
+<?php while ( have_posts() ) : the_post();
+$offer = car_dealer_offer_view( get_the_ID(), is_preview() );
+if ( ! $offer ) { echo '<div class="container empty-state">' . esc_html__( 'بيانات العرض غير متاحة حاليًا.', 'car-dealer' ) . '</div>'; continue; }
+$monthly = $offer['monthly_payment'];
+$new = $offer['price'];
+$old = $offer['old_price'];
+$car_id = $offer['car_id'];
+?>
 <section class="ab-car-hero ab-offer-single">
 	<div class="container ab-car-hero-grid">
-		<div class="car-single-media"><?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large' ); } ?></div>
+		<div class="car-single-media"><?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large' ); } else { echo get_the_post_thumbnail( $car_id, 'large' ); } ?></div>
 		<div class="car-single-content">
 			<p class="eyebrow"><?php esc_html_e( 'عرض AUTO BRANDS', 'car-dealer' ); ?></p>
 			<h1><?php the_title(); ?></h1>
@@ -11,7 +18,7 @@
 			<?php if ( $monthly ) : ?><p class="car-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
 			<div class="car-single-actions">
 				<a class="btn btn-primary" href="#offer-lead"><?php esc_html_e( 'احصل على العرض', 'car-dealer' ); ?></a>
-				<a class="btn btn-chrome" href="<?php echo esc_url( car_dealer_whatsapp_url( 'أريد الاستفادة من عرض: ' . get_the_title() ) ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a>
+				<?php $wa_link = car_dealer_whatsapp_url( 'أريد الاستفادة من عرض: ' . get_the_title() ); if ( '#' !== $wa_link ) : ?><a class="btn btn-chrome" href="<?php echo esc_url( $wa_link ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a><?php endif; ?>
 			</div>
 		</div>
 	</div>

@@ -209,6 +209,22 @@ final class PublicCatalog {
 		return $options;
 	}
 
+	/** Presentation choices for both operational and editorial compatibility catalogs. */
+	public static function presentation_filter_options(): array {
+		if ( self::is_authoritative() ) {
+			return array( 'mode' => self::MODE_AUTHORITATIVE, 'options' => self::filter_options() );
+		}
+		$result = array( 'mode' => self::MODE_COMPATIBILITY, 'categories' => array(), 'brands' => array() );
+		foreach ( array( 'car_category' => 'categories', 'car_brand' => 'brands' ) as $taxonomy => $key ) {
+			$terms = get_terms( array( 'taxonomy' => $taxonomy, 'hide_empty' => true ) );
+			if ( is_wp_error( $terms ) ) { continue; }
+			foreach ( $terms as $term ) {
+				$result[ $key ][] = array( 'slug' => $term->slug, 'name' => $term->name );
+			}
+		}
+		return $result;
+	}
+
 	/** Administrative cutover counts; no customer or financial fields are returned. */
 	public static function readiness(): array {
 		$schema_ready = get_option( 'adc_db_version' ) === Schema::VERSION;

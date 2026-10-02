@@ -31,7 +31,7 @@ function car_dealer_theme_options() {
 }
 
 function car_dealer_register_settings_menu() {
-	add_submenu_page( 'car-dealer-dashboard', __( 'إعدادات المعرض', 'car-dealer' ), __( 'إعدادات المعرض', 'car-dealer' ), 'manage_options', 'car-dealer-settings', 'car_dealer_render_settings_page' );
+	add_theme_page( __( 'مظهر المعرض', 'car-dealer' ), __( 'مظهر المعرض', 'car-dealer' ), 'manage_options', 'car-dealer-settings', 'car_dealer_render_settings_page' );
 }
 add_action( 'admin_menu', 'car_dealer_register_settings_menu', 25 );
 
@@ -39,7 +39,7 @@ function car_dealer_render_settings_page() {
 	$options = car_dealer_theme_options();
 	?>
 	<div class="wrap cd-admin" dir="rtl">
-		<h1><?php esc_html_e( 'إعدادات المعرض', 'car-dealer' ); ?></h1>
+		<h1><?php esc_html_e( 'مظهر المعرض وبيانات التواصل', 'car-dealer' ); ?></h1>
 		<p class="cd-page-description">خصص هوية الموقع وبيانات التواصل التي تظهر لعملائك.</p>
 		<?php settings_errors(); ?>
 		<form method="post" action="options.php" class="cd-panel">

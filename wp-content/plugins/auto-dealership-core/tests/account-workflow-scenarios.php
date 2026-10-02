@@ -52,10 +52,10 @@ $state = RequestWorkflow::read( $appointment['id'] );
 adc_check( $error_is( RequestWorkflow::update( $appointment['id'], array( 'revision'=>$state['revision'], 'status'=>'confirmed' ) ), 'adc_request_vehicle' ), 'Vehicle mapped to another branch blocks appointment confirmation.' );
 $wpdb->update( $vehicles, array( 'public_post_id'=>null ), array( 'id'=>$crm_document_vehicle ) );
 
-// Use the actual account and compatibility adapters without loading the full theme in CLI.
+// Use the current account and staff adapters without loading the full theme in CLI.
 require_once ABSPATH . 'wp-content/themes/car-dealer/inc/accounts.php';
-require_once ABSPATH . 'wp-content/themes/car-dealer/inc/crm.php';
-require_once ABSPATH . 'wp-content/themes/car-dealer/inc/customer-workflow.php';
+require_once ABSPATH . 'docs/archive/car-dealer/inc/crm.php';
+require_once ABSPATH . 'docs/archive/car-dealer/inc/customer-workflow.php';
 $account_actor = $make_user( 'account_paging', 'subscriber', 0 );
 $account_user = get_userdata( $account_actor );
 wp_set_current_user( $account_actor );
@@ -64,10 +64,11 @@ for ( $i=0; $i<12; ++$i ) {
 	$result = $crm_submit( array_replace( $crm_input, array( 'name'=>$account_user->display_name, 'email'=>$account_user->user_email, 'message'=>'PAGING-' . $i, 'idempotency_key'=>wp_generate_uuid4() ) ) );
 	$paging_ids[] = $result['legacy_request_id'];
 }
-$first = car_dealer_account_requests( 'messages', 1 ); $second = car_dealer_account_requests( 'messages', 2 );
-adc_check( 11 === count( $first ) && 2 === count( $second ) && ! array_intersect( array_column( array_slice( $first, 0, 10 ), 'id' ), array_column( $second, 'id' ) ), 'Customer pagination returns ten owned rows plus sentinel without repeating rows on page two.' );
+$first = adc_customer_request_page( 'messages', 1 ); $second = adc_customer_request_page( 'messages', 2 );
+adc_check( ! is_wp_error( $first ) && ! is_wp_error( $second ) && 10 === count( $first['items'] ) && $first['has_more'] && 2 === count( $second['items'] ) && ! $second['has_more'] && ! array_intersect( array_column( $first['items'], 'id' ), array_column( $second['items'], 'id' ) ), 'Customer pagination returns ten owned rows, a next-page indicator, and two distinct rows on page two.' );
 wp_set_current_user( $sales_b );
-adc_check( array() === car_dealer_account_requests( 'messages' ), 'Matching branch staff do not inherit customer-account request ownership.' );
+$staff_account_page = adc_customer_request_page( 'messages' );
+adc_check( ! is_wp_error( $staff_account_page ) && array() === $staff_account_page['items'], 'Matching branch staff do not inherit customer-account request ownership.' );
 // Counts and rows must share the same branch/owner predicate.
 wp_set_current_user( $admin );
 $admin_user = wp_get_current_user(); $had_theme_cap = $admin_user->has_cap( 'manage_car_dealer' ); $admin_user->add_cap( 'manage_car_dealer' );
@@ -92,8 +93,8 @@ for ( $i=0; $i<23; ++$i ) {
 	wp_set_current_user( $admin ); LeadService::assign( $owned['id'], $sales_b ); wp_set_current_user( 0 );
 }
 wp_set_current_user( $sales_b );
-$_GET = array( 'paged'=>1 ); ob_start(); car_dealer_render_messages_page(); $page_one = ob_get_clean();
-$_GET = array( 'paged'=>2 ); ob_start(); car_dealer_render_messages_page(); $page_two = ob_get_clean(); $_GET = array();
-adc_check( 20 === substr_count( $page_one, 'STAFF-PAGE-' ) && 3 === substr_count( $page_two, 'STAFF-PAGE-' ) && str_contains( $page_one, 'page-numbers' ) && ! str_contains( $page_one . $page_two, 'PAGING-1<' ), 'Actual scoped staff renderer paginates twenty recent rows, exposes the next page and excludes unassigned account messages.' );
+$_GET = array( 'paged'=>1 ); ob_start(); \AutoDealership\Admin\EngagementPages::render_messages(); $page_one = ob_get_clean();
+$_GET = array( 'paged'=>2 ); ob_start(); \AutoDealership\Admin\EngagementPages::render_messages(); $page_two = ob_get_clean(); $_GET = array();
+adc_check( 20 === substr_count( $page_one, 'STAFF-PAGE-' ) && 3 === substr_count( $page_two, 'STAFF-PAGE-' ) && str_contains( $page_one, 'page-numbers' ) && ! str_contains( $page_one . $page_two, 'PAGING-1<' ), 'Plugin-owned scoped staff renderer paginates twenty recent rows, exposes the next page and excludes unassigned account messages.' );
 if ( ! $sales_had_cap ) { $sales_user->remove_cap( 'manage_car_dealer' ); }
 wp_set_current_user( $admin );

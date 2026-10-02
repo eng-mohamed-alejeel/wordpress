@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.29.4
+ * Version: 1.29.13
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,14 +10,21 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.29.4' );
+define( 'ADC_VERSION', '1.29.13' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
 require_once ADC_PATH . 'src/Core/Capabilities.php';
 require_once ADC_PATH . 'src/Core/ConfigurationService.php';
 require_once ADC_PATH . 'src/Accounts/CustomerAccount.php';
+require_once ADC_PATH . 'src/Accounts/CustomerRequestView.php';
 require_once ADC_PATH . 'src/Content/ContentRegistry.php';
+require_once ADC_PATH . 'src/Content/EditorialPageSetup.php';
+require_once ADC_PATH . 'src/Content/PublicShortcodes.php';
+require_once ADC_PATH . 'src/Content/PublicStructuredData.php';
+require_once ADC_PATH . 'src/Content/PublicOfferView.php';
+require_once ADC_PATH . 'src/Content/PublicVehicleView.php';
+require_once ADC_PATH . 'src/Content/HomePageView.php';
 require_once ADC_PATH . 'src/Audit/AuditLog.php';
 require_once ADC_PATH . 'src/Content/PostMetaStore.php';
 require_once ADC_PATH . 'src/Content/VehiclePostEditor.php';
@@ -50,6 +57,7 @@ require_once ADC_PATH . 'src/Inventory/VehicleIssueService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleReturnService.php';
 require_once ADC_PATH . 'src/Inventory/TransferService.php';
 require_once ADC_PATH . 'src/Inventory/PublicCatalog.php';
+require_once ADC_PATH . 'src/Inventory/CatalogPresentation.php';
 require_once ADC_PATH . 'src/Inventory/CatalogMappingService.php';
 require_once ADC_PATH . 'src/Reservations/ReservationService.php';
 require_once ADC_PATH . 'src/Branches/BranchService.php';
@@ -89,6 +97,8 @@ require_once ADC_PATH . 'src/Admin/AuditPage.php';
 require_once ADC_PATH . 'src/Admin/OutboxPage.php';
 require_once ADC_PATH . 'src/Admin/IntegrationPage.php';
 require_once ADC_PATH . 'src/Admin/SecurityPage.php';
+require_once ADC_PATH . 'src/Admin/WorkspacePage.php';
+require_once ADC_PATH . 'src/Admin/EditorialSetupPage.php';
 require_once ADC_PATH . 'src/Admin/OperationsPages.php';
 require_once ADC_PATH . 'src/Admin/RequestPage.php';
 require_once ADC_PATH . 'src/Admin/EngagementPages.php';
@@ -119,6 +129,10 @@ register_activation_hook( ADC_FILE, array( 'AutoDealership\\Content\\ContentRegi
 register_activation_hook( ADC_FILE, array( 'AutoDealership\\Leads\\LegacyEngagementStore', 'install' ) );
 
 \AutoDealership\Content\ContentRegistry::boot();
+\AutoDealership\Content\PublicShortcodes::boot();
+\AutoDealership\Content\PublicOfferView::boot();
+\AutoDealership\Inventory\CatalogPresentation::boot();
+\AutoDealership\Content\PublicStructuredData::boot();
 \AutoDealership\Content\VehiclePostEditor::boot();
 \AutoDealership\Content\OfferPostEditor::boot();
 
@@ -138,9 +152,114 @@ if ( ! function_exists( 'adc_core_owns_offer_post_editor' ) ) {
 		return \AutoDealership\Content\OfferPostEditor::owns_theme_editor();
 	}
 }
+if ( ! function_exists( 'adc_core_owns_public_shortcodes' ) ) {
+	function adc_core_owns_public_shortcodes(): bool {
+		return \AutoDealership\Content\PublicShortcodes::owns_theme_registration();
+	}
+}
+if ( ! function_exists( 'adc_catalog_language' ) ) {
+	function adc_catalog_language(): string {
+		return \AutoDealership\Inventory\CatalogPresentation::language();
+	}
+}
+if ( ! function_exists( 'adc_catalog_is_request' ) ) {
+	function adc_catalog_is_request(): bool {
+		return \AutoDealership\Inventory\CatalogPresentation::is_catalog_request();
+	}
+}
+if ( ! function_exists( 'adc_core_owns_catalog_presentation' ) ) {
+	function adc_core_owns_catalog_presentation(): bool {
+		return \AutoDealership\Inventory\CatalogPresentation::enabled();
+	}
+}
+if ( ! function_exists( 'adc_core_owns_structured_data' ) ) {
+	function adc_core_owns_structured_data(): bool {
+		return \AutoDealership\Content\PublicStructuredData::enabled();
+	}
+}
+if ( ! function_exists( 'adc_core_owns_public_offer_view' ) ) {
+	function adc_core_owns_public_offer_view(): bool {
+		return \AutoDealership\Content\PublicOfferView::enabled();
+	}
+}
+if ( ! function_exists( 'adc_public_offer_view' ) ) {
+	function adc_public_offer_view( int $post_id ): ?array {
+		return \AutoDealership\Content\PublicOfferView::enabled() ? \AutoDealership\Content\PublicOfferView::for_post( $post_id ) : null;
+	}
+}
+if ( ! function_exists( 'adc_public_offer_preview' ) ) {
+	function adc_public_offer_preview( int $post_id ): ?array {
+		return \AutoDealership\Content\PublicOfferView::enabled() ? \AutoDealership\Content\PublicOfferView::for_preview( $post_id ) : null;
+	}
+}
+if ( ! function_exists( 'adc_public_vehicle_view' ) ) {
+	function adc_public_vehicle_view( int $post_id, bool $preview = false ): ?array {
+		return \AutoDealership\Content\PublicVehicleView::for_post( $post_id, $preview );
+	}
+}
+if ( ! function_exists( 'adc_home_page_view' ) ) {
+	function adc_home_page_view(): array {
+		return \AutoDealership\Content\HomePageView::view();
+	}
+}
+if ( ! function_exists( 'adc_core_owns_customer_request_view' ) ) {
+	function adc_core_owns_customer_request_view(): bool {
+		return \AutoDealership\Accounts\CustomerRequestView::enabled();
+	}
+}
+if ( ! function_exists( 'adc_customer_request_page' ) ) {
+	function adc_customer_request_page( string $type, int $page = 1 ) {
+		return \AutoDealership\Accounts\CustomerRequestView::page( $type, $page );
+	}
+}
+if ( ! function_exists( 'adc_catalog_localized_url' ) ) {
+	function adc_catalog_localized_url( string $url, string $language = '' ): string {
+		return \AutoDealership\Inventory\CatalogPresentation::localized_url( $url, $language );
+	}
+}
+if ( ! function_exists( 'adc_catalog_language_url' ) ) {
+	function adc_catalog_language_url( string $language ): string {
+		return \AutoDealership\Inventory\CatalogPresentation::language_url( $language );
+	}
+}
+if ( ! function_exists( 'adc_catalog_filter_options' ) ) {
+	function adc_catalog_filter_options(): array {
+		return \AutoDealership\Inventory\PublicCatalog::presentation_filter_options();
+	}
+}
 if ( ! function_exists( 'adc_core_owns_customer_account_actions' ) ) {
 	function adc_core_owns_customer_account_actions(): bool {
 		return \AutoDealership\Accounts\CustomerAccount::owns_theme_actions();
+	}
+}
+if ( ! function_exists( 'adc_customer_account_kind' ) ) {
+	function adc_customer_account_kind( \WP_User $user ): string {
+		return \AutoDealership\Accounts\CustomerAccount::kind( $user );
+	}
+}
+if ( ! function_exists( 'adc_customer_account_should_redirect_admin' ) ) {
+	function adc_customer_account_should_redirect_admin( \WP_User $user ): bool {
+		return \AutoDealership\Accounts\CustomerAccount::should_redirect_admin( $user );
+	}
+}
+if ( ! function_exists( 'adc_customer_account_process' ) ) {
+	function adc_customer_account_process( string $view ): string {
+		return \AutoDealership\Accounts\CustomerAccount::process_request( $view );
+	}
+}
+if ( ! function_exists( 'adc_customer_workspace_targets' ) ) {
+	function adc_customer_workspace_targets( \WP_User $user ): array {
+		return \AutoDealership\Accounts\CustomerAccount::workspace_targets( $user );
+	}
+}
+if ( ! function_exists( 'adc_customer_current_preferences' ) ) {
+	function adc_customer_current_preferences() {
+		return \AutoDealership\Leads\CustomerIdentity::current_preferences();
+	}
+}
+if ( ! function_exists( 'adc_public_comparison_ids' ) ) {
+	function adc_public_comparison_ids(): array {
+		return \AutoDealership\Tools\VehicleComparison::current();
 	}
 }
 if ( ! function_exists( 'adc_core_owns_legacy_crm_workflow' ) ) {
@@ -212,6 +331,8 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AuditPage', 'boot' 
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OutboxPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\IntegrationPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SecurityPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\WorkspacePage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\EditorialSetupPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OperationsPages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\RequestPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\EngagementPages', 'boot' ) );
