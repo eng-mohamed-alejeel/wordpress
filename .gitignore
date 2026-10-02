@@ -1,0 +1,3 @@
+# Local WordPress credentials and generated recovery material.
+/wp-config.php
+/.tmp/
