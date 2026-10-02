@@ -2,7 +2,15 @@
 
 Updated: 2026-10-02. This records completed increments, not completion of whole phases.
 
+The user authorized realistic demonstration data in the local `wp-autobrands` database on 2026-10-02, superseding the earlier empty-business-database preference for development. The 1.28-focused acceptance now passes 687 isolated checks; the repeatable local seed created 12 synthetic vehicles, 6 customer/lead pairs and representative workflows. Existing editorial pages were preserved. See `VERIFICATION-1.28.0.md` and `DEVELOPMENT-DATA-2026-10-02.md`.
+
+A populated local rollback rehearsal now passes for one representative transaction: the matching `b2fd4fe` prior pair read the synthetic sale/finance/payment/delivery data and wrote a quote/reservation/sale plus a rejected no-funds payment on a disposable database; the current pair read the resulting chain after switching back. The source's 45 table fingerprints were unchanged during that rehearsal. See `POPULATED-ROLLBACK-2026-10-02.md`. The separate-instance restore completed later is recorded below; legal/public deployment remains open.
+
+A separate local MariaDB process and data directory now passed a populated restore and restart rehearsal: 45/45 table fingerprints matched before application bootstrap, 666/666 restored files matched, the copied plugin/theme read the business and public catalog records, both referenced media files resolved, and 45/45 target fingerprints survived restart. The source's 44 non-option tables stayed unchanged; three `wp_options` values changed concurrently during the exercise. See `INDEPENDENT-RESTORE-2026-10-02.md`. Off-site recovery and public deployment remain open.
+
 ## Current increment: 1.29.13 (deployable theme cleanup; acceptance partial)
+
+- After the earlier empty-site rollback/source cutover evidence, the source database was deliberately seeded for development. Eight mapped vehicles are publicly eligible, two labeled example offers are eligible, all 12 car posts have brand/category terms, source schema/mapping checks pass and local home/car/offer/v1/v2 routes return HTTP 200. A second simulated sale has an explicitly labeled no-funds payment and a delivery only in `preparing` state. The later copied-data transactional rollback rehearsal is documented above; public deployment remains open.
 
 - A post-upgrade source snapshot was restored into a disposable database and inspected with the current pair and commit `b2fd4fe` prior pair. Both retained schema `1.17.0`, 108 dealership REST routes, privacy hooks and core administrator capabilities; 12 shared administration screens rendered for each. The source's 45 table fingerprints were unchanged. This closes the empty-site read-only administration rollback smoke; populated transactional downgrade and public deployment remain. See `ROLLBACK-OPERATIONS-2026-10-02.md`.
 - On 2026-10-02, the guarded local source upgrade applied the rehearsed nullable-margin repair and content-registry rewrite refresh after a logical/file snapshot. Schema `1.17.0` has no issues; `/offers/` and six other local Apache routes return 200, with 14 local assets available. Only `wp_options` changed checksum across 45 tables and no row count changed. Legal publication, public deployment and populated transactional downgrade remain. See `SOURCE-CUTOVER-2026-10-02.md`.
@@ -15,14 +23,14 @@ Updated: 2026-10-02. This records completed increments, not completion of whole 
 - Appearance contact details and social links render only when configured. Fixed page IDs, broken relative links, false contact/map details, invented home-page figures and unsupported service guarantees were removed. Manually entered team identities remain intact, while their empty contact links were removed. Empty inventory sections and unavailable archive links do not render. Public CSS was rebuilt without the dormant admin module.
 - The deployment rollback unit is a matching earlier theme and plugin release. No source or business database was seeded. The stock-theme switch and actual published-page/public prior-pair smoke passed on isolated staging. Legal publication and full operational downgrade remain pending.
 
-## Previous increment: 1.28.0 (implementation complete; verification pending)
+## Previous increment: 1.28.0 (implementation and focused acceptance complete)
 
 - Added schema 1.17.0 with the supplier directory, missing vehicle specification/acquisition fields and ordered finance-attempt history. The upgrade is additive and no source business data was created.
 - Added capability-restricted supplier and vehicle-acquisition services/admin pages. Costs, supplier contacts, customs references, documents and internal notes never enter the public catalog response.
 - Added four least-privilege dealership roles and dedicated supplier/cost capabilities while retaining the existing service-level branch and separation-of-duties checks.
 - Added finance retry lineage and optional commercial terms without inventing provider credentials or mandatory field rules that have not been approved.
 - Added account/login/role/capability audit hooks, `X-Request-ID`, an enveloped `v2` REST contract and an authenticated generated OpenAPI 3.1 description. Compatibility `v1` remains available.
-- Purchase-order workflow, total-cost formula, cost-visibility sign-off, mandatory finance terms and document-retention policy remain explicit business decisions. Automated and database acceptance for 1.28.0 has not been run in this increment.
+- Purchase-order workflow, total-cost formula, cost-visibility sign-off, mandatory finance terms and document-retention policy remain explicit business decisions. Focused 1.28 acceptance passed on the current 1.29.13 code with 687 isolated database/HTTP checks; see `VERIFICATION-1.28.0.md`.
 
 ## Previous increment: 1.29.12 (account decisions and public fallback isolation; verification pending)
 

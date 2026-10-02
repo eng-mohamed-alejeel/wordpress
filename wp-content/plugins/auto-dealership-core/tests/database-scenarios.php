@@ -573,6 +573,7 @@ require __DIR__ . '/increment-1.24.php';
 require __DIR__ . '/increment-1.25.php';
 require __DIR__ . '/increment-1.26.php';
 require __DIR__ . '/increment-1.27.php';
+require __DIR__ . '/increment-1.28.php';
 require __DIR__ . '/increment-crm.php';
 require __DIR__ . '/account-workflow-scenarios.php';
 require __DIR__ . '/customer-preferences-scenarios.php';

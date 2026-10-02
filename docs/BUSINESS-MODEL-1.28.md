@@ -58,4 +58,4 @@ REST v1 remains compatible. REST v2 wraps every response and supplies a request 
 
 ## Verification state
 
-Implementation is present in plugin 1.28.0 and schema 1.17.0. No migration was applied to the intentionally empty source database, no business data was inserted, and automated acceptance for this increment is pending.
+Implementation began in plugin 1.28.0 and schema 1.17.0. On 2026-10-02, focused acceptance passed against the current plugin 1.29.13: the full isolated suite completed 687 database/HTTP checks, including the supplier, acquisition, finance, role, audit and v2/OpenAPI boundaries. The source schema upgrade had already been applied. The user then authorized labeled synthetic development data in the local source database; see `VERIFICATION-1.28.0.md` and `DEVELOPMENT-DATA-2026-10-02.md`. The business decisions above remain open.

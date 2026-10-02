@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-02 — Populated independent-instance restore
+
+- Restored the current synthetic development snapshot and 666 files into a separate local MariaDB process/data directory. All 45 table fingerprints and file hashes matched before WordPress boot; copied plugin/theme business, catalog, route and media reads passed. A graceful server restart preserved all 45 target table fingerprints. Added a guarded read-only application inspection helper and documented the concurrent `wp_options` change on the source in `INDEPENDENT-RESTORE-2026-10-02.md`.
+
+## 2026-10-02 — Populated rollback rehearsal
+
+- Restored a fresh 45-table snapshot of the user-authorized synthetic development database into a disposable local database. The matching prior plugin/theme pair read existing sale, finance, payment and delivery states, created a clone-only quote/reservation/sale, verified idempotent reservation/payment retries, and rejected the new no-funds payment. The current pair read the resulting chain after switching back. All source table counts and checksums stayed unchanged. Added guarded CLI workers and recorded scope/limits in `POPULATED-ROLLBACK-2026-10-02.md`.
+
+## 2026-10-02 — 1.28 acceptance and local development data
+
+- Added 30 focused isolated checks for suppliers, restricted acquisition data, finance-attempt history, roles/security audit and v1/v2/OpenAPI compatibility. Full database/HTTP suite passed 687 checks. The late-loaded isolated runner now boots the response contract, OpenAPI and security audit hooks explicitly. See `VERIFICATION-1.28.0.md`.
+- With the user's new authorization, backed up and populated the local `wp-autobrands` development database using a guarded repeatable seed: three branches, five brands, three suppliers, twelve synthetic vehicles and mapped car posts, six leads/customers, two labeled offers, a pending sale with two finance attempts, and a second simulated sale with one no-funds payment and a delivery only in preparation. Repeated seed runs preserve counts. See `DEVELOPMENT-DATA-2026-10-02.md`.
+
 ## 1.29.13 — Deployable theme cleanup
 
 - Same-commit prior-pair rollback smoke on a fresh post-upgrade clone: plugin `1.29.4` and theme `1.0` kept schema `1.17.0`, 108 dealership REST routes, privacy hooks and administrator capabilities. Twelve common administration screens rendered on both pairs, and the current pair's three newer screens rendered after switching back. The source's 45 table fingerprints stayed unchanged. Populated transactional downgrade remains a separate gate; see `ROLLBACK-OPERATIONS-2026-10-02.md`.

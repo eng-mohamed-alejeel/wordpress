@@ -9,3 +9,7 @@ Restore procedure: isolate the target; restore database and files from the same 
 After the user's manual repairs, MariaDB was verified running normally. A logical copy of all 40 site tables was restored to an independent server; all row counts/checksums matched. All 576 files in the recovered archive matched source SHA-256 values. Artifacts are retained under `C:\Users\cv\Documents\DealershipBackups\2026-09-27-f105a275`.
 
 See `RESTORE-REHEARSAL-2026-09-27.md` for scope, evidence and reproduction. The user confirmed the empty business dataset is intentional; historical recovery/import is not required for this new deployment. This rehearsal does not replace an encrypted off-site backup or a complete production/browser release exercise.
+
+## 2026-10-02 populated independent-instance rehearsal
+
+After the user authorized synthetic development data, a fresh 45-table snapshot and 666 files were restored to a separate local MariaDB process and content directory. Counts/checksums and file hashes matched before application boot; business, public catalog, routes and referenced media read correctly, and all target table fingerprints survived a server restart. Source non-option tables remained unchanged; three live `wp_options` values changed during the exercise. See `INDEPENDENT-RESTORE-2026-10-02.md` for evidence and limits. This local process-isolated rehearsal does not replace encrypted off-site recovery or a separate-host drill.
