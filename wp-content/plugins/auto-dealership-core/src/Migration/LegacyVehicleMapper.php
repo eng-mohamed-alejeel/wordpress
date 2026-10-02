@@ -44,6 +44,12 @@ final class LegacyVehicleMapper {
 		$specs = array();
 		foreach ( VehicleSpecifications::fields() as $field ) {
 			$value = $meta( 'exterior_color' === $field ? '_car_color' : '_car_' . $field );
+			if ( 'gallery_media_ids' === $field ) {
+				if ( '' === $value ) { $value = array(); }
+				if ( ! is_array( $value ) ) { return new \WP_Error( 'invalid_specifications' ); }
+				$specs[$field] = $value;
+				continue;
+			}
 			if ( ! is_string( $value ) && ! is_int( $value ) ) { return new \WP_Error( 'invalid_specifications' ); }
 			$specs[$field] = $value;
 		}

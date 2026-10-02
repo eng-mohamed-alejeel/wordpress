@@ -68,24 +68,28 @@ final class PublicCatalog {
 
 	/** Applies central availability to every car query and full filters to opted-in queries. */
 	public static function filter_car_queries( array $clauses, \WP_Query $query ): array {
-		if ( is_admin() || $query->is_preview() || ! self::is_car_query( $query ) || get_option( 'adc_db_version' ) !== Schema::VERSION ) {
+		if ( is_admin() || $query->is_preview() || ! self::is_car_query( $query ) ) {
 			return $clauses;
 		}
 
 		global $wpdb;
+		$posts = $wpdb->posts;
+		$legacy_status = "COALESCE((SELECT adc_inventory_meta.meta_value FROM {$wpdb->postmeta} adc_inventory_meta WHERE adc_inventory_meta.post_id = $posts.ID AND adc_inventory_meta.meta_key = '_car_inventory_status' ORDER BY adc_inventory_meta.meta_id ASC LIMIT 1), '') IN ('', 'available')";
+		if ( get_option( 'adc_db_version' ) !== Schema::VERSION ) {
+			$clauses['where'] .= " AND $legacy_status";
+			return $clauses;
+		}
 		$vehicles = Schema::table( 'vehicles' );
 		$branches = Schema::table( 'branches' );
-		$posts = $wpdb->posts;
 		$authoritative = self::is_authoritative();
 
 		if ( ! $authoritative ) {
-			$clauses['where'] .= " AND NOT EXISTS (
-				SELECT 1 FROM $vehicles adc_vehicle
-				WHERE adc_vehicle.public_post_id = $posts.ID
-				AND ( adc_vehicle.status <> 'available' OR NOT EXISTS (
-					SELECT 1 FROM $branches adc_branch
-					WHERE adc_branch.id = adc_vehicle.branch_id AND adc_branch.active = 1
-				) )
+			$clauses['where'] .= " AND (
+				EXISTS (SELECT 1 FROM $vehicles adc_vehicle
+					INNER JOIN $branches adc_branch ON adc_branch.id=adc_vehicle.branch_id AND adc_branch.active=1
+					WHERE adc_vehicle.public_post_id=$posts.ID AND adc_vehicle.status='available'
+					AND NOT EXISTS (SELECT 1 FROM $vehicles adc_duplicate WHERE adc_duplicate.public_post_id=adc_vehicle.public_post_id AND adc_duplicate.id<>adc_vehicle.id))
+				OR (NOT EXISTS (SELECT 1 FROM $vehicles adc_mapping WHERE adc_mapping.public_post_id=$posts.ID) AND $legacy_status)
 			)";
 			return $clauses;
 		}
@@ -133,7 +137,7 @@ final class PublicCatalog {
 			return false;
 		}
 		if ( get_option( 'adc_db_version' ) !== Schema::VERSION ) {
-			return ! self::is_authoritative();
+			return in_array( get_post_meta( $post_id, '_car_inventory_status', true ), array( '', 'available' ), true );
 		}
 		if ( self::vehicle_for_post( $post_id ) ) {
 			return true;
@@ -144,7 +148,8 @@ final class PublicCatalog {
 
 		global $wpdb;
 		$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . Schema::table( 'vehicles' ) . ' WHERE public_post_id=%d', $post_id ) );
-		return ! $wpdb->last_error && 0 === (int) $count;
+		return ! $wpdb->last_error && 0 === (int) $count
+			&& in_array( get_post_meta( $post_id, '_car_inventory_status', true ), array( '', 'available' ), true );
 	}
 
 	/** Public REST/read-model list. Monetary filters use stored minor units. */

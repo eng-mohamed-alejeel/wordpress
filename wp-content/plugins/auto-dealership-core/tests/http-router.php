@@ -6,6 +6,14 @@ if ( ! is_array( $config ) || ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', $co
 $theme_test = '1' === getenv( 'ADC_THEME_TEST' );
 if ( $theme_test ) {
 	$asset = (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH );
+	if ( 'twentytwentyfive' === getenv( 'ADC_THEME_SLUG' ) && preg_match( '#\A/wp-content/themes/twentytwentyfive/(.+\.(?:css|js|svg|png|jpg|jpeg|webp|woff2?))\z#i', $asset, $match ) ) {
+		$theme_root = realpath( __DIR__ . '/isolated-content/themes/twentytwentyfive' );
+		$file = realpath( __DIR__ . '/isolated-content/themes/twentytwentyfive/' . $match[1] );
+		if ( ! $theme_root || ! $file || ! str_starts_with( $file, $theme_root . DIRECTORY_SEPARATOR ) || ! is_file( $file ) ) { http_response_code( 404 ); exit; }
+		$extension = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+		$types = array( 'css'=>'text/css', 'js'=>'text/javascript', 'svg'=>'image/svg+xml', 'png'=>'image/png', 'jpg'=>'image/jpeg', 'jpeg'=>'image/jpeg', 'webp'=>'image/webp', 'woff'=>'font/woff', 'woff2'=>'font/woff2' );
+		header( 'Content-Type: ' . $types[$extension] ); readfile( $file ); exit;
+	}
 	if ( preg_match( '#\A/(?:wp-content/(?:themes/car-dealer|plugins/auto-dealership-core/assets)/|wp-includes/).+\.(?:css|js|svg|png|jpg|jpeg|webp|woff2?)\z#i', $asset ) ) {
 		$root = realpath( dirname( __DIR__, 4 ) ); $file = realpath( $root . $asset );
 		if ( $file && str_starts_with( $file, $root . DIRECTORY_SEPARATOR ) && is_file( $file ) ) { return false; }
@@ -59,6 +67,45 @@ if ( '/adc-test-session' === (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', 
 	exit;
 }
 $request_path = (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH );
+if ( $theme_test && '/adc-test-inventory' === $request_path ) {
+	if ( ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true ) || ! hash_equals( $session_key, (string) ( $_GET['key'] ?? '' ) ) ) { http_response_code( 403 ); exit; }
+	global $wpdb, $shortcode_tags, $wp_filter;
+	$routes = array_keys( rest_get_server()->get_routes() );
+	$shortcodes = array();
+	foreach ( $shortcode_tags as $tag => $callback ) {
+		if ( ! str_starts_with( $tag, 'car_dealer_' ) && ! str_starts_with( $tag, 'ab_' ) ) { continue; }
+		$shortcodes[$tag] = is_array( $callback ) && is_string( $callback[0] ) ? $callback[0] . '::' . $callback[1] : ( is_array( $callback ) && is_object( $callback[0] ) ? get_class( $callback[0] ) . '::' . $callback[1] : 'other' );
+	}
+	$admin_hooks = 0;
+	foreach ( $wp_filter['admin_menu']->callbacks ?? array() as $group ) {
+		foreach ( $group as $item ) {
+			$callback = $item['function'] ?? null;
+			if ( is_array( $callback ) && is_string( $callback[0] ) && str_starts_with( $callback[0], 'AutoDealership\\Admin\\' ) ) { ++$admin_hooks; }
+		}
+	}
+	$counts = array();
+	foreach ( array( 'vehicles', 'customers', 'leads', 'sales' ) as $name ) { $counts[$name] = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \AutoDealership\Database\Schema::table( $name ) ); }
+	$counts['editorial'] = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type IN ('car','car_offer')" );
+	$data = array(
+		'theme' => wp_get_theme()->get_stylesheet(),
+		'plugin' => defined( 'ADC_VERSION' ) ? ADC_VERSION : '',
+		'post_types' => array_map( 'post_type_exists', array( 'car', 'car_offer', 'cd_crm' ) ),
+		'taxonomies' => array_map( 'taxonomy_exists', array( 'car_brand', 'car_category' ) ),
+		'shortcodes' => $shortcodes,
+		'rest_routes' => array_values( array_filter( $routes, static fn( $route ) => str_starts_with( $route, '/auto-dealership/' ) ) ),
+		'privacy_exporter' => false !== has_filter( 'wp_privacy_personal_data_exporters', array( \AutoDealership\Privacy\PrivacyTools::class, 'register_exporter' ) ),
+		'privacy_eraser' => false !== has_filter( 'wp_privacy_personal_data_erasers', array( \AutoDealership\Privacy\PrivacyTools::class, 'register_eraser' ) ),
+		'ajax_contact_handlers' => isset( $wp_filter['wp_ajax_car_dealer_contact'] ) ? count( $wp_filter['wp_ajax_car_dealer_contact']->callbacks[10] ?? array() ) : 0,
+		'ajax_booking_handlers' => isset( $wp_filter['wp_ajax_car_dealer_booking'] ) ? count( $wp_filter['wp_ajax_car_dealer_booking']->callbacks[10] ?? array() ) : 0,
+		'anonymous_contact_handlers' => isset( $wp_filter['wp_ajax_nopriv_car_dealer_contact'] ) ? count( $wp_filter['wp_ajax_nopriv_car_dealer_contact']->callbacks[10] ?? array() ) : 0,
+		'anonymous_booking_handlers' => isset( $wp_filter['wp_ajax_nopriv_car_dealer_booking'] ) ? count( $wp_filter['wp_ajax_nopriv_car_dealer_booking']->callbacks[10] ?? array() ) : 0,
+		'admin_menu_hooks' => $admin_hooks,
+		'cron' => array_map( static fn( $hook ) => (bool) wp_next_scheduled( $hook ), array( 'adc_expire_reservations', 'adc_privacy_retention', 'adc_process_outbox', 'adc_prune_request_limits' ) ),
+		'administrator_workspace' => (bool) get_role( 'administrator' )?->has_cap( 'adc_view_workspace' ),
+		'counts' => $counts,
+	);
+	header( 'Content-Type: application/json' ); echo wp_json_encode( $data ); exit;
+}
 if ( $theme_test && '/adc-test-review' === $request_path ) {
 	if ( ! current_user_can( 'manage_options' ) ) { http_response_code( 403 ); exit; }
 	get_header();
@@ -81,7 +128,6 @@ if ( '/wp-admin/admin-post.php' === $request_path ) {
 	exit;
 }
 if ( '/wp-admin/admin-ajax.php' === $request_path ) {
-	require_once ABSPATH . 'wp-content/themes/car-dealer/inc/contact-form-manager.php';
 	$action = sanitize_key( $_REQUEST['action'] ?? '' );
 	if ( ! in_array( $action, array( 'car_dealer_contact', 'car_dealer_booking' ), true ) ) { http_response_code( 400 ); exit; }
 	do_action( ( is_user_logged_in() ? 'wp_ajax_' : 'wp_ajax_nopriv_' ) . $action );

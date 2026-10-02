@@ -78,7 +78,8 @@ $invalid_migration_car = wp_insert_post( array( 'post_type' => 'car', 'post_stat
 $migration_offer = wp_insert_post( array( 'post_type' => 'car_offer', 'post_status' => 'publish', 'post_title' => 'Linked migration offer' ) ); update_post_meta( $migration_offer, '_car_id', $migration_car );
 $orphan_offer = wp_insert_post( array( 'post_type' => 'car_offer', 'post_status' => 'publish', 'post_title' => 'Orphan migration offer' ) ); update_post_meta( $orphan_offer, '_car_id', 99999999 );
 $migration_report = MigrationInventory::report();
-adc_check( 2 === $migration_report['vehicles']['source_total'] && 1 === $migration_report['vehicles']['eligible_unmapped'] && 1 === $migration_report['vehicles']['invalid_identity'], 'Migration inventory classifies eligible and invalid legacy vehicles without writing target rows.' );
+$migration_map_result = \AutoDealership\Migration\LegacyVehicleMapper::map( $migration_car );
+adc_check( 2 === $migration_report['vehicles']['source_total'] && 1 === $migration_report['vehicles']['eligible_unmapped'] && 1 === $migration_report['vehicles']['invalid_identity'], 'Migration inventory classifies eligible and invalid legacy vehicles without writing target rows: ' . wp_json_encode( $migration_report['vehicles'] ) . ', source=' . ( is_wp_error( $migration_map_result ) ? $migration_map_result->get_error_code() : 'valid' ) );
 adc_check( 2 === $migration_report['offers']['source_total'] && 1 === $migration_report['offers']['linked_to_vehicle'] && 1 === $migration_report['offers']['unlinked_or_orphaned'], 'Migration inventory identifies linked and orphaned legacy offers.' );
 adc_check( 0 === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'vehicles' ) ), 'Migration inventory is read-only for operational inventory.' );
 $invalid_report = MigrationInventory::report( 99999999 );

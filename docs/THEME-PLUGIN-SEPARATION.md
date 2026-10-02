@@ -167,4 +167,4 @@ The implemented **1.29-B content registry and compatibility bridge** follows the
 4. Guard and then remove theme registration only after the plugin path is present.
 5. Record rewrite migration version in the plugin without creating content or flushing on normal requests.
 
-The 1.29-E ownership work runs through 1.29.13. The deployable theme now contains presentation and appearance code; its former business sources are in `docs/archive/car-dealer`. The 1.29-F acceptance still needs a theme-switch journey, hook/URL review and a matching-release rollback rehearsal. Source placement alone is not runtime acceptance.
+The 1.29-E ownership work runs through 1.29.13. The deployable theme now contains presentation and appearance code; its former business sources are in `docs/archive/car-dealer`. The 1.29-F acceptance sequence and evidence requirements are recorded in `THEME-CUTOVER-ACCEPTANCE.md`; the theme-switch journey, hook/URL review and matching-release rollback rehearsal remain pending. Source placement alone is not runtime acceptance.

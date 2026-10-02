@@ -607,6 +607,17 @@ final class Schema {
 			foreach ( self::definitions() as $sql ) {
 				dbDelta( $sql );
 			}
+			// dbDelta can leave an existing signed BIGINT column NOT NULL when
+			// its declaration changes to nullable. Repair only that known legacy
+			// shape; NULL distinguishes an unknown historical margin from zero.
+			$table = self::table( 'discount_requests' );
+			$columns = array_column( $wpdb->get_results( "SHOW FULL COLUMNS FROM `$table`", ARRAY_A ) ?: array(), null, 'Field' );
+			foreach ( array( 'margin_before', 'margin_after' ) as $column ) {
+				$actual = $columns[ $column ] ?? null;
+				if ( $actual && 'NO' === $actual['Null'] && preg_match( '/\Abigint(?:\(\d+\))?\z/i', $actual['Type'] ) ) {
+					$wpdb->query( "ALTER TABLE `$table` MODIFY COLUMN `$column` bigint(20) NULL" );
+				}
+			}
 			$issues = self::verify();
 			if ( ! $issues && ! \AutoDealership\Pricing\QuoteHistory::backfill() ) {
 				$issues[] = 'quotation_versions:backfill_failed';

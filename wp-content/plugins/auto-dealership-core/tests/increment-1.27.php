@@ -97,7 +97,7 @@ try {
 	wp_set_current_user( $admin );
 	$summary = PublicRequestGuard::summary();
 	ob_start(); SecurityPage::render(); $security_html = ob_get_clean();
-	adc_check( is_array( $summary ) && 2 === count( $summary['policies'] ) && str_contains( $security_html, 'GET /vehicles' ) && ! str_contains( $security_html, '203.0.113.177' ) && ! str_contains( $security_html, $expired_key ), 'The restricted security page shows the public inventory and aggregate policy state without addresses or bucket fingerprints.' );
+	adc_check( is_array( $summary ) && array_keys( PublicRequestGuard::POLICIES ) === array_keys( $summary['policies'] ) && str_contains( $security_html, 'GET /vehicles' ) && ! str_contains( $security_html, '203.0.113.177' ) && ! str_contains( $security_html, $expired_key ), 'The restricted security page shows the public inventory and all configured aggregate policies without addresses or bucket fingerprints.' );
 	adc_check( has_action( 'adc_prune_request_limits', array( PublicRequestGuard::class, 'prune' ) ) !== false, 'The bounded request-limit cleanup handler is registered for scheduled execution.' );
 
 	// Independent connections must receive exact atomic attempt numbers.

@@ -4,6 +4,7 @@ if ( PHP_SAPI !== 'cli' || ! defined( 'DB_NAME' ) || ! preg_match( '/\Aadc_verif
 use AutoDealership\Leads\CustomerIdentity;
 use AutoDealership\Leads\RequestWorkflow;
 use AutoDealership\Leads\LeadService;
+use AutoDealership\Leads\EngagementQuery;
 use AutoDealership\Database\Schema;
 
 // Mixed operation races must never leave a financial document on a merged tombstone.
@@ -32,7 +33,7 @@ foreach ( array( false,true ) as $reverse ) {
 	$crm_clear_rate();
 	$race = $crm_parallel( 'crm_intake', $mixed_account, $reverse ? array( $erase,$new ) : array( $new,$erase ) );
 	$erasure = $race[$reverse ? 0 : 1]; $intake = $race[$reverse ? 1 : 0];
-	adc_check( ! empty( $erasure['done'] ) && isset( $intake['id'] ), 'Concurrent account intake and privacy erasure complete under worker order ' . (int) $reverse . '.' );
+	adc_check( ! empty( $erasure['done'] ) && isset( $intake['id'] ), 'Concurrent account intake and privacy erasure complete under worker order ' . (int) $reverse . ': ' . wp_json_encode( array( 'erasure_done' => ! empty( $erasure['done'] ), 'erasure_error' => $erasure['error'] ?? '', 'intake_has_id' => isset( $intake['id'] ), 'intake_error' => $intake['error'] ?? '' ) ) );
 	adc_check( 'Erased customer' === $wpdb->get_var( "SELECT full_name FROM $customers WHERE id=$old_id" ) && null === $wpdb->get_var( $wpdb->prepare( "SELECT public_payload_hash FROM $crm_leads WHERE id=%d", $old['id'] ) ) && '' === (string) $wpdb->get_var( $wpdb->prepare( "SELECT email FROM $crm_messages WHERE id=%d", $old['legacy_request_id'] ) ), 'Concurrent fresh enquiry never restores erased identity or old compatibility content.' );
 	adc_check( (int) $wpdb->get_var( "SELECT COUNT(*) FROM $customers WHERE account_user_id=$mixed_account" ) <= 1, 'Mixed erasure/intake retains at most one current account-linked customer.' );
 }
@@ -93,8 +94,11 @@ for ( $i=0; $i<23; ++$i ) {
 	wp_set_current_user( $admin ); LeadService::assign( $owned['id'], $sales_b ); wp_set_current_user( 0 );
 }
 wp_set_current_user( $sales_b );
+$staff_first = EngagementQuery::page( 'message', 1 );
+$staff_second = EngagementQuery::page( 'message', 2 );
 $_GET = array( 'paged'=>1 ); ob_start(); \AutoDealership\Admin\EngagementPages::render_messages(); $page_one = ob_get_clean();
 $_GET = array( 'paged'=>2 ); ob_start(); \AutoDealership\Admin\EngagementPages::render_messages(); $page_two = ob_get_clean(); $_GET = array();
-adc_check( 20 === substr_count( $page_one, 'STAFF-PAGE-' ) && 3 === substr_count( $page_two, 'STAFF-PAGE-' ) && str_contains( $page_one, 'page-numbers' ) && ! str_contains( $page_one . $page_two, 'PAGING-1<' ), 'Plugin-owned scoped staff renderer paginates twenty recent rows, exposes the next page and excludes unassigned account messages.' );
+$staff_messages = static fn( array $items ): int => count( array_filter( $items, static fn( array $row ): bool => str_starts_with( (string) $row['message'], 'STAFF-PAGE-' ) ) );
+adc_check( ! is_wp_error( $staff_first ) && ! is_wp_error( $staff_second ) && 20 === count( $staff_first['items'] ) && 20 === $staff_messages( $staff_first['items'] ) && 3 === $staff_messages( $staff_second['items'] ) && ! array_intersect( array_column( $staff_first['items'], 'id' ), array_column( $staff_second['items'], 'id' ) ) && str_contains( $page_one, 'STAFF-PAGE-22' ) && str_contains( $page_two, 'STAFF-PAGE-00' ) && str_contains( $page_one, 'page-numbers' ) && ! str_contains( $page_one . $page_two, 'PAGING-1<' ), 'Plugin-owned scoped staff renderer paginates twenty recent rows, exposes the next page and excludes unassigned account messages.' );
 if ( ! $sales_had_cap ) { $sales_user->remove_cap( 'manage_car_dealer' ); }
 wp_set_current_user( $admin );

@@ -6,6 +6,7 @@ use AutoDealership\Database\Schema;
 use AutoDealership\Leads\ContactIdentity;
 use AutoDealership\Leads\PublicIntake;
 use AutoDealership\Leads\LeadService;
+use AutoDealership\Leads\LegacyEngagementStore;
 use AutoDealership\Leads\RequestWorkflow;
 use AutoDealership\Leads\CustomerIdentity;
 use AutoDealership\Privacy\PrivacyTools;
@@ -21,8 +22,7 @@ update_option( 'adc_db_version', '1.10.0' );
 Schema::install();
 adc_check( Schema::is_ready() && array() === Schema::verify() && $crm_existing_customers === (int) $wpdb->get_var( "SELECT COUNT(*) FROM $customers" ) && $crm_existing_leads === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'leads' ) ), 'CRM additive upgrade restores identity and idempotency columns/indexes without losing existing customers or leads.' );
 
-require_once ABSPATH . 'wp-content/themes/car-dealer/inc/contact-form-manager.php';
-car_dealer_engagement_tables();
+LegacyEngagementStore::install();
 $crm_messages = $wpdb->prefix . 'car_dealer_messages';
 $crm_bookings = $wpdb->prefix . 'car_dealer_bookings';
 $crm_leads = Schema::table( 'leads' );
@@ -215,9 +215,9 @@ adc_check( 1 === count( array_filter( $crm_merge_race, static fn( $r ) => isset(
 // Export/erase follow the authenticated account even after its email changes.
 wp_update_user( array( 'ID'=>$crm_account, 'user_email'=>'crm-new@example.invalid' ) );
 $crm_export = PrivacyTools::export( 'crm-new@example.invalid' );
-adc_check( str_contains( wp_json_encode( $crm_export ), $crm_account_input['email'] ) && str_contains( wp_json_encode( $crm_export ), 'Synthetic enquiry' ), 'Privacy export follows account linkage to old-email identity and enquiry text.' );
+adc_check( str_contains( wp_json_encode( $crm_export ), 'crm-new@example.invalid' ) && str_contains( wp_json_encode( $crm_export ), 'Synthetic enquiry' ), 'Privacy export follows account linkage after immediate profile email sync and includes enquiry text.' );
 $failed = $with_sql_failure( static fn( $q ) => str_starts_with( $q, "UPDATE `$crm_messages`" ), static fn() => PrivacyTools::erase( 'crm-new@example.invalid' ) );
-adc_check( ! $failed['done'] && $crm_account === (int) $wpdb->get_var( "SELECT account_user_id FROM $customers WHERE id=$crm_linked_id" ) && $crm_account_input['email'] === $wpdb->get_var( "SELECT email FROM $customers WHERE id=$crm_linked_id" ), 'Legacy erasure failure rolls back canonical identity anonymization.' );
+adc_check( ! $failed['done'] && $crm_account === (int) $wpdb->get_var( "SELECT account_user_id FROM $customers WHERE id=$crm_linked_id" ) && 'crm-new@example.invalid' === $wpdb->get_var( "SELECT email FROM $customers WHERE id=$crm_linked_id" ), 'Legacy erasure failure rolls back canonical identity anonymization.' );
 $crm_erased = PrivacyTools::erase( 'crm-new@example.invalid' );
 adc_check( $crm_erased['done'] && null === $wpdb->get_var( "SELECT account_user_id FROM $customers WHERE id=$crm_linked_id" ) && '' === (string) $wpdb->get_var( $wpdb->prepare( "SELECT email FROM $crm_bookings WHERE id=%d", $crm_booking['legacy_request_id'] ) ), 'Erasure clears account linkage and old-email compatibility copies together.' );
 adc_check( null === $wpdb->get_var( $wpdb->prepare( "SELECT public_payload_hash FROM $crm_leads WHERE id=%d", $crm_linked['id'] ) ), 'Erasure also clears the enquiry payload fingerprint.' );

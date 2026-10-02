@@ -2,6 +2,7 @@
 namespace AutoDealership\Leads;
 
 use AutoDealership\Database\Schema;
+use AutoDealership\Inventory\PublicCatalog;
 use AutoDealership\Inventory\VehicleService;
 use AutoDealership\Pricing\Money;
 use AutoDealership\Security\PublicRequestGuard;
@@ -32,7 +33,7 @@ final class PublicIntake {
 	public static function handle_lead(): void { self::handle_theme( 'lead' ); }
 
 	public static function enqueue(): void {
-		if ( self::enabled() ) {
+		if ( self::enabled() || MarketingSubscription::enabled() ) {
 			wp_enqueue_script( 'adc-public-intake', plugins_url( 'assets/js/public-intake.js', ADC_FILE ), array(), ADC_VERSION, true );
 			wp_localize_script( 'adc-public-intake', 'adcPublicIntake', array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
@@ -61,13 +62,13 @@ final class PublicIntake {
 		$kind = 'booking' === $compatibility_type ? 'test_drive' : ( $input['request_kind'] ?? 'contact' );
 		if ( null === $branch || null === $post_id || ! in_array( $kind, array( 'contact','finance','finance_request','price_request','offer_request','test_drive','purchase' ), true ) || ( '' !== $key && ! preg_match( '/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/', $key ) ) ) { return self::error( 'adc_invalid_lead', 400 ); }
 		if ( $post_id ) {
-			if ( 'car' !== get_post_type( $post_id ) || 'publish' !== get_post_status( $post_id ) ) { return self::error( 'adc_intake_vehicle_unavailable', 400 ); }
+			if ( ! PublicCatalog::is_post_publicly_eligible( $post_id ) ) { return self::error( 'adc_intake_vehicle_unavailable', 400 ); }
 			$vehicle = $wpdb->get_row( $wpdb->prepare( 'SELECT branch_id,status FROM ' . Schema::table( 'vehicles' ) . ' WHERE public_post_id=%d LIMIT 1', $post_id ), ARRAY_A );
 			if ( $wpdb->last_error ) { return self::error( 'adc_intake_unavailable', 503 ); }
 			if ( $vehicle ) {
 				if ( 'available' !== $vehicle['status'] || ! VehicleService::branch_exists( (int) $vehicle['branch_id'] ) || ( $branch && $branch !== (int) $vehicle['branch_id'] ) ) { return self::error( 'adc_intake_vehicle_unavailable', 400 ); }
 				$branch = (int) $vehicle['branch_id'];
-			} elseif ( 'available' !== get_post_meta( $post_id, '_car_inventory_status', true ) ) { return self::error( 'adc_intake_vehicle_unavailable', 400 ); }
+			}
 		}
 		if ( ! $branch ) { $branch = (int) get_option( 'adc_default_branch_id', 0 ); }
 		if ( $branch < 0 || ( $branch && ! VehicleService::branch_exists( $branch ) ) ) { return self::error( 'adc_invalid_lead', 400 ); }

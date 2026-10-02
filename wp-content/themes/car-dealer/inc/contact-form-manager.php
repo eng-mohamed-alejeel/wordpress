@@ -40,21 +40,11 @@ function car_dealer_render_lead_form( $car_id, $type, $title = '', $button = '' 
 		$language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
 		echo '<form method="post" class="cd-ajax-form cd-lead-form" data-action="car_dealer_contact"><h2>' . esc_html( $title ) . '</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '"><input type="hidden" name="lead_type" value="' . esc_attr( $type ) . '"><input type="hidden" name="lang" value="' . esc_attr( $language ) . '">' . car_dealer_customer_form_fields() . '<textarea name="message" aria-label="' . esc_attr__( 'ملاحظات إضافية', 'car-dealer' ) . '" placeholder="' . esc_attr__( 'ملاحظات إضافية', 'car-dealer' ) . '"></textarea><button class="btn btn-primary" type="submit">' . esc_html( $button ) . '</button><p class="cd-form-status" role="status"></p></form>';
 }
-if ( ! function_exists( 'car_dealer_lead_form' ) ) {
-	function car_dealer_lead_form( $car_id, $type = 'price_request', $title = '', $button = '' ) {
-		if ( ! $title ) { $title = __( 'اطلب السعر', 'car-dealer' ); }
-		if ( ! $button ) { $button = __( 'إرسال الطلب', 'car-dealer' ); }
-		car_dealer_render_lead_form( $car_id, $type, $title, $button );
-	}
-}
 function car_dealer_render_booking_form( $car_id ) {
 	if ( ! car_dealer_intake_available() ) { echo car_dealer_form_unavailable(); return; }
 	$car_id = absint( $car_id );
 		$language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
 		echo '<form method="post" class="cd-ajax-form cd-booking-form" data-action="car_dealer_booking"><h2>' . esc_html__( 'احجز تجربة قيادة', 'car-dealer' ) . '</h2><input type="hidden" name="car_id" value="' . absint( $car_id ) . '"><input type="hidden" name="lang" value="' . esc_attr( $language ) . '">' . car_dealer_customer_form_fields() . '<label>' . esc_html__( 'اليوم', 'car-dealer' ) . '<input name="date" type="date" min="' . esc_attr( current_time( 'Y-m-d' ) ) . '" required></label><label>' . esc_html__( 'الوقت', 'car-dealer' ) . '<input name="time" type="time" required></label><button class="btn btn-primary" type="submit">' . esc_html__( 'إرسال الطلب', 'car-dealer' ) . '</button><p class="cd-form-status" role="status"></p></form>';
-}
-if ( ! function_exists( 'car_dealer_booking_form' ) ) {
-	function car_dealer_booking_form( $car_id ) { car_dealer_render_booking_form( $car_id ); }
 }
 if ( ! function_exists( 'car_dealer_newsletter_form' ) ) {
 	function car_dealer_newsletter_form() {

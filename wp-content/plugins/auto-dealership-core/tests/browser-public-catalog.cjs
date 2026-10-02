@@ -122,6 +122,8 @@ const assert = require('node:assert/strict');
             const screenshot = await call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
             fs.writeFileSync(path.join(artifacts, `catalog-${width}.png`), Buffer.from(screenshot.data, 'base64'));
         }
+        await call('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
+        await call('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
         await evaluate("document.querySelector('.ab-filter-authoritative input:not([type=hidden])').focus()");
         check(await evaluate("(() => { const style=getComputedStyle(document.activeElement); return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0; })()"), 'Keyboard focus remains visibly indicated on catalog controls.');
 

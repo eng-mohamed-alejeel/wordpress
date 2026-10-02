@@ -84,10 +84,16 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	$install = wp_install( 'Isolated verification', 'verify_admin', 'verify@example.invalid', false, '', wp_generate_password( 32, true, true ) );
 	wp_set_current_user( (int) $install['user_id'] );
 	require __DIR__ . '/../auto-dealership-core.php';
+	// The isolated worker loads the plugin after wp-settings.php has already fired
+	// plugins_loaded and init. Boot those runtime integrations explicitly here.
+	\AutoDealership\Leads\LegacyCrmBridge::boot();
+	\AutoDealership\Leads\LegacyCrmBridge::register();
+	\AutoDealership\Leads\CustomerIdentity::boot();
 	\AutoDealership\Core\Capabilities::activate();
 	wp_set_current_user( 0 );
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
+	if ( '1' === getenv( 'ADC_THEME_CUTOVER' ) ) { require __DIR__ . '/theme-cutover.php'; exit; }
 	if ( '1' === getenv( 'ADC_JOURNEY_ONLY' ) ) { require __DIR__ . '/account-journey-fixture.php'; exit; }
 	require __DIR__ . '/database-scenarios.php';
 	exit;

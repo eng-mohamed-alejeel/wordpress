@@ -440,6 +440,11 @@ car_dealer_register_shortcode_adapter( 'ab_faq_section', 'car_dealer_shortcode_a
    Shortcode: [ab_social_section] - وسائل التواصل الاجتماعي
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_social() {
+	$options = car_dealer_theme_options();
+	$facebook = esc_url( $options['facebook'] ?? '' );
+	$instagram = esc_url( $options['instagram'] ?? '' );
+	$phone = preg_replace( '/\D+/', '', (string) ( $options['whatsapp'] ?: get_option( 'car_dealer_whatsapp', '' ) ) );
+	if ( ! $facebook && ! $instagram && ! $phone ) { return ''; }
 	ob_start(); ?>
 <section class="ab-social-section">
 	<div class="container">
@@ -449,26 +454,18 @@ function car_dealer_shortcode_ab_social() {
 				<p>ابقَ على اطلاع بآخر العروض والمبادرات الجديدة</p>
 			</div>
 			<div class="ab-social-links">
-				<a href="#" class="ab-social-btn ab-social-fb" aria-label="فيسبوك">
+				<?php if ( $facebook ) : ?><a href="<?php echo esc_url( $facebook ); ?>" class="ab-social-btn ab-social-fb" aria-label="فيسبوك">
 					<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
 					فيسبوك
-				</a>
-				<a href="#" class="ab-social-btn ab-social-tw" aria-label="تويتر">
-					<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>
-					تويتر
-				</a>
-				<a href="#" class="ab-social-btn ab-social-insta" aria-label="إنستغرام">
+				</a><?php endif; ?>
+				<?php if ( $instagram ) : ?><a href="<?php echo esc_url( $instagram ); ?>" class="ab-social-btn ab-social-insta" aria-label="إنستغرام">
 					<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.5"/></svg>
 					إنستغرام
-				</a>
-				<a href="#" class="ab-social-btn ab-social-wa" aria-label="واتساب">
+				</a><?php endif; ?>
+				<?php if ( $phone ) : ?><a href="<?php echo esc_url( 'https://wa.me/' . $phone ); ?>" class="ab-social-btn ab-social-wa" aria-label="واتساب">
 					<svg viewBox="0 0 64 64" fill="currentColor"><path d="M32 4C16.536 4 4 16.536 4 32c0 5.336 1.392 10.36 3.84 14.72L4 60l13.76-3.68A27.84 27.84 0 0032 60c15.464 0 28-12.536 28-28S47.464 4 32 4z"/></svg>
 					واتساب
-				</a>
-				<a href="#" class="ab-social-btn ab-social-yt" aria-label="يوتيوب">
-					<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00-.46-5.25 29 29 0 00-.46-5.33zM9.75 15.02V8.98l5.75 3.02-5.75 3.02z"/></svg>
-					يوتيوب
-				</a>
+				</a><?php endif; ?>
 			</div>
 		</div>
 	</div>
@@ -477,12 +474,3 @@ function car_dealer_shortcode_ab_social() {
 	return ob_get_clean();
 }
 car_dealer_register_shortcode_adapter( 'ab_social_section', 'car_dealer_shortcode_ab_social' );
-
-
-/* ═══════════════════════════════════════════════════════
-   تسجيل الـ shortcodes في WordPress
-   ═══════════════════════════════════════════════════════ */
-function car_dealer_register_about_contact_shortcodes() {
-	// جميع الـ shortcodes مسجلة أعلاه
-}
-add_action( 'init', 'car_dealer_register_about_contact_shortcodes' );
