@@ -1,0 +1,33 @@
+# PREPARATION TEMPLATE ONLY — replace every @@TOKEN@@ before validation/use.
+# Apache 2.4 with mod_ssl, mod_headers and the chosen PHP handler already configured.
+# Install only on the separate staging host. Do not include in the live local config.
+# Listen 80/443 must be configured once by the hosting administrator.
+<VirtualHost *:80>
+    ServerName @@STAGING_HOSTNAME@@
+    Redirect permanent / https://@@STAGING_HOSTNAME@@/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName @@STAGING_HOSTNAME@@
+    DocumentRoot "@@STAGING_DOCUMENT_ROOT@@"
+    SSLEngine on
+    SSLProtocol -all +TLSv1.2 +TLSv1.3
+    SSLCertificateFile "@@VALID_FULLCHAIN_PATH@@"
+    SSLCertificateKeyFile "@@PRIVATE_KEY_PATH_OUTSIDE_REPO@@"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-Robots-Tag "noindex, nofollow, noarchive"
+
+    <Directory "@@STAGING_DOCUMENT_ROOT@@">
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        # Direct-host access restriction; validate proxy topology before replacing.
+        Require ip @@AUTHORIZED_REVIEWER_IP_OR_CIDR@@
+    </Directory>
+    <FilesMatch "^(wp-config\.php|\.env|.*\.(sql|bak|log))$">
+        Require all denied
+    </FilesMatch>
+
+    ErrorLog "@@PRIVATE_LOG_DIRECTORY@@/autobrands-staging-error.log"
+    CustomLog "@@PRIVATE_LOG_DIRECTORY@@/autobrands-staging-access.log" combined
+</VirtualHost>

@@ -1,0 +1,7 @@
+stock_number,display_title_ar,display_title_en,brand,model,model_year,condition,mileage_km,branch_code,illustrative_price_sar,price_approved_for_sale,record_type,media_status
+AB-DEMO-001,مثال تجريبي — تويوتا كامري,Demo example — Toyota Camry,Toyota,Camry,2025,new,0,JED-MAIN,125000,false,synthetic,placeholder
+AB-DEMO-002,مثال تجريبي — تويوتا كورولا,Demo example — Toyota Corolla,Toyota,Corolla,2025,new,0,JED-MAIN,85000,false,synthetic,placeholder
+AB-DEMO-003,مثال تجريبي — هيونداي إلنترا,Demo example — Hyundai Elantra,Hyundai,Elantra,2025,new,0,JED-MAIN,90000,false,synthetic,placeholder
+AB-DEMO-004,مثال تجريبي — كيا سبورتاج,Demo example — Kia Sportage,Kia,Sportage,2025,new,0,JED-MAIN,115000,false,synthetic,placeholder
+AB-DEMO-005,مثال تجريبي — نيسان إكس تريل,Demo example — Nissan X-Trail,Nissan,X-Trail,2025,new,0,JED-MAIN,130000,false,synthetic,placeholder
+AB-DEMO-006,مثال تجريبي — إم جي زد إس,Demo example — MG ZS,MG,ZS,2025,new,0,JED-MAIN,70000,false,synthetic,placeholder

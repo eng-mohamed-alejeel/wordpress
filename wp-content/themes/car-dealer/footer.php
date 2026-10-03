@@ -36,6 +36,8 @@
 						<?php $cd_finance = car_dealer_page_url( 'finance' ); if ( $cd_finance ) : ?><li><a href="<?php echo esc_url( $cd_finance ); ?>"><?php echo esc_html( car_dealer_text( 'حاسبة التمويل', 'Finance Calculator' ) ); ?></a></li><?php endif; ?>
 						<?php $cd_about = car_dealer_page_url( 'about' ); if ( $cd_about ) : ?><li><a href="<?php echo esc_url( $cd_about ); ?>"><?php echo esc_html( car_dealer_text( 'من نحن', 'About us' ) ); ?></a></li><?php endif; ?>
 						<?php $cd_contact = car_dealer_page_url( 'contact' ); if ( $cd_contact ) : ?><li><a href="<?php echo esc_url( $cd_contact ); ?>"><?php echo esc_html( car_dealer_text( 'تواصل معنا', 'Contact us' ) ); ?></a></li><?php endif; ?>
+						<?php $cd_faq = car_dealer_page_url( 'faq' ); if ( $cd_faq ) : ?><li><a href="<?php echo esc_url( $cd_faq ); ?>"><?php echo esc_html( car_dealer_text( 'الأسئلة الشائعة', 'Frequently asked questions' ) ); ?></a></li><?php endif; ?>
+						<?php $cd_guide = car_dealer_page_url( 'buying-guide' ); if ( $cd_guide ) : ?><li><a href="<?php echo esc_url( $cd_guide ); ?>"><?php echo esc_html( car_dealer_text( 'دليل اختيار السيارة', 'Vehicle buying guide' ) ); ?></a></li><?php endif; ?>
 					</ul>
 				</nav>
 				<div class="footer-col">

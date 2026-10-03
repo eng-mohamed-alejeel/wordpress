@@ -30,7 +30,7 @@ $permalink  = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer
 		<?php if ( $monthly ) : ?><p class="car-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $monthly ) : car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
 		<ul class="car-specs">
 			<?php if ( $year ) : ?><li><?php echo esc_html( $year ); ?></li><?php endif; ?>
-			<?php if ( $kilometers ) : ?><li><?php echo esc_html( function_exists( 'car_dealer_catalog_distance' ) ? car_dealer_catalog_distance( $kilometers ) : number_format_i18n( $kilometers ) . ' كم' ); ?></li><?php endif; ?>
+			<?php if ( null !== $kilometers && '' !== $kilometers && false !== $kilometers ) : ?><li><?php echo esc_html( function_exists( 'car_dealer_catalog_distance' ) ? car_dealer_catalog_distance( $kilometers ) : number_format_i18n( $kilometers ) . ' كم' ); ?></li><?php endif; ?>
 			<?php if ( $vehicle && $vehicle['branch_name'] ) : ?><li><?php echo esc_html( $vehicle['branch_name'] ); ?></li><?php endif; ?>
 			<li><?php echo esc_html( function_exists( 'car_dealer_inventory_status_label' ) ? car_dealer_inventory_status_label( $status ) : $status ); ?></li>
 		</ul>

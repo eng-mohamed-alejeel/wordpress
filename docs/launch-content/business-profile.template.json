@@ -1,0 +1,9 @@
+{
+  "status": "pending_owner_input",
+  "reference_from_existing_code_only": "AUTO BRANDS / ناصر مطر المطيري — requires owner confirmation",
+  "entity": {"trade_name_ar": null, "trade_name_en": null, "legal_name_ar": null, "legal_name_en": null, "registration_number": null, "operating_country": null, "registered_address": null},
+  "public_contacts": {"phone_e164": null, "whatsapp_e164": null, "email": null, "privacy_email": null, "business_hours_ar": null, "business_hours_en": null},
+  "launch": {"staging_https_origin": null, "production_https_origin": null, "data_mode": null, "business_owner": null, "operations_owner": null},
+  "policy_decisions": {"price_tax_statement": null, "additional_fees_statement": null, "reservation_terms_reference": null, "deposit_terms_reference": null, "cancellation_refund_reference": null, "warranty_reference": null, "delivery_reference": null, "retention_schedule_reference": null, "external_providers": "disabled_pending_separate_approval"},
+  "approval": {"approved_by": null, "approved_at": null, "business_reference": null, "legal_reference": null}
+}

@@ -111,7 +111,7 @@ const { spawn } = require('node:child_process');
         await visit('/?lang=en');
         page = await state();
         check(page.language === 'en' && page.direction === 'ltr', 'English home declares LTR');
-        check(page.active.every(x => x === 'en') && page.body.includes('Find your next car with confidence'), 'English switch and home copy render');
+        check(page.active.every(x => x === 'en') && page.body.includes('Your new vehicle starts with Auto Brands'), 'English switch and home copy render');
         check(await evaluate("(() => {const f=document.querySelector('#colophon .cd-newsletter-form');return !!f && getComputedStyle(f).backgroundColor === 'rgba(0, 0, 0, 0)' && getComputedStyle(f.querySelector('label')).color === 'rgb(255, 255, 255)' && getComputedStyle(f.querySelector('.cd-newsletter-consent')).flexDirection === 'row';})()"), 'Footer newsletter has readable text and aligned consent');
         check(page.links.find(x => x.lang === 'ar')?.url.endsWith('/wordpress/'), 'Arabic switch returns to the home view');
         fs.writeFileSync(path.join(captures, 'home-en-desktop.png'), Buffer.from((await call('Page.captureScreenshot', { format: 'png' })).data, 'base64'));
@@ -124,8 +124,9 @@ const { spawn } = require('node:child_process');
         await wait("document.readyState === 'complete' && location.pathname.endsWith('/cars/') && new URL(location.href).searchParams.get('search') === 'Synthetic' && new URL(location.href).searchParams.get('lang') === 'en'", 'English vehicle search');
         check(true, 'Submitting vehicle search keeps the query and English');
         for (const [route, expected] of [
-            ['/about/?lang=en', 'About us'], ['/contact/?lang=en', 'How can we help?'],
-            ['/finance/?lang=en', 'Financing'], ['/cars/?lang=en', 'Browse AUTO BRANDS Vehicles'],
+            ['/about/?lang=en', 'About us'], ['/contact/?lang=en', 'Contact us'],
+            ['/faq/?lang=en', 'Frequently asked questions'], ['/buying-guide/?lang=en', 'Your vehicle buying guide'],
+            ['/finance/?lang=en', 'Finance Calculator'], ['/cars/?lang=en', 'Browse AUTO BRANDS Vehicles'],
             ['/offers/?lang=en', 'AUTO BRANDS Offers'], ['/?cd_account=login&lang=en', 'Welcome back']
         ]) {
             await visit(route);
@@ -137,17 +138,26 @@ const { spawn } = require('node:child_process');
         }
         await visit('/?cd_account=register&lang=en');
         check((await state()).body.includes('Create account') && await evaluate("document.querySelector('.cd-auth-form form')?.action.includes('lang=en')"), 'English registration form preserves language');
-        for (const [route, expected] of [['/about/', 'من نحن'], ['/contact/', 'نحن هنا لمساعدتك'], ['/finance/', 'التمويل']]) {
+        for (const [route, expected] of [['/about/', 'من نحن'], ['/contact/', 'تواصل معنا'], ['/finance/', 'حاسبة التمويل'], ['/faq/', 'الأسئلة الشائعة'], ['/buying-guide/', 'دليلك لاختيار السيارة']]) {
             await visit(route);
             page = await state();
             check(page.language === 'ar' && page.direction === 'rtl' && page.body.includes(expected), `${route} renders Arabic`);
         }
         await visit('/finance/');
-        check(await evaluate("[...document.querySelectorAll('.entry-content > section[lang=en]')].every(x => getComputedStyle(x).display === 'none') && [...document.querySelectorAll('.entry-content > section[lang=ar]')].some(x => getComputedStyle(x).display !== 'none')"), 'Finance page shows only Arabic editorial section');
+        check(await evaluate("document.querySelector('.entry-content').innerText.includes('النتيجة إرشادية وغير ملزمة') && !document.querySelector('.entry-content').innerText.includes('Explore how the down payment')"), 'Finance page shows only Arabic editorial content');
         await visit('/contact/?lang=en');
         check(await evaluate("document.querySelector('.cd-contact-form [name=lang]')?.value === 'en' && document.querySelector('.cd-contact-form button')?.textContent.trim() === 'Send'"), 'English contact form preserves language without submission');
+        await visit('/faq/?lang=en');
+        check(await evaluate("document.querySelector('.entry-content').innerText.includes('SAR 20,000') && document.querySelector('.entry-content').innerText.includes('within three days of reservation cancellation') && document.querySelector('.entry-content').innerText.includes('same payment method')"), 'English FAQ presents the owner-confirmed deposit and refund policy');
+        await visit('/about/');
+        check(await evaluate("document.querySelector('.entry-content').innerText.includes('تحت الإنشاء') && document.querySelector('.entry-content').innerText.includes('20,000') && document.querySelector('.entry-content').innerText.includes('ثلاثة أيام من إلغاء الحجز')"), 'Arabic about copy includes the construction status and refund policy');
+        await visit('/contact/?lang=en');
+        check(await evaluate("document.querySelector('.entry-content').innerText.includes('autobrands2020@gmail.com') && document.querySelector('.entry-content').innerText.includes('+966 55 092 8190') && document.querySelector('.entry-content').innerText.includes('Jeddah')"), 'English contact displays the supplied official contact details');
+        await visit('/cars/');
+        check(await evaluate("[...document.querySelectorAll('.car-card')].some(x=>x.innerText.includes('مثال تجريبي') && /0\\s*كم/.test(x.innerText))"), 'New synthetic vehicle cards explicitly show zero mileage and demo labels');
+        check(await evaluate("document.querySelector('.site-footer a[href*=\"/faq/\"]') && document.querySelector('.site-footer a[href*=\"/buying-guide/\"]')"), 'Footer exposes FAQ and buying-guide navigation');
         await visit('/finance/?lang=en');
-        check(await evaluate("[...document.querySelectorAll('.entry-content > section[lang=ar]')].every(x => getComputedStyle(x).display === 'none') && [...document.querySelectorAll('.entry-content > section[lang=en]')].some(x => getComputedStyle(x).display !== 'none')"), 'Finance page shows only English editorial section');
+        check(await evaluate("document.querySelector('.entry-content').innerText.includes('Explore how the down payment') && !document.querySelector('.entry-content').innerText.includes('النتيجة إرشادية وغير ملزمة')"), 'Finance page shows only English editorial content');
         for (const width of [1440, 768, 390, 320]) {
             await call('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width <= 390 });
             await pause(150);

@@ -1,0 +1,103 @@
+{
+  "version": "1.0.0",
+  "prepared_on": "2026-10-03",
+  "status": "owner_facts_confirmed_editorial_review",
+  "approval": {
+    "approved_by": "Business owner via conversation",
+    "approved_at": "2026-10-03",
+    "reference": "Owner supplied identity, branches, contacts, services and reservation policy; editorial/legal release approval remains pending."
+  },
+  "pages": [
+    {
+      "slug": "about",
+      "ar": {
+        "title": "من نحن",
+        "summary": "معلومات واضحة تساعدك على اختيار سيارتك والتواصل مع فريق المعرض.",
+        "content": "<p>شركة أوتو براندز متخصصة في مبيعات السيارات الجديدة، ويقع فرعها الرئيسي في مدينة جدة، حي الجوهرة. نقدم أيضًا خدمات ما بعد البيع، ومنها تلميع السيارات وتظليلها.</p><h2>فروعنا</h2><ul><li>الفرع الرئيسي: جدة، حي الجوهرة.</li><li>الفرع الثاني: مكة المكرمة، مدينة السيارات — تحت الإنشاء وغير متاح للزيارة حاليًا.</li></ul><h2>اختيار واضح وخطوة مدروسة</h2><p>استعرض المواصفات وقارن الخيارات وتواصل معنا لتأكيد التفاصيل والتوفر. ضمان السيارة على الوكيل، وتختلف شروطه وتغطيته بحسب المورد؛ اطلب تفاصيل الضمان الخاصة بالسيارة قبل الشراء.</p><h2>الحجز</h2><p>يتم الحجز بدفع عربون ثابت قدره 20,000 ريال سعودي لمدة لا تتجاوز ثلاثة أيام. عند إلغاء الحجز يُعاد مبلغ العربون خلال ثلاثة أيام من إلغاء الحجز عبر طريقة الدفع نفسها. تُوضح إجراءات الاسترداد قبل الدفع.</p>"
+      },
+      "en": {
+        "title": "About us",
+        "summary": "Clear information to help you explore vehicles and contact the dealership team.",
+        "content": "<p>Auto Brands Company specializes in new vehicle sales. Our main branch is in Al Jawharah district, Jeddah. We also offer after-sales services, including vehicle polishing and window tinting.</p><h2>Our branches</h2><ul><li>Main branch: Al Jawharah district, Jeddah.</li><li>Second branch: Cars City, Makkah — under construction and not currently open for visits.</li></ul><h2>Choose with clarity</h2><p>Explore specifications, compare options and contact us to confirm details and availability. Vehicle warranty is provided by the authorized dealer; terms and coverage vary by supplier. Request the applicable warranty details before buying.</p><h2>Reservations</h2><p>A reservation requires a fixed deposit of SAR 20,000 and lasts no longer than three days. If cancelled, the deposit is returned within three days of reservation cancellation through the same payment method. Refund procedures are explained before payment.</p>"
+      }
+    },
+    {
+      "slug": "contact",
+      "ar": {
+        "title": "تواصل معنا",
+        "summary": "هل تحتاج تفاصيل إضافية عن سيارة أو ترغب في ترتيب زيارة؟ أرسل استفسارك إلى فريق المعرض.",
+        "content": "<h2>شركة أوتو براندز</h2><p>الفرع الرئيسي: جدة، حي الجوهرة.<br>الهاتف: 0550928190<br>البريد الإلكتروني: autobrands2020@gmail.com</p><p>فرع مكة المكرمة في مدينة السيارات تحت الإنشاء. تواصل معنا لتنسيق زيارة الفرع الرئيسي وتأكيد التوفر والموعد.</p><p>اذكر السيارة التي تهمك والسؤال الذي ترغب في توضيحه، وأضف بيانات تواصل صحيحة حتى يتمكن الفريق من متابعة طلبك.</p><h2>قبل إرسال الطلب</h2><ul><li>إرسال الاستفسار لا يُعد حجزًا للسيارة أو اتفاق شراء.</li><li>موعد تجربة القيادة يخضع لتأكيد التوفر والموعد من الفريق.</li><li>لا ترفق بيانات بطاقتك البنكية أو كلمات المرور أو مستندات حساسة في الرسالة.</li></ul>[car_dealer_contact_form]"
+      },
+      "en": {
+        "title": "Contact us",
+        "summary": "Need more vehicle details or want to arrange a visit? Send an enquiry to the dealership team.",
+        "content": "<h2>Auto Brands Company</h2><p>Main branch: Al Jawharah district, Jeddah.<br>Phone: +966 55 092 8190<br>Email: autobrands2020@gmail.com</p><p>The Makkah branch in Cars City is under construction. Contact us to arrange a visit to the main branch and confirm availability and timing.</p><p>Tell us which vehicle interests you and what you would like to know. Provide accurate contact details so the team can follow up.</p><h2>Before you send</h2><ul><li>An enquiry does not reserve a vehicle or create a purchase agreement.</li><li>A test-drive appointment is subject to confirmation of availability and timing by the team.</li><li>Do not include bank card details, passwords or sensitive documents in your message.</li></ul>[car_dealer_contact_form]"
+      }
+    },
+    {
+      "slug": "faq",
+      "ar": {
+        "title": "الأسئلة الشائعة",
+        "summary": "إجابات تساعدك على الاستفسار ومراجعة تفاصيل السيارة قبل الشراء.",
+        "content": "<h2>كيف أعرف أن السيارة ما زالت متاحة؟</h2><p>راجع حالة السيارة المنشورة وتواصل مع الفريق لتأكيد التوفر قبل الزيارة أو الاتفاق.</p><h2>هل إرسال الطلب يحجز السيارة؟</h2><p>لا. الاستفسار وطلب تجربة القيادة ليسا حجزًا تجاريًا. اطلب من الفريق شروط الحجز المعتمدة إذا رغبت في المتابعة.</p><h2>كيف أطلب تجربة قيادة؟</h2><p>استخدم نموذج الطلب في صفحة السيارة. يراجع الفريق الطلب ويؤكد الموعد والتوفر قبل الزيارة.</p><h2>ماذا يشمل السعر؟</h2><p>راجع بيان السعر والعرض المعتمد لمعرفة الضريبة وأي رسوم إضافية. اطلب توضيحًا مكتوبًا إذا لم تكن تفاصيل السعر واضحة.</p><h2>هل حاسبة التمويل تعرض موافقة تمويل؟</h2><p>لا. النتيجة تقدير إرشادي غير ملزم، وليست موافقة أو عرضًا من جهة تمويل.</p><h2>ما الضمان وشروط الإلغاء؟</h2><p>الضمان على الوكيل ويختلف بحسب المورد؛ راجع الوثيقة الخاصة بالسيارة. يُحجز بدفع عربون ثابت قدره 20,000 ريال سعودي لمدة ثلاثة أيام كحد أقصى. يُعاد العربون خلال ثلاثة أيام من إلغاء الحجز عبر طريقة الدفع نفسها.</p>"
+      },
+      "en": {
+        "title": "Frequently asked questions",
+        "summary": "Answers to help you enquire and review vehicle details before buying.",
+        "content": "<h2>How do I check availability?</h2><p>Review the published vehicle status and contact the team to confirm availability before visiting or entering into an agreement.</p><h2>Does sending a request reserve a vehicle?</h2><p>No. An enquiry or test-drive request is not a commercial reservation. Ask the team for the approved reservation terms if you wish to proceed.</p><h2>How do I request a test drive?</h2><p>Use the request form on the vehicle page. The team reviews the request and confirms availability and timing before your visit.</p><h2>What does the price include?</h2><p>Check the price statement and approved offer for tax and any additional charges. Request written clarification if the breakdown is unclear.</p><h2>Does the calculator provide financing approval?</h2><p>No. It provides a non-binding estimate, not approval or an offer from a finance provider.</p><h2>What are the warranty and cancellation terms?</h2><p>Warranty is provided by the authorized dealer and varies by supplier; review the vehicle’s warranty document. A fixed deposit of SAR 20,000 reserves the vehicle for a maximum of three days and is returned within three days of reservation cancellation through the same payment method.</p>"
+      }
+    },
+    {
+      "slug": "buying-guide",
+      "ar": {
+        "title": "دليلك لاختيار السيارة",
+        "summary": "خطوات عملية لمقارنة الخيارات ومراجعة التفاصيل قبل إتمام الشراء.",
+        "content": "<h2>حدّد احتياجك</h2><p>فكّر في استخدامك اليومي، وعدد الركاب، والمساحة، والتجهيزات التي تحتاجها. حدّد ميزانية تشمل السيارة والتكاليف التي قد تنطبق على الاتفاق.</p><h2>قارن المعلومات</h2><p>راجع سنة الموديل والفئة وحالة السيارة والعداد والمواصفات. قارن الخيارات المتاحة، ولا تعتمد على الصور وحدها لتقييم حالة السيارة.</p><h2>راجع المستندات والتكاليف</h2><p>اطلب التفاصيل المتاحة عن حالة السيارة، ووثائقها، وشروط الضمان إن وجد. احصل على عرض واضح يبيّن السعر والضريبة والرسوم وشروط الحجز والدفع.</p><h2>أكد الخطوة التالية</h2><p>اتفق مع الفريق على الزيارة أو تجربة القيادة، ثم راجع العرض النهائي والمستندات المطلوبة. لا ترسل بيانات مالية حساسة عبر نموذج الاستفسار العام.</p>"
+      },
+      "en": {
+        "title": "Your vehicle buying guide",
+        "summary": "Practical steps to compare options and review the details before buying.",
+        "content": "<h2>Define your needs</h2><p>Consider daily use, passenger capacity, space and essential equipment. Set a budget that includes the vehicle and any costs applicable to the agreement.</p><h2>Compare the information</h2><p>Review the model year, trim, condition, mileage and specifications. Compare available options and do not rely on photographs alone to assess condition.</p><h2>Review documents and costs</h2><p>Ask for available condition information, vehicle documents and warranty terms where applicable. Obtain a clear offer setting out the price, tax, charges and reservation and payment terms.</p><h2>Confirm your next step</h2><p>Arrange a visit or test drive with the team, then review the final offer and required documents. Do not send sensitive financial information through the general enquiry form.</p>"
+      }
+    },
+    {
+      "slug": "finance",
+      "ar": {
+        "title": "حاسبة التمويل",
+        "summary": "قدّر القسط الشهري باستخدام سعر السيارة والدفعة الأولى والنسبة والمدة.",
+        "content": "<p>استخدم الحاسبة لاستكشاف أثر الدفعة الأولى والمدة والنسبة السنوية على القسط التقديري. النتيجة إرشادية وغير ملزمة؛ وقد لا تشمل جميع الرسوم أو شروط أي عرض فعلي.</p>[car_dealer_loan_calculator]<h2>لديك سؤال عن النتيجة؟</h2><p>أرسل استفسارك إلى الفريق. إرسال النموذج لا ينشئ طلب تمويل لدى مزود خارجي، ولا يضمن الأهلية أو الموافقة.</p>[car_dealer_contact_form]"
+      },
+      "en": {
+        "title": "Finance Calculator",
+        "summary": "Estimate a monthly payment using the vehicle price, down payment, annual rate and term.",
+        "content": "<p>Explore how the down payment, term and annual rate affect an estimated monthly payment. Results are illustrative and non-binding and may not include every fee or condition of an actual offer.</p>[car_dealer_loan_calculator]<h2>Have a question about the estimate?</h2><p>Send an enquiry to the team. Submitting the form does not create an application with an external finance provider or guarantee eligibility or approval.</p>[car_dealer_contact_form]"
+      }
+    }
+  ],
+  "microcopy": {
+    "home_headline": {
+      "ar": "سيارتك الجديدة تبدأ من أوتو براندز",
+      "en": "Your new vehicle starts with Auto Brands"
+    },
+    "home_intro": {
+      "ar": "مبيعات السيارات الجديدة في جدة، حي الجوهرة، وخدمات ما بعد البيع والتلميع والتظليل. استعرض الخيارات وتواصل مع فريقنا.",
+      "en": "New vehicle sales in Al Jawharah, Jeddah, with after-sales services, polishing and window tinting. Explore your options and contact our team."
+    },
+    "catalog_cta": {
+      "ar": "استعرض السيارات",
+      "en": "Browse vehicles"
+    },
+    "enquiry_cta": {
+      "ar": "استفسر عن السيارة",
+      "en": "Enquire about this vehicle"
+    },
+    "empty_catalog": {
+      "ar": "لا توجد سيارات منشورة تطابق بحثك حاليًا. جرّب تعديل الفلاتر أو تواصل مع الفريق.",
+      "en": "No published vehicles currently match your search. Adjust the filters or contact the team."
+    },
+    "marketing_opt_in": {
+      "ar": "أرغب في تلقي رسائل عن السيارات والعروض، ويمكنني إلغاء الاشتراك لاحقًا.",
+      "en": "I would like to receive vehicle and offer updates and can unsubscribe later."
+    }
+  }
+}

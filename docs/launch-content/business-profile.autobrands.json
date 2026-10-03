@@ -1,0 +1,58 @@
+{
+  "status": "owner_facts_confirmed",
+  "entity": {
+    "trade_name_ar": "شركة أوتو براندز",
+    "trade_name_en": "Auto Brands Company",
+    "legal_registered_name": "شركة أوتو براندز",
+    "registration_number": "7031112431",
+    "country": "Saudi Arabia"
+  },
+  "public_contacts": {
+    "phone_local": "0550928190",
+    "phone_e164": "+966550928190",
+    "email": "autobrands2020@gmail.com",
+    "privacy_email": "autobrands2020@gmail.com",
+    "whatsapp_confirmed": false,
+    "opening_hours": null
+  },
+  "branches": [
+    {
+      "code": "JED-MAIN",
+      "city_ar": "جدة",
+      "district_ar": "حي الجوهرة",
+      "status": "operating"
+    },
+    {
+      "code": "MAK-PLANNED",
+      "city_ar": "مكة المكرمة",
+      "district_ar": "مدينة السيارات",
+      "status": "under_construction",
+      "operational_inventory_allowed": false
+    }
+  ],
+  "services": [
+    "new_vehicle_sales",
+    "after_sales",
+    "polishing",
+    "window_tinting"
+  ],
+  "reservation": {
+    "deposit_required": true,
+    "max_hours": 72,
+    "cancellation_refund": "deposit_returned",
+    "amount": 20000,
+    "refund_time": "within_3_days_of_reservation_cancellation",
+    "refund_method": "same_as_original_payment",
+    "currency": "SAR",
+    "amount_halalas": 2000000,
+    "refund_processing_days": 3
+  },
+  "warranty": "Authorized dealer warranty; varies by supplier",
+  "data_mode": "synthetic_development_only",
+  "pending": [
+    "full registered address",
+    "VAT and fees",
+    "privacy and legal approval",
+    "HTTPS staging"
+  ]
+}
