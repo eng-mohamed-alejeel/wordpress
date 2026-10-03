@@ -21,6 +21,7 @@ The plugin registers these initial scoped roles; these are capability names, not
 | Approve high discount | `adc_approve_high_discounts` | General manager/administrator only; required for the frozen general-manager tier. |
 | Manage reservation | `adc_manage_reservations` | Lock/recheck vehicle availability within transaction. |
 | View finance | `adc_view_finance` | Mask sensitive fields by default. |
+| Read vehicle acquisition costs | `adc_view_vehicle_costs` | Dedicated permission, independent of finance read; vehicle reads still require inventory/finance access and active branch scope. Does not grant VIN access. Administrators with `manage_options` can read costs. |
 | Correct vehicle VIN | `adc_change_vehicle_vin` | General manager/administrator only; pre-sale states, branch scope, reason and audit required. |
 | Manage finance | `adc_manage_finance` | No storage of bank credentials/payment card data. |
 | Record receipt/deposit evidence | `adc_record_payments` | Finance role; branch scope, exact reservation policy where applicable, positive amount and external reference; pending until reviewed. |

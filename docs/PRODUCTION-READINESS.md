@@ -1,5 +1,9 @@
 # Production Readiness Review
 
+Latest local acceptance, 2026-10-03: after priority stabilization, **690 isolated database/HTTP, 34 catalog browser and 33 account browser checks passed**, plus syntax across 168 PHP and nine JavaScript/CommonJS files. This is fresh independent-server evidence with synthetic fixtures; it does not close the four source preflight failures or nine manual launch gates. See `PRIORITY-A-ACCEPTANCE-2026-10-03.md`. Overall readiness remains FAIL.
+
+2026-10-03 priority-A update: the previously stale offline finance-cost assertion was corrected to match the dedicated capability. All 52 authorization, 12 money and 16 pricing-policy checks now pass. No runtime permission or business record changed; database/browser totals below remain prior acceptance evidence. The English About/Contact presentation was already covered by the later bilingual acceptance; approved business copy still requires editorial review. Current stabilization details and remaining gates are in `PRIORITY-A-STABILIZATION-2026-10-03.md`. Overall production readiness remains FAIL.
+
 2026-10-03 update: the current public Arabic/English theme/plugin pair passed 53 local browser presentation checks; the read-only release preflight still reports 8 PASS, 4 FAIL and 9 MANUAL. This is local presentation evidence only. See `BILINGUAL-SITE-ACCEPTANCE-2026-10-03.md`.
 
 This is an initial repository review, not a production approval. PASS is used only where verified.

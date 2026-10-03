@@ -1,6 +1,6 @@
 # Local plugin/theme release candidate — 2026-10-03
 
-**Superseded as current-code evidence:** later 2026-10-03 bilingual, search and footer changes are still uncommitted and are not in this archive. The 53-check local presentation acceptance is recorded in `BILINGUAL-SITE-ACCEPTANCE-2026-10-03.md`. Build a new immutable candidate from a reviewed clean commit; do not deploy the ZIP below as the current implementation.
+**Superseded as current-code evidence:** this archive was built from `66cf4f2` and does not establish the contents of the later release baseline `4893af9`. The earlier statement that bilingual, search and footer changes were still uncommitted was historical: the working tree was clean before priority stabilization began. The 53-check local presentation acceptance is recorded in `BILINGUAL-SITE-ACCEPTANCE-2026-10-03.md`. Stabilization now changes a test and documentation; no new immutable archive has been built. Build a new candidate from the reviewed clean release commit after final acceptance; do not deploy the ZIP below as the current implementation.
 
 `tools/build-release-package.ps1` built a code-only candidate from Git commit `66cf4f2bb9886536370aecd0fa3e77dcd4ba8b29` (plugin/theme version `1.29.13`). It did not publish or deploy anything.
 

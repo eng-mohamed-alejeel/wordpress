@@ -1,8 +1,12 @@
 # Verification Plan
 
-Plugin 1.28.0 / schema 1.17.0 implementation is present, but migration, RBAC, supplier/acquisition, finance-attempt, v2 envelope and OpenAPI acceptance has not yet been executed. The latest complete local evidence remains 1.27.0 in `VERIFICATION-1.27.0.md`. Verification must continue to use an isolated disposable database and must not seed or connect to the intentionally empty source database.
+The current plugin/theme pair is 1.29.13 / schema 1.17.0. Focused 1.28 acceptance completed with 687 isolated database/HTTP checks; see `VERIFICATION-1.28.0.md`. The local source now contains authorized synthetic development data, not an empty business database. Do not seed or run transactional tests against it; prefer the independent disposable server mode below.
+
+On 2026-10-03, release stabilization reran the offline suites: **52 authorization, 12 money and 16 pricing-policy checks passed**. The authorization fixture now reflects the dedicated `adc_view_vehicle_costs` capability and covers denial without it, scoped access with it, missing-branch denial and immediate revocation. PHP syntax passed for the changed test. No database or browser acceptance was rerun for this test-only change; the 687 database/HTTP and 53 bilingual presentation checks remain prior evidence, not new results. See `PRIORITY-A-STABILIZATION-2026-10-03.md`.
 
 ## Current evidence and independent server mode
+
+Latest execution on 2026-10-03 after priority stabilization: **690 isolated database/HTTP checks, 34 real-theme catalog browser checks and 33 real-theme account browser checks passed** on a new loopback-only MariaDB instance at port 33351. The 690 includes three post-browser database assertions on top of the 687 base checks. Syntax passed for 168 PHP and nine JavaScript/CommonJS files. The disposable database was removed and its server shut down; source configuration/database were not loaded. See `PRIORITY-A-ACCEPTANCE-2026-10-03.md` for the initial restricted-browser failure, successful escalated repeat, local logs and limits. Older counts below remain historical evidence.
 
 On 2026-10-01, version 1.27.0 passed **654 isolated database/HTTP checks** on an independent disposable MariaDB server. Its 13 focused assertions cover additive rate-table migration, proxy trust/fallback, HMAC-only storage, policy isolation, fail-closed storage, cleanup, exact anonymous-route inventory, minimized operations output, scheduling and a 12-process atomic race. Syntax passes across 105 plugin PHP, 41 theme PHP and 8 JavaScript/CommonJS files; 48 authorization, 12 money and 16 pricing-policy checks also pass. The disposable database and server directory were removed and the intentionally empty source database was not contacted. See `VERIFICATION-1.27.0.md`.
 
@@ -48,7 +52,7 @@ Run without WordPress bootstrap or a database connection:
 
 The suite uses the real branch policy and service methods with a query recorder and small WordPress function doubles. It covers malformed/missing branch assignments, branch-zero intake, owner plus branch restrictions after staff reassignment, denied CRM writes, capability-filtered vehicle fields, scoped vehicle/list queries, workflow queue predicates, and profile assignment nonce/input rejection. It does not prove database execution, REST authentication, browser behavior, or concurrent writes.
 
-Result on 2026-09-26: **48 checks passed** on PHP CLI 8.2.12. These checks complement the real-database suite below.
+Current result on 2026-10-03: **52 checks passed** on PHP CLI. The earlier 48-check result is historical. These query-recorder checks complement the real-database suite below and do not simulate database filtering.
 
 ## Isolated WordPress and MariaDB suite
 
@@ -108,4 +112,4 @@ php wp-content/plugins/auto-dealership-core/tests/workflow-smoke.php
 Remove-Item Env:\ADC_RUN_INTEGRATION_TESTS
 ```
 
-It creates temporary roles and workflow records, removes those records/users, and retains audit events as the system of record. Never run it against a production database. Existing theme tests are under `wp-content/themes/car-dealer/tests`. This smoke suite does not replace the full automated security, accessibility, regression or provider-integration tests required for release.
+It creates temporary roles and workflow records, removes those records/users, and retains audit events as the system of record. Never run it against a production database. Historical theme tests are archived under `docs/archive/car-dealer/tests` and are not current acceptance commands. Active catalog, account, bilingual-site and theme-switch coverage is under `wp-content/plugins/auto-dealership-core/tests`. This smoke suite does not replace the full automated security, accessibility, regression or provider-integration tests required for release.
