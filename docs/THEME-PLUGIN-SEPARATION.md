@@ -4,9 +4,9 @@
 
 Make `auto-dealership-core` the stable owner of dealership data, business rules, permissions, workflows, APIs, background work and operational administration. Keep `car-dealer` as a replaceable presentation layer that owns templates, layout, public styling, theme supports and navigation.
 
-The cutover must preserve the current post type slugs, taxonomy slugs, post meta keys, URLs, shortcodes and legacy request identifiers. The intentionally empty business database must remain empty; this work does not create branches, brands, vehicles, customers, suppliers, offers or sample content.
+The cutover must preserve the current post type slugs, taxonomy slugs, post meta keys, URLs, shortcodes and legacy request identifiers. Theme/plugin ownership work did not create business content. The user later authorized a separate, labeled synthetic development seed in `wp-autobrands`; see `DEVELOPMENT-DATA-2026-10-02.md`.
 
-This sequence is currently tracked as **1.29.13 — deployable theme cleanup**. The plugin owns dealership registration, writes, permissions, operations and public read models. The theme renders them and holds appearance settings only. Former theme business PHP, historical checks and unused admin assets are preserved under `docs/archive/car-dealer`, outside the deployable theme. No runtime fallback loads them. Theme-switch and release acceptance remain pending.
+This sequence is currently tracked as **1.29.13 — deployable theme cleanup**. The plugin owns dealership registration, writes, permissions, operations and public read models. The theme renders them and holds appearance settings only. Former theme business PHP, historical checks and unused admin assets are preserved under `docs/archive/car-dealer`, outside the deployable theme. No runtime fallback loads them. Isolated theme-switch and local rollback smoke passed on 2026-10-02; the public release gate remains open for legal content, real inventory, deployment and human review. See `THEME-CUTOVER-ACCEPTANCE.md`.
 
 ## Current repository finding
 
@@ -167,4 +167,4 @@ The implemented **1.29-B content registry and compatibility bridge** follows the
 4. Guard and then remove theme registration only after the plugin path is present.
 5. Record rewrite migration version in the plugin without creating content or flushing on normal requests.
 
-The 1.29-E ownership work runs through 1.29.13. The deployable theme now contains presentation and appearance code; its former business sources are in `docs/archive/car-dealer`. The 1.29-F acceptance sequence and evidence requirements are recorded in `THEME-CUTOVER-ACCEPTANCE.md`; the theme-switch journey, hook/URL review and matching-release rollback rehearsal remain pending. Source placement alone is not runtime acceptance.
+The 1.29-E ownership work runs through 1.29.13. The deployable theme now contains presentation and appearance code; its former business sources are in `docs/archive/car-dealer`. The 1.29-F acceptance sequence and evidence requirements are recorded in `THEME-CUTOVER-ACCEPTANCE.md`. The isolated theme-switch, hook/URL, matching-release rollback and populated local recovery rehearsals passed; public deployment and content/business acceptance remain pending. Source placement alone is not runtime acceptance.

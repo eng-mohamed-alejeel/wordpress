@@ -7,7 +7,7 @@ $demand_ids = $home['demand_ids'] ?? array();
 $offer_ids = $home['offer_ids'] ?? array();
 $total_cars = (int) ( $home['published_car_count'] ?? 0 );
 $hero_image = $featured_ids ? get_the_post_thumbnail_url( $featured_ids[0], 'full' ) : '';
-$whatsapp_url = car_dealer_whatsapp_url( 'مرحباً AUTO BRANDS، أريد الاستفسار عن السيارات المتاحة.' );
+$whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً AUTO BRANDS، أريد الاستفسار عن السيارات المتاحة.', 'Hello AUTO BRANDS, I would like to ask about the available vehicles.' ) );
 $catalog_url = car_dealer_archive_url( 'car' );
 $offers_url = car_dealer_archive_url( 'car_offer' );
 ?>
@@ -97,7 +97,7 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 					<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="2"/><rect x="14" y="20" width="20" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M18 20v-4a6 6 0 0112 0v4" stroke="currentColor" stroke-width="2"/></svg>
 				</div>
 				<span class="ab-feature-num">02</span>
-				<h3><?php esc_html_e( 'حلول تمويل', 'car-dealer' ); ?></h3>
+				<h3><?php $cd_feature_finance = car_dealer_page_url( 'finance' ); if ( $cd_feature_finance ) : ?><a href="<?php echo esc_url( $cd_feature_finance ); ?>"><?php esc_html_e( 'حاسبة التمويل', 'car-dealer' ); ?></a><?php else : esc_html_e( 'حاسبة التمويل', 'car-dealer' ); endif; ?></h3>
 				<p><?php esc_html_e( 'استخدم الحاسبة للاطلاع على تقدير أولي، وتعرّف على الخيارات المتاحة عند توفيرها.', 'car-dealer' ); ?></p>
 			</article>
 			<article class="ab-feature-card">
@@ -181,9 +181,10 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 	<div class="container ab-finance-grid">
 		<div class="ab-finance-copy">
 			<p class="eyebrow"><?php esc_html_e( 'تمويل', 'car-dealer' ); ?></p>
-			<h2><?php esc_html_e( 'احسب فرصتك التمويلية', 'car-dealer' ); ?></h2>
+			<h2><?php esc_html_e( 'قدّر قسطك الشهري', 'car-dealer' ); ?></h2>
 			<p><?php esc_html_e( 'احسب قسطًا تقديريًا للمقارنة الأولية. شروط التمويل الفعلية تعتمد على مزود الخدمة عند توفره.', 'car-dealer' ); ?></p>
 			<?php echo do_shortcode( '[car_dealer_loan_calculator]' ); ?>
+			<?php $cd_finance_page = car_dealer_page_url( 'finance' ); if ( $cd_finance_page ) : ?><a class="btn btn-outline" href="<?php echo esc_url( $cd_finance_page ); ?>"><?php echo esc_html( car_dealer_text( 'افتح حاسبة التمويل', 'Open Finance Calculator' ) ); ?></a><?php endif; ?>
 		</div>
 	</div>
 </section>

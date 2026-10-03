@@ -25,10 +25,9 @@ while ( have_posts() ) :
 	<section class="ab-car-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div class="container ab-car-hero-grid">
 			<div class="car-single-media">
-				<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large', array( 'loading' => 'eager' ) ); } else { ?><div class="car-image-placeholder">🚘</div><?php } ?>
+				<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large', array( 'loading' => 'eager' ) ); } else { ?><div class="car-image-placeholder"><?php echo car_dealer_vehicle_placeholder(); ?></div><?php } ?>
 			</div>
 			<div class="car-single-content">
-				<?php if ( function_exists( 'car_dealer_catalog_language_switch' ) ) { car_dealer_catalog_language_switch(); } ?>
 				<p class="eyebrow"><?php echo $brand_name ? esc_html( $brand_name ) : esc_html__( 'AUTO BRANDS', 'car-dealer' ); ?></p>
 				<h1><?php the_title(); ?></h1>
 				<?php if ( $price ) : ?><p class="car-single-price"><?php echo esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ); ?></p><?php endif; ?>

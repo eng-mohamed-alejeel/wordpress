@@ -30,4 +30,4 @@ Every cell beginning with a spreadsheet formula prefix is neutralized. The expor
 
 ## Data policy
 
-This increment does not insert reference, customer, inventory or transaction data. The source business database remains intentionally empty until actual business values are supplied. Automated acceptance uses a separate disposable MariaDB instance and removes its generated database after the run.
+This increment did not insert reference, customer, inventory or transaction data. Its automated acceptance used a separate disposable MariaDB instance and removed the generated database. On 2026-10-02 the user separately authorized synthetic local development records; those are documented in `DEVELOPMENT-DATA-2026-10-02.md` and are not approved business data.

@@ -12,7 +12,7 @@ get_header(); ?>
 <div class="page-template-about">
 <div class="container">
 	<div id="primary" class="content-area">
-		<main id="main" class="site-main">
+		<div id="main" class="site-main">
 			<?php
 			while ( have_posts() ) :
 				the_post();
@@ -28,7 +28,7 @@ get_header(); ?>
 					</div>
 				</article>
 			<?php endwhile; ?>
-		</main>
+		</div>
 	</div>
 </div>
 </div>

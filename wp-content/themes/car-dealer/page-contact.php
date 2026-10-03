@@ -12,7 +12,7 @@ get_header(); ?>
 <div class="page-template-contact">
 <div class="container">
 	<div id="primary" class="content-area">
-		<main id="main" class="site-main">
+		<div id="main" class="site-main">
 			<?php
 			while ( have_posts() ) :
 				the_post();
@@ -24,11 +24,11 @@ get_header(); ?>
 						</div>
 					<?php endif; ?>
 					<div class="entry-content">
-						<?php echo do_shortcode('[ab_contact_hero][ab_contact_grid][ab_contact_map][ab_contact_form_section][ab_faq_section][ab_social_section]'); ?>
+						<?php if ( 'en' === car_dealer_catalog_language() && get_post_meta( get_the_ID(), '_adc_content_en', true ) ) { the_content(); } else { echo do_shortcode('[ab_contact_hero][ab_contact_grid][ab_contact_map][ab_contact_form_section][ab_faq_section][ab_social_section]'); } ?>
 					</div>
 				</article>
 			<?php endwhile; ?>
-		</main>
+		</div>
 	</div>
 </div>
 </div>

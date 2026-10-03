@@ -1,0 +1,11 @@
+# Public languages and contact controls — 2026-10-03
+
+The public site defaults to Arabic. `?lang=en` selects English, sets `lang="en"` and `dir="ltr"`, and is kept on internal menu, page, catalog, search and account links. The language control appears in the header and footer. The plugin owns URL selection and alternate links; the theme owns visual labels and layout.
+
+Theme-owned home, vehicle, offer, about, contact, form and account interface copy has English counterparts. The plugin's public shortcode fallback for finance and contact forms also has English copy. The WordPress administration interface continues to use each administrator's WordPress locale; the public language URL does not alter admin permissions or locale.
+
+Editorial content is separate from interface copy. The plugin now offers English title and content fields in the WordPress editor for pages, vehicles and offers. When populated, those fields supply the public English title and body; blank fields retain the original. The finance page and legal review drafts contain Arabic and English sections, with only the selected section shown on the public page. Vehicle descriptions, customer-entered text, imported media text and other future editorial pages need approved English source text before they can be called fully translated. The privacy and terms drafts remain unpublished and require business and legal approval; the footer only links to published legal pages.
+
+The development site's WhatsApp setting was populated from the number supplied in this conversation, without adding the number to tracked PHP or CSS. The floating button and footer contact link read that setting. Production and staging need their own approved WhatsApp setting under the theme settings page. The contact form and newsletter retain their existing plugin availability and consent gates.
+
+The later local acceptance found and fixed an undefined shortcode tag in the English editorial adapter, redirected header search to the vehicle catalog, corrected footer newsletter contrast/layout, omitted the empty legal column, and replaced the missing-photo emoji with an SVG. See `BILINGUAL-SITE-ACCEPTANCE-2026-10-03.md` for 53 passing read-only browser checks and remaining manual gates.

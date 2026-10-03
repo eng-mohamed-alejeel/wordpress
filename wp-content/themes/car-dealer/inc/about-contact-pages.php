@@ -18,8 +18,13 @@ function car_dealer_editorial_page_blueprints( $blueprints ) {
 	$blueprints = is_array( $blueprints ) ? $blueprints : array();
 	return array_merge( $blueprints, array(
 		'finance' => array(
-			'title' => 'التمويل',
-			'content' => '<section class="ab-page-band"><h1>تقدير التمويل</h1><p>استخدم الحاسبة لتقدير القسط مبدئيًا. تعتمد الخيارات والشروط الفعلية على مزود التمويل عند توفره.</p></section>[car_dealer_loan_calculator][car_dealer_contact_form]',
+			'title' => 'حاسبة التمويل',
+			'content' => '<section class="cd-finance-intro" lang="ar" dir="rtl"><p>أدخل بيانات السيارة والدفعة الأولى والمدة في حاسبة التمويل للحصول على تقدير أولي غير ملزم للقسط الشهري. تختلف الأهلية والرسوم والشروط النهائية بحسب الجهة المرخصة والعرض المعتمد عند توفره.</p></section>'
+				. '<section class="cd-finance-intro" lang="en" dir="ltr"><p>Enter the vehicle price, down payment and term in the Finance Calculator for a preliminary, non-binding monthly payment estimate. Eligibility, charges and final terms depend on an approved offer from a licensed provider when available.</p></section>'
+				. '[car_dealer_loan_calculator]'
+				. '<section class="cd-finance-enquiry" lang="ar" dir="rtl"><h2>لديك استفسار؟</h2><p>أرسل استفسارك إلى فريق المعرض. إرسال النموذج لا يُنشئ طلب تمويل لدى مزود خارجي.</p></section>'
+				. '<section class="cd-finance-enquiry" lang="en" dir="ltr"><h2>Have a question?</h2><p>Send your enquiry to the dealership team. Submitting this form does not create a financing application with an external provider.</p></section>'
+				. '[car_dealer_contact_form]',
 		),
 		'about' => array(
 			'title' => 'من نحن',
@@ -255,7 +260,7 @@ car_dealer_register_shortcode_adapter( 'ab_team_section', 'car_dealer_shortcode_
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_cta() {
 	$contact_url = car_dealer_page_url( 'contact' );
-	$whatsapp_url = car_dealer_whatsapp_url( 'مرحباً، أود الاستفسار عن سيارة.' );
+	$whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً، أود الاستفسار عن سيارة.', 'Hello, I would like to ask about a vehicle.' ) );
 	if ( ! $contact_url && '#' === $whatsapp_url ) { return ''; }
 	ob_start(); ?>
 <section class="ab-cta-v2">

@@ -1,5 +1,7 @@
 # Theme/plugin cutover acceptance — 1.29
 
+2026-10-03 public-language follow-up: local browser acceptance passed 53 read-only checks for Arabic/English navigation, forms, footer, WhatsApp and responsive layout after repairing the shortcode translation adapter and header catalog search. This does not replace the real-data, legal, human accessibility or production staging gates. See `BILINGUAL-SITE-ACCEPTANCE-2026-10-03.md`.
+
 Status: partial release acceptance on 2026-10-02. The isolated database/HTTP, dealership browser and stock-theme switch paths passed. Actual published pages and a same-commit prior plugin/theme pair passed disposable staging public and read-only administration smoke checks. The local source registry/schema upgrade and Apache route smoke also passed. A representative populated transactional rollback rehearsal now passes on a copied database. Approved legal pages, public deployment checks and broader production recovery remain. See `VERIFICATION-1.29.13.md`, `SOURCE-CUTOVER-2026-10-02.md`, `ROLLBACK-OPERATIONS-2026-10-02.md` and `POPULATED-ROLLBACK-2026-10-02.md`.
 
 ## Scope and data boundary
@@ -44,3 +46,5 @@ On 2026-10-02, after the source upgrade and rollback smoke above, the user autho
 The subsequent populated rehearsal passed with a copied 45-table snapshot: the prior pair read the existing synthetic finance/payment/delivery states, wrote a new quote/reservation/sale and rejected a no-funds payment on the clone; the current pair then read the resulting chain. All source fingerprints stayed unchanged. This closes the representative local transactional rollback check, not full production recovery or public deployment acceptance. See `POPULATED-ROLLBACK-2026-10-02.md`.
 
 A further local restore on a separate MariaDB process/data directory matched all 45 table fingerprints and 666 file hashes, passed application and media readback, and retained all target fingerprints across restart. The source's non-option tables were stable; three `wp_options` values changed concurrently. This remains a same-host rehearsal, with public deployment and off-site/separate-host recovery still open. See `INDEPENDENT-RESTORE-2026-10-02.md`.
+
+The 2026-10-03 read-only release preflight now records the remaining local failures explicitly: HTTPS origin, legal pages, development records and compatibility catalog mode. Current HEAD and index exclude `wp-config.php`; historical-secret review remains manual. The unchanged WordPress example page was preserved as a draft and the published-page placeholder check now passes. Staging/business/manual gates remain in `RELEASE-PREFLIGHT-2026-10-03.md`.

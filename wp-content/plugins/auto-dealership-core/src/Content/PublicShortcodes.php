@@ -155,11 +155,12 @@ final class PublicShortcodes {
 
 	private static function loan_calculator( array $model ): string {
 		return '<div class="adc-loan-calculator"><h2>' . esc_html__( 'حاسبة التمويل', 'auto-dealership-core' ) . '</h2><form data-loan-calculator>'
-			. '<label>' . esc_html__( 'سعر السيارة', 'auto-dealership-core' ) . '<input type="number" name="price" data-loan-price value="' . esc_attr( $model['price'] ) . '" min="1" max="' . esc_attr( $model['max_amount'] ) . '" required></label>'
+			. '<input type="hidden" name="lang" value="' . esc_attr( \AutoDealership\Inventory\CatalogPresentation::language() ) . '">'
+			. '<label>' . esc_html__( 'سعر السيارة', 'auto-dealership-core' ) . '<input type="number" name="price" data-loan-price value="' . esc_attr( (int) $model['price'] > 0 ? $model['price'] : '' ) . '" min="1" max="' . esc_attr( $model['max_amount'] ) . '" required></label>'
 			. '<label>' . esc_html__( 'الدفعة الأولى', 'auto-dealership-core' ) . '<input type="number" name="down_payment" data-loan-down value="' . esc_attr( $model['down_payment'] ) . '" min="0" max="' . esc_attr( $model['max_amount'] ) . '" required></label>'
 			. '<label>' . esc_html__( 'النسبة السنوية التقديرية %', 'auto-dealership-core' ) . '<input type="number" name="annual_rate" data-loan-rate value="' . esc_attr( $model['annual_rate'] ) . '" min="0" max="' . esc_attr( $model['max_rate'] ) . '" step="0.01" required></label>'
 			. '<label>' . esc_html__( 'المدة بالأشهر', 'auto-dealership-core' ) . '<input type="number" name="months" data-loan-months value="' . esc_attr( $model['months'] ) . '" min="1" max="' . esc_attr( $model['max_months'] ) . '" required></label>'
-			. '<button type="submit">' . esc_html__( 'احسب', 'auto-dealership-core' ) . '</button><p>' . esc_html__( 'القسط الشهري التقديري:', 'auto-dealership-core' ) . ' <strong data-loan-result>0 SAR</strong></p><p data-loan-status role="status"></p><small>' . esc_html__( 'هذا تقدير إرشادي وليس عرض تمويل أو موافقة.', 'auto-dealership-core' ) . '</small></form></div>';
+			. '<button type="submit">' . esc_html__( 'احسب', 'auto-dealership-core' ) . '</button><p>' . esc_html__( 'القسط الشهري التقديري:', 'auto-dealership-core' ) . ' <strong data-loan-result aria-live="polite">—</strong></p><p data-loan-status role="status"></p><small>' . esc_html__( 'هذا تقدير إرشادي وليس عرض تمويل أو موافقة.', 'auto-dealership-core' ) . '</small></form></div>';
 	}
 
 	private static function contact_form( array $model ): string {

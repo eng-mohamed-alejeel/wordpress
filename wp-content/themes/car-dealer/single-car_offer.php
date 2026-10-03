@@ -18,7 +18,7 @@ $car_id = $offer['car_id'];
 			<?php if ( $monthly ) : ?><p class="car-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
 			<div class="car-single-actions">
 				<a class="btn btn-primary" href="#offer-lead"><?php esc_html_e( 'احصل على العرض', 'car-dealer' ); ?></a>
-				<?php $wa_link = car_dealer_whatsapp_url( 'أريد الاستفادة من عرض: ' . get_the_title() ); if ( '#' !== $wa_link ) : ?><a class="btn btn-chrome" href="<?php echo esc_url( $wa_link ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a><?php endif; ?>
+				<?php $wa_link = car_dealer_whatsapp_url( car_dealer_text( 'أريد الاستفادة من عرض: ', 'I would like to ask about this offer: ' ) . get_the_title() ); if ( '#' !== $wa_link ) : ?><a class="btn btn-chrome" href="<?php echo esc_url( $wa_link ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a><?php endif; ?>
 			</div>
 		</div>
 	</div>

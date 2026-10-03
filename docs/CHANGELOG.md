@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-03 — Finance Calculator page
+
+- Renamed the published `/finance/` page to “حاسبة التمويل” with “Finance Calculator” for English visitors. Updated its navigation/footer labels, editorial blueprint and bilingual page copy, and aligned the browser title with the English title. The URL remains unchanged.
+- Replaced the calculator's misleading initial `0 SAR` with an unset result, sent the selected language with calculation requests, and clarified that the estimate and enquiry are not a provider offer or application. The local page update has a guarded rerunnable script and a pre-change backup in `.tmp`.
+- Refined the homepage calculator card for desktop and narrow screens: full-width labeled inputs, readable result and disclaimer, accessible focus styling, and a compact page link. Completed the English labels in that form.
+
+## 2026-10-03 — Bilingual public-site acceptance
+
+- Unified Arabic/English page direction and language controls across the public plugin/theme interface; added optional English editorial fields for pages, vehicles and offers. Restored the configured floating WhatsApp link and rebuilt the conditional footer.
+- Fixed the shortcode adapter's undefined tag warning found in live local browser inspection. Header search now submits to the vehicle catalog with the selected language. Footer newsletter copy and consent are legible on the dark background; unpublished legal links leave no empty column. Vehicles without photos use an SVG fallback.
+- Added a read-only local browser acceptance script. Its 53 checks pass across public routes and desktop/mobile widths, without posting customer data. The preflight still reports 8 PASS, 4 FAIL and 9 MANUAL; the previous code-only ZIP predates these uncommitted changes. See `BILINGUAL-SITE-ACCEPTANCE-2026-10-03.md`.
+
+## 2026-10-03 — Release preflight and documentation alignment
+
+- Added a read-only CLI release gate for active code/schema, public origin, legal pages, editorial placeholders, demo data, catalog reconciliation/mode, provider route safety, media and configuration tracking. After preserving the untouched WordPress example page as a draft and excluding configuration from HEAD, the local baseline is 8 PASS, 4 FAIL and 9 MANUAL, with 45/45 source fingerprints stable around a repeat read-only run. See `RELEASE-PREFLIGHT-2026-10-03.md`.
+- Excluded `wp-config.php` from HEAD and index in local commit `66cf4f2` without deleting the working site file; historical-secret review remains. Added a constrained plugin/theme release builder and a local 163-file code-only candidate with per-file and archive SHA-256 evidence (`RELEASE-PACKAGE-2026-10-03.md`). Updated stale empty-database and pending-rollback statements in current operation docs while retaining historical test context.
+- Prepared guarded Arabic/English privacy and terms drafts in local WordPress without publishing them; replaced the default privacy sample text, created the terms draft and corrected the public finance copy to avoid unapproved provider claims. Recorded approved first-release deferrals and the real-data intake boundary; the synthetic dataset and compatibility catalog remain unchanged (`legal/REVIEW.md`, `LAUNCH-DATA-AND-SCOPE-2026-10-03.md`).
+
 ## 2026-10-02 — Populated independent-instance restore
 
 - Restored the current synthetic development snapshot and 666 files into a separate local MariaDB process/data directory. All 45 table fingerprints and file hashes matched before WordPress boot; copied plugin/theme business, catalog, route and media reads passed. A graceful server restart preserved all 45 target table fingerprints. Added a guarded read-only application inspection helper and documented the concurrent `wp_options` change on the source in `INDEPENDENT-RESTORE-2026-10-02.md`.

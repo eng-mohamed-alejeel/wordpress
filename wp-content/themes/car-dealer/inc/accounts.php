@@ -1,7 +1,7 @@
 <?php
 /** Front-end authentication and capability-aware account workspace. */
 defined( 'ABSPATH' ) || exit;
-function car_dealer_account_url( $view = 'dashboard' ) { return add_query_arg( 'cd_account', $view, home_url( '/' ) ); }
+function car_dealer_account_url( $view = 'dashboard' ) { return car_dealer_catalog_localized_url( add_query_arg( 'cd_account', $view, home_url( '/' ) ) ); }
 add_filter( 'adc_customer_account_url', function ( $url, $fragment = '' ) {
 	$url = car_dealer_account_url();
 	return $fragment ? $url . '#' . sanitize_html_class( $fragment ) : $url;
@@ -13,13 +13,13 @@ function car_dealer_account_kind( WP_User $user ) {
 }
 function car_dealer_account_links() {
   if ( is_user_logged_in() ) {
-   return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url() ) . '">حسابي</a></li><li class="menu-item cd-logout-link"><a href="' . esc_url( wp_logout_url( home_url( '/' ) ) ) . '">تسجيل الخروج</a></li>';
+   return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url() ) . '">' . esc_html( car_dealer_text( 'حسابي', 'My account' ) ) . '</a></li><li class="menu-item cd-logout-link"><a href="' . esc_url( wp_logout_url( car_dealer_site_url() ) ) . '">' . esc_html( car_dealer_text( 'تسجيل الخروج', 'Log out' ) ) . '</a></li>';
   }
-  return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url( 'login' ) ) . '">تسجيل الدخول</a></li>';
+  return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url( 'login' ) ) . '">' . esc_html( car_dealer_text( 'تسجيل الدخول', 'Log in' ) ) . '</a></li>';
 }
 add_filter( 'wp_nav_menu_items', function ( $items, $args ) {
   if ( 'primary' === $args->theme_location ) {
-    $home_link = '<li class="menu-item menu-item-home"><a href="' . esc_url( home_url( '/' ) ) . '">الرئيسية</a></li>';
+    $home_link = '<li class="menu-item menu-item-home"><a href="' . esc_url( car_dealer_site_url() ) . '">' . esc_html( car_dealer_text( 'الرئيسية', 'Home' ) ) . '</a></li>';
     if ( false === strpos( $items, 'menu-item-home' ) ) {
       $items = $home_link . $items;
     }
@@ -29,8 +29,8 @@ add_filter( 'wp_nav_menu_items', function ( $items, $args ) {
 }, 20, 2 );
 function car_dealer_account_menu_fallback() {
   $catalog_url = car_dealer_archive_url( 'car' );
-  echo '<ul id="primary-menu"><li><a href="' . esc_url( home_url( '/' ) ) . '">الرئيسية</a></li>';
-  if ( $catalog_url ) { echo '<li><a href="' . esc_url( $catalog_url ) . '">السيارات</a></li>'; }
+  echo '<ul id="primary-menu"><li><a href="' . esc_url( car_dealer_site_url() ) . '">' . esc_html( car_dealer_text( 'الرئيسية', 'Home' ) ) . '</a></li>';
+  if ( $catalog_url ) { echo '<li><a href="' . esc_url( $catalog_url ) . '">' . esc_html( car_dealer_text( 'السيارات', 'Vehicles' ) ) . '</a></li>'; }
   echo car_dealer_account_links() . '</ul>';
 }
 add_action( 'wp_enqueue_scripts', function () { wp_enqueue_style( 'car-dealer-account', get_template_directory_uri() . '/assets/css/account.css', array( 'car-dealer-main' ), filemtime( __DIR__ . '/../assets/css/account.css' ) ); } );
@@ -93,7 +93,7 @@ function car_dealer_account_request_table_core( string $type ): void {
    echo $bookings ? esc_html( trim( $item['requested_date'] . ' ' . $item['requested_time'] ) ) : nl2br( esc_html( $item['message'] ) );
    echo '</td><td>';
    if ( $item['car_url'] ) {
-    echo '<a href="' . esc_url( $item['car_url'] ) . '">' . esc_html( $item['car_title'] ) . '</a>';
+    echo '<a href="' . esc_url( car_dealer_catalog_localized_url( $item['car_url'] ) ) . '">' . esc_html( $item['car_title'] ) . '</a>';
    } else {
     echo esc_html( $item['car_id'] ? 'السيارة غير متاحة حاليًا' : 'طلب عام' );
    }

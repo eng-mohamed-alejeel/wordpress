@@ -1,0 +1,170 @@
+/* Shared bilingual site chrome. */
+.header-content { gap: 1.25rem; }
+.header-content .brand-section { margin-inline-end: auto; margin-left: 0; flex: 0 0 auto; }
+.header-actions { display: flex; align-items: center; gap: .85rem; flex: 0 0 auto; }
+.site-language-switch { display: inline-flex; align-items: center; gap: .15rem; padding: .22rem; border: 1px solid var(--cd-color-line, #d9e1e8); border-radius: 999px; background: var(--cd-color-surface, #fff); white-space: nowrap; }
+.site-language-switch a { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; padding: .35rem .7rem; border-radius: 999px; color: var(--cd-color-primary, #102a43); font-size: .875rem; font-weight: 700; text-decoration: none; }
+.site-language-switch a:hover, .site-language-switch a:focus-visible { color: var(--cd-color-primary, #102a43); background: #e9f2fa; }
+.site-language-switch a[aria-current="page"] { color: #fff; background: var(--cd-color-primary, #102a43); }
+.site-language-switch a:focus-visible, .ab-float-wa:focus-visible, .footer-links a:focus-visible { outline: 2px solid var(--cd-color-accent, #1677c8); outline-offset: 3px; }
+html[dir="ltr"] .main-navigation ul { direction: ltr; }
+html[dir="ltr"] .site-main, html[dir="ltr"] .site-footer { text-align: left; }
+html[dir="ltr"] .site-header { direction: ltr; }
+html[lang="ar"] .entry-content > section[lang="en"], html[lang="en"] .entry-content > section[lang="ar"] { display: none; }
+.cd-finance-page .content-area { max-width: 920px; }
+.cd-finance-page .entry-content > section { margin-block: 0 1.75rem; }
+.cd-finance-page .entry-content > section > p { max-width: 760px; color: var(--cd-color-muted, #556579); }
+.cd-finance-page .cd-loan-calculator { padding: clamp(1.25rem, 3vw, 2rem); border-radius: 1rem; box-shadow: 0 14px 40px rgba(16, 42, 67, .08); }
+.cd-finance-page .cd-loan-calculator h2 { margin-block: 0 1.25rem; }
+.cd-finance-page .cd-loan-calculator form { display: grid; gap: 1rem; }
+.cd-finance-page .cd-loan-calculator .cd-form-grid { gap: 1rem; }
+.cd-finance-page .cd-loan-calculator label { display: grid; gap: .4rem; font-weight: 700; }
+.cd-finance-page .cd-loan-calculator input[type="number"] { width: 100%; min-width: 0; }
+.cd-finance-page .cd-loan-calculator .btn { justify-self: start; }
+.cd-finance-page .cd-loan-calculator .cd-loan-result { margin: 0; }
+.cd-finance-page .cd-loan-calculator [data-loan-status]:empty { display: none; }
+.cd-finance-page .entry-content > .cd-finance-enquiry { margin-block: 2.5rem 1rem; }
+.ab-feature-card h3 a { color: inherit; text-decoration: none; }
+.ab-feature-card h3 a:hover, .ab-feature-card h3 a:focus-visible { text-decoration: underline; }
+.ab-finance-v2 .ab-finance-grid { max-width: 1020px; }
+.ab-finance-v2 .ab-finance-copy { gap: 1.25rem; }
+.ab-finance-v2 .ab-finance-copy > p:not(.eyebrow) { max-width: 68ch; }
+.ab-finance-v2 .cd-loan-calculator {
+  width: 100%;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  color: #1e293b;
+  border-color: rgba(255, 255, 255, .28);
+  border-radius: 1.25rem;
+  box-shadow: 0 24px 65px rgba(0, 0, 0, .22);
+}
+.ab-finance-v2 .cd-loan-calculator h3 {
+  margin: 0 0 1.35rem;
+  color: #102a43;
+  font-size: clamp(1.35rem, 2vw, 1.65rem);
+  line-height: 1.4;
+}
+.ab-finance-v2 .cd-loan-calculator form { display: grid; gap: 1.25rem; }
+.ab-finance-v2 .cd-loan-calculator .cd-form-grid { gap: 1rem 1.25rem; }
+.ab-finance-v2 .cd-loan-calculator label {
+  display: grid;
+  gap: .5rem;
+  min-width: 0;
+  color: #243447;
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: start;
+}
+.ab-finance-v2 .cd-loan-calculator input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: .7rem .85rem;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: .65rem;
+  background: #f8fafc;
+  color: #102a43;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.ab-finance-v2 .cd-loan-calculator input[type="number"]:focus-visible {
+  outline: 3px solid rgba(13, 103, 191, .24);
+  outline-offset: 1px;
+  border-color: #0d67bf;
+}
+.ab-finance-v2 .cd-loan-calculator .btn { justify-self: start; min-width: 160px; }
+.ab-finance-v2 .cd-loan-calculator .cd-loan-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem 1.25rem;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  color: #243447;
+  background: #edf4fb;
+  border: 1px solid #d6e5f4;
+  border-radius: .75rem;
+}
+.ab-finance-v2 .cd-loan-calculator .cd-loan-result strong {
+  color: #123c6a;
+  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+  font-weight: 800;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: isolate;
+}
+.ab-finance-v2 .cd-loan-calculator [data-loan-status]:empty { display: none; }
+.ab-finance-v2 .cd-loan-calculator [data-loan-status]:not(:empty) { color: #a11d2a; font-weight: 700; }
+.ab-finance-v2 .cd-loan-calculator small { display: block; color: #526477; line-height: 1.7; }
+.ab-finance-v2 .ab-finance-copy > .btn-outline {
+  justify-self: start;
+  width: auto;
+  min-height: 46px;
+  padding-inline: 1.25rem;
+  color: #fff;
+  border-color: rgba(255, 255, 255, .72);
+}
+.ab-finance-v2 .ab-finance-copy > .btn-outline:hover,
+.ab-finance-v2 .ab-finance-copy > .btn-outline:focus-visible { color: #fff; border-color: var(--cd-color-accent); }
+@media (max-width: 600px) {
+  .ab-finance-v2 { padding-block: 3.25rem; }
+  .ab-finance-v2 .ab-finance-copy { gap: 1rem; }
+  .ab-finance-v2 .cd-loan-calculator { padding: 1.25rem; }
+  .ab-finance-v2 .cd-loan-calculator h3 { margin-bottom: 1.1rem; }
+  .ab-finance-v2 .cd-loan-calculator .btn,
+  .ab-finance-v2 .ab-finance-copy > .btn-outline { width: 100%; justify-self: stretch; }
+  .ab-finance-v2 .cd-loan-calculator .cd-loan-result { align-items: start; flex-direction: column; }
+}
+.site-footer .footer-grid { grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(150px, 1fr)); align-items: start; }
+.site-footer .footer-grid-no-legal { grid-template-columns: minmax(250px, 1.4fr) repeat(2, minmax(180px, 1fr)); }
+.site-footer .footer-col { gap: .9rem; }
+.site-footer .footer-brand a { color: #fff; text-decoration: none; }
+.site-footer .footer-title { font-size: 1rem; margin-bottom: 1rem; }
+.site-footer .footer-links { display: grid; gap: .7rem; list-style: none; padding: 0; margin: 0; }
+.site-footer .footer-links li { margin: 0; }
+.site-footer .footer-links a { color: rgba(255,255,255,.82); text-decoration: none; }
+.site-footer .footer-links a:hover { text-decoration: underline; }
+.site-footer .footer-newsletter { display: grid; gap: .55rem; margin-top: .4rem; }
+.site-footer .footer-newsletter-title { color: #fff; font-size: 1rem; margin: 0; }
+.site-footer .footer-newsletter p { color: rgba(255,255,255,.72); }
+.site-footer .cd-newsletter-form { display: grid; gap: .6rem; margin-top: .5rem; padding: 0; border: 0; border-radius: 0; background: transparent; color: #fff; }
+.site-footer .cd-newsletter-form label { display: grid; gap: .3rem; font-size: .875rem; color: #fff; }
+.site-footer .cd-newsletter-form input[type="email"] { width: 100%; max-width: 100%; min-height: 42px; border-radius: .5rem; padding: .5rem .7rem; }
+.site-footer .cd-newsletter-form input[type="email"] { color: #102a43; }
+.site-footer .cd-newsletter-form .cd-newsletter-consent { display: flex; flex-direction: row; align-items: start; gap: .5rem; line-height: 1.6; }
+.site-footer .cd-newsletter-form .cd-newsletter-consent input { width: auto; min-height: 0; margin-top: .3rem; accent-color: #d02b2b; }
+.site-footer .cd-newsletter-form button { justify-self: start; }
+.site-footer .footer-contact-links a[dir="ltr"] { display: inline-block; unicode-bidi: isolate; }
+.site-footer .footer-social { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.25rem; }
+.site-footer .footer-social a { color: inherit; font-weight: 700; text-decoration: none; }
+.site-footer .site-language-switch { align-self: center; width: max-content; }
+.site-footer .site-language-switch a { color: #102a43; }
+.site-footer .site-language-switch a[aria-current="page"] { color: #fff; }
+.ab-float-wa { background: #128c4e; box-shadow: 0 8px 24px rgba(0, 71, 37, .35); }
+.ab-float-wa-pulse { border-color: #128c4e; }
+.car-image-placeholder { color: #476b8a; }
+.car-image-placeholder svg { width: min(52%, 180px); height: auto; max-height: 92px; }
+@media (max-width: 1120px) {
+  .header-content { flex-wrap: wrap; padding-block: .7rem; }
+  .header-actions { margin-inline-start: auto; }
+  .site-footer .footer-grid, .site-footer .footer-grid-no-legal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .header-content { gap: .6rem; }
+  .header-actions { width: 100%; justify-content: space-between; }
+  .header-search { flex: 1 1 auto; min-width: 0; }
+  .header-search { display: flex; }
+  .header-search input { width: 100%; min-width: 0; }
+  .site-language-switch a { min-height: 32px; padding-inline: .55rem; }
+  .site-footer .footer-grid, .site-footer .footer-grid-no-legal { grid-template-columns: 1fr; text-align: start; }
+  .site-footer .footer-brand, .site-footer .footer-social { justify-content: start; }
+  .site-footer .footer-links { justify-items: start; }
+  .site-footer { padding-bottom: 7rem; }
+  .ab-float-wa { inset-inline-end: 16px; bottom: 16px; }
+  .ab-back-top { inset-inline-end: 22px; bottom: 82px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ab-float-wa-pulse { animation: none; }
+}

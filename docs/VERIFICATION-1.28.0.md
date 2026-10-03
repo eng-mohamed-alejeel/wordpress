@@ -25,4 +25,4 @@ After isolated acceptance, the user explicitly authorized realistic demonstratio
 
 ## Boundary
 
-The records are fictional and clearly labeled. Provider adapters remain disabled, and the public catalog stays in compatibility mode. Business policy decisions, public deployment, human accessibility/security review, durable off-site backup and populated transactional rollback remain open.
+The records are fictional and clearly labeled. Provider adapters remain disabled, and the public catalog stays in compatibility mode. Business policy decisions, public deployment, human accessibility/security review and durable off-site backup remain open. The populated transactional rollback was subsequently exercised on a copied database; see `POPULATED-ROLLBACK-2026-10-02.md`.

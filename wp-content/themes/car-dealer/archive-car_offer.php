@@ -6,7 +6,7 @@
 		<p><?php esc_html_e( 'عروض مختارة، أقساط مرنة، وفرص محدودة على سيارات تناسب رحلتك القادمة.', 'car-dealer' ); ?></p>
 	</div>
 </section>
-<main class="container archive-content">
+<div class="container archive-content">
 	<?php if ( ! function_exists( 'adc_public_offer_view' ) ) : ?>
 		<p class="empty-state" role="status"><?php esc_html_e( 'العروض غير متاحة حاليًا. يرجى المحاولة لاحقًا.', 'car-dealer' ); ?></p>
 	<?php else : ?>
@@ -23,7 +23,7 @@
 	<?php else : ?>
 		<div class="empty-state"><?php esc_html_e( 'لا توجد عروض منشورة حالياً.', 'car-dealer' ); ?></div>
 	<?php endif; ?>
-	<?php if ( $had_posts ) : ?><div class="pagination"><?php the_posts_pagination(); ?></div><?php endif; ?>
+	<?php if ( $had_posts ) : ?><div class="pagination"><?php the_posts_pagination( array( 'prev_text' => car_dealer_text( 'السابق', 'Previous' ), 'next_text' => car_dealer_text( 'التالي', 'Next' ) ) ); ?></div><?php endif; ?>
 	<?php endif; ?>
-</main>
+</div>
 <?php get_footer(); ?>

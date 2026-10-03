@@ -21,6 +21,7 @@ require_once ADC_PATH . 'src/Accounts/CustomerRequestView.php';
 require_once ADC_PATH . 'src/Content/ContentRegistry.php';
 require_once ADC_PATH . 'src/Content/EditorialPageSetup.php';
 require_once ADC_PATH . 'src/Content/PublicShortcodes.php';
+require_once ADC_PATH . 'src/Content/PublicEditorialTranslations.php';
 require_once ADC_PATH . 'src/Content/PublicStructuredData.php';
 require_once ADC_PATH . 'src/Content/PublicOfferView.php';
 require_once ADC_PATH . 'src/Content/PublicVehicleView.php';
@@ -130,6 +131,7 @@ register_activation_hook( ADC_FILE, array( 'AutoDealership\\Leads\\LegacyEngagem
 
 \AutoDealership\Content\ContentRegistry::boot();
 \AutoDealership\Content\PublicShortcodes::boot();
+\AutoDealership\Content\PublicEditorialTranslations::boot();
 \AutoDealership\Content\PublicOfferView::boot();
 \AutoDealership\Inventory\CatalogPresentation::boot();
 \AutoDealership\Content\PublicStructuredData::boot();

@@ -21,7 +21,7 @@ $permalink  = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer
 		<span class="car-badge"><?php esc_html_e( 'مميزة', 'car-dealer' ); ?></span>
 	<?php endif; ?>
 	<a class="car-image" href="<?php echo esc_url( $permalink ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'عرض تفاصيل %s', 'car-dealer' ), get_the_title() ) ); ?>">
-		<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'car-card', array( 'loading' => 'lazy' ) ); } else { ?><span class="car-image-placeholder">🚘</span><?php } ?>
+		<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'car-card', array( 'loading' => 'lazy' ) ); } else { ?><span class="car-image-placeholder"><?php echo car_dealer_vehicle_placeholder(); ?></span><?php } ?>
 	</a>
 	<div class="car-details">
 		<p class="car-brand"><?php echo $brand_name ? esc_html( $brand_name ) : esc_html__( 'سيارة متاحة', 'car-dealer' ); ?></p>

@@ -21,7 +21,7 @@ function car_dealer_customer_form_fields( $email_only = false, $model = array() 
  }
  if ( $authenticated ) {
 	$account_url = $has_model ? (string) ( $model['account_url'] ?? home_url( '/' ) ) : car_dealer_account_url();
-  $html .= '<p class="cd-profile-form-note">تُرسل بيانات حسابك تلقائياً. <a href="' . esc_url( $account_url ) . '">تحديث بياناتي' . ( ! $email_only && ! $identity['phone'] ? ' وإضافة رقم الهاتف' : '' ) . '</a></p>';
+  $html .= '<p class="cd-profile-form-note">' . esc_html( car_dealer_text( 'تُرسل بيانات حسابك تلقائياً.', 'Your account details are included automatically.' ) ) . ' <a href="' . esc_url( car_dealer_catalog_localized_url( $account_url ) ) . '">' . esc_html( car_dealer_text( 'تحديث بياناتي', 'Update my details' ) ) . ( ! $email_only && ! $identity['phone'] ? esc_html( car_dealer_text( ' وإضافة رقم الهاتف', ' and add a phone number' ) ) : '' ) . '</a></p>';
  }
  if ( ! $email_only ) {
   $html .= '<input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>';
@@ -31,7 +31,8 @@ function car_dealer_customer_form_fields( $email_only = false, $model = array() 
 function car_dealer_contact_form_shortcode( $model = array() ) {
 	if ( ! car_dealer_intake_available() ) { return car_dealer_form_unavailable(); }
 	$language = is_array( $model ) && 'en' === ( $model['language'] ?? '' ) ? 'en' : ( function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar' );
- return '<form method="post" class="cd-ajax-form cd-contact-form" data-action="car_dealer_contact"><input type="hidden" name="lang" value="' . esc_attr( $language ) . '">' . car_dealer_customer_form_fields( false, $model ) . '<textarea name="message" required aria-label="رسالتك" placeholder="رسالتك"></textarea><button class="btn btn-primary" type="submit">إرسال</button><p class="cd-form-status" role="status"></p></form>';
+ $message_label = car_dealer_text( 'رسالتك', 'Your message' );
+ return '<form method="post" class="cd-ajax-form cd-contact-form" data-action="car_dealer_contact"><input type="hidden" name="lang" value="' . esc_attr( $language ) . '">' . car_dealer_customer_form_fields( false, $model ) . '<textarea name="message" required aria-label="' . esc_attr( $message_label ) . '" placeholder="' . esc_attr( $message_label ) . '"></textarea><button class="btn btn-primary" type="submit">' . esc_html( car_dealer_text( 'إرسال', 'Send' ) ) . '</button><p class="cd-form-status" role="status"></p></form>';
 }
 car_dealer_register_shortcode_adapter( 'car_dealer_contact_form', 'car_dealer_contact_form_shortcode', false, true );
 function car_dealer_render_lead_form( $car_id, $type, $title = '', $button = '' ) {
@@ -49,6 +50,6 @@ function car_dealer_render_booking_form( $car_id ) {
 if ( ! function_exists( 'car_dealer_newsletter_form' ) ) {
 	function car_dealer_newsletter_form() {
 		if ( ! function_exists( 'adc_core_owns_marketing_subscription_actions' ) || ! adc_core_owns_marketing_subscription_actions() ) { echo car_dealer_form_unavailable(); return; }
-		echo '<form method="post" class="cd-ajax-form cd-newsletter-form" data-action="car_dealer_subscribe">' . car_dealer_customer_form_fields( true ) . '<input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" hidden><label class="cd-newsletter-consent"><input type="checkbox" name="consent_marketing" value="1" required> ' . esc_html__( 'أوافق على استلام رسائل وتسويق المعرض ويمكنني إلغاء الاشتراك لاحقًا.', 'car-dealer' ) . '</label><button class="btn btn-primary" type="submit">اشترك</button><p class="cd-form-status" role="status"></p></form>';
+		echo '<form method="post" class="cd-ajax-form cd-newsletter-form" data-action="car_dealer_subscribe">' . car_dealer_customer_form_fields( true ) . '<input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" hidden><label class="cd-newsletter-consent"><input type="checkbox" name="consent_marketing" value="1" required> ' . esc_html__( 'أوافق على استلام رسائل وتسويق المعرض ويمكنني إلغاء الاشتراك لاحقًا.', 'car-dealer' ) . '</label><button class="btn btn-primary" type="submit">' . esc_html( car_dealer_text( 'اشترك', 'Subscribe' ) ) . '</button><p class="cd-form-status" role="status"></p></form>';
 	}
 }

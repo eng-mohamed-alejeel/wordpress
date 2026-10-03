@@ -56,6 +56,8 @@ REST v1 remains compatible. REST v2 wraps every response and supplies a request 
 5. Retention periods for supplier contacts, acquisition documents and finance decisions.
 6. Business approval for specialist margin, aging, purchasing and employee reports.
 
+For the first-release scope decision on 2026-10-03, the owner deferred purchase orders, an automatic total-cost formula, official stored PDF/invoice generation, financial-history identity merges and external provider adapters until their policies and contracts are approved. Existing explicit cost fields and current capability/reports remain. Automated identity retention is disabled at 0 days pending a category-specific policy. This is a scope decision, not a substitute for the outstanding business approvals; see `LAUNCH-DATA-AND-SCOPE-2026-10-03.md`.
+
 ## Verification state
 
 Implementation began in plugin 1.28.0 and schema 1.17.0. On 2026-10-02, focused acceptance passed against the current plugin 1.29.13: the full isolated suite completed 687 database/HTTP checks, including the supplier, acquisition, finance, role, audit and v2/OpenAPI boundaries. The source schema upgrade had already been applied. The user then authorized labeled synthetic development data in the local source database; see `VERIFICATION-1.28.0.md` and `DEVELOPMENT-DATA-2026-10-02.md`. The business decisions above remain open.

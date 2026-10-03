@@ -114,3 +114,5 @@ Before enabling one event:
 6. Enable one sandbox route, monitor the outbox and receipt ledger, then reconcile local subjects against provider records before production activation.
 
 Provider adapters, production credentials, signature algorithms, consent/templates, staging execution and external alert channels remain pending until actual provider contracts are supplied.
+
+On 2026-10-03 the owner chose to defer external integrations for the first release. All eight outbound event routes remain disabled; the public finance page describes a non-binding estimate and internal enquiry. No provider identity, endpoint, credential, signature format or sample response is invented. Reopen the activation checklist for each named provider only after its contract and sandbox evidence arrive. See `LAUNCH-DATA-AND-SCOPE-2026-10-03.md`.
