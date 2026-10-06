@@ -26,7 +26,7 @@ final class IntegrationPage {
 		$counts = AcknowledgementService::counts();
 		$records = AcknowledgementService::records( $status, $page, 50 );
 		?>
-		<div class="wrap" dir="rtl">
+		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'جاهزية التكاملات ومطابقة المزودين', 'auto-dealership-core' ); ?></h1>
 			<?php self::notice(); ?>
 			<p><?php esc_html_e( 'لا تعرض هذه الصفحة بيانات الاعتماد أو محتوى الرسائل أو مرجع المزود الكامل. تبقى جميع المسارات معطلة حتى ينجح فحص الجاهزية ويتم تفعيلها بإجراء مدقق.', 'auto-dealership-core' ); ?></p>
@@ -85,8 +85,8 @@ final class IntegrationPage {
 				<td><code><?php echo esc_html( $route['event_key'] ); ?></code></td>
 				<td><code><?php echo esc_html( $route['adapter_id'] ?: '—' ); ?></code></td>
 				<td><?php echo esc_html( $route['environment'] ?: '—' ); ?></td>
-				<td><?php echo esc_html( $route['ready'] ? 'ready' : 'blocked' ); ?><?php if ( $route['missing'] ) : ?><br><small><code><?php echo esc_html( implode( ', ', $route['missing'] ) ); ?></code></small><?php endif; ?></td>
-				<td><strong><?php echo esc_html( $route['enabled'] ? 'enabled' : 'disabled' ); ?></strong></td>
+				<td><?php echo esc_html( \AutoDealership\Core\Localization::label( $route['ready'] ? 'ready' : 'blocked' ) ); ?><?php if ( $route['missing'] ) : ?><br><small><code><?php echo esc_html( implode( ', ', $route['missing'] ) ); ?></code></small><?php endif; ?></td>
+				<td><strong><?php echo esc_html( \AutoDealership\Core\Localization::label( $route['enabled'] ? 'enabled' : 'disabled' ) ); ?></strong></td>
 				<td><?php if ( current_user_can( 'adc_manage_integrations' ) && ( $route['enabled'] || $route['ready'] ) ) : ?>
 					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 						<input type="hidden" name="action" value="adc_set_integration_route"><input type="hidden" name="event_key" value="<?php echo esc_attr( $route['event_key'] ); ?>"><input type="hidden" name="enabled" value="<?php echo $route['enabled'] ? '0' : '1'; ?>">
@@ -108,16 +108,16 @@ final class IntegrationPage {
 		foreach ( $links as $status=>$label ) {
 			$count = '' === $status ? $total : $counts[ $status ];
 			$url = add_query_arg( array_filter( array( 'page'=>'adc-integrations', 'status'=>$status ) ), admin_url( 'admin.php' ) );
-			printf( '<li><a class="%1$s" href="%2$s">%3$s <span class="count">(%4$d)</span></a> | </li>', $selected === $status ? 'current' : '', esc_url( $url ), esc_html( $label ), absint( $count ) );
+			printf( '<li><a class="%1$s" href="%2$s">%3$s <span class="count">(%4$d)</span></a> | </li>', $selected === $status ? 'current' : '', esc_url( $url ), esc_html__( $label, 'auto-dealership-core' ), absint( $count ) );
 		}
 		echo '</ul><div class="clear"></div><p>' . esc_html__( 'إقرارات غير مرتبطة:', 'auto-dealership-core' ) . ' <strong>' . absint( $counts['unmatched'] ) . '</strong></p>';
 	}
 
 	private static function render_records( array $records ): void {
 		?>
-		<table class="widefat striped"><thead><tr><th>ID</th><th>Outbox</th><th><?php esc_html_e( 'المحول / الحدث', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'بصمة المرجع', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'آخر فحص UTC', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'آخر رمز', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'مطابقة', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
+		<table class="widefat striped"><thead><tr><th><?php echo esc_html__( 'ID', 'auto-dealership-core' ); ?></th><th><?php echo esc_html__( 'Outbox', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المحول / الحدث', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'بصمة المرجع', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'آخر فحص UTC', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'آخر رمز', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'مطابقة', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
 		<?php if ( $records['rows'] ) : foreach ( $records['rows'] as $row ) : $readiness = IntegrationRegistry::readiness( $row['event_key'] ); ?>
-			<tr><td><?php echo absint( $row['id'] ); ?></td><td><?php echo $row['outbox_id'] ? absint( $row['outbox_id'] ) : '—'; ?></td><td><code><?php echo esc_html( $row['adapter_id'] ); ?></code><br><code><?php echo esc_html( $row['event_key'] ); ?></code></td><td><code><?php echo esc_html( $row['reference_hint'] ); ?></code></td><td><?php echo esc_html( $row['status'] ); ?></td><td><?php echo esc_html( $row['last_checked_at'] ?: '—' ); ?></td><td><code><?php echo esc_html( $row['last_error'] ?: '—' ); ?></code></td><td>
+			<tr><td><?php echo absint( $row['id'] ); ?></td><td><?php echo $row['outbox_id'] ? absint( $row['outbox_id'] ) : '—'; ?></td><td><code><?php echo esc_html( $row['adapter_id'] ); ?></code><br><code><?php echo esc_html( $row['event_key'] ); ?></code></td><td><code><?php echo esc_html( $row['reference_hint'] ); ?></code></td><td><?php echo esc_html( \AutoDealership\Core\Localization::label( (string) $row['status'] ) ); ?></td><td><?php echo esc_html( $row['last_checked_at'] ?: '—' ); ?></td><td><code><?php echo esc_html( $row['last_error'] ?: '—' ); ?></code></td><td>
 			<?php if ( current_user_can( 'adc_manage_integrations' ) && $row['outbox_id'] && in_array( $row['status'], array( 'pending','mismatch' ), true ) && $readiness['reconciliation'] ) : ?>
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_reconcile_integration"><input type="hidden" name="receipt_id" value="<?php echo absint( $row['id'] ); ?>"><?php wp_nonce_field( 'adc_reconcile_integration_' . absint( $row['id'] ) ); ?><textarea name="reason" required minlength="5" maxlength="500" rows="2" placeholder="<?php esc_attr_e( 'سبب طلب المطابقة', 'auto-dealership-core' ); ?>"></textarea><br><button class="button"><?php esc_html_e( 'طلب مطابقة', 'auto-dealership-core' ); ?></button></form>
 			<?php else : ?>—<?php endif; ?></td></tr>

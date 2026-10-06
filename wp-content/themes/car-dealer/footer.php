@@ -47,7 +47,7 @@
 						<?php if ( $cd_email ) : ?><li><a href="<?php echo esc_url( 'mailto:' . $cd_email ); ?>" dir="ltr"><?php echo esc_html( $cd_email ); ?></a></li><?php endif; ?>
 						<?php if ( $cd_whatsapp_url ) : ?><li><a href="<?php echo esc_url( $cd_whatsapp_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( car_dealer_text( 'راسلنا عبر واتساب', 'Message us on WhatsApp' ) ); ?></a></li><?php endif; ?>
 					</ul>
-					<?php if ( $cd_social ) : ?><div class="footer-social" aria-label="<?php echo esc_attr( car_dealer_text( 'وسائل التواصل الاجتماعي', 'Social media' ) ); ?>"><?php foreach ( $cd_social as $cd_label => $cd_url ) : ?><a href="<?php echo esc_url( $cd_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $cd_label ); ?></a><?php endforeach; ?></div><?php endif; ?>
+					<?php if ( $cd_social ) : ?><div class="footer-social" aria-label="<?php echo esc_attr( car_dealer_text( 'وسائل التواصل الاجتماعي', 'Social media' ) ); ?>"><?php foreach ( $cd_social as $cd_label => $cd_url ) : ?><a href="<?php echo esc_url( $cd_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html__( $cd_label, 'car-dealer' ); ?></a><?php endforeach; ?></div><?php endif; ?>
 				</div>
 				<?php if ( $cd_has_legal ) : ?><div class="footer-col">
 					<h2 class="footer-title"><?php echo esc_html( car_dealer_text( 'معلومات مهمة', 'Information' ) ); ?></h2>

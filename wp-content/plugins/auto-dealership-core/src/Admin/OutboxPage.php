@@ -33,7 +33,7 @@ final class OutboxPage {
 		$counts = OutboxService::counts();
 		$events = OutboxService::events( $status, $page, 50 );
 		?>
-		<div class="wrap" dir="rtl">
+		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'مراقبة المهام والطابور', 'auto-dealership-core' ); ?></h1>
 			<?php self::notice(); ?>
 			<?php if ( is_wp_error( $counts ) || is_wp_error( $events ) ) : ?>
@@ -68,7 +68,7 @@ final class OutboxPage {
 		foreach ( $links as $status => $label ) {
 			$count = '' === $status ? $total : $counts[ $status ];
 			$url = add_query_arg( array_filter( array( 'page'=>'adc-outbox', 'status'=>$status ) ), admin_url( 'admin.php' ) );
-			printf( '<li><a class="%1$s" href="%2$s">%3$s <span class="count">(%4$d)</span></a> | </li>', $selected === $status ? 'current' : '', esc_url( $url ), esc_html( $label ), absint( $count ) );
+			printf( '<li><a class="%1$s" href="%2$s">%3$s <span class="count">(%4$d)</span></a> | </li>', $selected === $status ? 'current' : '', esc_url( $url ), esc_html__( $label, 'auto-dealership-core' ), absint( $count ) );
 		}
 		echo '</ul><div class="clear"></div>';
 	}
@@ -90,7 +90,7 @@ final class OutboxPage {
 			$last = $is_outbox && is_array( $health ) ? (string) ( $health['finished_at'] ?? '' ) : '';
 			$summary = $is_outbox && is_array( $health['summary'] ?? null ) ? wp_json_encode( $health['summary'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) : '';
 		?>
-			<tr><td><strong><?php echo esc_html( $label ); ?></strong><br><code><?php echo esc_html( $hook ); ?></code></td><td><?php echo esc_html( $next ? gmdate( 'Y-m-d H:i:s', $next ) : __( 'غير مجدولة', 'auto-dealership-core' ) ); ?></td><td><?php echo esc_html( $last ?: '—' ); ?></td><td><code><?php echo esc_html( $summary ?: '—' ); ?></code></td></tr>
+			<tr><td><strong><?php echo esc_html__( $label, 'auto-dealership-core' ); ?></strong><br><code><?php echo esc_html( $hook ); ?></code></td><td><?php echo esc_html( $next ? gmdate( 'Y-m-d H:i:s', $next ) : __( 'غير مجدولة', 'auto-dealership-core' ) ); ?></td><td><?php echo esc_html( $last ?: '—' ); ?></td><td><code><?php echo esc_html( $summary ?: '—' ); ?></code></td></tr>
 		<?php endforeach; ?>
 		</tbody></table>
 		<?php
@@ -99,11 +99,11 @@ final class OutboxPage {
 	private static function render_events( array $events ): void {
 		?>
 		<h2><?php esc_html_e( 'الأحداث', 'auto-dealership-core' ); ?></h2>
-		<table class="widefat striped"><thead><tr><th>ID</th><th><?php esc_html_e( 'الحدث', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المحاولات', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الموعد التالي (UTC)', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'آخر رمز خطأ', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'التوقيتات', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'إجراء', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
+		<table class="widefat striped"><thead><tr><th><?php echo esc_html__( 'ID', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحدث', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المحاولات', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الموعد التالي (UTC)', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'آخر رمز خطأ', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'التوقيتات', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'إجراء', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
 		<?php if ( $events['rows'] ) : foreach ( $events['rows'] as $row ) : ?>
 			<tr>
-				<td><?php echo absint( $row['id'] ); ?></td><td><code><?php echo esc_html( $row['event_key'] ); ?></code></td><td><?php echo esc_html( $row['status'] ); ?></td><td><?php echo absint( $row['attempts'] ); ?></td><td><?php echo esc_html( $row['next_attempt_at'] ); ?></td><td><code><?php echo esc_html( $row['last_error'] ?: '—' ); ?></code></td>
-				<td><small><?php echo esc_html( 'created: ' . $row['created_at'] ); ?><br><?php echo esc_html( 'locked: ' . ( $row['locked_at'] ?: '—' ) ); ?><br><?php echo esc_html( 'completed: ' . ( $row['completed_at'] ?: '—' ) ); ?><br><?php echo esc_html( 'failed: ' . ( $row['failed_at'] ?: '—' ) ); ?></small></td>
+				<td><?php echo absint( $row['id'] ); ?></td><td><code><?php echo esc_html( $row['event_key'] ); ?></code></td><td><?php echo esc_html( \AutoDealership\Core\Localization::label( (string) $row['status'] ) ); ?></td><td><?php echo absint( $row['attempts'] ); ?></td><td><?php echo esc_html( $row['next_attempt_at'] ); ?></td><td><code><?php echo esc_html( $row['last_error'] ?: '—' ); ?></code></td>
+				<td><small><?php echo esc_html( __( 'Created:', 'auto-dealership-core' ) . ' ' . $row['created_at'] ); ?><br><?php echo esc_html( __( 'Locked:', 'auto-dealership-core' ) . ' ' . ( $row['locked_at'] ?: '—' ) ); ?><br><?php echo esc_html( __( 'Completed:', 'auto-dealership-core' ) . ' ' . ( $row['completed_at'] ?: '—' ) ); ?><br><?php echo esc_html( __( 'Failed:', 'auto-dealership-core' ) . ' ' . ( $row['failed_at'] ?: '—' ) ); ?></small></td>
 				<td><?php if ( 'failed' === $row['status'] && current_user_can( 'adc_manage_outbox' ) ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_retry_outbox"><input type="hidden" name="event_id" value="<?php echo absint( $row['id'] ); ?>"><?php wp_nonce_field( 'adc_retry_outbox_' . absint( $row['id'] ) ); ?><textarea name="reason" required maxlength="500" rows="2" placeholder="<?php esc_attr_e( 'سبب إعادة المحاولة', 'auto-dealership-core' ); ?>"></textarea><br><button class="button button-secondary"><?php esc_html_e( 'إعادة المحاولة', 'auto-dealership-core' ); ?></button></form><?php else : ?>—<?php endif; ?></td>
 			</tr>
 		<?php endforeach; else : ?><tr><td colspan="8"><?php esc_html_e( 'لا توجد أحداث مطابقة.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?>

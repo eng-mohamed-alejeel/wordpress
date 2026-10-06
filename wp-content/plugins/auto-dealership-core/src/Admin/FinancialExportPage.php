@@ -11,7 +11,7 @@ final class FinancialExportPage {
 	public static function render(): void {
 		if ( ! current_user_can( 'adc_view_finance' ) ) { wp_die( esc_html__( 'Finance viewing permission is required.', 'auto-dealership-core' ), '', array( 'response' => 403 ) ); }
 		$to = gmdate( 'Y-m-d' ); $from = gmdate( 'Y-m-d', time() - 30 * DAY_IN_SECONDS ); ?>
-		<div class="wrap" dir="rtl"><h1><?php esc_html_e( 'تصدير التسويات المالية', 'auto-dealership-core' ); ?></h1><p><?php esc_html_e( 'يتضمن الملف بيانات البيع والتسوية ضمن فروعك فقط، ولا يتضمن بيانات اتصال العميل أو VIN أو مراجع السداد ومزودي التمويل.', 'auto-dealership-core' ); ?></p>
+		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><h1><?php esc_html_e( 'تصدير التسويات المالية', 'auto-dealership-core' ); ?></h1><p><?php esc_html_e( 'يتضمن الملف بيانات البيع والتسوية ضمن فروعك فقط، ولا يتضمن بيانات اتصال العميل أو VIN أو مراجع السداد ومزودي التمويل.', 'auto-dealership-core' ); ?></p>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_financial_export"><?php wp_nonce_field( 'adc_financial_export' ); ?><label><?php esc_html_e( 'من', 'auto-dealership-core' ); ?> <input type="date" name="from" value="<?php echo esc_attr( $from ); ?>" required></label> <label><?php esc_html_e( 'إلى', 'auto-dealership-core' ); ?> <input type="date" name="to" value="<?php echo esc_attr( $to ); ?>" required></label> <?php submit_button( __( 'تنزيل CSV', 'auto-dealership-core' ), 'primary', 'submit', false ); ?></form></div><?php
 	}
 	public static function download(): void {

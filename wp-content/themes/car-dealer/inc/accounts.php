@@ -63,7 +63,7 @@ add_action( 'template_redirect', function () {
  status_header( 200 );
  include get_template_directory() . '/templates/account.php'; exit;
 } );
-add_filter( 'pre_get_document_title', function ( $title ) { return car_dealer_account_view() ? 'حسابي — ' . get_bloginfo( 'name' ) : $title; } );
+add_filter( 'pre_get_document_title', function ( $title ) { return car_dealer_account_view() ? __( 'حسابي — ', 'car-dealer' ) . get_bloginfo( 'name' ) : $title; } );
 
 function car_dealer_account_request_table( string $type ): void { car_dealer_account_request_table_core( $type ); }
 
@@ -77,7 +77,7 @@ function car_dealer_account_request_table_core( string $type ): void {
  $param = $bookings ? 'booking_page' : 'message_page';
  $page = max( 1, absint( $_GET[ $param ] ?? 1 ) );
  $result = adc_customer_request_page( $type, $page );
- echo '<section class="cd-account-panel" id="' . ( $bookings ? 'customer-bookings' : 'customer-messages' ) . '"><h2>' . esc_html( $bookings ? 'حجوزات تجربة القيادة' : 'طلباتي ورسائلي' ) . '</h2>';
+ echo '<section class="cd-account-panel" id="' . ( $bookings ? 'customer-bookings' : 'customer-messages' ) . '"><h2>' . esc_html__( $bookings ? 'حجوزات تجربة القيادة' : 'طلباتي ورسائلي', 'car-dealer' ) . '</h2>';
  if ( is_wp_error( $result ) ) {
   echo '<p role="alert">' . esc_html( $result->get_error_message() ) . '</p></section>';
   return;
@@ -87,7 +87,7 @@ function car_dealer_account_request_table_core( string $type ): void {
   echo '<p>' . esc_html__( 'لا توجد طلبات في هذه الصفحة حاليًا.', 'car-dealer' ) . '</p>';
  } else {
   echo '<p class="cd-account-table-hint">' . esc_html__( 'مرّر الجدول أفقيًا لعرض بقية التفاصيل.', 'car-dealer' ) . '</p>';
-  echo '<div class="cd-account-table" role="region" tabindex="0" aria-label="' . esc_attr( $bookings ? 'جدول حجوزات تجربة القيادة' : 'جدول الطلبات والرسائل' ) . '"><table><thead><tr><th scope="col">الطلب</th><th scope="col">السيارة</th><th scope="col">التاريخ</th><th scope="col">الحالة</th></tr></thead><tbody>';
+  echo '<div class="cd-account-table" role="region" tabindex="0" aria-label="' . esc_attr__( $bookings ? 'جدول حجوزات تجربة القيادة' : 'جدول الطلبات والرسائل', 'car-dealer' ) . ( '"><table><thead><tr><th scope="col">' . esc_html__( 'الطلب', 'car-dealer' ) . '</th><th scope="col">' . esc_html__( 'السيارة', 'car-dealer' ) . '</th><th scope="col">' . esc_html__( 'التاريخ', 'car-dealer' ) . '</th><th scope="col">' . esc_html__( 'الحالة', 'car-dealer' ) . '</th></tr></thead><tbody>' );
   foreach ( $items as $item ) {
    echo '<tr><td>#' . absint( $item['id'] ) . '<br>';
    echo $bookings ? esc_html( trim( $item['requested_date'] . ' ' . $item['requested_time'] ) ) : nl2br( esc_html( $item['message'] ) );
@@ -95,19 +95,19 @@ function car_dealer_account_request_table_core( string $type ): void {
    if ( $item['car_url'] ) {
     echo '<a href="' . esc_url( car_dealer_catalog_localized_url( $item['car_url'] ) ) . '">' . esc_html( $item['car_title'] ) . '</a>';
    } else {
-    echo esc_html( $item['car_id'] ? 'السيارة غير متاحة حاليًا' : 'طلب عام' );
+    echo esc_html__( $item['car_id'] ? 'السيارة غير متاحة حاليًا' : 'طلب عام', 'car-dealer' );
    }
-   echo '</td><td>' . esc_html( $item['created_at'] ) . '</td><td>' . esc_html( $item['status_label'] );
+   echo '</td><td>' . esc_html( $item['created_at'] ) . '</td><td>' . esc_html__( $item['status_label'], 'car-dealer' );
    if ( $item['customer_reply'] ) {
-    echo '<p><strong>رد المعرض:</strong><br>' . nl2br( esc_html( $item['customer_reply'] ) ) . '</p>';
+    echo ( '<p><strong>' . esc_html__( 'رد المعرض:', 'car-dealer' ) . '</strong><br>' ) . nl2br( esc_html( $item['customer_reply'] ) ) . '</p>';
    }
    if ( $item['updated_at'] ) {
-    echo '<small>آخر تحديث: ' . esc_html( $item['updated_at'] ) . '</small>';
+    echo ( '<small>' . esc_html__( 'آخر تحديث: ', 'car-dealer' ) . '' ) . esc_html( $item['updated_at'] ) . '</small>';
    }
    if ( $item['can_cancel'] ) {
     echo '<form method="post" action="' . esc_url( car_dealer_account_url() ) . '">';
     wp_nonce_field( 'cd_account_dashboard' );
-    echo '<input type="hidden" name="account_action" value="cancel_booking"><input type="hidden" name="request_id" value="' . absint( $item['id'] ) . '"><button class="btn" type="submit">إلغاء الحجز</button></form>';
+    echo '<input type="hidden" name="account_action" value="cancel_booking"><input type="hidden" name="request_id" value="' . absint( $item['id'] ) . ( '"><button class="btn" type="submit">' . esc_html__( 'إلغاء الحجز', 'car-dealer' ) . '</button></form>' );
    }
    echo '</td></tr>';
   }
@@ -115,10 +115,10 @@ function car_dealer_account_request_table_core( string $type ): void {
  }
  echo '<div class="cd-account-actions">';
  if ( $result['page'] > 1 ) {
-  echo '<a href="' . esc_url( add_query_arg( $param, $result['page'] - 1, car_dealer_account_url() ) ) . '">السابق</a>';
+  echo '<a href="' . esc_url( add_query_arg( $param, $result['page'] - 1, car_dealer_account_url() ) ) . ( '">' . esc_html__( 'السابق', 'car-dealer' ) . '</a>' );
  }
  if ( $result['has_more'] ) {
-  echo '<a href="' . esc_url( add_query_arg( $param, $result['page'] + 1, car_dealer_account_url() ) ) . '">التالي</a>';
+  echo '<a href="' . esc_url( add_query_arg( $param, $result['page'] + 1, car_dealer_account_url() ) ) . ( '">' . esc_html__( 'التالي', 'car-dealer' ) . '</a>' );
  }
  echo '</div></section>';
 }

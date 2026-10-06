@@ -1,0 +1,1262 @@
+# Arabic<TAB>English; use \u0020 for leading or trailing spaces. UI copy only; never translate stored identifiers or customer input.
+تعذر إنشاء إحدى الصفحات المحددة. لم تُحفظ أي صفحة.	A selected page could not be created. No pages were saved.
+لم تحتفظ إحدى الصفحات المحددة بهويتها المطلوبة كمسودة. لم تُحفظ أي صفحة.	A selected page did not retain its required draft identity. No pages were saved.
+نوع مستند معتمد ومرجع مطلوبان.	A supported document type and reference are required.
+تفضيلات التسويق للحساب	Account marketing preference
+تم تسجيل تفضيلات التسويق للحساب	Account marketing preference recorded
+تعذر حفظ بيانات الاقتناء.	Acquisition data could not be saved.
+تم حفظ بيانات الاقتناء وتدقيقها.	Acquisition data saved and audited.
+الإجراء	Action
+تفعيل	Activate
+نشط	Active
+مجموعات الطلبات النشطة	Active buckets
+العرض الترويجي النشط	Active promotion
+إضافة مورد	Add supplier
+صلاحية مدير الموقع مطلوبة.	Administrator access is required.
+جميع المبالغ بالهللات السعودية. تُدخل التكلفة الإجمالية صراحةً حتى تُعتمد معادلة العمل.	All monetary values use SAR halalas. Total cost is entered explicitly until an approved business formula is configured.
+الفروع المسموح بها	Allowed branches
+المبلغ	Amount
+هناك عملية إعداد صفحات أخرى قيد التنفيذ. حاول بعد قليل.	Another page setup operation is running. Try again shortly.
+مستوى الاعتماد	Approval tier
+الاعتمادات	Approvals
+اعتماد	Approve
+الخصم المعتمد	Approved discount
+الفرع المسند	Assigned branch
+سجل التدقيق	Audit Log
+إدارة علاقات عملاء المعرض	Auto Dealership CRM
+تعذر تسجيل محتوى الإضافة لأن المعرفات التالية مسجلة مسبقًا: %s	Auto Dealership Core could not claim its content registry because these identifiers were already registered before it: %s
+السعر الأساسي	Base price
+نقل المركبات بين الفروع	Branch Transfers
+صلاحية إسناد الفروع مطلوبة.	Branch assignment permission is required.
+الماركات والمواقع	Brands and locations
+فرص العملاء	CRM Leads
+عربون حجز ملغى	Cancelled reservation deposit
+تحويل مصدر الكتالوج	Catalog cutover
+قائمة التحقق	Checklist
+اختر موقعًا وأدخل السبب.	Choose a location and provide a reason.
+اختر فترة صحيحة لا تتجاوز 366 يومًا.	Choose a valid date range of at most 366 days.
+اختر منشور سيارة صالحًا وغير محذوف.	Choose a valid vehicle post that is not trashed.
+اختر مركبة وأدخل سببًا لا يتجاوز 500 حرف.	Choose a vehicle and provide a reason of up to 500 characters.
+المدينة	City
+الرمز / الاسم	Code / name
+تأكيد الاستلام	Confirm receipt
+جهة الاتصال	Contact
+تعذر إنشاء طلب النقل.	Could not create the transfer request.
+تعذر توثيق قرار النقل.	Could not document the transfer decision.
+تعذر توثيق طلب النقل.	Could not document the transfer request.
+تعذر توثيق إرسال المركبة.	Could not document transfer dispatch.
+تعذر توثيق استلام النقل.	Could not document transfer receipt.
+تعذر تسجيل إرسال المركبة.	Could not record transfer dispatch.
+تعذر تسجيل استلام النقل.	Could not record transfer receipt.
+تعذر حفظ إسناد الفروع وتدقيقه.	Could not save and audit the branch assignments.
+تعذر حفظ مستند التسليم وتدقيقه.	Could not save and audit the delivery document.
+تعذر حفظ قرار العربون وتدقيقه.	Could not save and audit the deposit decision.
+تعذر حفظ إثبات العربون وتدقيقه.	Could not save and audit the deposit evidence.
+تعذر حفظ قرار النقل.	Could not save the transfer decision.
+تعذر بدء العملية.	Could not start the operation.
+تعذر بدء معاملة النقل.	Could not start the transfer transaction.
+الدولة	Country
+إنشاء مورد	Create supplier
+الحالة الحالية	Current status
+القيم الحالية	Current values
+العميل	Customer
+تم إنشاء ملف العميل	Customer record created
+تعطيل	Deactivate
+مدقق المعرض	Dealership Auditor
+إدارة المعرض	Dealership Core
+عميل المعرض	Dealership Customer
+خدمة عملاء المعرض	Dealership Customer Service
+مسؤول تسليم المعرض	Dealership Delivery
+مسؤول مالية المعرض	Dealership Finance
+المدير العام للمعرض	Dealership General Manager
+مسؤول مخزون المعرض	Dealership Inventory
+مسؤول تسويق المعرض	Dealership Marketing
+مسؤول مشتريات المعرض	Dealership Purchasing
+مستشار مبيعات المعرض	Dealership Sales
+مدير مبيعات المعرض	Dealership Sales Manager
+الوصول إلى المعرض	Dealership access
+بيانات عملاء المعرض واستفساراتهم	Dealership customer and enquiry data
+التسليم	Delivery
+صلاحية قائمة تحقق التسليم مطلوبة.	Delivery checklist permission is required.
+إثبات مستند التسليم	Delivery document evidence
+صلاحية مستندات التسليم مطلوبة.	Delivery document permission is required.
+مستندات التسليم مقفلة في هذه الحالة.	Delivery documents are locked in this state.
+التسليم غير متاح ضمن نطاق فرعك.	Delivery is unavailable in your branch scope.
+إثبات العربون قيد الانتظار أو تم التحقق منه مسبقًا.	Deposit evidence is already pending or verified.
+صلاحية التحقق من العربون وسبب الرفض مطلوبان.	Deposit verification permission and a rejection reason are required.
+الفرع المستلم	Destination branch
+تم مسح بيانات الهوية المباشرة ونصوص الاستفسارات. تبقى السجلات التشغيلية الضرورية للمحاسبة وسير العمل والتدقيق.	Direct identifiers and enquiry text were erased. Minimal operational records remain for accounting, workflow and audit purposes.
+المستندات مقفلة في هذه الحالة.	Documents are locked in this state.
+تعذر نشر حدث النظام.	Domain event publication failed.
+البريد الإلكتروني	Email
+نهاية العرض	Ends
+المحتوى الإنجليزي	English content
+المحتوى العام باللغة الإنجليزية	English public content
+العنوان الإنجليزي	English title
+أدخل سبب الإعداد من 5 إلى 500 حرف.	Enter a setup reason between 5 and 500 characters.
+أدخل النص الإنجليزي المعتمد. اترك الحقل فارغًا لاستخدام المحتوى الأصلي.	Enter approved English copy. Leave a field blank to use the original content.
+عميل محذوف البيانات	Erased customer
+يجب أن تكون جميع الفروع المسندة نشطة وصالحة.	Every assigned branch must be active and valid.
+يجب تسجيل كل مستندات التسليم المطلوبة قبل الاعتماد.	Every required delivery document must be recorded before approval.
+المرجع الخارجي	External reference
+الرسوم	Fees
+التمويل	Finance
+سجل التمويل غير متاح ضمن نطاق فرعك.	Finance history is unavailable in your branch scope.
+طلب التمويل	Finance request
+صلاحية عرض التمويل مطلوبة.	Finance viewing permission is required.
+التصدير المالي	Financial export
+رسوم عرض السعر الثابتة (هللة)	Fixed quote fee (halalas)
+المبالغ الثابتة بالهللات، والنسب بنقاط الأساس.	Fixed values are halalas; percentage values are basis points.
+أعلى خصم للمدير العام (هللة)	General manager discount ceiling (halalas)
+غير معروف تاريخيًا	Historically unknown
+الاحتجاز والصيانة	Holds and maintenance
+غير نشط	Inactive
+تعذر تفعيل التكامل.	Integration activation failed.
+تعذر تسجيل محول التكامل.	Integration adapter registration failed.
+صلاحية الوصول إلى المخزون مطلوبة.	Inventory access is required.
+صلاحية إدارة المخزون مطلوبة.	Inventory management permission is required.
+آخر تنظيف (التوقيت العالمي)	Last cleanup (UTC)
+نتيجة آخر تنظيف	Last cleanup result
+فرصة العميل	Lead
+نشاط العميل	Lead activity
+نشاط قديم في إدارة العملاء	Legacy CRM activity
+جهة اتصال قديمة في إدارة العملاء	Legacy CRM contact
+ملف عميل قديم	Legacy CRM profile
+طلب قديم من الموقع	Legacy website request
+بيانات محتوى المعرض المتوافقة مع النظام السابق. تتولى خدمات الإضافة تعديلها.	Legacy-compatible dealership content metadata. Writes are owned by plugin services.
+الحد	Limit
+معرّف الحساب المرتبط	Linked account ID
+المواقع ورقم الهيكل	Locations and VIN
+الهامش قبل / بعد	Margin before / after
+تسجيل الإرسال	Mark dispatched
+الموافقة التسويقية	Marketing consent
+تم تسجيل الموافقة التسويقية	Marketing consent recorded
+الطريقة والمسار	Method and route
+الجوال	Mobile
+الاسم	Name
+اشتراك النشرة البريدية	Newsletter subscription
+التنظيف المحدود التالي (التوقيت العالمي)	Next bounded cleanup (UTC)
+لا	No
+لا توجد مركبات متاحة في فرعك.	No available vehicles in your branch.
+بدون فرع	No branch
+لا توجد متطلبات مستندات معدّة للتسليمات الحالية.	No configured document requirements apply to current deliveries.
+لا توجد إثباتات عربون ضمن نطاق فرعك.	No reservation deposit evidence is available in your branch scope.
+لم يُحدّد مورد	No supplier selected
+لم تُدخل بيانات موردين بعد. تبقى القائمة فارغة حتى تتوفر بيانات عمل معتمدة.	No suppliers have been entered. The empty state is expected until approved business data is available.
+لا توجد طلبات نقل ضمن نطاق فرعك.	No transfer requests in your branch scope.
+لا توجد مركبات متاحة ضمن نطاق فرعك.	No vehicles are available in your branch scope.
+لم يُنفّذ بعد	Not run yet
+غير مجدول	Not scheduled
+يمكن لمديري الموقع فقط إسناد الموظفين إلى الفروع.	Only administrators can assign staff branch scope.
+يمكن طلب نقل المركبات المتاحة فقط إلى فرع آخر.	Only available vehicles can be requested for transfer to another branch.
+افتح حالة تشغيلية موثقة للاحتجاز أو الصيانة.	Open a documented operational issue for hold or maintenance.
+تعذر إنشاء التقرير التشغيلي.	Operational report failed.
+تعذر تنفيذ عملية طابور الإرسال.	Outbox operation failed.
+يجب التحقق من إثبات العربون المعلق أو رفضه قبل إلغاء الحجز.	Pending deposit evidence must be verified or rejected before cancelling the reservation.
+النسب بنقاط الأساس؛ 1500 تعني 15%.	Percentage values use basis points; 1500 means 15%.
+السياسة	Policy
+رد العميل السابق	Previous customer reply
+سياسة التسعير أو الاعتماد أو العربون أو التاريخ غير صالحة.	Pricing, approval, deposit or date policy is invalid.
+طباعة أو حفظ مستند	Print or save PDF
+عالج المركبة المسلّمة عبر سير الإرجاع الموثق.	Process the delivered vehicle through the documented return workflow.
+العرض الترويجي	Promotion
+تعذر تنفيذ عملية إقرار المزود.	Provider acknowledgement operation failed.
+حماية الواجهة البرمجية العامة	Public API Security
+حماية الطلبات العامة غير متاحة.	Public request protection is unavailable.
+يجب تسجيل تكلفة الشراء قبل طلب خصم يعتمد على الهامش.	Purchase cost must be recorded before a margin-based discount request can be submitted.
+نسخة عرض السعر	Quotation revision
+بيانات تشغيلية للقراءة فقط. لا تُعرض عناوين العملاء أو بصمات مجموعات الطلبات أو قواعد الشبكات الموثوقة.	Read-only operational metadata. Client addresses, bucket fingerprints and trusted network rules are never displayed.
+السبب	Reason
+الاستلام واجتياز الفحص الإلزامي مطلوبان قبل هذا الانتقال.	Receipt and a passed mandatory inspection are required before this transition.
+تسجيل مستند	Record document
+تسجيل إثبات	Record evidence
+تسجيل استرداد عربون الحجز	Record reservation deposit refund
+المرجع	Reference
+تعذر تنفيذ عملية البيانات المرجعية.	Reference data operation could not be completed.
+تعذر تنفيذ عملية الاسترداد.	Refund operation could not be completed.
+الاستردادات	Refunds
+رفض	Reject
+موضوع الطلب	Request subject
+الموعد المطلوب	Requested appointment
+المبلغ المطلوب (هللة)	Required amount (halalas)
+مستندات التسليم المطلوبة	Required delivery documents
+مستندات التسليم المطلوبة غير مكتملة.	Required delivery documents are incomplete.
+الحجز	Reservation
+إثبات عربون الحجز	Reservation deposit evidence
+سياسة عربون الحجز	Reservation deposit policy
+سياسة عربون الحجز غير صالحة.	Reservation deposit policy is invalid.
+استرداد عربون الحجز	Reservation deposit refund
+عربون الحجوزات	Reservation deposits
+أغلق الحالة التشغيلية المفتوحة قبل تغيير حالة المركبة.	Resolve the open operational issue before changing the vehicle status.
+يجب تعطيل الاحتفاظ أو تحديد مدته بين 30 و3650 يومًا.	Retention must be disabled or between 30 and 3650 days.
+مراجعة	Review
+المسار	Route
+حالة التشغيل	Runtime status
+تعذر إلغاء البيع.	Sale cancellation could not be completed.
+إلغاءات البيع	Sale cancellations
+إثبات إيصال البيع	Sale receipt evidence
+إيصالات البيع	Sale receipts
+إثبات استرداد البيع	Sale refund evidence
+حفظ	Save
+حفظ القرار	Save decision
+اختر فرعًا مستلمًا نشطًا وأدخل السبب.	Select an active destination branch and provide a reason.
+اختر تعريف صفحة متاحًا واحدًا على الأقل.	Select at least one available page definition.
+اختر الفرع	Select branch
+حدّد جميع الفروع النشطة المسموح بها. الفرع المسند أدناه هو الفرع الرئيسي ويجب اختياره هنا أيضًا. تبقى الإجراءات مقيدة بصلاحيات الدور.	Select every allowed active branch. The assigned branch below is the primary branch and must be selected here too. Role capabilities still control permitted actions.
+اختر الحجز	Select reservation
+تمنع المستندات المختارة اعتماد التسليم وإطلاق المركبة حتى تُسجّل مراجع إثباتها.	Selected documents block delivery approval and release until evidence references are recorded.
+بيانات البائع في عروض الأسعار	Seller identity on quotations
+المصدر	Source
+بداية العرض	Starts
+الحالة	Status
+رقم المخزون	Stock number
+إرسال إثبات العربون	Submit deposit evidence
+إرسال الطلب يضع المركبة في حالة انتظار النقل حتى قرار الفرع المستلم وتأكيد الاستلام.	Submitting a request places the vehicle on transfer hold until the destination branch decision and receipt.
+المجموع قبل الضريبة	Subtotal before tax
+تعذر حفظ تعديل المورد.	Supplier change could not be saved.
+تم حفظ تعديل المورد وتدقيقه.	Supplier change saved and audited.
+تعذر حفظ بيانات المورد. راجع القيم والصلاحيات وتفرّد رمز المورد.	Supplier data could not be saved. Check the values, permissions and unique supplier code.
+دليل الموردين	Supplier directory
+الموردون	Suppliers
+النظام	System
+مبلغ الضريبة	Tax amount
+الرقم الضريبي	Tax number
+نسبة الضريبة	Tax rate
+تعذر محو بيانات إدارة العملاء. أعد المحاولة بعد مراجعة سجل أخطاء قاعدة البيانات.	The CRM erasure could not be completed. Retry the request after checking the database error log.
+خدمة الإعداد المدققة غير جاهزة.	The audited setup service is not ready.
+لا يمكن تفعيل الكتالوج المعتمد حتى تتم مطابقة روابط السيارات المنشورة وفحوص مخطط البيانات.	The authoritative catalog cannot be enabled until published vehicle mappings and schema checks are reconciled.
+تعذر حفظ ربط الكتالوج وتدقيقه.	The catalog mapping could not be saved and audited.
+يجب إنهاء محاولة التمويل الحالية بالرفض أو الإلغاء قبل تجربة مزود آخر.	The current finance attempt must reach a final rejected or cancelled state before another provider is tried.
+تعذر حفظ حقول المعرض.	The dealership fields could not be saved.
+أُعيدت حقول المعرض لأن سجل التدقيق لم يُحفظ.	The dealership fields were restored because the audit record could not be saved.
+العربون المعلن لا يطابق سياسة الحجز.	The declared deposit does not match the reservation policy.
+لا يمكن لهذا المستخدم اتخاذ قرار بشأن إثبات العربون أو لا تسمح حالته بذلك.	The deposit evidence cannot be decided by this user or in this state.
+الخصم خارج سياسة الاعتماد المعدّة.	The discount is outside the configured approval policy.
+تعذر تدقيق التصدير.	The export could not be audited.
+سجل محاولات التمويل يتطلب مراجعة إدارية.	The finance attempt history requires administrative review.
+تعذر تعيين قالب الصفحة. لم تُحفظ أي صفحة.	The page template could not be assigned. No pages were saved.
+يجب تضمين الفرع الرئيسي في الفروع المسموح بها.	The primary branch must be included in the allowed branches.
+يجعل العرض الترويجي السعر أقل من الحد الأدنى المعتمد.	The promotion would place the quotation below the approved minimum price.
+يجب أن يُرجع محول المزود الجاهز نتيجة إقرار.	The ready provider adapter must return an acknowledgement result.
+تعذر إتمام الطلب.	The request could not be completed.
+تعديل بيانات المحتوى المطلوب غير صالح.	The requested content metadata change is invalid.
+الخصم المطلوب لا ينتج إجمالي عرض صالحًا.	The requested discount cannot produce a valid quotation total.
+لا يمكن للحجز قبول إثبات العربون هذا.	The reservation cannot accept this deposit evidence.
+الماركة أو الموقع المختار غير نشط أو خارج فرع المركبة.	The selected brand or location is inactive or outside the vehicle branch.
+تعريف الصفحة المختار غير متاح.	The selected page definition is not available.
+تعذر تدقيق الإعداد. لم تُحفظ أي صفحة.	The setup could not be audited. No pages were saved.
+مخطط بيانات المعرض المتحقق منه مطلوب.	The verified dealership schema is required.
+يهيّئ هذا الدليل مراجع الموردين المعتمدة. تبقى حالات أوامر الشراء وحدود اعتمادها معطلة حتى اعتماد سياسة العمل.	This directory prepares verified supplier references. Purchase-order states and approval limits remain disabled until the business policy is approved.
+هذا المستند نسخة مالية ثابتة من عرض السعر. تبقى الصلاحية وتوفر المركبة مرتبطين بالحالة المسجلة في النظام.	This document is an immutable financial revision of the quotation. Validity and vehicle availability remain subject to the recorded system state.
+هذا المنشور مرتبط مسبقًا بمركبة تشغيلية أخرى.	This post is already mapped to another operational vehicle.
+لا يمكن لهذا المستخدم أو الفرع استلام النقل.	This transfer cannot be received by this user or branch.
+طلب النقل لا ينتظر قرارًا مؤهلًا من الفرع المستلم.	This transfer is not awaiting an eligible destination-branch decision.
+طلب النقل غير جاهز للإرسال بواسطة مستخدم هذا الفرع.	This transfer is not ready for dispatch by this branch user.
+طلبات كثيرة جدًا. حاول لاحقًا.	Too many requests. Please try again later.
+الإجمالي	Total
+النقل	Transfer
+طابور نقل المركبات	Transfer Queue
+صلاحية النقل مطلوبة.	Transfer permission required.
+سبب النقل	Transfer reason
+تعذر تنفيذ خطوة النقل. راجع الحالة والفرع المسند إليك.	Transfer step failed. Check its status and your branch assignment.
+تم حفظ خطوة النقل.	Transfer step saved.
+قواعد الوسطاء الموثوقين معدّة	Trusted proxy rules configured
+غير مسند	Unassigned
+تكلفة قديمة غير معروفة	Unknown legacy cost
+تحديث	Update
+رقم الهيكل	VIN
+إثبات عربون صالح وصلاحية تسجيل السداد مطلوبان.	Valid deposit evidence and payment recording permission are required.
+صالح حتى	Valid until
+المركبة	Vehicle
+اقتناء المركبات	Vehicle acquisition
+بيانات اقتناء المركبة	Vehicle acquisition data
+تعذر حفظ بيانات اقتناء المركبة. راجع الصلاحيات وحالة المورد والقيم وحالة المركبة.	Vehicle acquisition data could not be saved. Check permissions, supplier status, values and vehicle state.
+تعذر تنفيذ استلام المركبة.	Vehicle intake operation could not be completed.
+المركبة خارج نطاق فرعك.	Vehicle is not in your branch scope.
+تعذر تنفيذ عملية حالة المركبة.	Vehicle issue operation could not be completed.
+المركبة غير موجودة.	Vehicle not found.
+عرض سعر المركبة	Vehicle quotation
+تعذر إرجاع المركبة.	Vehicle return could not be completed.
+مرتجعات المركبات	Vehicle returns
+يتحكم نقل نشط بين الفروع في حالة المركبة.	Vehicle status is controlled by an active branch transfer.
+الإصدار	Version
+النافذة الزمنية (ثانية)	Window (seconds)
+نعم	Yes
+لا تملك صلاحية نقل المخزون.	You are not allowed to transfer inventory.
+لا تملك صلاحية عرض حماية الواجهة البرمجية العامة.	You are not allowed to view public API security.
+المعرّف	ID
+طابور الإرسال	Outbox
+جيدة	good
+متضررة	damaged
+ناقصة	incomplete
+ناجح	pass
+راسب	fail
+قيد الفحص	inspection
+متاحة	available
+محتجزة	hold
+قيد الصيانة	maintenance
+مكالمة	call
+واتساب	WhatsApp
+اجتماع	meeting
+متابعة	follow-up
+ملاحظة	note
+تحويل بنكي	bank transfer
+نقدي	cash
+بطاقة	card
+تمويل	finance
+ملاحظة المراجعة	Review note
+تحقق	verify
+رفض الطلب	reject
+مفتاح الماركة	brand-key
+الاسم الإنجليزي	English name
+رمز الموقع	LOCATION-CODE
+صالة عرض	showroom
+مستودع	warehouse
+ساحة	yard
+مركز خدمة	service
+المبلغ بالهللات	Amount in halalas
+مرجع الاسترداد	Refund reference
+عكس تمويل	finance reversal
+الرمز	code
+الهاتف	Phone
+العنوان	Address
+رمز المورد	SUPPLIER-CODE
+الاسم المعروض	Display name
+الاسم القانوني	Legal name
+اسم جهة الاتصال	Contact name
+ملاحظات داخلية	Internal notes
+تكلفة الشراء	Purchase cost
+التكلفة الإضافية	Additional cost
+التكلفة الإجمالية	Total cost
+سعر الجملة	Wholesale price
+المرجع الجمركي	Customs reference
+معرّفات مرفقات الصور أو المستندات الموجودة، مفصولة بفواصل	Existing image/PDF attachment IDs, comma separated
+سبب التغيير	Reason for change
+الدفعة الأولى (هللة)	Down payment (halalas)
+المدة بالأشهر	Term months
+القسط الشهري (هللة)	Monthly payment (halalas)
+قيد المراجعة	under_review
+معتمد	approved
+مرفوض	rejected
+سبب القرار	Decision reason
+مخزون أوتو براندز	AUTO BRANDS INVENTORY
+أوتو براندز	AUTO BRANDS
+سيارات متميزة	Premium Automotive
+متابعة القراءة<span class="screen-reader-text"> "%s"</span>	Continue reading<span class="screen-reader-text"> "%s"</span>
+تحرير	Edit
+الصفحات:	Pages:
+كامري	Camry
+0 يعطل الإخفاء المجدول. أي قيمة مفعلة يجب أن تكون بين 30 و3650 يومًا وبعد اعتماد السياسة النظامية.	0 disables scheduled anonymization. Any enabled value must be between 30 and 3650 days and follow the approved retention policy.
+1500 تعني 15%. القيمة الافتراضية صفر حتى يعتمدها مسؤول الشركة.	1500 means 15%. The default is zero until approved by the company administrator.
+VIN الجديد	New VIN
+آخر تشغيل UTC	Last run (UTC)
+آخر تشغيل معروف (UTC)	Last known run (UTC)
+آخر رمز	Last code
+آخر رمز خطأ	Last error code
+آخر فحص UTC	Last check (UTC)
+أدخل VIN بعد مطابقته ميدانيًا	Enter the VIN after checking it against the vehicle
+أدخل اسمًا وبريدًا صحيحًا وكلمة مرور من 10 أحرف على الأقل مع تأكيد مطابق.	Enter a valid name and email, and a password of at least 10 characters with matching confirmation.
+أدخل رقم هاتف صحيحًا بصيغة محلية أو دولية.	Enter a valid local or international phone number.
+أضف أرقام التواصل والبريد الذي يمكن للعملاء مراسلتك عليه.	Add the phone numbers and email address customers can use to contact you.
+أعلى خصم لمدير المبيعات (هللة)	Sales manager discount ceiling (halalas)
+أعيدت المهمة إلى الطابور وسُجل الإجراء في سجل التدقيق.	The job was requeued and the action was recorded in the audit log.
+أي خصم أعلى من الحد يتطلب صلاحية المدير العام. صفر يحول كل طلب خصم للمدير العام.	Discounts above the limit require general manager permission. Zero sends every discount request to the general manager.
+أُنشئ في %s UTC. المخزون والاستثناءات لقطة حالية، وبقية الأقسام ضمن الفترة المختارة.	Generated at %s UTC. Inventory and exceptions reflect the current snapshot; other sections cover the selected period.
+إجراء	Action
+إدارة الطلب	Manage request
+إدارة المخزون	Manage inventory
+إدارة صفحات السيارات التحريرية.	Manage editorial vehicle pages.
+إدارة محتوى عروض السيارات.	Manage vehicle offer content.
+إرجاع المركبات	Vehicle returns
+إرسال	Send
+إرسال طلب تمويل بموافقة العميل	Submit finance request with customer consent
+إرسال للمراجعة	Submit for review
+إزالة صورة السيارة	Remove vehicle image
+إزالة صورة العرض	Remove offer image
+إسناد	Assign
+إسناد إلى...	Assign to...
+إضافة	Add
+إضافة السيارة	Add vehicle
+إضافة سيارة	Add vehicle
+إضافة سيارة إلى المخزون	Add vehicle to inventory
+إضافة سيارة جديدة	Add new vehicle
+إضافة عرض	Add offer
+إضافة عرض جديد	Add new offer
+إضافة علامة	Add brand
+إضافة فئة جديدة	Add new category
+إضافة فرع	Add branch
+إضافة ماركة جديدة	Add new brand
+إضافة موقع	Add location
+إضافة نشاط	Add activity
+إطلاق المركبة	Release vehicle
+إعادة المحاولة	Retry
+إعداد صفحات الموقع	Website page setup
+إعدادات التفعيل	Activation settings
+إعدادات منصة المعرض	Dealership platform settings
+إغلاق وإعادة للفحص	Close and return to inspection
+إقرارات المزود	Provider acknowledgements
+إقرارات غير مرتبطة:	Unlinked acknowledgements:
+إلغاء البيع	Cancel sale
+إلغاء المبيعات	Sale cancellations
+إلى	To
+إنشاء الفرع	Create branch
+إنشاء المسودات المحددة	Create selected drafts
+إنشاء المسودات المفقودة	Create missing drafts
+إنشاء طلب نقل لمركبة متاحة إلى فرع آخر.	Request transfer of an available vehicle to another branch.
+إنشاء منشور سيارة	Create vehicle post
+إنشاء ومراجعة عروض الأسعار المسموح بها.	Create and review permitted quotations.
+إنهاء الحجوزات المنتهية	Expire overdue reservations
+إيصال نقدي	Cash receipt
+اختر ألوان واجهة موقع المعرض.	Choose the dealership website colors.
+اختر البيع	Select sale
+اختر الموقع	Select location
+اختر سيارة منشورة ومتوفرة	Select an available published vehicle
+اختر فرصة	Select lead
+اربط كل سيارة تشغيلية بمنشور سيارة واحد. لا يغيّر الربط حالة السيارة أو ينشر المنشور، وكل تغيير يتطلب سببًا ويُسجّل في سجل التدقيق.	Link each operational vehicle to one vehicle post. Linking does not change vehicle status or publish the post. Every change requires a reason and is audited.
+استخدام كصورة السيارة	Use as vehicle image
+استخدام كصورة العرض	Use as offer image
+استخدم الروابط الكاملة لحسابات المعرض، وأضف عنواناً واضحاً لزيارته.	Use full URLs for the dealership social accounts and add a clear visiting address.
+استخدم رقم المرجع فقط. لا تدخل بيانات الحساب البنكي أو البطاقة.	Use the reference number only. Do not enter bank account or card details.
+استرداد إلغاء البيع	Sale cancellation refund
+استلام المركبة المرتجعة	Receive returned vehicle
+اسم الفرع	Branch name
+اسم الموقع	Location name
+اشتراكات النشرة	Newsletter subscriptions
+اشتراكات النشرة البريدية	Newsletter subscriptions
+اعتماد البيع	Approve sale
+اعتماد التسليم	Approve delivery
+اعتماد وإرسال واستلام النقل بين الفروع.	Approve, dispatch and receive branch transfers.
+الأحداث	Events
+الأحداث الإدارية والتشغيلية للقراءة.	Read administrative and operational events.
+الإجراء المنفذ والنتيجة	Action taken and result
+الإجمالي (هللة)	Total (halalas)
+الإرجاع	Return
+الاستردادات المالية	Financial refunds
+الاستلام والفحص	Intake and inspection
+الاستلام والفحص والموقع وهوية المركبة.	Vehicle intake, inspection, location and identity.
+الاسم العربي	Arabic name
+الاعتمادات والمالية والتسليم	Approvals, finance and delivery
+الانتقال بين حالتي السيارة غير مسموح.	This vehicle status transition is not allowed.
+الانتقال بين مراحل الفرصة غير مسموح.	This lead stage transition is not allowed.
+البحث في السيارات	Search vehicles
+البحث في العروض	Search offers
+البحث في الفئات	Search categories
+البحث في الماركات	Search brands
+البريد	Email
+البيئة	Environment
+البيان	Description
+البيع	Sale
+البيع غير معتمد أو خارج نطاق فرعك.	The sale is unapproved or outside your branch scope.
+التجهيز والمستندات والمطابقة والإطلاق.	Preparation, documents, verification and release.
+التسويق والتقارير والإدارة	Marketing, reports and administration
+التشغيل التالي (UTC)	Next run (UTC)
+التشغيل التالي UTC	Next run (UTC)
+التغييرات	Changes
+التفاصيل	Details
+التفعيل	Activation
+التقارير التشغيلية	Operational reports
+التكاليف والمراجع ومستندات الاقتناء.	Acquisition costs, references and documents.
+التواريخ أدناه بالتوقيت العالمي UTC.	The dates below use UTC.
+التواصل مع المعرض	Contact the dealership
+التوقيتات	Timings
+الجاهزية	Readiness
+الجهة	Entity
+الحالات المفتوحة	Open issues
+الحالة أو سبب التغيير غير صالح.	The status or change reason is invalid.
+الحالة السابقة	Previous status
+الحالة المالية	Financial status
+الحالة والفرع	Status and branch
+الحالة/المؤشر	Status / indicator
+الحجز غير موجود أو لم يعد قابلًا للإلغاء.	The booking does not exist or can no longer be cancelled.
+الحدث	Event
+الخصائص الفنية المقيدة للمركبات.	Restricted technical vehicle specifications.
+الخصم (هللة)	Discount (halalas)
+الخصومات واعتماد المبيعات والإلغاءات.	Discounts, sale approvals and cancellations.
+الرد الظاهر للعميل	Customer-visible reply
+الرسائل	Messages
+الرسالة	Message
+السجل	History
+السعر	Price
+السعر (هللة)	Price (halalas)
+السعر أو الحد الأدنى المعتمد غير صالح.	The price or approved minimum is invalid.
+السعر أو نسبة الضريبة غير صالحين للحساب.	The price or tax rate is invalid for calculation.
+السعر المقترح أقل من الحد الأدنى المعتمد.	The proposed price is below the approved minimum.
+السعر بالهللات	Price in halalas
+السعر بعد العرض	Offer price
+السعر قبل العرض	Original price
+السنة	Year
+السيارات	Vehicles
+السيارات المنشورة	Published vehicles
+السيارة أو العميل أو تاريخ صلاحية العرض غير صالح.	The vehicle, customer or quotation expiry date is invalid.
+السيارة المرتبطة	Linked vehicle
+السيارة غير متاحة للحجز أو لا تملك صلاحية الوصول إليها.	The vehicle is unavailable for reservation or you do not have access.
+السيارة غير متاحة للمقارنة.	The vehicle is unavailable for comparison.
+السيارة غير موجودة أو لا تملك صلاحية الوصول إليها.	The vehicle does not exist or you do not have access.
+الصفحات المطلوب إنشاؤها	Pages to create
+الصفحة	Page
+الصلاحية	Permission
+الصلاحية أو الموافقة أو المبلغ غير صالح.	The permission, consent or amount is invalid.
+الطلب غير موجود أو خارج نطاق صلاحيتك.	The request does not exist or is outside your access scope.
+الطلبات القائمة	Current requests
+العدد	Count
+العرض غير موجود أو خارج نطاق صلاحياتك.	The quotation does not exist or is outside your access scope.
+العروض	Offers
+العروض المنشورة	Published offers
+العلامات التجارية والمواقع	Brands and locations
+العميل / السيارة	Customer / vehicle
+العميل أو السيارة غير متاحين لهذه العملية.	The customer or vehicle is unavailable for this operation.
+الفئات	Categories
+الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.	The lead does not exist or you do not have access.
+الفرع الافتراضي غير نشط أو غير موجود.	The default branch is inactive or does not exist.
+الفرع الافتراضي للطلبات الواردة	Default branch for incoming requests
+الفروع	Branches
+الفروع النشطة	Active branches
+الفروع والسياسات والإعدادات المركزية.	Branches, policies and central settings.
+الفروع والماركات والمواقع	Branches, brands and locations
+القالب	Template
+القالب الافتراضي	Default template
+القالب النشط لا يقدّم تعريفات صفحات لهذه الأداة.	The active theme does not provide page definitions for this tool.
+القرار	Decision
+القسط الشهري	Monthly payment
+القسط الشهري يبدأ من	Monthly payment from
+القيم المالية بالهللات السعودية. راجع إعدادات الضرائب وسياسات الحجز والخصومات مع مسؤول الشركة قبل التشغيل.	Financial amounts use SAR halalas. Review tax settings and reservation and discount policies with the company administrator before use.
+اللون الرئيسي	Primary color
+الماركات	Brands
+المبالغ المستردة	Refunds
+المبلغ (هللة)	Amount (halalas)
+المبلغ الأقصى (هللة)	Maximum amount (halalas)
+المبلغ المجمع (هللة)	Total amount (halalas)
+المبلغ المستلم (هللة سعودية)	Received amount (SAR halalas)
+المبيعات وخدمة العملاء	Sales and customer service
+المتابعة التالية	Next follow up
+المحاولات	Attempts
+المحول	Adapter
+المحول / الحدث	Adapter / event
+المخزون	Inventory
+المخزون التشغيلي المعتمد	Authoritative operational inventory
+المخزون والمحتوى والمشتريات	Inventory, content and purchasing
+المخطط التشغيلي غير جاهز. أكمل ترقية قاعدة البيانات ثم أعد فتح الصفحة.	The operational schema is not ready. Complete the database upgrade and reopen the page.
+المراجعة	Review
+المرحلة	Stage
+المرحلة غير صالحة أو سبب الخسارة مطلوب.	The stage is invalid or a loss reason is required.
+المركبات وحالاتها التشغيلية حسب الفرع.	Vehicles and their operational status by branch.
+المركبة غير موجودة أو خارج نطاق الوصول.	The vehicle does not exist or is outside your access scope.
+المزايا (سطر لكل ميزة)	Features (one per line)
+المستخدم	User
+المستخدمون	Users
+المستند	Document
+المفتاح	Key
+الملف الذي سيبقى	Record to keep
+الممشى (كم)	Mileage (km)
+المنصة غير متاحة مؤقتًا أثناء التحقق من قاعدة البيانات.	The platform is temporarily unavailable while the database is being verified.
+المهام المجدولة	Scheduled jobs
+المهمة	Job
+المواقع وVIN	Locations and VIN
+الموظف أو الفرع غير صالح للإسناد.	The employee or branch is invalid for assignment.
+الموعد التالي (UTC)	Next appointment (UTC)
+الموعد حسب توقيت الموقع: %s	Appointment in the website time zone: %s
+الموقع والفرع	Location and branch
+النتيجة	Result
+النسخة	Revision
+النشاط	Activity
+الهوية البصرية	Visual identity
+الوثيقة	Document
+الوقت (UTC)	Time (UTC)
+انتهت صلاحية الطلب. حدّث الصفحة وحاول مجددًا.	This request has expired. Refresh the page and try again.
+انتهت صلاحية النموذج. حدّث الصفحة وحاول مجددًا.	This form has expired. Refresh the page and try again.
+بانتظار التحقق	Pending verification
+بحث / معاينة	Search / preview
+بدء التجهيز	Start preparation
+بدون ربط	Unlinked
+بدون فرع — يتطلب إسنادًا يدويًا	No branch — manual assignment required
+بصمة المرجع	Reference fingerprint
+بلد المنشأ	Country of origin
+بوابة الجاهزية	Readiness gate
+بيانات الحجز غير صالحة.	The booking details are invalid.
+بيانات السيارة غير مكتملة أو غير صالحة.	The vehicle details are incomplete or invalid.
+بيانات العميل والحجز غير متاحة لهذه العملية.	Customer and reservation details are unavailable for this operation.
+تأكيد VIN	Confirm VIN
+تأكيدات السداد	Payment confirmations
+تاريخ الموافقة	Consent date
+تاريخ انتهاء العرض	Offer expiry date
+تاريخ انتهاء العرض غير صالح.	The offer expiry date is invalid.
+تجربة قيادة	Test drive
+تجهيز وتسليم المركبات	Vehicle preparation and delivery
+تحديث بيانات حسابي	Update my account details
+تحقق من الاسم ورقم الجوال والبريد الإلكتروني.	Check the name, mobile number and email address.
+تحقق من الاسم ورقم الجوال والبريد والفرع.	Check the name, mobile number, email and branch.
+تسجيل إيصال سداد	Record payment receipt
+تصحيح	Correction
+تصدير التسويات المالية	Export financial reconciliation
+تطابق البريد والجوال يرشح الملفات للمراجعة. أكّد الهوية من دليل مستقل قبل الدمج، وأبقِ الملف المرتبط بالحساب وجهةً للدمج.	Matching email and mobile numbers flag records for review. Verify identity using independent evidence before merging, and retain the account-linked record as the destination.
+تظهر الوحدات المتاحة وفق صلاحيات دورك ونطاق عملك الحالي.	Available modules depend on your role permissions and current work scope.
+تظهر هذه المواصفات للعملاء عند إتاحة المركبة ونشر صفحتها. تُقفل التعديلات أثناء الحجز والبيع والتسليم.	Customers see these specifications when the vehicle is available and its page is published. Editing is locked during reservation, sale and delivery.
+تعديل السيارة	Edit vehicle
+تعديل العرض	Edit offer
+تعديل الفئة	Edit category
+تعديل الماركة	Edit brand
+تعذر إرسال الطلب الآن.	The request could not be sent now.
+تعذر إرسال طلب الخصم.	The discount request could not be sent.
+تعذر إسناد الفرصة.	The lead could not be assigned.
+تعذر إعادة المهمة إلى الطابور.	The job could not be requeued.
+تعذر إلغاء الحجز.	The reservation could not be cancelled.
+تعذر إنشاء الحجز.	The reservation could not be created.
+تعذر إنشاء الحساب حاليًا.	The account could not be created at this time.
+تعذر إنشاء الحساب.	The account could not be created.
+تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.	The account could not be created. Try again or contact the dealership.
+تعذر إنشاء السيارة. تحقق من عدم تكرار رقم الهيكل أو المخزون.	The vehicle could not be created. Check for a duplicate VIN or stock number.
+تعذر إنشاء الفرع. تحقق من صحة الرمز وعدم تكراره.	The branch could not be created. Check that the code is valid and unique.
+تعذر إنشاء الفرع. قد يكون الرمز مستخدمًا.	The branch could not be created. Its code may already be in use.
+تعذر إنشاء عرض السعر.	The quotation could not be created.
+تعذر إنشاء عملية البيع.	The sale could not be created.
+تعذر استخدام هذا البريد. جرّب تسجيل الدخول أو استعادة كلمة المرور.	This email could not be used. Try logging in or resetting your password.
+تعذر اعتماد الخصم لأن الضريبة التاريخية أو حد السعر غير صالح.	The discount could not be approved because the historical tax or price limit is invalid.
+تعذر التحقق من قاعدة بيانات المنصة. حاول بعد معالجة الخطأ.	The platform database could not be verified. Try again after resolving the error.
+تعذر الحفظ. راجع القيم وحالة المركبة وصلاحية الوصول.	Could not save. Check the values, vehicle status and access permission.
+تعذر بدء تجهيز التسليم.	Delivery preparation could not be started.
+تعذر تحديث المقارنة.	The comparison could not be updated.
+تعذر تحديث حالة عرض السعر.	The quotation status could not be updated.
+تعذر تحميل سجل المتابعة.	The follow-up history could not be loaded.
+تعذر تحميل طلبات الحساب حاليًا. حاول مجددًا لاحقًا.	Account requests could not be loaded. Try again later.
+تعذر تحويل الحجز إلى عملية بيع.	The reservation could not be converted to a sale.
+تعذر تسجيل الدخول. تحقق من بياناتك أو استخدم استعادة كلمة المرور.	Could not log in. Check your details or reset your password.
+تعذر تسجيل تسليم المركبة.	Vehicle delivery could not be recorded.
+تعذر تسجيل حركة المخزون.	The inventory movement could not be recorded.
+تعذر تسجيل حركة المركبة.	The vehicle movement could not be recorded.
+تعذر تنفيذ الإجراء.	The action could not be completed.
+تعذر تنفيذ العملية. تحقق من الصلاحيات وحالة سير العمل.	The operation could not be completed. Check permissions and workflow status.
+تعذر تنفيذ العملية. تحقق من القيم ومن عدم ارتباط المرجع بمركبة نشطة.	The operation could not be completed. Check the values and ensure the reference is not linked to an active vehicle.
+تعذر تنفيذ تأكيد السداد. تحقق من الصلاحيات والمرجع والمبلغ وحالة البيع.	Payment confirmation could not be completed. Check permissions, reference, amount and sale status.
+تعذر توثيق إسناد الفرصة.	The lead assignment could not be audited.
+تعذر توثيق إلغاء الحجز.	The reservation cancellation could not be audited.
+تعذر توثيق إنشاء السيارة.	Vehicle creation could not be audited.
+تعذر توثيق إنشاء الفرع.	Branch creation could not be audited.
+تعذر توثيق اعتماد البيع.	The sale approval could not be audited.
+تعذر توثيق اعتماد التسليم.	The delivery approval could not be audited.
+تعذر توثيق الحجز وحفظه.	The reservation could not be audited and saved.
+تعذر توثيق الطلب. حاول لاحقًا.	The request could not be audited. Try again later.
+تعذر توثيق النشاط.	The activity could not be audited.
+تعذر توثيق تجهيز التسليم.	Delivery preparation could not be audited.
+تعذر توثيق تحديث الفرصة.	The lead update could not be audited.
+تعذر توثيق تسليم المركبة.	Vehicle delivery could not be audited.
+تعذر توثيق تغيير حالة السيارة.	The vehicle status change could not be audited.
+تعذر توثيق طلب التمويل.	The finance request could not be audited.
+تعذر توثيق طلب الخصم.	The discount request could not be audited.
+تعذر توثيق عرض السعر.	The quotation could not be audited.
+تعذر توثيق عملية البيع.	The sale could not be audited.
+تعذر توثيق قرار التمويل.	The finance decision could not be audited.
+تعذر توثيق قرار الخصم.	The discount decision could not be audited.
+تعذر توثيق مطابقة رقم الهيكل.	VIN verification could not be audited.
+تعذر حساب إجمالي العرض بعد الخصم.	The quotation total after discount could not be calculated.
+تعذر حساب التقدير حاليًا.	The estimate is currently unavailable.
+تعذر حساب التقدير. راجع القيم وحاول مجددًا.	Could not calculate the estimate. Check the values and try again.
+تعذر حفظ اعتماد البيع.	The sale approval could not be saved.
+تعذر حفظ اعتماد التسليم.	The delivery approval could not be saved.
+تعذر حفظ الإعدادات وتوثيقها.	The settings could not be saved and audited.
+تعذر حفظ الإعدادات وتوثيقها؛ أُعيدت القيم السابقة.	The settings could not be saved and audited; the previous values were restored.
+تعذر حفظ التفضيلات. اختر أحد الخيارين وحاول مجددًا.	Could not save preferences. Select one of the two options and try again.
+تعذر حفظ الطلب مؤقتًا.	The request could not be saved at this time.
+تعذر حفظ الطلب. حاول لاحقًا.	The request could not be saved. Try again later.
+تعذر حفظ العملية. تحقق من الصلاحيات والبيانات وحالة سير العمل.	The operation could not be saved. Check permissions, details and workflow status.
+تعذر حفظ العملية. تحقق من المبلغ والمرجع والفرع والصلاحيات وفصل مهام الاعتماد.	The operation could not be saved. Check the amount, reference, branch, permissions and separation of approval duties.
+تعذر حفظ المواصفات. راجع القيم وصلاحية الوصول وحالة المركبة.	Specifications could not be saved. Check values, access permission and vehicle status.
+تعذر حفظ النشاط.	The activity could not be saved.
+تعذر حفظ تأكيد رقم الهيكل.	VIN confirmation could not be saved.
+تعذر حفظ تحديث الفرصة.	The lead update could not be saved.
+تعذر حفظ تغيير حالة السيارة.	The vehicle status change could not be saved.
+تعذر حفظ سياق الطلب. حاول لاحقًا.	The request context could not be saved. Try again later.
+تعذر حفظ طلب التمويل.	The finance request could not be saved.
+تعذر حفظ قرار التمويل.	The finance decision could not be saved.
+تعذر حفظ قرار الخصم.	The discount decision could not be saved.
+تعذر حفظ موعد المتابعة.	The follow-up appointment could not be saved.
+تعذر قراءة سجلات التفاعل.	Engagement records could not be read.
+تعرض القائمة الطلبات الواقعة ضمن نطاق الفرع أو المسؤول الحالي فقط.	The list only shows requests within the current branch or owner scope.
+تعرض هذه الصفحة البيانات التشغيلية الآمنة فقط. لا يتم عرض محتوى الرسائل أو مفاتيح منع التكرار.	This page only shows safe operational data. Message content and deduplication keys are not displayed.
+تعيين صورة السيارة	Set vehicle image
+تعيين صورة العرض	Set offer image
+تغيرت بيانات الطلب. أرسل طلبًا جديدًا.	The request details have changed. Submit a new request.
+تغيير الحالة	Change status
+تغيير الموقع لا يغير حالة المركبة أو فرعها. تصحيح VIN يتطلب صلاحية مستقلة وسببًا موثقًا ولا يسمح به بعد بدء البيع أو التسليم.	Changing location does not change vehicle status or branch. VIN correction requires separate permission and an audited reason, and is not allowed after sale or delivery begins.
+تفاصيل السيارة	Vehicle details
+تفاصيل العرض	Offer details
+تم إبقاء العرض كمسودة لأن السيارة المرتبطة غير منشورة أو غير متوفرة.	The offer was kept as a draft because its linked vehicle is unpublished or unavailable.
+تم إنشاء %d صفحة كمسودة وتوثيق العملية.	Created %d draft pages and audited the operation.
+تم إنشاء الفرع.	The branch was created.
+تم استلام طلبك بنجاح.	Your request was received successfully.
+تم الإبقاء على %d صفحة موجودة دون أي تعديل.	Kept %d existing pages without changes.
+تم التحقق	Verified
+تم تحديث السيارة	Vehicle updated
+تم تحديث الطلب وحفظ سجل المتابعة.	The request was updated and its follow-up history was saved.
+تم تحديث العرض	Offer updated
+تم تحديث المقارنة.	The comparison was updated.
+تم توثيق موافقة العميل	Customer consent recorded
+تم حجز السيارة من مستخدم آخر. حدّث الصفحة وحاول مجددًا.	Another user reserved the vehicle. Refresh the page and try again.
+تم حفظ الإجراء وتدقيقه.	The action was saved and audited.
+تم حفظ الإعدادات.	The settings were saved.
+تم حفظ البيانات المرجعية.	Reference data was saved.
+تم حفظ العملية.	The operation was saved.
+تم حفظ القرار.	The decision was saved.
+تم حفظ المواصفات.	Specifications were saved.
+تم حفظ ربط الكتالوج وتوثيقه.	The catalog mapping was saved and audited.
+تم دمج الملفات وتوثيق العملية.	The records were merged and the operation was audited.
+تم نشر السيارة	Vehicle published
+تم نشر العرض	Offer published
+تمت المطابقة	Matched
+تنزيل CSV	Download CSV
+تنزيل CSV مدقق	Download audited CSV
+تنشئ هذه الأداة الصفحات المحددة والمفقودة كمسودات للمراجعة. لا تعدّل عنوانًا أو محتوى أو قالبًا لأي صفحة موجودة.	This tool creates selected missing pages as drafts for review. It does not change the title, content or template of any existing page.
+تنفيذ الدمج الموثّق	Perform audited merge
+تواصل عام	General enquiry
+توافق تدريجي مع بيانات القالب	Gradual compatibility with theme data
+توثق هذه الشاشة استردادًا منفذًا خارج النظام، ولا تنقل أموالًا.	This screen records a refund performed outside the system. It does not transfer money.
+توثيق الاستلام	Record intake
+تُدار الفروع عبر واجهة REST.	Branches are managed through the REST API.
+جاري الإرسال…	Sending…
+جارٍ الحساب…	Calculating…
+جاهزية التحويل: سيارات تشغيلية %1$d، مؤهلة للنشر %2$d، منشورات سيارات %3$d، منشورات غير مرتبطة %4$d، خرائط مكررة %5$d، روابط غير صالحة %6$d.	Cutover readiness: operational vehicles %1$d, eligible vehicles %2$d, vehicle posts %3$d, unmapped posts %4$d, duplicate mappings %5$d, invalid links %6$d.
+جاهزية التكاملات	Integration readiness
+جاهزية التكاملات ومطابقة المزودين	Integration readiness and provider reconciliation
+جهة التمويل	Finance provider
+حالة السيارة لا تسمح بإلغاء الحجز.	The vehicle status does not allow reservation cancellation.
+حالة السيارة مرتبطة بالمخزون التشغيلي وتُعرض هنا للقراءة فقط.	Vehicle status is linked to operational inventory and is read-only here.
+حالة الطابور	Queue status
+حالة المخزون غير صالحة.	The inventory status is invalid.
+حالة طلب التمويل لا تسمح بالتحديث.	The finance request status does not allow updates.
+حالة عرض السعر لا تسمح بحسم الطلب.	The quotation status does not allow a decision on this request.
+حركة المواقع وتصحيح VIN	Location movement and VIN correction
+حسابات التواصل والموقع	Social accounts and location
+حسابات الموظفين والأدوار والتعيينات.	Staff accounts, roles and assignments.
+حفظ الإعدادات	Save settings
+حفظ الربط	Save mapping
+حفظ الفحص	Save inspection
+حفظ المواصفات	Save specifications
+حفظ وإظهار التحديث للعميل	Save and show update to customer
+حماية الحساب غير متاحة مؤقتًا. حاول لاحقًا.	Account protection is temporarily unavailable. Try again later.
+حوالة بنكية	Bank transfer
+خصص هوية الموقع وبيانات التواصل التي تظهر لعملائك.	Customize the website identity and contact details shown to customers.
+دفعة من جهة التمويل	Finance provider payment
+دليل الموردين وبياناتهم المقيدة.	Supplier directory and restricted details.
+رابط فيديو المركبة	Vehicle video URL
+راجع مبلغ السيارة والدفعة والنسبة والمدة ثم حاول مجددًا.	Check the vehicle price, down payment, rate and term, then try again.
+راجعت الهوية بدليل مستقل وأؤكد أن الملفين للشخص نفسه.	I verified the identity using independent evidence and confirm that both records belong to the same person.
+ربط السيارات التشغيلية	Operational vehicle mapping
+رسائل العملاء وطلبات البيع	Customer messages and sales requests
+رسالتك	Your message
+رقم العرض	Quotation number
+رقم الملف الذي سيبقى	Destination record ID
+رقم الهيكل غير مطابق أو أن التسليم غير متاح.	The VIN does not match or delivery is unavailable.
+رقم ملف المصدر	Source record ID
+رمز الفرع	Branch code
+رمز الفرع واسمه مطلوبان.	Branch code and name are required.
+سبب إعادة المحاولة	Retry reason
+سبب الإرجاع	Return reason
+سبب الإعداد	Setup reason
+سبب الإلغاء	Cancellation reason
+سبب التصحيح	Correction reason
+سبب التعديل	Change reason
+سبب التفعيل أو التعطيل	Activation or deactivation reason
+سبب الخسارة عند الحاجة	Loss reason when required
+سبب الربط أو تغييره	Mapping or change reason
+سبب طلب المطابقة	Reconciliation request reason
+ستُنقل %d فرصة إلى الملف الذي سيبقى، وتُحذف بيانات الاتصال من المصدر مع إبقاء مرجع الدمج. لا تتوفر عملية تراجع تلقائية.	%d leads will move to the destination record. Source contact details will be removed and a merge reference retained. There is no automatic undo.
+سجل الإرجاعات	Return history
+سجل المتابعة	Follow-up history
+سجل تاريخي غير مرتبط بمسار Core؛ متاح للقراءة فقط.	Historical record outside the core workflow; read-only.
+سجل متابعة الفرصة	Lead follow-up history
+سجّل المبلغ المستلم ومرجع الإيصال، ثم يراجعه موظف مالي آخر بعد مطابقته مع المصدر. يلزم اعتماد كامل قيمة البيع قبل التسليم.	Record the received amount and receipt reference. Another finance staff member verifies them against the source. The full sale amount must be approved before delivery.
+سعر العرض لا يمكن أن يتجاوز السعر السابق.	The offer price cannot exceed the previous price.
+سنة الصنع غير صالحة.	The model year is invalid.
+سيارة	Vehicle
+سيارة جديدة	New vehicle
+سيارة مطلوبة	Requested vehicle
+سيارة مميزة	Featured vehicle
+سياسة الاحتفاظ والخصوصية	Retention and privacy policy
+صحة التشغيل	Operational health
+صفحة تواصل معنا	Contact page
+صفحة من نحن	About page
+صلاحية إدارة الحجز وسبب الإلغاء مطلوبان.	Reservation management permission and a cancellation reason are required.
+صورة السيارة الرئيسية	Main vehicle image
+صورة العرض	Offer image
+طباعة / PDF	Print / PDF
+طلب المقارنة غير صالح.	The comparison request is invalid.
+طلب تمويل	Finance request
+طلب سعر	Price request
+طلب شراء	Purchase request
+طلب مطابقة	Reconciliation request
+طلب نقل مركبة	Vehicle transfer request
+طلبات الاسترداد وقراراتها.	Refund requests and decisions.
+طلبات التمويل	Finance requests
+طلبات التمويل وقراراتها ومراجعها.	Finance requests, decisions and references.
+طلبات التواصل والبيع ضمن نطاقك.	Contact and sales requests in your scope.
+طلبات الخصم	Discount requests
+عامل الطابور	Queue worker
+عدد الأسطوانات	Cylinders
+عرض	View
+عرض السجل	View history
+عرض السعر	Quotation
+عرض السيارة	View vehicle
+عرض الطلب في حسابي	View request in my account
+عرض جديد	New offer
+عرض للقراءة فقط. لا تتضمن هذه الصفحة أدوات تعديل أو حذف للسجل.	Read-only view. This page has no history editing or deletion controls.
+عروض الأسعار	Quotations
+عمليات البيع بانتظار الاعتماد	Sales awaiting approval
+عمليات التسليم	Deliveries
+عمليات المعرض	Dealership operations
+عملية البيع	Sale
+غير متاحة	Unavailable
+غير متاحة حاليًا	Currently unavailable
+غير مجدولة	Not scheduled
+غير محددة	Unspecified
+غير مسموح.	Not allowed.
+فئة	Category
+فتح الحالة	Open issue
+فتح مساحة مطابقة الكتالوج	Open catalog reconciliation workspace
+فتح ومعالجة حالات الاحتجاز والصيانة.	Open and resolve hold and maintenance issues.
+فرص العملاء CRM	Customer leads
+فعّل المصدر التشغيلي بعد ربط السيارات المنشورة والتحقق من الترحيل. في هذا الوضع لا تظهر أي سيارة غير مرتبطة أو غير متاحة أو تابعة لفرع غير نشط.	Enable the operational source after mapping published vehicles and verifying migration. This mode hides unmapped or unavailable vehicles and vehicles in inactive branches.
+قائمة التذييل	Footer menu
+قائمة موافقات الاشتراك الحالية للقراءة التشغيلية.	Current subscription consents for operational review.
+قراءة العداد	Odometer reading
+قيمة الخصم تتجاوز حدود سياسة الاعتماد.	The discount exceeds the approval policy limits.
+كل السيارات المنشورة	All published vehicles
+كل الصفحات المعرفة موجودة، ولم تُجرَ عليها أي تعديلات.	All defined pages already exist and were left unchanged.
+لا تتطابق بيانات العرض والحجز أو لم تعد صالحة.	Quotation and reservation details do not match or are no longer valid.
+لا تستوفي عملية التسليم شروط الإطلاق أو فصل المهام.	The delivery does not meet release requirements or separation of duties.
+لا تعرض هذه الصفحة بيانات الاعتماد أو محتوى الرسائل أو مرجع المزود الكامل. تبقى جميع المسارات معطلة حتى ينجح فحص الجاهزية ويتم تفعيلها بإجراء مدقق.	This page does not display credentials, message content or complete provider references. All routes stay disabled until readiness checks pass and activation is audited.
+لا تملك صلاحية إدارة التكاملات.	You do not have permission to manage integrations.
+لا تملك صلاحية إدارة الفروع.	You do not have permission to manage branches.
+لا تملك صلاحية إدارة المخزون.	You do not have permission to manage inventory.
+لا تملك صلاحية إسناد الفرص.	You do not have permission to assign leads.
+لا تملك صلاحية إعادة محاولة المهمة.	You do not have permission to retry this job.
+لا تملك صلاحية إنشاء الحجوزات.	You do not have permission to create reservations.
+لا تملك صلاحية إنشاء الفروع.	You do not have permission to create branches.
+لا تملك صلاحية إنشاء عرض سعر.	You do not have permission to create quotations.
+لا تملك صلاحية إنشاء عملية البيع.	You do not have permission to create sales.
+لا تملك صلاحية اعتماد البيع.	You do not have permission to approve sales.
+لا تملك صلاحية اعتماد التسليم.	You do not have permission to approve delivery.
+لا تملك صلاحية الاعتمادات.	You do not have approval permission.
+لا تملك صلاحية الوصول.	You do not have access permission.
+لا تملك صلاحية بدء تجهيز التسليم.	You do not have permission to begin delivery preparation.
+لا تملك صلاحية تأكيد رقم الهيكل.	You do not have permission to confirm the VIN.
+لا تملك صلاحية تحديث الفرصة.	You do not have permission to update leads.
+لا تملك صلاحية تحديث حالة التمويل.	You do not have permission to update finance status.
+لا تملك صلاحية تسليم المركبة.	You do not have permission to deliver the vehicle.
+لا تملك صلاحية تصدير التقارير التشغيلية.	You do not have permission to export operational reports.
+لا تملك صلاحية حفظ الإعدادات.	You do not have permission to save settings.
+لا تملك صلاحية طلب الخصم.	You do not have permission to request discounts.
+لا تملك صلاحية عرض التقارير التشغيلية.	You do not have permission to view operational reports.
+لا تملك صلاحية عرض التكاملات.	You do not have permission to view integrations.
+لا تملك صلاحية عرض الفرص.	You do not have permission to view leads.
+لا تملك صلاحية عرض المخزون.	You do not have permission to view inventory.
+لا تملك صلاحية عرض سجل التدقيق.	You do not have permission to view the audit log.
+لا تملك صلاحية عرض طلبات التمويل.	You do not have permission to view finance requests.
+لا تملك صلاحية عرض عرض السعر.	You do not have permission to view this quotation.
+لا تملك صلاحية عرض عروض الأسعار.	You do not have permission to view quotations.
+لا تملك صلاحية عرض مراقبة المهام.	You do not have permission to view job monitoring.
+لا تملك صلاحية لهذا الفرع.	You do not have permission for this branch.
+لا تملك صلاحية مراجعة الخصومات.	You do not have permission to review discounts.
+لا تملك صلاحية مهام التسليم.	You do not have permission for delivery tasks.
+لا توجد أحداث مسجلة.	No events have been recorded.
+لا توجد أحداث مطابقة.	No matching events.
+لا توجد أنشطة في هذه الصفحة.	No activities on this page.
+لا توجد إقرارات مطابقة.	No matching acknowledgements.
+لا توجد تأكيدات سداد في نطاق فروعك.	No payment confirmations in your branch scope.
+لا توجد سجلات ضمن نطاقك حتى الآن.	No records in your scope yet.
+لا توجد سيارات	No vehicles
+لا توجد سيارات تشغيلية بعد. أنشئ البيانات المرجعية ثم أضف السيارات من مساحة العمل.	No operational vehicles yet. Create reference data, then add vehicles through the workspace.
+لا توجد سيارات في سلة المهملات	No vehicles in Trash
+لا توجد سيارات في نطاق صلاحيتك.	No vehicles in your access scope.
+لا توجد طلبات تمويل.	No finance requests.
+لا توجد طلبات خصم معلّقة في نطاقك.	No pending discount requests in your scope.
+لا توجد عروض	No offers
+لا توجد عروض في سلة المهملات	No offers in Trash
+لا توجد عروض في نطاق صلاحياتك.	No quotations in your access scope.
+لا توجد عمليات بيع مؤهلة.	No eligible sales.
+لا توجد عمليات بيع معلّقة في نطاقك.	No pending sales in your scope.
+لا توجد عمليات تسليم.	No deliveries.
+لا توجد عناصر ضمن هذه الفئة.	No items in this category.
+لا توجد فرص في نطاق صلاحيتك.	No leads in your access scope.
+لا توجد مبيعات جاهزة للتجهيز.	No sales ready for preparation.
+لا توجد ملفات تطابق البريد والجوال المسجلين.	No records match the registered email and mobile number.
+لا توجد نتائج ضمن النطاق المسموح.	No results in the permitted scope.
+لا يمكن اعتماد هذا الطلب أو أنه حُسم مسبقًا.	This request cannot be approved or was already decided.
+لا يمكن اعتماد هذه العملية أو أنها حُسمت مسبقًا.	This operation cannot be approved or was already decided.
+لا يمكن تعديل سعر عرض مرتبط بعملية بيع.	The price of a quotation linked to a sale cannot be changed.
+لا يمكن تقديم طلب تمويل لهذه العملية.	A finance request cannot be submitted for this operation.
+لا يمكن طلب هذا الخصم على العرض المحدد.	This discount cannot be requested for the selected quotation.
+لم تضف سيارات للمقارنة بعد.	You have not added any vehicles for comparison yet.
+لم يتم التحقق من سداد كامل قيمة البيع.	Full payment of the sale amount has not been verified.
+لم يتم تأكيد حفظ الطلب. حاول مجددًا.	Saving the request was not confirmed. Try again.
+لم يُحفظ العرض: يجب اختيار سيارة منشورة ومتوفرة في المخزون.	The offer was not saved: select a published vehicle available in inventory.
+لون الأزرار	Button color
+ليست لديك صلاحية دخول مساحة عمليات المعرض.	You do not have permission to enter the dealership operations workspace.
+ليست لديك صلاحية لعرض هذه السجلات.	You do not have permission to view these records.
+ليست لديك صلاحية.	You do not have permission.
+مؤشرات مجمعة ضمن فروعك النشطة. لا يتضمن التقرير أسماء العملاء أو وسائل الاتصال أو VIN أو أرقام المخزون.	Aggregated metrics within your active branches. The report excludes customer names, contact details, VINs and stock numbers.
+مؤشرات مجمعة ضمن نطاق الصلاحية.	Aggregated metrics in your access scope.
+ماركة	Brand
+مبيعات جاهزة للتجهيز	Sales ready for preparation
+متابعة العملاء والمراحل والأنشطة.	Follow customers, stages and activities.
+متابعة طلب العميل	Follow customer request
+متوفرة	Available
+محاولات كثيرة. يرجى المحاولة لاحقًا.	Too many attempts. Please try again later.
+محجوب	Hidden
+مخزن سجلات التفاعل غير متاح حاليًا.	The engagement record store is currently unavailable.
+مخطط سجل المطابقة غير جاهز.	The reconciliation log schema is not ready.
+مدة الاحتفاظ ببيانات الهوية (يوم)	Identity data retention (days)
+مدة الحجز بالساعات	Reservation duration (hours)
+مراجعة الصفحات التعريفية وإنشاء المسودات المفقودة صراحة.	Review informational pages and explicitly create missing drafts.
+مراجعة دفعات المبيعات والعربون.	Review sale payments and reservation deposits.
+مراجعة ملف العميل والتكرار	Review customer record and duplicates
+مراجعة ملفات العملاء	Review customer records
+مراقبة المهام	Job monitoring
+مراقبة المهام والطابور	Job and queue monitoring
+مرجع الإيصال	Receipt reference
+مرجع الفاتورة	Invoice reference
+مرجع الفاتورة مطلوب قبل اعتماد البيع.	An invoice reference is required before approving the sale.
+مرجع المزود	Provider reference
+مرجع جهة التمويل مطلوب عند الاعتماد.	A finance provider reference is required for approval.
+مرجع مراجعة الهوية (رقم إجراء داخلي، دون بيانات شخصية)	Identity review reference (internal action ID, no personal data)
+مرجع مستند الإرجاع	Return document reference
+مرجع مستند الاستلام	Intake document reference
+مرحبًا، %s	Welcome, %s
+مساحة تشغيل مستقلة عن الثيم	Operations workspace independent of the theme
+مسارات الأحداث	Event routes
+مصدر الكتالوج العام	Public catalog source
+مطابقة	Reconciliation
+مطابقة وتفعيل الكتالوج	Catalog reconciliation and activation
+مظهر المعرض	Dealership appearance
+مظهر المعرض وبيانات التواصل	Dealership appearance and contact details
+معالجة المركبات المرتجعة وفق سير العمل.	Process returned vehicles through the workflow.
+معالجة طابور الأحداث	Process event queue
+معاينة الدمج	Preview merge
+معرّف الارتباط	Correlation ID
+معرّف المركبة	Vehicle ID
+معرّفات صور المعرض	Gallery image IDs
+معرّفات مرفقات صور WordPress، مفصولة بفواصل، بحد أقصى 30 صورة.	WordPress image attachment IDs, comma separated, up to 30 images.
+مفتاح الطلب غير متاح لهذه العملية.	The request key is unavailable for this operation.
+مفقودة	Missing
+ملاحظات	Notes
+ملاحظات الإخفاق	Failure notes
+ملاحظة التحقق	Verification note
+ملاحظة القرار	Decision note
+ملفات مرشحة للمراجعة	Records flagged for review
+من	From
+منشور الكتالوج	Catalog post
+مواصفات المركبات	Vehicle specifications
+مواعيد تجربة القيادة وتحديثاتها.	Test drive appointments and updates.
+موافقات التواصل التسويقي الحالية.	Current marketing communication consents.
+موجودة (%s)	Exists (%s)
+موعد المتابعة غير صالح.	The follow-up appointment is invalid.
+موقع الاستلام	Intake location
+نتيجة المراجعة	Review result
+نسبة الضريبة (نقاط أساس)	Tax rate (basis points)
+نسبة ضريبة العرض القديم غير محفوظة. أنشئ عرضًا جديدًا قبل طلب الخصم.	The historical quotation tax rate is missing. Create a new quotation before requesting a discount.
+نسخ العرض	Quotation revisions
+نسخة العرض غير موجودة أو خارج نطاق صلاحياتك.	The quotation revision does not exist or is outside your access scope.
+نقل	Transfer
+نموذج التواصل غير متاح حاليًا.	The contact form is currently unavailable.
+نوع الإيصال	Receipt type
+نوع الطلب	Request type
+نوع الطلب غير صالح.	The request type is invalid.
+نوع النشاط والملاحظة مطلوبان.	Activity type and note are required.
+نوع الوقود	Fuel type
+هذا الحجز تاريخي وغير مرتبط بمسار Core؛ لا يمكن تغييره من الحساب.	This historical booking is outside the core workflow and cannot be changed from the account.
+هذا تقدير إرشادي وليس عرض تمويل أو موافقة.	This is an estimate, not a financing offer or approval.
+وقت الحفظ	Saved at
+يتضمن الملف بيانات البيع والتسوية ضمن فروعك فقط، ولا يتضمن بيانات اتصال العميل أو VIN أو مراجع السداد ومزودي التمويل.	The file contains sale and reconciliation data within your branches only. It excludes customer contact details, VINs, payment references and finance provider references.
+يتطلب هذا الخصم اعتماد المدير العام.	This discount requires general manager approval.
+يجب أن تكون أسعار العرض أرقامًا صحيحة موجبة.	Offer prices must be positive whole numbers.
+يجب أن تكون الأسعار أرقامًا موجبة وبحد أقصى منزلتين عشريتين.	Prices must be positive numbers with at most two decimal places.
+يجب أن تكون قراءة العداد رقمًا صحيحًا موجبًا.	The odometer reading must be a positive whole number.
+يجب أن يعتمد التسليم موظف مختلف عن مؤكد رقم الهيكل.	Delivery must be approved by a different employee from the one who confirmed the VIN.
+يجب التحقق من سداد كامل قيمة البيع قبل تجهيز التسليم.	Full payment of the sale amount must be verified before delivery preparation.
+يجب الموافقة على سياسة الخصوصية وشروط الاستخدام لإنشاء حساب.	You must accept the privacy policy and terms of use to create an account.
+يجب تسوية عملية البيع المرتبطة قبل إلغاء الحجز.	The linked sale must be settled before cancelling the reservation.
+يجب حسم طلب التمويل قبل اعتماد البيع.	The finance request must be decided before approving the sale.
+يرجى إدخال اسم صالح.	Please enter a valid name.
+يسجّل هذا الإجراء استلام المركبة ويضع الالتزام المالي في انتظار الاسترداد. لا ينفذ استردادًا ماليًا.	This action records receipt of the vehicle and marks the financial obligation as awaiting refund. It does not issue a refund.
+يعرض التقرير أول %1$d من أصل %2$d عنصرًا.	The report shows the first %1$d of %2$d items.
+يمكن مقارنة %d سيارات كحد أقصى.	You can compare up to %d vehicles.
+\u0020ريال	\u0020SAR
+\u0020كم	\u0020km
+\u0020و\u0020	\u0020and\u0020
+\u0020وإضافة رقم الهاتف	\u0020and adding your phone number
+%s سيارة مطابقة	%s matching vehicles
+مقبول	Accepted
+تم الإقرار	Acknowledged
+معتمد	Approved
+معتمد تشغيليًا	Authoritative
+إيصال تحويل بنكي	Bank transfer receipt
+مكالمة	Call
+بطاقة	Card
+إيصال بطاقة	Card receipt
+نقدي	Cash
+استرداد نقدي	Cash refund
+مغلق	Closed
+توافق	Compatibility
+تم التواصل	Contacted
+متضررة	Damaged
+تم التسليم	Delivered
+تم الإرسال	Dispatched
+مسودة	Draft
+منتهي الصلاحية	Expired
+راسب	Fail
+فشل	Failed
+فشل نهائي	Failed permanently
+عكس تمويل	Finance reversal
+مبلغ ثابت	Fixed amount
+متابعة	Follow up
+المدير العام	General manager
+جيدة	Good
+محتجزة	Hold
+ناقصة	Incomplete
+قيد الفحص	Inspection
+خاسرة	Lost
+قيد الصيانة	Maintenance
+اجتماع	Meeting
+تفاوض	Negotiation
+بدون	None
+غير مسجل	Not recorded
+غير مطلوب	Not required
+لم يبدأ	Not started
+ملاحظة	Note
+مفتوح	Open
+مسدد	Paid
+مسدد جزئيًا	Partially paid
+ناجح	Pass
+نسبة مئوية	Percentage
+قيد التجهيز	Preparing
+قيد المعالجة	Processing
+مؤهل	Qualified
+في الطابور	Queued
+جاهز	Ready
+تم الاستلام	Received
+بانتظار الاسترداد	Refund pending
+تم الاسترداد	Refunded
+مرفوض	Rejected
+تم الإطلاق	Released
+مطلوب	Requested
+إعادة المحاولة جارية	Retrying
+مرتجعة	Returned
+مدير المبيعات	Sales manager
+مرسل	Sent
+مركز خدمة	Service
+صالة عرض	Showroom
+محتجزة للنقل	Transfer hold
+قيد المراجعة	Under review
+غير مسدد	Unpaid
+تم تأكيد رقم الهيكل	VIN confirmed
+تحقق	Verify
+مستودع	Warehouse
+الموقع الإلكتروني	Website
+ناجحة	Won
+ساحة	Yard
+أدخل بريدًا صحيحًا ووافق صراحة على الاشتراك.	Enter a valid email and explicitly consent to the subscription.
+أريد الاستفادة من عرض:\u0020	I am interested in this offer:\u0020
+أكمل معاينة الملفين وتأكيد مراجعة الهوية ومرجع الإثبات.	Preview both records and confirm the identity review and evidence reference.
+ابحث في السيارات	Search vehicles
+ابقَ على اطلاع	Stay informed
+اختر سيارة وتاريخًا ووقتًا في المستقبل حسب توقيت الموقع.	Select a vehicle and a future date and time in the website time zone.
+اختر موعدًا صحيحًا في المستقبل حسب توقيت الموقع.	Select a valid future appointment in the website time zone.
+اشترك في تحديثات المعرض إذا رغبت.	Subscribe to dealership updates if you wish.
+افتح حاسبة التمويل	Open finance calculator
+الاستثناءات التي تحتاج متابعة	Exceptions requiring follow up
+التجهيزات الخارجية	Exterior features
+التجهيزات الداخلية	Interior features
+التواصل	Contact
+الحجوزات	Reservations
+الحساب	Account
+الحساب المرتبط	Linked account
+الرئيسية	Home
+الرقم	Number
+الروابط المكررة	Duplicate links
+الروابط غير الصالحة	Invalid links
+السيارات التشغيلية	Operational vehicles
+السيارة غير متاحة أو لم تعد في فرع الطلب.	The vehicle is unavailable or is no longer in the request branch.
+السيارة غير متاحة لهذا الطلب.	The vehicle is unavailable for this request.
+الصفحة غير موجودة	Page not found
+الضمان	Warranty
+العملاء المحتملون الجدد	New leads
+العودة إلى الرئيسية	Back to home
+القوة بالحصان	Horsepower
+الماركات النشطة	Active brands
+المبيعات	Sales
+المخزون الحالي	Current inventory
+الملفان غير متوافقين للدمج. أبقِ الملف المرتبط بالحساب وجهةً للدمج، وتحقق من تطابق البريد والجوال.	The records cannot be merged. Keep the account-linked record as the destination and check that email and mobile numbers match.
+المنشورات غير المرتبطة	Unmapped posts
+المواقع النشطة	Active locations
+بنية قاعدة البيانات	Database schema
+تجهيزات السلامة	Safety features
+تحديث بياناتي	Update my details
+تعذر إتمام العملية. تحقق من الصلاحيات والبيانات وحاول مجددًا.	The operation could not be completed. Check permissions and details and try again.
+تعذر تحديث الطلب. تحقق من البيانات والصلاحيات وحاول مجددًا.	The request could not be updated. Check details and permissions and try again.
+تعذر حفظ الاشتراك.	The subscription could not be saved.
+تعذر حفظ الطلب. راجع البيانات أو حاول لاحقًا.	The request could not be saved. Check the details or try again later.
+تغير الطلب منذ فتحه. أعد تحميله قبل الحفظ.	The request has changed since it was opened. Reload it before saving.
+تغيرت البيانات. أعد المعاينة قبل الدمج.	The details have changed. Preview again before merging.
+تم الاشتراك بنجاح.	You have subscribed successfully.
+تم تجاوز عدد الطلبات المسموح. حاول لاحقًا.	The request limit was exceeded. Try again later.
+تُرسل بيانات حسابك تلقائياً.	Your account details are sent automatically.
+جاهز للمراجعة النهائية	Ready for final review
+جاهزة	Ready
+جاهزية التحويل	Cutover readiness
+جميع الحقوق محفوظة.	All rights reserved.
+حسابي	My account
+حسابي —\u0020	My account —\u0020
+خدمة الاشتراك غير متاحة مؤقتًا.	The subscription service is temporarily unavailable.
+دفع أمامي	Front-wheel drive
+دفع خلفي	Rear-wheel drive
+دفع رباعي	Four-wheel drive
+دفع كلي	All-wheel drive
+دليل اختيار السيارة	Vehicle selection guide
+راسلنا عبر واتساب	Message us on WhatsApp
+روابط إلى منشورات غير منشورة أو غير صالحة	Links to unpublished or invalid posts
+روابط الموقع	Website links
+روابط سريعة	Quick links
+روابط مكررة	Duplicate links
+سعة المحرك (مع الوحدة)	Engine size (including unit)
+سيارات تشغيلية غير مرتبطة	Unmapped operational vehicles
+سيارة واحدة مطابقة	One matching vehicle
+سيارتك الجديدة تبدأ من أوتو براندز	Your next car starts at AUTO BRANDS
+صورة السيارة قيد الإضافة	Vehicle image coming soon
+عدد الأبواب	Doors
+عدد المقاعد	Seats
+غير جاهزة	Not ready
+غير محدد	Unspecified
+قد يكون الرابط تغيّر. ابحث عن سيارة أو عد إلى الصفحة الرئيسية.	The link may have changed. Search for a vehicle or return to the home page.
+لا يمكن الانتقال إلى هذه الحالة أو تعديل موعد طلب مغلق.	This status transition is not allowed, and a closed request appointment cannot be changed.
+لغة الموقع	Website language
+للملف المصدر حجوزات أو مستندات تشغيلية؛ لا يمكن دمجه بهذه الأداة.	The source record has reservations or operational documents and cannot be merged with this tool.
+مبيعات السيارات الجديدة في جدة، حي الجوهرة، وخدمات ما بعد البيع والتلميع والتظليل. استعرض الخيارات وتواصل مع فريقنا.	New vehicle sales in Al-Jawharah, Jeddah, with after-sales, detailing and tinting services. Browse available options and contact our team.
+محظور	Blocked
+مرحباً AUTO BRANDS، أريد الاستفسار عن %s	Hello AUTO BRANDS, I would like to enquire about %s
+مرحباً AUTO BRANDS، أريد الاستفسار عن السيارات المتاحة.	Hello AUTO BRANDS, I would like to enquire about available vehicles.
+مرحباً، أود الاستفسار عن السيارات المتاحة.	Hello, I would like to enquire about available vehicles.
+مرحباً، أود الاستفسار عن سيارة.	Hello, I would like to enquire about a vehicle.
+معلومات مهمة	Important information
+ملف العميل غير موجود.	The customer record does not exist.
+منشورات السيارات المنشورة	Published vehicle posts
+منشورات منشورة غير مرتبطة	Unmapped published posts
+وسائل التواصل الاجتماعي	Social media
+يجب أن يتطابق نطاق الفروع والموظفين للملفين.	Both records must have matching branch and staff scopes.
+آخر موافقة مسجلة:	Last recorded consent:
+أهلاً بك في	Welcome to
+استكشف السيارات ←	Explore vehicles →
+البريد الإلكتروني:	Email address:
+مرحباً،	Hello,
+أدخل بيانات السيارة والدفعة الأولى والمدة في حاسبة التمويل للحصول على تقدير أولي غير ملزم للقسط الشهري. تختلف الأهلية والرسوم والشروط النهائية بحسب الجهة المرخصة والعرض المعتمد عند توفره.	Enter the vehicle price, down payment and term in the finance calculator for a preliminary, nonbinding monthly payment estimate. Eligibility, fees and final terms depend on the licensed provider and approved offer when available.
+أرسل استفسارك إلى فريق المعرض. إرسال النموذج لا يُنشئ طلب تمويل لدى مزود خارجي.	Send your enquiry to our team. Submitting this form does not create a finance application with an external provider.
+لديك استفسار؟	Have an enquiry?
+تم الإنشاء:	Created:
+تم الإكمال:	Completed:
+تم القفل:	Locked:
+فشل:	Failed:
+ريال سعودي	SAR
+قيد النقل	In transfer
+حجز تجربة قيادة	Test drive booking
+طلب شراء	Purchase request
+مفعّل	Enabled
+معطّل	Disabled
+الإنتاج	Production
+بيئة الاختبار	Sandbox
+الهيكل الخارجي	Exterior
+التجهيز الداخلي	Interior
+المحرك	Engine
+الإطارات	Tires
+معرّف المنشور	Post ID
+عنوان المنشور	Post title
+حالة المنشور	Post status
+نوع المنشور	Post type
+عدد الروابط	Mapping count
+معرّفات المركبات	Vehicle IDs
+أرقام المخزون	Stock numbers
+منشور	Published
+خاص	Private
+سلة المهملات	Trash
+مجدول	Scheduled
+عرض سيارة	Vehicle offer
+بانتظار الاعتماد	Awaiting approval
+بانتظار اعتماد	Pending approval
+بانتظار التمويل	Pending finance
+الاسترداد مطلوب	Refund required
+تمت التسوية	Settled
+ملغى مع الاسترداد	Cancelled and refunded
+تويوتا	Toyota
+نيسان	Nissan
+هيونداي	Hyundai
+كيا	Kia
+هوندا	Honda
+مازدا	Mazda
+ميتسوبيشي	Mitsubishi
+لكزس	Lexus
+فورد	Ford
+شيفروليه	Chevrolet
+مرسيدس بنز	Mercedes-Benz
+بي إم دبليو	BMW
+أودي	Audi
+فولكس واجن	Volkswagen
+جي إم سي	GMC
+جيلي	Geely
+شانجان	Changan
+إم جي	MG
+هافال	Haval
+شيري	Chery
+بي واي دي	BYD
+إيسوزو	Isuzu
+سوزوكي	Suzuki
+سوبارو	Subaru
+بيجو	Peugeot
+رينو	Renault
+جيب	Jeep
+دودج	Dodge
+بورشه	Porsche
+تسلا	Tesla
+كورولا	Corolla
+يارس	Yaris
+لاند كروزر	Land Cruiser
+برادو	Prado
+هايلكس	Hilux
+فورتشنر	Fortuner
+راف فور	RAV4
+أفالون	Avalon
+سوناتا	Sonata
+إلنترا	Elantra
+أكسنت	Accent
+توسان	Tucson
+سانتافي	Santa Fe
+سبورتاج	Sportage
+سيراتو	Cerato
+ألتيما	Altima
+باترول	Patrol
+صني	Sunny
+أكورد	Accord
+سيفيك	Civic
+فضي	Silver
+أسود	Black
+أبيض	White
+أحمر	Red
+أزرق	Blue
+رمادي	Gray
+رمادي	Grey
+بيج	Beige
+بني	Brown
+أخضر	Green
+ذهبي	Gold
+حصان	HP
+رياضية متعددة الاستخدامات	SUV
+سيدان	Sedan
+كوبيه	Coupe
+هاتشباك	Hatchback
+بيك أب	Pickup
+فان	Van
+تم التحويل إلى بيع	Converted to sale
+في الطريق	In transit
+غير مطابق	Mismatch
+بانتظار الخصم	Pending discount
+جاهزة للتسليم	Ready for delivery
+تمت المعالجة	Resolved
+إعادة المحاولة	Retry
+تم التقديم	Submitted
+تم الطلب	Ordered
+مسترد جزئيًا	Partially refunded

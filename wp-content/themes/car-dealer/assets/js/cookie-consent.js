@@ -9,13 +9,15 @@
     var CONSENT_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
     var COOKIE_VERSION = '1.0';
     var TEMPLATE_URI = window.cdCookieConfig ? window.cdCookieConfig.templateUri : '';
+	var LANGUAGE = window.cdCookieConfig && window.cdCookieConfig.language || (document.documentElement.lang.indexOf('en') === 0 ? 'en' : 'ar');
+	function text(arabic, english) { return LANGUAGE === 'en' ? english : arabic; }
 
     // Cookie categories
     var COOKIE_CATEGORIES = {
-        essential: { name: 'ضرورية', description: 'ضرورية لعمل الموقع بشكل صحيح', default: true, enabled: true },
-        analytics: { name: 'تحليلات', description: 'تساعدنا على فهم كيفية استخدام الزوار للموقع', default: false, enabled: false },
-        marketing: { name: 'تسويقية', description: 'تُستخدم لتخصيص المحتوى والإعلانات', default: false, enabled: false },
-        preferences: { name: 'تفضيلات', description: 'تتذكر اختياراتك مثل اللغة والموقع', default: false, enabled: false }
+        essential: { name: text('ضرورية', 'Essential'), description: text('ضرورية لعمل الموقع بشكل صحيح', 'Required for the website to work correctly'), default: true, enabled: true },
+        analytics: { name: text('تحليلات', 'Analytics'), description: text('تساعدنا على فهم كيفية استخدام الزوار للموقع', 'Help us understand how visitors use the website'), default: false, enabled: false },
+        marketing: { name: text('تسويقية', 'Marketing'), description: text('تُستخدم لتخصيص المحتوى والإعلانات', 'Used to personalize content and advertising'), default: false, enabled: false },
+        preferences: { name: text('تفضيلات', 'Preferences'), description: text('تتذكر اختياراتك مثل اللغة والموقع', 'Remember choices such as language and location'), default: false, enabled: false }
     };
 
     // Initialize the consent manager
@@ -68,6 +70,8 @@
         var banner = document.createElement('div');
         banner.className = 'cd-cookie-banner';
         banner.id = 'cd-cookie-banner';
+		banner.dir = LANGUAGE === 'en' ? 'ltr' : 'rtl';
+		banner.lang = LANGUAGE;
         banner.innerHTML = getBannerHTML();
         document.body.appendChild(banner);
 
@@ -94,12 +98,12 @@
         return '<div class="cd-cookie-container">' +
             '<div class="cd-cookie-content">' +
                 '<div class="cd-cookie-icon">🍪</div>' +
-                '<h3>نستخدم ملفات الكوكيز</h3>' +
-                '<p>نستخدم ملفات الكوكيز لتحسين تجربتك، وتحليل حركة المرور، وتخصيص المحتوى. يمكنك اختيار تفضيلاتك أدناه.</p>' +
+                '<h3>' + text('نستخدم ملفات الكوكيز', 'We use cookies') + '</h3>' +
+                '<p>' + text('نستخدم ملفات الكوكيز لتحسين تجربتك، وتحليل حركة المرور، وتخصيص المحتوى. يمكنك اختيار تفضيلاتك أدناه.', 'We use cookies to improve your experience, analyze traffic and personalize content. Choose your preferences below.') + '</p>' +
                 '<div class="cd-cookie-actions">' +
-                    '<button class="cd-cookie-btn cd-cookie-btn-primary" id="cd-cookie-accept-all">قبول الكل</button>' +
-                    '<button class="cd-cookie-btn cd-cookie-btn-secondary" id="cd-cookie-accept-essential">الأساسية فقط</button>' +
-                    '<button class="cd-cookie-btn cd-cookie-btn-settings" id="cd-cookie-settings-btn">⚙ الإعدادات</button>' +
+                    '<button class="cd-cookie-btn cd-cookie-btn-primary" id="cd-cookie-accept-all">' + text('قبول الكل', 'Accept all') + '</button>' +
+                    '<button class="cd-cookie-btn cd-cookie-btn-secondary" id="cd-cookie-accept-essential">' + text('الأساسية فقط', 'Essential only') + '</button>' +
+                    '<button class="cd-cookie-btn cd-cookie-btn-settings" id="cd-cookie-settings-btn">⚙ ' + text('الإعدادات', 'Settings') + '</button>' +
                 '</div>' +
             '</div>' +
         '</div>';
@@ -142,6 +146,8 @@
         var settings = document.createElement('div');
         settings.className = 'cd-cookie-settings';
         settings.id = 'cd-cookie-settings';
+		settings.dir = LANGUAGE === 'en' ? 'ltr' : 'rtl';
+		settings.lang = LANGUAGE;
         settings.innerHTML = getSettingsHTML();
         document.body.appendChild(settings);
 
@@ -192,13 +198,13 @@
         });
 
         return '<div class="cd-cookie-settings-header">' +
-            '<h3>⚙ تفضيلات الكوكيز</h3>' +
-            '<button class="cd-cookie-settings-close" id="cd-cookie-settings-close">&times;</button>' +
+            '<h3>⚙ ' + text('تفضيلات الكوكيز', 'Cookie preferences') + '</h3>' +
+            '<button class="cd-cookie-settings-close" id="cd-cookie-settings-close" aria-label="' + text('إغلاق', 'Close') + '">&times;</button>' +
         '</div>' +
         items +
         '<div style="margin-top:var(--cd-spacing-lg);display:flex;gap:12px;justify-content:flex-end;">' +
-            '<button class="cd-cookie-btn cd-cookie-btn-secondary" id="cd-cookie-settings-cancel">إلغاء</button>' +
-            '<button class="cd-cookie-btn cd-cookie-btn-primary cd-cookie-save-btn">حفظ التفضيلات</button>' +
+            '<button class="cd-cookie-btn cd-cookie-btn-secondary" id="cd-cookie-settings-cancel">' + text('إلغاء', 'Cancel') + '</button>' +
+            '<button class="cd-cookie-btn cd-cookie-btn-primary cd-cookie-save-btn">' + text('حفظ التفضيلات', 'Save preferences') + '</button>' +
         '</div>';
     }
 

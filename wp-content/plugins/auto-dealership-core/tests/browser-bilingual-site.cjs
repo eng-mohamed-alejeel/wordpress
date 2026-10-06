@@ -106,7 +106,7 @@ const { spawn } = require('node:child_process');
             check(await evaluate("getComputedStyle(document.querySelector('.dashicons')).fontFamily.includes('dashicons') && getComputedStyle(document.querySelector('.ab-icon'),'::before').fontFamily.includes('dashicons')"), 'Dashicons and admin-bar icon pseudo-elements are preserved');
             await call('Emulation.setEmulatedMedia', { media: 'print' });
             check(await evaluate("getComputedStyle(document.body).fontFamily.includes('Tajawal') && document.fonts.check('700 16px Tajawal')"), 'Print media retains locally loaded Tajawal');
-            check(errors.length === 0 && badAssets.length === 0, 'Typography fixture has no browser exceptions or missing assets');
+        check(errors.length === 0 && badAssets.length === 0, 'Typography fixture has no browser exceptions or missing assets');
             process.stdout.write(`TAJAWAL PASS: ${passed} fixture checks.\n`);
             return;
         }
@@ -229,6 +229,15 @@ const { spawn } = require('node:child_process');
         await visit('/contact/');
         check(await evaluate("(async()=>{for(const weight of [200,300,400,500,700,800,900]){const faces=await document.fonts.load(`${weight} 16px Tajawal`, 'أوتو براندز Auto Brands');if(!faces.length||faces.some(face=>face.status!=='loaded'))return false;}return true;})()"), 'All seven local Tajawal weights load successfully');
         check(await evaluate("[document.body,...document.querySelectorAll('h1,h2,p,input,textarea,button')].every(el=>getComputedStyle(el).fontFamily.includes('Tajawal'))"), 'Public text and form controls use Tajawal');
+        // Cookie UI is created by JavaScript after page load, outside PHP gettext.
+        for (const language of ['en', 'ar']) {
+            await evaluate("localStorage.removeItem('cd_cookie_consent')");
+            await visit(language === 'en' ? '/contact/?lang=en' : '/contact/');
+            await wait("!!document.querySelector('#cd-cookie-banner')", `${language} cookie banner`);
+            check(await evaluate(`(() => {const banner=document.querySelector('#cd-cookie-banner');return banner.lang==='${language}' && banner.dir==='${language === 'en' ? 'ltr' : 'rtl'}' && banner.innerText.includes('${language === 'en' ? 'Essential only' : 'الأساسية فقط'}');})()`), `${language} cookie banner follows selected language and direction`);
+            await evaluate("document.querySelector('#cd-cookie-settings-btn').click()");
+            check(await evaluate(`(() => {const modal=document.querySelector('#cd-cookie-settings');return modal.lang==='${language}' && modal.innerText.includes('${language === 'en' ? 'Analytics' : 'تحليلات'}') && modal.innerText.includes('${language === 'en' ? 'Save preferences' : 'حفظ التفضيلات'}') && ${language === 'en' ? '!/[\\u0600-\\u06ff]/u.test(modal.innerText)' : 'modal.dir === "rtl"'};})()`), `${language} cookie settings and categories have localized copy`);
+        }
         await call('Page.navigate', { url: root + '/wp-login.php' });
         await wait("document.readyState==='complete' && !!document.querySelector('#loginform')", 'WordPress login typography');
         check(await evaluate("(async()=>{await document.fonts.load('400 16px Tajawal','دخول Login');return document.fonts.check('400 16px Tajawal') && [document.body,...document.querySelectorAll('#login input,#login label,#login button')].every(el=>getComputedStyle(el).fontFamily.includes('Tajawal'));})()"), 'WordPress login and controls use locally loaded Tajawal');

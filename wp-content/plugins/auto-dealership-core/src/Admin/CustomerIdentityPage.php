@@ -8,7 +8,16 @@ defined( 'ABSPATH' ) || exit;
 
 final class CustomerIdentityPage {
 	public static function boot(): void {
-		add_action( 'admin_menu', static function (): void { add_submenu_page( 'adc-settings', 'مراجعة ملفات العملاء', 'مراجعة ملفات العملاء', 'manage_options', 'adc-customer-identities', array( self::class, 'render' ) ); } );
+		add_action( 'admin_menu', static function (): void {
+			add_submenu_page(
+				'adc-settings',
+				__( 'مراجعة ملفات العملاء', 'auto-dealership-core' ),
+				__( 'مراجعة ملفات العملاء', 'auto-dealership-core' ),
+				'manage_options',
+				'adc-customer-identities',
+				array( self::class, 'render' )
+			);
+		} );
 		add_action( 'admin_post_adc_merge_customers', array( self::class, 'save' ) );
 	}
 
@@ -23,7 +32,7 @@ final class CustomerIdentityPage {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'ليست لديك صلاحية.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
 		$source = absint( $_GET['source_id'] ?? 0 ); $target = absint( $_GET['target_id'] ?? 0 );
 		?>
-		<div class="wrap" dir="rtl"><h1><?php esc_html_e( 'مراجعة ملفات العملاء', 'auto-dealership-core' ); ?></h1>
+		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><h1><?php esc_html_e( 'مراجعة ملفات العملاء', 'auto-dealership-core' ); ?></h1>
 		<p><?php esc_html_e( 'تطابق البريد والجوال يرشح الملفات للمراجعة. أكّد الهوية من دليل مستقل قبل الدمج، وأبقِ الملف المرتبط بالحساب وجهةً للدمج.', 'auto-dealership-core' ); ?></p>
 		<?php if ( isset( $_GET['merged'] ) ) { echo '<div class="notice notice-success"><p>' . esc_html__( 'تم دمج الملفات وتوثيق العملية.', 'auto-dealership-core' ) . '</p></div>'; } ?>
 		<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
@@ -50,7 +59,7 @@ final class CustomerIdentityPage {
 			if ( is_wp_error( $preview ) ) { self::error( $preview ); }
 			else {
 				echo '<h2>' . esc_html__( 'معاينة الدمج', 'auto-dealership-core' ) . '</h2><table class="widefat"><thead><tr><th>' . esc_html__( 'البيان', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المصدر', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'الملف الذي سيبقى', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
-				foreach ( array( 'id'=>'الرقم', 'full_name'=>'الاسم', 'email'=>'البريد', 'mobile'=>'الجوال', 'account_user_id'=>'الحساب المرتبط' ) as $field => $label ) { echo '<tr><th>' . esc_html( $label ) . '</th><td>' . esc_html( $preview['source'][$field] ?? '—' ) . '</td><td>' . esc_html( $preview['target'][$field] ?? '—' ) . '</td></tr>'; }
+				foreach ( array( 'id'=>'الرقم', 'full_name'=>'الاسم', 'email'=>'البريد', 'mobile'=>'الجوال', 'account_user_id'=>'الحساب المرتبط' ) as $field => $label ) { echo '<tr><th>' . esc_html__( $label, 'auto-dealership-core' ) . '</th><td>' . esc_html( $preview['source'][$field] ?? '—' ) . '</td><td>' . esc_html( $preview['target'][$field] ?? '—' ) . '</td></tr>'; }
 				echo '</tbody></table><p>' . esc_html( sprintf( __( 'ستُنقل %d فرصة إلى الملف الذي سيبقى، وتُحذف بيانات الاتصال من المصدر مع إبقاء مرجع الدمج. لا تتوفر عملية تراجع تلقائية.', 'auto-dealership-core' ), count( $preview['lead_ids'] ) ) ) . '</p>';
 				?>
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">

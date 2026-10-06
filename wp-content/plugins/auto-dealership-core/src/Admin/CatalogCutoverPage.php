@@ -24,7 +24,7 @@ final class CatalogCutoverPage {
 		$posts = CatalogMappingService::posts();
 		$error = isset( $_GET['error'] ) && is_scalar( $_GET['error'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['error'] ) ) : '';
 		?>
-		<div class="wrap" dir="rtl">
+		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'مطابقة وتفعيل الكتالوج', 'auto-dealership-core' ); ?></h1>
 			<p><?php esc_html_e( 'اربط كل سيارة تشغيلية بمنشور سيارة واحد. لا يغيّر الربط حالة السيارة أو ينشر المنشور، وكل تغيير يتطلب سببًا ويُسجّل في سجل التدقيق.', 'auto-dealership-core' ); ?></p>
 			<?php if ( isset( $_GET['saved'] ) ) : ?><div class="notice notice-success"><p><?php esc_html_e( 'تم حفظ ربط الكتالوج وتوثيقه.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>
@@ -48,7 +48,7 @@ final class CatalogCutoverPage {
 			<h2><?php esc_html_e( 'ربط السيارات التشغيلية', 'auto-dealership-core' ); ?></h2>
 			<table class="widefat striped"><thead><tr><th><?php esc_html_e( 'السيارة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة والفرع', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'منشور الكتالوج', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
 			<?php foreach ( $vehicles as $vehicle ) : $vehicle_id = (int) $vehicle['id']; ?>
-				<tr><td><strong><?php echo esc_html( $vehicle['stock_number'] ); ?></strong><br><?php echo esc_html( $vehicle['brand'] . ' ' . $vehicle['model'] . ' ' . $vehicle['model_year'] ); ?></td><td><?php echo esc_html( $vehicle['status'] . ' — ' . $vehicle['branch_name'] ); ?></td><td><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_save_catalog_mapping"><input type="hidden" name="vehicle_id" value="<?php echo absint( $vehicle_id ); ?>"><?php wp_nonce_field( 'adc_save_catalog_mapping_' . $vehicle_id ); ?><label class="screen-reader-text" for="adc-catalog-post-<?php echo absint( $vehicle_id ); ?>"><?php esc_html_e( 'منشور الكتالوج', 'auto-dealership-core' ); ?></label><select id="adc-catalog-post-<?php echo absint( $vehicle_id ); ?>" name="post_id"><option value="0"><?php esc_html_e( 'بدون ربط', 'auto-dealership-core' ); ?></option><?php foreach ( $posts as $post ) : ?><option value="<?php echo absint( $post['ID'] ); ?>" <?php selected( (int) $vehicle['public_post_id'], (int) $post['ID'] ); ?>><?php echo esc_html( '#' . $post['ID'] . ' — ' . $post['post_title'] . ' (' . $post['post_status'] . ')' ); ?></option><?php endforeach; ?></select> <label class="screen-reader-text" for="adc-catalog-reason-<?php echo absint( $vehicle_id ); ?>"><?php esc_html_e( 'سبب الربط أو تغييره', 'auto-dealership-core' ); ?></label><input id="adc-catalog-reason-<?php echo absint( $vehicle_id ); ?>" name="reason" maxlength="500" required placeholder="<?php esc_attr_e( 'سبب الربط أو تغييره', 'auto-dealership-core' ); ?>"> <button type="submit" class="button"><?php esc_html_e( 'حفظ الربط', 'auto-dealership-core' ); ?></button></form></td></tr>
+				<tr><td><strong><?php echo esc_html( $vehicle['stock_number'] ); ?></strong><br><?php echo esc_html( $vehicle['brand'] . ' ' . $vehicle['model'] . ' ' . $vehicle['model_year'] ); ?></td><td><?php echo esc_html( \AutoDealership\Core\Localization::label( (string) $vehicle['status'] ) . ' — ' . $vehicle['branch_name'] ); ?></td><td><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_save_catalog_mapping"><input type="hidden" name="vehicle_id" value="<?php echo absint( $vehicle_id ); ?>"><?php wp_nonce_field( 'adc_save_catalog_mapping_' . $vehicle_id ); ?><label class="screen-reader-text" for="adc-catalog-post-<?php echo absint( $vehicle_id ); ?>"><?php esc_html_e( 'منشور الكتالوج', 'auto-dealership-core' ); ?></label><select id="adc-catalog-post-<?php echo absint( $vehicle_id ); ?>" name="post_id"><option value="0"><?php esc_html_e( 'بدون ربط', 'auto-dealership-core' ); ?></option><?php foreach ( $posts as $post ) : ?><option value="<?php echo absint( $post['ID'] ); ?>" <?php selected( (int) $vehicle['public_post_id'], (int) $post['ID'] ); ?>><?php echo esc_html( '#' . $post['ID'] . ' — ' . $post['post_title'] . ' (' . \AutoDealership\Core\Localization::label( (string) $post['post_status'] ) . ')' ); ?></option><?php endforeach; ?></select> <label class="screen-reader-text" for="adc-catalog-reason-<?php echo absint( $vehicle_id ); ?>"><?php esc_html_e( 'سبب الربط أو تغييره', 'auto-dealership-core' ); ?></label><input id="adc-catalog-reason-<?php echo absint( $vehicle_id ); ?>" name="reason" maxlength="500" required placeholder="<?php esc_attr_e( 'سبب الربط أو تغييره', 'auto-dealership-core' ); ?>"> <button type="submit" class="button"><?php esc_html_e( 'حفظ الربط', 'auto-dealership-core' ); ?></button></form></td></tr>
 			<?php endforeach; ?>
 			<?php if ( ! $vehicles ) : ?><tr><td colspan="3"><?php esc_html_e( 'لا توجد سيارات تشغيلية بعد. أنشئ البيانات المرجعية ثم أضف السيارات من مساحة العمل.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?>
 			</tbody></table>
@@ -60,16 +60,16 @@ final class CatalogCutoverPage {
 		<?php
 	}
 
-	private static function metric( string $label, bool $pass, string $value ): void { ?><tr><th><?php echo esc_html( $label ); ?></th><td><strong style="color:<?php echo esc_attr( $pass ? '#16794b' : '#b32d2e' ); ?>"><?php echo esc_html( $pass ? '✓' : '✕' ); ?></strong> <?php echo esc_html( $value ); ?></td></tr><?php }
+	private static function metric( string $label, bool $pass, string $value ): void { ?><tr><th><?php echo esc_html__( $label, 'auto-dealership-core' ); ?></th><td><strong style="color:<?php echo esc_attr( $pass ? '#16794b' : '#b32d2e' ); ?>"><?php echo esc_html( $pass ? '✓' : '✕' ); ?></strong> <?php echo esc_html__( $value, 'auto-dealership-core' ); ?></td></tr><?php }
 
 	private static function issues( string $title, array $rows, array $columns, int $total ): void {
-		echo '<h2>' . esc_html( $title ) . ' <span class="count">(' . absint( $total ) . ')</span></h2>';
+		echo '<h2>' . esc_html__( $title, 'auto-dealership-core' ) . ' <span class="count">(' . absint( $total ) . ')</span></h2>';
 		if ( ! $rows ) { echo '<p>' . esc_html__( 'لا توجد عناصر ضمن هذه الفئة.', 'auto-dealership-core' ) . '</p>'; return; }
 		if ( $total > count( $rows ) ) { echo '<p>' . esc_html( sprintf( __( 'يعرض التقرير أول %1$d من أصل %2$d عنصرًا.', 'auto-dealership-core' ), count( $rows ), $total ) ) . '</p>'; }
 		echo '<table class="widefat striped"><thead><tr>';
-		foreach ( $columns as $column ) { echo '<th>' . esc_html( $column ) . '</th>'; }
+		foreach ( $columns as $column ) { echo '<th>' . esc_html( \AutoDealership\Core\Localization::label( $column ) ) . '</th>'; }
 		echo '</tr></thead><tbody>';
-		foreach ( $rows as $row ) { echo '<tr>'; foreach ( $columns as $column ) { echo '<td>' . esc_html( (string) ( $row[ $column ] ?? '' ) ) . '</td>'; } echo '</tr>'; }
+		foreach ( $rows as $row ) { echo '<tr>'; foreach ( $columns as $column ) { $value = (string) ( $row[$column] ?? '' ); echo '<td>' . esc_html( in_array( $column, array( 'status', 'post_status', 'post_type' ), true ) ? \AutoDealership\Core\Localization::label( $value ) : $value ) . '</td>'; } echo '</tr>'; }
 		echo '</tbody></table>';
 	}
 

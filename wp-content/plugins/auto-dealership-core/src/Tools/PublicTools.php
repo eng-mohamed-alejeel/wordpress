@@ -32,10 +32,12 @@ final class PublicTools {
 		if ( ! self::enabled() ) {
 			return;
 		}
-		wp_enqueue_script( 'adc-public-tools', plugins_url( 'assets/js/public-tools.js', ADC_FILE ), array(), ADC_VERSION, true );
+		wp_enqueue_script( 'adc-public-tools', plugins_url( 'assets/js/public-tools.js', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/js/public-tools.js' ), true );
 		wp_localize_script( 'adc-public-tools', 'adcPublicTools', array(
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 			'nonce' => wp_create_nonce( 'adc_public_tools' ),
+			'language' => \AutoDealership\Core\Localization::language(),
+			'currencyLabel' => __( 'SAR', 'auto-dealership-core' ),
 			'addLabel' => __( 'أضف للمقارنة', 'auto-dealership-core' ),
 			'removeLabel' => __( 'إزالة من المقارنة', 'auto-dealership-core' ),
 			'comparisonError' => __( 'تعذر تحديث المقارنة.', 'auto-dealership-core' ),

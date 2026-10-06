@@ -4,7 +4,9 @@ defined( 'ABSPATH' ) || exit;
 
 /** Public language is explicit and URL-bound; Arabic remains the safe default. */
 function car_dealer_catalog_language(): string {
-	return function_exists( 'adc_catalog_language' ) ? adc_catalog_language() : 'ar';
+	if ( function_exists( 'adc_catalog_language' ) ) { return adc_catalog_language(); }
+	$source = wp_doing_ajax() ? $_REQUEST : $_GET;
+	return isset( $source['lang'] ) && is_scalar( $source['lang'] ) && 'en' === sanitize_key( wp_unslash( (string) $source['lang'] ) ) ? 'en' : 'ar';
 }
 
 function car_dealer_catalog_direction(): string {
@@ -214,7 +216,7 @@ function car_dealer_catalog_gettext( string $translation, string $text, string $
 add_filter( 'gettext', 'car_dealer_catalog_gettext', 10, 3 );
 
 function car_dealer_catalog_ngettext( string $translation, string $single, string $plural, int $number, string $domain ): string {
-	if ( 'car-dealer' === $domain && 'en' === car_dealer_catalog_language() && car_dealer_catalog_is_request() ) {
+	if ( 'car-dealer' === $domain && 'en' === car_dealer_catalog_language() && 'سيارة واحدة مطابقة' === $single && '%s سيارة مطابقة' === $plural ) {
 		return 1 === $number ? '1 matching vehicle' : '%s matching vehicles';
 	}
 	return $translation;
@@ -259,15 +261,21 @@ function car_dealer_catalog_distance( $distance ): string {
 }
 
 function car_dealer_catalog_value_label( string $value ): string {
-	if ( 'en' !== car_dealer_catalog_language() ) {
-		return $value;
-	}
 	$labels = array(
-		'new'=>'New', 'used'=>'Used', 'gasoline'=>'Gasoline', 'diesel'=>'Diesel', 'hybrid'=>'Hybrid', 'electric'=>'Electric',
-		'automatic'=>'Automatic', 'manual'=>'Manual', 'suv'=>'SUV', 'sedan'=>'Sedan', 'coupe'=>'Coupe', 'hatchback'=>'Hatchback',
-		'pickup'=>'Pickup', 'van'=>'Van', 'fwd'=>'FWD', 'rwd'=>'RWD', 'awd'=>'AWD', '4wd'=>'4WD',
+		'new'=>array('جديدة','New'), 'used'=>array('مستعملة','Used'), 'gasoline'=>array('بنزين','Gasoline'),
+		'diesel'=>array('ديزل','Diesel'), 'hybrid'=>array('هجين','Hybrid'), 'electric'=>array('كهربائي','Electric'),
+		'automatic'=>array('أوتوماتيكي','Automatic'), 'manual'=>array('يدوي','Manual'),
+		'suv'=>array('رياضية متعددة الاستخدامات','SUV'), 'sedan'=>array('سيدان','Sedan'), 'coupe'=>array('كوبيه','Coupe'),
+		'hatchback'=>array('هاتشباك','Hatchback'), 'pickup'=>array('بيك أب','Pickup'), 'van'=>array('فان','Van'),
+		'fwd'=>array('دفع أمامي','FWD'), 'rwd'=>array('دفع خلفي','RWD'), 'awd'=>array('دفع كلي','AWD'), '4wd'=>array('دفع رباعي','4WD'),
 	);
-	return $labels[ strtolower( $value ) ] ?? $value;
+	$english = 'en' === car_dealer_catalog_language();
+	$key = strtolower( trim( $value ) );
+	if ( isset( $labels[$key] ) ) { return $labels[$key][$english ? 1 : 0]; }
+	foreach ( $labels as $pair ) {
+		if ( $value === $pair[0] ) { return $pair[$english ? 1 : 0]; }
+	}
+	return __( $value, 'car-dealer' );
 }
 
 function car_dealer_vehicle_view( int $post_id, bool $preview = false ): ?array {

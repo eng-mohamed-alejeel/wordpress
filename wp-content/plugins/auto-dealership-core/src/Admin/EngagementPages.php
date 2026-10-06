@@ -102,14 +102,14 @@ final class EngagementPages {
 			wp_die( esc_html( $result->get_error_message() ), '', array( 'response' => (int) ( $result->get_error_data()['status'] ?? 500 ) ) );
 		}
 
-		echo '<div class="wrap adc-engagement" dir="rtl"><h1>' . esc_html( $title ) . '</h1>';
+		echo '<div class="wrap adc-engagement" dir="' . ( 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl' ) . '"><h1>' . esc_html( $title ) . '</h1>';
 		if ( isset( $_GET['saved'] ) ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'تم تحديث الطلب وحفظ سجل المتابعة.', 'auto-dealership-core' ) . '</p></div>';
 		}
 		echo '<p class="description">' . esc_html( 'subscriber' === $type ? __( 'قائمة موافقات الاشتراك الحالية للقراءة التشغيلية.', 'auto-dealership-core' ) : __( 'تعرض القائمة الطلبات الواقعة ضمن نطاق الفرع أو المسؤول الحالي فقط.', 'auto-dealership-core' ) ) . '</p>';
 		echo '<div class="adc-table-scroll"><table class="widefat striped"><thead><tr>';
 		foreach ( $columns as $label ) {
-			echo '<th scope="col">' . esc_html( $label ) . '</th>';
+			echo '<th scope="col">' . esc_html__( $label, 'auto-dealership-core' ) . '</th>';
 		}
 		echo '</tr></thead><tbody>';
 		foreach ( $result['items'] as $row ) {

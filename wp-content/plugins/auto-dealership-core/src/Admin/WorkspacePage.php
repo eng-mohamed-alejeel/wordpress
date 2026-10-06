@@ -41,7 +41,7 @@ final class WorkspacePage {
 		$user = wp_get_current_user();
 		$groups = self::groups();
 		?>
-		<div class="wrap adc-workspace" dir="rtl">
+		<div class="wrap adc-workspace" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<header class="adc-workspace-hero">
 				<div>
 					<span><?php esc_html_e( 'مساحة تشغيل مستقلة عن الثيم', 'auto-dealership-core' ); ?></span>

@@ -15,8 +15,8 @@ add_action( 'after_setup_theme', 'car_dealer_setup' );
 
 // تسجيل قوالب الصفحات المخصصة
 function car_dealer_register_page_templates( $templates ) {
-	$templates['page-about.php'] = 'صفحة من نحن';
-	$templates['page-contact.php'] = 'صفحة تواصل معنا';
+	$templates['page-about.php'] = __( 'صفحة من نحن', 'car-dealer' );
+	$templates['page-contact.php'] = __( 'صفحة تواصل معنا', 'car-dealer' );
 	return $templates;
 }
 add_filter( 'theme_page_templates', 'car_dealer_register_page_templates', 10, 4 );
@@ -29,9 +29,6 @@ function car_dealer_register_shortcode_adapter( $tag, $callback, $accepts_atts =
 		if ( $accepts_atts ) { $args[] = is_array( $atts ) ? $atts : array(); }
 		if ( $accepts_model ) { $args[] = is_array( $model ) ? $model : array(); }
 		$rendered = call_user_func_array( $callback, $args );
-		if ( is_string( $rendered ) && 'en' === car_dealer_catalog_language() && str_starts_with( (string) $registered_tag, 'ab_' ) && function_exists( 'car_dealer_editorial_english_copy' ) ) {
-			$rendered = strtr( $rendered, car_dealer_editorial_english_copy() );
-		}
 		return is_string( $rendered ) ? $rendered : $fallback;
 	}, 10, 5 );
 }
@@ -43,6 +40,7 @@ require_once get_template_directory() . '/inc/about-contact-pages.php';
 // واجهة الحساب والكتالوج تستخدم واجهات الإضافة العامة فقط.
 require_once get_template_directory() . '/inc/accounts.php';
 require_once get_template_directory() . '/inc/public-catalog.php';
+require_once get_template_directory() . '/inc/localization.php';
 require_once get_template_directory() . '/inc/customization-manager.php';
 
 function car_dealer_assets() {
@@ -64,7 +62,7 @@ function car_dealer_assets() {
 	// Cookie Consent
 	wp_enqueue_style( 'car-dealer-cookies', $uri . '/assets/css/components/_cookies.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/components/_cookies.css' ) );
 	wp_enqueue_script( 'car-dealer-cookie-consent', $uri . '/assets/js/cookie-consent.js', array(), filemtime( get_template_directory() . '/assets/js/cookie-consent.js' ), true );
-	wp_localize_script( 'car-dealer-cookie-consent', 'cdCookieConfig', array( 'templateUri' => $uri ) );
+	wp_localize_script( 'car-dealer-cookie-consent', 'cdCookieConfig', array( 'templateUri' => $uri, 'language' => car_dealer_ui_language() ) );
 	
 }
 add_action( 'wp_enqueue_scripts', 'car_dealer_assets' );
@@ -168,7 +166,7 @@ function car_dealer_footer_social_links(): void {
 	foreach ( $links as $label => $url ) {
 		echo '<a href="' . esc_url( $url ) . '" target="_blank" rel="noopener">' . esc_html( ucfirst( $label ) ) . '</a>';
 	}
-	if ( $phone ) { echo '<a href="' . esc_url( 'https://wa.me/' . $phone ) . '" target="_blank" rel="noopener">WhatsApp</a>'; }
+	if ( $phone ) { echo '<a href="' . esc_url( 'https://wa.me/' . $phone ) . '" target="_blank" rel="noopener">' . esc_html__( 'واتساب', 'car-dealer' ) . '</a>'; }
 	echo '</div>';
 }
 

@@ -38,22 +38,22 @@ add_action( 'admin_menu', 'car_dealer_register_settings_menu', 25 );
 function car_dealer_render_settings_page() {
 	$options = car_dealer_theme_options();
 	?>
-	<div class="wrap cd-admin" dir="rtl">
+	<div class="wrap cd-admin" dir="<?php echo 'en' === car_dealer_ui_language() ? 'ltr' : 'rtl'; ?>">
 		<h1><?php esc_html_e( 'مظهر المعرض وبيانات التواصل', 'car-dealer' ); ?></h1>
-		<p class="cd-page-description">خصص هوية الموقع وبيانات التواصل التي تظهر لعملائك.</p>
+		<p class="cd-page-description"><?php echo esc_html__( 'خصص هوية الموقع وبيانات التواصل التي تظهر لعملائك.', 'car-dealer' ); ?></p>
 		<?php settings_errors(); ?>
 		<form method="post" action="options.php" class="cd-panel">
 			<?php settings_fields( 'car_dealer_theme_settings' ); ?>
-			<fieldset class="cd-settings-section"><legend>الهوية البصرية</legend><p>اختر ألوان واجهة موقع المعرض.</p>
+			<fieldset class="cd-settings-section"><legend><?php echo esc_html__( 'الهوية البصرية', 'car-dealer' ); ?></legend><p><?php echo esc_html__( 'اختر ألوان واجهة موقع المعرض.', 'car-dealer' ); ?></p>
 			<div class="cd-settings-grid">
 				<label><?php esc_html_e( 'اللون الرئيسي', 'car-dealer' ); ?><input type="color" name="car_dealer_theme_settings[primary_color]" value="<?php echo esc_attr( $options['primary_color'] ); ?>"></label>
 				<label><?php esc_html_e( 'لون الأزرار', 'car-dealer' ); ?><input type="color" name="car_dealer_theme_settings[accent_color]" value="<?php echo esc_attr( $options['accent_color'] ); ?>"></label>
 			</div></fieldset>
-			<fieldset class="cd-settings-section"><legend>التواصل مع المعرض</legend><p>أضف أرقام التواصل والبريد الذي يمكن للعملاء مراسلتك عليه.</p><div class="cd-settings-grid">
+			<fieldset class="cd-settings-section"><legend><?php echo esc_html__( 'التواصل مع المعرض', 'car-dealer' ); ?></legend><p><?php echo esc_html__( 'أضف أرقام التواصل والبريد الذي يمكن للعملاء مراسلتك عليه.', 'car-dealer' ); ?></p><div class="cd-settings-grid">
 				<label><?php esc_html_e( 'الهاتف', 'car-dealer' ); ?><input type="text" name="car_dealer_theme_settings[phone]" value="<?php echo esc_attr( $options['phone'] ); ?>"></label>
 				<label><?php esc_html_e( 'البريد', 'car-dealer' ); ?><input type="email" name="car_dealer_theme_settings[email]" value="<?php echo esc_attr( $options['email'] ); ?>"></label>
 			</div></fieldset>
-			<fieldset class="cd-settings-section"><legend>حسابات التواصل والموقع</legend><p>استخدم الروابط الكاملة لحسابات المعرض، وأضف عنواناً واضحاً لزيارته.</p><div class="cd-settings-grid">
+			<fieldset class="cd-settings-section"><legend><?php echo esc_html__( 'حسابات التواصل والموقع', 'car-dealer' ); ?></legend><p><?php echo esc_html__( 'استخدم الروابط الكاملة لحسابات المعرض، وأضف عنواناً واضحاً لزيارته.', 'car-dealer' ); ?></p><div class="cd-settings-grid">
 				<label><?php esc_html_e( 'فيسبوك', 'car-dealer' ); ?><input type="url" name="car_dealer_theme_settings[facebook]" value="<?php echo esc_attr( $options['facebook'] ); ?>"></label>
 				<label><?php esc_html_e( 'إنستغرام', 'car-dealer' ); ?><input type="url" name="car_dealer_theme_settings[instagram]" value="<?php echo esc_attr( $options['instagram'] ); ?>"></label>
 				<label><?php esc_html_e( 'واتساب', 'car-dealer' ); ?><input type="text" name="car_dealer_theme_settings[whatsapp]" value="<?php echo esc_attr( $options['whatsapp'] ); ?>"></label>

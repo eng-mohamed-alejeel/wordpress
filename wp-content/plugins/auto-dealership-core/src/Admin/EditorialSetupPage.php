@@ -27,7 +27,7 @@ final class EditorialSetupPage {
 		$preserved = isset( $_GET['preserved'] ) && is_scalar( $_GET['preserved'] ) ? absint( $_GET['preserved'] ) : 0;
 		$missing = array_values( array_filter( $rows, static fn( array $row ): bool => ! $row['exists'] ) );
 		?>
-		<div class="wrap" dir="rtl">
+		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'إعداد صفحات الموقع', 'auto-dealership-core' ); ?></h1>
 			<p><?php esc_html_e( 'تنشئ هذه الأداة الصفحات المحددة والمفقودة كمسودات للمراجعة. لا تعدّل عنوانًا أو محتوى أو قالبًا لأي صفحة موجودة.', 'auto-dealership-core' ); ?></p>
 			<?php if ( '' !== $error ) : ?><div class="notice notice-error"><p><?php echo esc_html( $error ); ?></p></div><?php endif; ?>

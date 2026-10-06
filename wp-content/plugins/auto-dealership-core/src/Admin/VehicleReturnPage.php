@@ -21,22 +21,22 @@ final class VehicleReturnPage {
 		$returns = VehicleReturnService::list_for_current_user();
 		$locations = VehicleReturnService::eligible_locations();
 		?>
-		<div class="wrap" dir="rtl">
-			<h1>إرجاع المركبات</h1>
-			<p>يسجّل هذا الإجراء استلام المركبة ويضع الالتزام المالي في انتظار الاسترداد. لا ينفذ استردادًا ماليًا.</p>
+		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
+			<h1><?php echo esc_html__( 'إرجاع المركبات', 'auto-dealership-core' ); ?></h1>
+			<p><?php echo esc_html__( 'يسجّل هذا الإجراء استلام المركبة ويضع الالتزام المالي في انتظار الاسترداد. لا ينفذ استردادًا ماليًا.', 'auto-dealership-core' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="adc_receive_vehicle_return">
 				<?php wp_nonce_field( 'adc_receive_vehicle_return' ); ?>
-				<select name="delivery_id" required><option value="">التسليم</option><?php foreach ( $eligible as $row ) : ?><option value="<?php echo absint( $row['id'] ); ?>"><?php echo esc_html( $row['stock_number'] . ' — ' . $row['brand'] . ' ' . $row['model'] ); ?></option><?php endforeach; ?></select>
-				<select name="location_id" required><option value="">موقع الاستلام</option><?php foreach ( $locations as $location ) : ?><option value="<?php echo absint( $location['id'] ); ?>"><?php echo esc_html( $location['name'] ); ?></option><?php endforeach; ?></select>
-				<select name="condition" required><option value="good">جيدة</option><option value="damaged">متضررة</option><option value="incomplete">ناقصة</option></select>
-				<input type="number" min="0" name="odometer" required placeholder="قراءة العداد">
-				<input name="document_reference" required maxlength="100" placeholder="مرجع مستند الإرجاع">
-				<textarea name="reason" required maxlength="2000" placeholder="سبب الإرجاع"></textarea>
-				<button class="button button-primary">استلام المركبة المرتجعة</button>
+				<select name="delivery_id" required><option value=""><?php echo esc_html__( 'التسليم', 'auto-dealership-core' ); ?></option><?php foreach ( $eligible as $row ) : ?><option value="<?php echo absint( $row['id'] ); ?>"><?php echo esc_html( $row['stock_number'] . ' — ' . $row['brand'] . ' ' . $row['model'] ); ?></option><?php endforeach; ?></select>
+				<select name="location_id" required><option value=""><?php echo esc_html__( 'موقع الاستلام', 'auto-dealership-core' ); ?></option><?php foreach ( $locations as $location ) : ?><option value="<?php echo absint( $location['id'] ); ?>"><?php echo esc_html( $location['name'] ); ?></option><?php endforeach; ?></select>
+				<select name="condition" required><option value="good"><?php echo esc_html__( 'جيدة', 'auto-dealership-core' ); ?></option><option value="damaged"><?php echo esc_html__( 'متضررة', 'auto-dealership-core' ); ?></option><option value="incomplete"><?php echo esc_html__( 'ناقصة', 'auto-dealership-core' ); ?></option></select>
+				<input type="number" min="0" name="odometer" required placeholder="<?php echo esc_attr__( 'قراءة العداد', 'auto-dealership-core' ); ?>">
+				<input name="document_reference" required maxlength="100" placeholder="<?php echo esc_attr__( 'مرجع مستند الإرجاع', 'auto-dealership-core' ); ?>">
+				<textarea name="reason" required maxlength="2000" placeholder="<?php echo esc_attr__( 'سبب الإرجاع', 'auto-dealership-core' ); ?>"></textarea>
+				<button class="button button-primary"><?php echo esc_html__( 'استلام المركبة المرتجعة', 'auto-dealership-core' ); ?></button>
 			</form>
-			<h2>سجل الإرجاعات</h2>
-			<table class="widefat striped"><thead><tr><th>المركبة</th><th>الحالة</th><th>المستند</th><th>السبب</th><th>التاريخ</th></tr></thead><tbody><?php foreach ( $returns as $row ) : ?><tr><td><?php echo esc_html( $row['stock_number'] ); ?></td><td><?php echo esc_html( $row['financial_status'] ); ?></td><td><?php echo esc_html( $row['document_reference'] ); ?></td><td><?php echo esc_html( $row['reason'] ); ?></td><td><?php echo esc_html( $row['created_at'] ); ?></td></tr><?php endforeach; ?></tbody></table>
+			<h2><?php echo esc_html__( 'سجل الإرجاعات', 'auto-dealership-core' ); ?></h2>
+			<table class="widefat striped"><thead><tr><th><?php echo esc_html__( 'المركبة', 'auto-dealership-core' ); ?></th><th><?php echo esc_html__( 'الحالة', 'auto-dealership-core' ); ?></th><th><?php echo esc_html__( 'المستند', 'auto-dealership-core' ); ?></th><th><?php echo esc_html__( 'السبب', 'auto-dealership-core' ); ?></th><th><?php echo esc_html__( 'التاريخ', 'auto-dealership-core' ); ?></th></tr></thead><tbody><?php foreach ( $returns as $row ) : ?><tr><td><?php echo esc_html( $row['stock_number'] ); ?></td><td><?php echo esc_html( \AutoDealership\Core\Localization::label( (string) $row['financial_status'] ) ); ?></td><td><?php echo esc_html( $row['document_reference'] ); ?></td><td><?php echo esc_html( $row['reason'] ); ?></td><td><?php echo esc_html( $row['created_at'] ); ?></td></tr><?php endforeach; ?></tbody></table>
 		</div>
 		<?php
 	}

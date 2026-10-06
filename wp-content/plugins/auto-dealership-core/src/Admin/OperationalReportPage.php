@@ -33,7 +33,7 @@ final class OperationalReportPage {
 		$to = isset( $_GET['to'] ) ? sanitize_text_field( wp_unslash( $_GET['to'] ) ) : $today;
 		$report = OperationalReport::summary( $from, $to );
 		?>
-		<div class="wrap" dir="rtl"><h1><?php esc_html_e( 'التقارير التشغيلية', 'auto-dealership-core' ); ?></h1>
+		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><h1><?php esc_html_e( 'التقارير التشغيلية', 'auto-dealership-core' ); ?></h1>
 			<p><?php esc_html_e( 'مؤشرات مجمعة ضمن فروعك النشطة. لا يتضمن التقرير أسماء العملاء أو وسائل الاتصال أو VIN أو أرقام المخزون.', 'auto-dealership-core' ); ?></p>
 			<form method="get"><input type="hidden" name="page" value="adc-operational-reports"><label><?php esc_html_e( 'من', 'auto-dealership-core' ); ?> <input type="date" name="from" value="<?php echo esc_attr( $from ); ?>" required></label> <label><?php esc_html_e( 'إلى', 'auto-dealership-core' ); ?> <input type="date" name="to" value="<?php echo esc_attr( $to ); ?>" required></label> <?php submit_button( __( 'عرض', 'auto-dealership-core' ), 'secondary', 'submit', false ); ?></form>
 			<?php if ( is_wp_error( $report ) ) : ?>
@@ -67,9 +67,9 @@ final class OperationalReportPage {
 
 	private static function table( string $section, array $rows ): void {
 		?>
-		<h2><?php echo esc_html( self::LABELS[ $section ] ?? $section ); ?></h2>
+		<h2><?php echo esc_html__( self::LABELS[ $section ] ?? $section, 'auto-dealership-core' ); ?></h2>
 		<table class="widefat striped"><thead><tr><th><?php esc_html_e( 'الفرع', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة/المؤشر', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'العدد', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المبلغ المجمع (هللة)', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
-		<?php if ( $rows ) : foreach ( $rows as $row ) : ?><tr><td><?php echo esc_html( $row['branch_name'] ); ?> <small>#<?php echo absint( $row['branch_id'] ); ?></small></td><td><code><?php echo esc_html( $row['status'] ); ?></code></td><td><?php echo absint( $row['total'] ); ?></td><td><?php echo in_array( $section, array( 'quotations','sales' ), true ) ? esc_html( number_format_i18n( $row['amount'] ) ) : '—'; ?></td></tr><?php endforeach; else : ?><tr><td colspan="4"><?php esc_html_e( 'لا توجد نتائج ضمن النطاق المسموح.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?>
+		<?php if ( $rows ) : foreach ( $rows as $row ) : ?><tr><td><?php echo esc_html( $row['branch_name'] ); ?> <small>#<?php echo absint( $row['branch_id'] ); ?></small></td><td><code><?php echo esc_html( \AutoDealership\Core\Localization::label( (string) $row['status'] ) ); ?></code></td><td><?php echo absint( $row['total'] ); ?></td><td><?php echo in_array( $section, array( 'quotations','sales' ), true ) ? esc_html( number_format_i18n( $row['amount'] ) ) : '—'; ?></td></tr><?php endforeach; else : ?><tr><td colspan="4"><?php esc_html_e( 'لا توجد نتائج ضمن النطاق المسموح.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?>
 		</tbody></table>
 		<?php
 	}

@@ -4,6 +4,7 @@
 
     function request(data) {
         data.append('nonce', window.adcPublicTools.nonce);
+		data.set('lang', window.adcPublicTools.language || (document.documentElement.lang.startsWith('en') ? 'en' : 'ar'));
         return fetch(window.adcPublicTools.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
             .then(function (response) { return response.json(); });
     }
@@ -41,7 +42,7 @@
         request(data).then(function (result) {
             if (!result.success) throw new Error(result.data && result.data.message ? result.data.message : window.adcPublicTools.calculatorError);
             var locale = document.documentElement.lang === 'en' ? 'en-SA' : 'ar-SA';
-            if (resultNode) resultNode.textContent = new Intl.NumberFormat(locale).format(result.data.monthly_payment) + ' ' + result.data.currency;
+            if (resultNode) resultNode.textContent = new Intl.NumberFormat(locale).format(result.data.monthly_payment) + ' ' + (window.adcPublicTools.currencyLabel || result.data.currency);
             if (statusNode) statusNode.textContent = '';
         }).catch(function (error) {
             if (statusNode) statusNode.textContent = error.message || window.adcPublicTools.calculatorError;

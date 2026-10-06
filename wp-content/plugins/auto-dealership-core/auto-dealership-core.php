@@ -15,6 +15,8 @@ define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
 require_once ADC_PATH . 'src/Core/Capabilities.php';
+require_once ADC_PATH . 'src/Core/Localization.php';
+\AutoDealership\Core\Localization::boot();
 require_once ADC_PATH . 'src/Core/Typography.php';
 \AutoDealership\Core\Typography::boot();
 require_once ADC_PATH . 'src/Core/ConfigurationService.php';
