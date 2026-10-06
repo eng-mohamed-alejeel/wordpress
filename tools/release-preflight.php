@@ -91,7 +91,7 @@ $demo_sales = $count( $wpdb->prepare( "SELECT COUNT(*) FROM $sales s INNER JOIN 
 $demo_marker = $option( 'adc_demo_seed_version' );
 $has_demo = null !== $demo_marker || $demo_vehicle_count > 0 || $demo_customer_count > 0 || $demo_supplier_count > 0 || $demo_posts > 0 || $demo_staff > 0 || $demo_sales > 0;
 $add( 'development_data', ! $has_demo && $vehicle_count >= 0 ? 'pass' : 'fail', 'Development fixtures must be retired or explicitly excluded from the public release.', array( 'demo_marker_present' => null !== $demo_marker, 'demo_vehicles' => $demo_vehicle_count, 'demo_sales' => $demo_sales, 'demo_customers' => $demo_customer_count, 'demo_suppliers' => $demo_supplier_count, 'demo_posts' => $demo_posts, 'demo_staff' => $demo_staff ) );
-$add( 'business_data_approval', 'manual', 'Record approved branches, inventory, offers, prices, contacts, consent, retention, roles and first-release policy decisions; no synthetic record counts as approval.' );
+$add( 'business_data_approval', 'manual', 'Record approved branches, inventory, offers, prices, vehicle-image matching/rights and alt text, contacts, consent, retention, roles and first-release policy decisions; no synthetic record counts as approval.' );
 
 $mode = $option( 'adc_public_catalog_mode' ) ?: 'compatibility';
 $mapped = $count( "SELECT COUNT(*) FROM $vehicles WHERE public_post_id>0" );

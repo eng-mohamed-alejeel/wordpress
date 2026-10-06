@@ -47,8 +47,12 @@ require_once get_template_directory() . '/inc/customization-manager.php';
 
 function car_dealer_assets() {
 	$version = wp_get_theme()->get( 'Version' ); $uri = get_template_directory_uri();
-	wp_enqueue_style( 'car-dealer-font', 'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap', array(), null );
-	wp_enqueue_style( 'car-dealer-style', get_stylesheet_uri(), array( 'car-dealer-font' ), $version );
+	if ( class_exists( '\AutoDealership\Core\Typography' ) ) {
+		\AutoDealership\Core\Typography::enqueue();
+	} elseif ( is_readable( WP_PLUGIN_DIR . '/auto-dealership-core/assets/css/typography.css' ) ) {
+		wp_enqueue_style( 'autobrands-tajawal', plugins_url( 'auto-dealership-core/assets/css/typography.css' ), array(), $version );
+	}
+	wp_enqueue_style( 'car-dealer-style', get_stylesheet_uri(), array(), $version );
 	wp_enqueue_style( 'car-dealer-main', $uri . '/assets/css/main.css', array( 'car-dealer-style' ), $version );
 	wp_enqueue_style( 'car-dealer-home-v2', $uri . '/assets/css/home-v2.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_style( 'car-dealer-floating', $uri . '/assets/css/floating-buttons.css', array( 'car-dealer-main' ), $version );

@@ -25,7 +25,7 @@ while ( have_posts() ) :
 	<section class="ab-car-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div class="container ab-car-hero-grid">
 			<div class="car-single-media">
-				<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large', array( 'loading' => 'eager' ) ); } else { ?><div class="car-image-placeholder"><?php echo car_dealer_vehicle_placeholder(); ?></div><?php } ?>
+				<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large', array( 'loading' => 'eager', 'alt' => get_post_meta( get_post_thumbnail_id(), '_wp_attachment_image_alt', true ) ?: get_the_title() ) ); } else { ?><div class="car-image-placeholder"><?php echo car_dealer_vehicle_placeholder(); ?><span class="car-image-placeholder-label"><?php echo esc_html( car_dealer_text( 'صورة السيارة قيد الإضافة', 'Vehicle photo pending' ) ); ?></span></div><?php } ?>
 			</div>
 			<div class="car-single-content">
 				<p class="eyebrow"><?php echo $brand_name ? esc_html( $brand_name ) : esc_html__( 'AUTO BRANDS', 'car-dealer' ); ?></p>
@@ -70,7 +70,7 @@ while ( have_posts() ) :
 					__( 'القوة', 'car-dealer' ) => ! empty( $vehicle['horsepower'] ) ? number_format_i18n( $vehicle['horsepower'] ) . ' HP' : '',
 					__( 'الأبواب', 'car-dealer' ) => $vehicle['doors'] ?? '',
 					__( 'المقاعد', 'car-dealer' ) => $vehicle['seats'] ?? '',
-					__( 'الممشى', 'car-dealer' ) => $kilometers ? ( function_exists( 'car_dealer_catalog_distance' ) ? car_dealer_catalog_distance( $kilometers ) : number_format_i18n( $kilometers ) . ' كم' ) : '',
+					__( 'الممشى', 'car-dealer' ) => null !== $kilometers && '' !== $kilometers && false !== $kilometers ? ( function_exists( 'car_dealer_catalog_distance' ) ? car_dealer_catalog_distance( $kilometers ) : number_format_i18n( $kilometers ) . ' كم' ) : '',
 					__( 'الفرع', 'car-dealer' ) => $vehicle['branch_name'] ?? '',
 					__( 'رقم المخزون', 'car-dealer' ) => $vehicle['stock_number'] ?? '',
 				) as $label => $value ) : if ( '' === (string) $value ) { continue; } ?><div><dt><?php echo esc_html( $label ); ?></dt><dd><?php echo esc_html( $value ); ?></dd></div><?php endforeach; ?>

@@ -42,6 +42,12 @@ final class PublicIntake {
 				'errorLabel' => __( 'تعذر إرسال الطلب الآن.', 'auto-dealership-core' ),
 				'unconfirmedLabel' => __( 'لم يتم تأكيد حفظ الطلب. حاول مجددًا.', 'auto-dealership-core' ),
 				'accountLabel' => __( 'عرض الطلب في حسابي', 'auto-dealership-core' ),
+				'englishLabels' => array(
+					'sendingLabel' => 'Sending…',
+					'errorLabel' => 'The request could not be sent right now.',
+					'unconfirmedLabel' => 'We could not confirm that the request was saved. Please try again.',
+					'accountLabel' => 'View request in my account',
+				),
 			) );
 		}
 	}

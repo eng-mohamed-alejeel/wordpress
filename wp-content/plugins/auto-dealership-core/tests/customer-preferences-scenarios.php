@@ -107,9 +107,18 @@ $failed_privacy_erase = $with_sql_failure(
 clean_post_cache( $privacy_profile ); clean_user_cache( $privacy_account ); wp_cache_delete( $privacy_account, 'user_meta' );
 adc_check( ! $failed_privacy_erase['done'] && 'Legacy Privacy Person' === get_post( $privacy_profile )->post_title && 'Legacy Privacy Person' === $wpdb->get_var( $wpdb->prepare( "SELECT full_name FROM $customers WHERE id=%d", $privacy_customer ) ) && '1' === (string) get_user_meta( $privacy_account, 'adc_marketing_consent', true ) && 'Private legacy note' === get_comment( $privacy_comment )->comment_content, 'Legacy privacy write failure rolls back Core, WordPress account and CRM post changes together.' );
 
+$failed_privacy_audit = $with_sql_failure(
+	static fn( string $query ): bool => str_starts_with( $query, "INSERT INTO `$audit`" ),
+	static fn() => PrivacyTools::erase( $privacy_profile_email )
+);
+clean_post_cache( $privacy_profile ); clean_user_cache( $privacy_account ); wp_cache_delete( $privacy_account, 'user_meta' );
+adc_check( ! $failed_privacy_audit['done'] && 'Legacy Privacy Person' === get_post( $privacy_profile )->post_title && 'Legacy Privacy Person' === $wpdb->get_var( $wpdb->prepare( "SELECT full_name FROM $customers WHERE id=%d", $privacy_customer ) ), 'Privacy erasure rolls back identity changes when its minimized audit event fails.' );
+
 $privacy_erasure = PrivacyTools::erase( $privacy_profile_email );
 clean_post_cache( $privacy_profile ); clean_user_cache( $privacy_account ); wp_cache_delete( $privacy_account, 'user_meta' );
 adc_check( $privacy_erasure['done'] && 'Erased customer' === get_post( $privacy_profile )->post_title && '1' === (string) get_post_meta( $privacy_profile, '_crm_privacy_erased', true ) && '' === (string) get_post_meta( $privacy_profile, '_crm_email', true ) && '[Personal data erased]' === get_comment( $privacy_comment )->comment_content, 'Successful privacy erasure anonymizes and retires the legacy CRM profile and activity.' );
 adc_check( ! metadata_exists( 'user', $privacy_account, 'adc_marketing_consent' ) && 'Erased customer' === $wpdb->get_var( $wpdb->prepare( "SELECT full_name FROM $customers WHERE id=%d", $privacy_customer ) ), 'Successful privacy erasure removes account preference metadata and anonymizes the canonical customer.' );
+$privacy_audit_data = (string) $wpdb->get_var( "SELECT after_data FROM $audit WHERE event_key='privacy.personal_data_erased' ORDER BY id DESC LIMIT 1" );
+adc_check( str_contains( $privacy_audit_data, 'customer_count' ) && ! str_contains( $privacy_audit_data, $privacy_profile_email ), 'Privacy erasure audit records counts without retaining the erased email address.' );
 
 wp_set_current_user( $admin );

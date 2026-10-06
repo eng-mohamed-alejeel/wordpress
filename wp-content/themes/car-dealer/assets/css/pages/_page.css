@@ -8,6 +8,30 @@
   padding: var(--cd-spacing-3xl) var(--cd-spacing-md);
 }
 
+.cd-not-found {
+  max-width: 760px;
+  min-height: 55vh;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 1rem;
+  padding-block: 4rem;
+}
+
+.cd-not-found h1,
+.cd-not-found p { margin: 0; }
+
+.cd-not-found-search { width: 100%; display: grid; gap: 0.5rem; margin-block: 1rem; }
+.cd-not-found-search-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.cd-not-found-search-row input[type="search"] {
+  flex: 1 1 220px;
+  min-height: 44px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--cd-color-line);
+  border-radius: var(--cd-radius-sm);
+  background: var(--cd-color-surface);
+}
+
 /* ── عرض المحتوى في صفحات القوالب المخصصة ── */
 .page-template-about .content-area,
 .page-template-contact .content-area {

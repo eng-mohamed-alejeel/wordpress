@@ -1,0 +1,31 @@
+name: Source quality
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.1.0
+        with:
+          persist-credentials: false
+      - name: Prepare PHP CLI
+        run: sudo apt-get update && sudo apt-get install -y php-cli php-mbstring
+      - name: Syntax and stylesheet integrity
+        run: |
+          find wp-content/plugins/auto-dealership-core/src wp-content/themes/car-dealer -type f -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+          find wp-content/plugins/auto-dealership-core/assets wp-content/plugins/auto-dealership-core/tests wp-content/themes/car-dealer/assets wp-content/themes/car-dealer -maxdepth 2 -type f \( -name '*.js' -o -name '*.cjs' \) -print0 | xargs -0 -r -n1 node --check
+          node wp-content/themes/car-dealer/build-css.js --check
+          node tools/check-theme-copy.cjs
+      - name: Offline regression
+        run: |
+          php wp-content/plugins/auto-dealership-core/tests/money.php
+          php wp-content/plugins/auto-dealership-core/tests/pricing-policy.php
+          php wp-content/plugins/auto-dealership-core/tests/branch-scope.php
+          php wp-content/plugins/auto-dealership-core/tests/newsletter-language.php

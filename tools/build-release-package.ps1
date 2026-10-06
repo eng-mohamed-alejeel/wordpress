@@ -2,8 +2,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
-$paths = @('wp-content/plugins/auto-dealership-core', 'wp-content/themes/car-dealer')
+$paths = @('wp-content/plugins/auto-dealership-core', 'wp-content/themes/car-dealer', 'wp-content/mu-plugins/autobrands-typography.php')
 $runtimePaths = @(
+    'wp-content/mu-plugins/autobrands-typography.php',
     'wp-content/plugins/auto-dealership-core/assets',
     'wp-content/plugins/auto-dealership-core/auto-dealership-core.php',
     'wp-content/plugins/auto-dealership-core/readme.txt',

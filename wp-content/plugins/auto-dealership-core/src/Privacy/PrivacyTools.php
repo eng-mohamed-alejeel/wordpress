@@ -1,6 +1,7 @@
 <?php
 namespace AutoDealership\Privacy;
 
+use AutoDealership\Audit\AuditLog;
 use AutoDealership\Database\Schema;
 
 defined( 'ABSPATH' ) || exit;
@@ -253,6 +254,16 @@ final class PrivacyTools {
 				return self::erase_failed();
 			}
 		}
+		$removed = count( $customer_ids ) + $legacy_count + count( $legacy_profile_ids ) + $preference_count;
+		if ( $removed && ! AuditLog::record( 'privacy.personal_data_erased', 'privacy_request', 0, 'WordPress personal-data erasure', null, array(
+			'customer_count' => count( $customer_ids ),
+			'legacy_request_count' => $legacy_count,
+			'legacy_profile_count' => count( $legacy_profile_ids ),
+			'account_preference_count' => $preference_count,
+		) ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return self::erase_failed();
+		}
 		if ( false === $wpdb->query( 'COMMIT' ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return self::erase_failed();
@@ -263,7 +274,6 @@ final class PrivacyTools {
 			if ( $comment_ids ) { clean_comment_cache( array_map( 'intval', $comment_ids ) ); }
 		}
 		if ( $account ) { clean_user_cache( $account->ID ); wp_cache_delete( $account->ID, 'user_meta' ); }
-		$removed = count( $customer_ids ) + $legacy_count + count( $legacy_profile_ids ) + $preference_count;
 		return array(
 			'items_removed' => $removed,
 			'items_retained' => count( $customer_ids ) + count( $legacy_profile_ids ),

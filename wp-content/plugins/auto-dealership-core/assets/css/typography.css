@@ -1,0 +1,20 @@
+/* Locally hosted Tajawal; licensed under SIL OFL (../fonts/tajawal/OFL.txt). */
+@font-face{font-family:Tajawal;src:url('../fonts/tajawal/Tajawal-ExtraLight.ttf') format('truetype');font-weight:200;font-style:normal;font-display:swap}
+@font-face{font-family:Tajawal;src:url('../fonts/tajawal/Tajawal-Light.ttf') format('truetype');font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:Tajawal;src:url('../fonts/tajawal/Tajawal-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:Tajawal;src:url('../fonts/tajawal/Tajawal-Medium.ttf') format('truetype');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:Tajawal;src:url('../fonts/tajawal/Tajawal-Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:Tajawal;src:url('../fonts/tajawal/Tajawal-ExtraBold.ttf') format('truetype');font-weight:800;font-style:normal;font-display:swap}
+@font-face{font-family:Tajawal;src:url('../fonts/tajawal/Tajawal-Black.ttf') format('truetype');font-weight:900;font-style:normal;font-display:swap}
+:root{--adc-font-family:'Tajawal',sans-serif;--cd-font-family:'Tajawal',sans-serif}
+body,button,input,select,textarea,h1,h2,h3,h4,h5,h6,p,label,legend,table,th,td,blockquote,pre,code,
+.wp-core-ui .button,.wp-core-ui .button-primary,.wp-core-ui .button-secondary,
+.components-button,.components-input-control__input,.components-select-control__input,
+.ui-widget,.ui-widget input,.ui-widget select,.ui-widget textarea,.ui-widget button,
+.select2-container,.select2-selection,.select2-results,
+.wp-admin #adminmenu a,.wp-admin .wp-menu-name,
+.editor-styles-wrapper,.editor-styles-wrapper p,.editor-styles-wrapper [data-rich-text-placeholder],
+#wpadminbar .ab-item,#wpadminbar .ab-label,#wpadminbar span:not(.ab-icon):not(.dashicons){
+  font-family:var(--adc-font-family)!important;
+}
+/* Dashicons, editor icon glyphs and SVGs keep their own icon rendering. */

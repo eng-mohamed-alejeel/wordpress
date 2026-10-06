@@ -47,8 +47,17 @@
   height: 100%;
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: 0.6rem;
   font-size: 3rem;
   background: linear-gradient(135deg, #e8f4fd, #d0e8f9);
+}
+
+.car-image-placeholder-label {
+  color: #1a365d;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 .car-badge {

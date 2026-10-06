@@ -29,7 +29,7 @@
   --cd-color-info: #3182CE;
 
   /* ── الخطوط ── */
-  --cd-font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --cd-font-family: 'Tajawal', sans-serif;
   --cd-font-size-xs: 0.75rem;
   --cd-font-size-sm: 0.875rem;
   --cd-font-size-base: 1rem;

@@ -162,6 +162,8 @@ function car_dealer_catalog_english_copy(): array {
 		'ابحث' => 'Search', 'ابحث عن سيارة' => 'Search for a vehicle', 'تواصل عبر واتساب' => 'Contact on WhatsApp',
 		'تواصل معنا' => 'Contact us', 'العودة إلى الأعلى' => 'Back to top', 'اشترك' => 'Subscribe',
 		'الكتالوج غير متاح حاليًا. يرجى التواصل مع إدارة الموقع.' => 'The catalog is currently unavailable. Please contact the site administrator.',
+		'كتالوج السيارات غير متاح حاليًا. يرجى المحاولة لاحقًا.' => 'The vehicle catalog is temporarily unavailable. Please try again later.',
+		'بيانات السيارة غير متاحة حاليًا.' => 'Vehicle details are temporarily unavailable.',
 		'اختر سيارتك.. وابدأ رحلتك بثقة' => 'Find your next car with confidence',
 		'استعرض السيارات والعروض المنشورة، وتعرّف على تفاصيلها قبل إرسال طلبك إلى فريق المعرض.' => 'Browse published vehicles and offers, then review their details before contacting our team.',
 		'استعرض السيارات' => 'Browse vehicles', 'سيارة منشورة' => 'Published vehicles', 'تصفح الآن' => 'Browse now', 'اكتشف المزيد' => 'Discover more',

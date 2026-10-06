@@ -3,6 +3,11 @@
     if (!window.adcPublicIntake) return;
 
     const config = window.adcPublicIntake;
+    function label(form, key) {
+        const language = form.querySelector('input[name="lang"]')?.value === 'en' ? 'en' : 'ar';
+        return language === 'en' && config.englishLabels && config.englishLabels[key]
+            ? config.englishLabels[key] : config[key];
+    }
     const requests = new WeakMap();
     const selector = [
         '.cd-ajax-form[data-action="car_dealer_contact"]',
@@ -50,7 +55,7 @@
         if (!node) return;
         const link = document.createElement('a');
         link.href = url;
-        link.textContent = ' ' + config.accountLabel + ' ←';
+        link.textContent = ' ' + label(form, 'accountLabel');
         node.appendChild(link);
     }
 
@@ -67,19 +72,19 @@
         data.append('nonce', config.nonce || '');
         form.dataset.adcSubmitting = '1';
         form.querySelectorAll('[type="submit"]').forEach(button => { button.disabled = true; });
-        status(form, config.sendingLabel, true);
+        status(form, label(form, 'sendingLabel'), true);
 
         fetch(config.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
             .then(response => response.json())
             .then(result => {
-                const message = result.data && result.data.message ? result.data.message : config.unconfirmedLabel;
+                const message = result.data && result.data.message ? result.data.message : label(form, 'unconfirmedLabel');
                 status(form, message, !!result.success);
                 if (!result.success) return;
                 accountLink(form, result.data && result.data.account_url ? result.data.account_url : '');
                 requests.delete(form);
                 form.reset();
             })
-            .catch(() => status(form, config.errorLabel, false))
+            .catch(() => status(form, label(form, 'errorLabel'), false))
             .finally(() => {
                 delete form.dataset.adcSubmitting;
                 form.querySelectorAll('[type="submit"]').forEach(button => { button.disabled = false; });
