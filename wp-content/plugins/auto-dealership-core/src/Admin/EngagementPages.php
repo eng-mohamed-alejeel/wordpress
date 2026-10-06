@@ -40,7 +40,7 @@ final class EngagementPages {
 	public static function enqueue(): void {
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 		if ( in_array( $page, self::PAGES, true ) ) {
-			wp_enqueue_style( 'adc-admin-engagement', plugins_url( 'assets/css/admin-engagement.css', ADC_FILE ), array(), ADC_VERSION );
+			wp_enqueue_style( 'adc-admin-engagement', plugins_url( 'assets/css/admin-engagement.css', ADC_FILE ), array( 'adc-admin' ), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin-engagement.css' ) );
 		}
 	}
 

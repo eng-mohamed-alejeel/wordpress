@@ -3,7 +3,7 @@
 	margin-top: 16px;
 }
 
-.adc-engagement table {
+.adc-admin .adc-engagement .adc-table-scroll > table {
 	min-width: 1040px;
 }
 
@@ -23,8 +23,12 @@
 .adc-engagement-workflow .card {
 	max-width: none;
 	margin: 0;
-	padding: 12px;
+	padding: 16px;
+	background: #f8fafd;
 }
+
+.adc-engagement-workflow .card label { display: block; margin-block: 8px; }
+.adc-engagement-workflow .card :is(select, textarea, input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"])) { width: 100%; }
 
 .adc-engagement-workflow textarea {
 	display: block;
@@ -33,12 +37,19 @@
 
 .adc-status {
 	display: inline-block;
-	padding: 3px 9px;
+	padding: 4px 12px;
 	border-radius: 999px;
-	background: #f0f0f1;
+	color: #334b68;
+	background: #eaf0f8;
 	font-weight: 600;
 	white-space: nowrap;
+	font-size: 12px;
+	line-height: 1.7;
 }
+
+.adc-status-new,
+.adc-status-pending,
+.adc-status-in_progress { color: #854d0e; background: #fef3c7; }
 
 .adc-status-active,
 .adc-status-completed,
@@ -54,8 +65,9 @@
 }
 
 .adc-empty {
-	padding: 28px;
+	padding: 40px 24px;
 	text-align: center;
+	color: #52657a;
 }
 
 .adc-empty .dashicons {

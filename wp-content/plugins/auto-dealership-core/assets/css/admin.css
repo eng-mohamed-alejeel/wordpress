@@ -1,0 +1,138 @@
+/* Shared presentation, confined to registered dealership administration screens. */
+.adc-admin {
+	--adc-ink: #182b42;
+	--adc-muted: #52657a;
+	--adc-accent: #2459a9;
+	--adc-border: #dce4ee;
+	--adc-surface: #fff;
+	--adc-soft: #f3f6fb;
+	background: #f1f4f8;
+}
+.adc-admin #wpbody-content > .wrap {
+	max-width: 1440px;
+	margin-block: 28px 48px;
+	color: var(--adc-ink);
+	font-size: 14px;
+	line-height: 1.7;
+}
+.adc-admin .wrap > h1 {
+	margin-block-end: 24px;
+	padding: 20px 24px;
+	border: 1px solid var(--adc-border);
+	border-inline-start: 4px solid var(--adc-accent);
+	border-radius: 12px;
+	background: var(--adc-surface);
+	color: var(--adc-ink);
+	font-size: 26px;
+	font-weight: 700;
+	line-height: 1.5;
+}
+.adc-admin .wrap h2 { margin-block: 28px 14px; color: var(--adc-ink); font-size: 19px; line-height: 1.5; }
+.adc-admin .wrap h3 { color: var(--adc-ink); line-height: 1.5; }
+.adc-admin .wrap p { font-size: inherit; line-height: 1.7; }
+.adc-admin .wrap .description,
+.adc-admin .wrap small { color: var(--adc-muted); }
+.adc-admin .wrap .card {
+	box-sizing: border-box;
+	max-width: 100%;
+	margin-block: 16px 24px;
+	padding: 24px;
+	border: 1px solid var(--adc-border);
+	border-radius: 12px;
+	background: var(--adc-surface);
+	box-shadow: 0 3px 14px rgb(24 43 66 / 4%);
+}
+.adc-admin .wrap .card > h2:first-child,
+.adc-admin .wrap .card > h3:first-child { margin-block-start: 0; }
+.adc-admin .wrap form.card > p { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; }
+.adc-admin .wrap form.card > p > label { flex: 1 1 220px; }
+.adc-admin .wrap form.card > p > label:not(:has(input[type="checkbox"], input[type="radio"])) {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 6px;
+	font-weight: 500;
+}
+.adc-admin .wrap :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea) {
+	box-sizing: border-box;
+	max-width: 100%;
+	min-height: 40px;
+	padding: 6px 12px;
+	border: 1px solid #aab9cb;
+	border-radius: 7px;
+	background-color: var(--adc-surface);
+	color: var(--adc-ink);
+	font-size: 14px;
+	line-height: 1.6;
+}
+.adc-admin .wrap select { padding-inline-end: 30px; }
+.adc-admin .wrap textarea { min-height: 96px; resize: vertical; }
+.adc-admin .wrap input::placeholder,
+.adc-admin .wrap textarea::placeholder { color: #65768a; opacity: 1; }
+.adc-admin .wrap :is(input, select, textarea):focus {
+	border-color: var(--adc-accent);
+	outline: 2px solid var(--adc-accent);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+.adc-admin .wrap :is(input, select, textarea):disabled { background-color: #eef1f5; color: var(--adc-muted); }
+.adc-admin .wrap input[readonly],
+.adc-admin .wrap textarea[readonly] { background-color: var(--adc-soft); }
+.adc-admin .wrap .button {
+	min-height: 38px;
+	padding: 4px 15px;
+	border-color: #b5c5d9;
+	border-radius: 7px;
+	background: #fff;
+	color: var(--adc-accent);
+	font-size: 14px;
+	line-height: 2;
+	white-space: normal;
+	text-align: center;
+	transition: background-color .15s, border-color .15s;
+}
+.adc-admin .wrap .button:hover { border-color: var(--adc-accent); background: #edf3fc; }
+.adc-admin .wrap .button-primary { border-color: var(--adc-accent); background: var(--adc-accent); color: #fff; }
+.adc-admin .wrap .button-primary:hover { border-color: #194783; background: #194783; color: #fff; }
+.adc-admin .wrap .button:disabled,
+.adc-admin .wrap .button.disabled { cursor: default; opacity: .6; }
+.adc-admin .wrap a:focus-visible,
+.adc-admin .adc-table-scroll:focus-visible { outline: 3px solid var(--adc-accent); outline-offset: 3px; box-shadow: none; }
+.adc-admin .wrap .form-table { margin-block: 16px; border-collapse: separate; border-spacing: 0; border: 1px solid var(--adc-border); border-radius: 12px; background: #fff; }
+.adc-admin .wrap .form-table th,
+.adc-admin .wrap .form-table td { padding: 18px 22px; border-bottom: 1px solid var(--adc-border); }
+.adc-admin .wrap .form-table tr:last-child > * { border-bottom: 0; }
+.adc-admin .adc-table-scroll {
+	max-width: 100%;
+	overflow-x: auto;
+	margin-block: 18px 24px;
+	border: 1px solid var(--adc-border);
+	border-radius: 12px;
+	background: #fff;
+	overscroll-behavior-inline: contain;
+}
+.adc-admin .wrap .widefat { border: 1px solid var(--adc-border); border-spacing: 0; box-shadow: none; }
+.adc-admin .adc-table-scroll > .widefat { min-width: 760px; border: 0; }
+.adc-admin .wrap .widefat th { padding: 14px 16px; background: #edf2f9; color: #334b68; font-weight: 700; text-align: start; }
+.adc-admin .wrap .widefat td { padding: 16px; color: var(--adc-ink); vertical-align: top; line-height: 1.7; overflow-wrap: anywhere; }
+.adc-admin .wrap .widefat tbody tr > * { border-bottom: 1px solid #e8edf4; }
+.adc-admin .wrap .widefat tbody tr:last-child > * { border-bottom: 0; }
+.adc-admin .wrap .striped > tbody > :nth-child(odd) { background: #f8fafd; }
+.adc-admin .wrap .widefat tbody tr:hover { background: #f0f5fc; }
+.adc-admin .wrap .widefat td form { margin-block: 6px; }
+.adc-admin .wrap .widefat td form > :is(input:not([type="hidden"]), select, textarea, .button) { margin-block: 3px; }
+.adc-admin .wrap .widefat code { display: inline-block; direction: ltr; unicode-bidi: isolate; white-space: nowrap; background: #edf2f7; border-radius: 4px; }
+.adc-admin .wrap .notice { margin-block: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgb(24 43 66 / 4%); }
+.adc-admin .wrap pre { max-width: 100%; overflow: auto; padding: 16px; border: 1px solid var(--adc-border); border-radius: 8px; background: var(--adc-soft); }
+@media (max-width: 782px) {
+	.adc-admin #wpbody-content > .wrap { margin-block-start: 16px; }
+	.adc-admin .wrap > h1 { padding: 16px; font-size: 22px; }
+	.adc-admin .wrap .card { padding: 18px; }
+	.adc-admin .wrap .form-table th { padding: 16px 16px 6px; border-bottom: 0; }
+	.adc-admin .wrap .form-table td { padding: 6px 16px 18px; }
+	.adc-admin .wrap .form-table :is(input.regular-text, textarea, select) { width: 100%; }
+	.adc-admin .wrap .button { min-height: 44px; padding-block: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.adc-admin .wrap .button { transition: none; }
+}

@@ -7,12 +7,29 @@ defined( 'ABSPATH' ) || exit;
 final class WorkspacePage {
 	public static function boot(): void {
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue' ) );
+		add_filter( 'admin_body_class', array( self::class, 'body_class' ) );
+	}
+
+	private static function is_plugin_screen(): bool {
+		$screen = get_current_screen();
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		$owned = 0 === strpos( $page, 'adc-' ) || ( EngagementPages::enabled() && in_array( $page, array( 'car-dealer-messages', 'car-dealer-bookings', 'car-dealer-subscribers' ), true ) );
+		return $screen && $owned && str_ends_with( $screen->id, '_page_' . $page );
+	}
+
+	public static function body_class( string $classes ): string {
+		return self::is_plugin_screen() ? $classes . ' adc-admin' : $classes;
 	}
 
 	public static function enqueue(): void {
+		if ( ! self::is_plugin_screen() ) {
+			return;
+		}
+		wp_enqueue_style( 'adc-admin', plugins_url( 'assets/css/admin.css', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin.css' ) );
+		wp_enqueue_script( 'adc-admin-layout', plugins_url( 'assets/js/admin-layout.js', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/js/admin-layout.js' ), true );
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 		if ( 'adc-workspace' === $page ) {
-			wp_enqueue_style( 'adc-admin-workspace', plugins_url( 'assets/css/admin-workspace.css', ADC_FILE ), array(), ADC_VERSION );
+			wp_enqueue_style( 'adc-admin-workspace', plugins_url( 'assets/css/admin-workspace.css', ADC_FILE ), array( 'adc-admin' ), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin-workspace.css' ) );
 		}
 	}
 

@@ -1,5 +1,5 @@
 .adc-workspace {
-	max-width: 1320px;
+	max-width: 1440px;
 }
 
 .adc-workspace-hero {
@@ -8,16 +8,18 @@
 	justify-content: space-between;
 	gap: 24px;
 	margin: 20px 0 28px;
-	padding: 26px 30px;
-	border-radius: 14px;
+	padding: 36px;
+	border-radius: 18px;
 	color: #fff;
-	background: linear-gradient(135deg, #172554, #1d4ed8);
+	background: linear-gradient(120deg, #152a46, #2459a9);
+	box-shadow: 0 8px 24px rgba(21, 42, 70, .12);
 }
 
 .adc-workspace-hero span:first-child {
 	display: block;
 	margin-bottom: 5px;
-	opacity: .78;
+	color: #dbe8fc;
+	font-size: 13px;
 }
 
 .adc-workspace-hero h1,
@@ -28,61 +30,83 @@
 
 .adc-workspace-hero p {
 	margin-top: 8px;
-	opacity: .88;
+	max-width: 720px;
+	color: #e1ebfa;
+	line-height: 1.8;
 }
 
+.adc-admin .adc-workspace-hero h1 { font-size: 30px; font-weight: 700; line-height: 1.5; }
+
 .adc-workspace-hero > .dashicons {
-	width: 54px;
-	height: 54px;
-	font-size: 54px;
+	flex-shrink: 0;
+	width: 76px;
+	height: 76px;
+	padding: 16px;
+	border: 1px solid rgba(255, 255, 255, .18);
+	border-radius: 18px;
+	background: rgba(255, 255, 255, .08);
+	font-size: 76px;
 }
 
 .adc-workspace-section {
-	margin-bottom: 30px;
+	margin-bottom: 32px;
 }
+
+.adc-workspace-section > h2 { display: flex; align-items: center; gap: 10px; }
+.adc-workspace-section > h2::before { content: ''; width: 4px; height: 20px; border-radius: 4px; background: var(--adc-accent, #2459a9); }
 
 .adc-workspace-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-	gap: 14px;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+	gap: 16px;
 }
 
 .adc-workspace-card {
 	display: grid;
-	grid-template-columns: 36px 1fr;
-	gap: 5px 12px;
-	min-height: 94px;
-	padding: 18px;
-	border: 1px solid #dcdcde;
-	border-radius: 10px;
-	color: #1d2327;
+	grid-template-columns: 48px minmax(0, 1fr);
+	grid-template-rows: auto 1fr;
+	gap: 8px 16px;
+	min-height: 110px;
+	padding: 22px;
+	border: 1px solid #dce4ee;
+	border-radius: 12px;
+	color: #182b42;
 	background: #fff;
 	text-decoration: none;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+	box-shadow: 0 3px 12px rgba(24, 43, 66, .03);
+	transition: border-color .18s, box-shadow .18s, transform .18s;
 }
 
 .adc-workspace-card:hover,
 .adc-workspace-card:focus {
-	border-color: #2271b1;
-	color: #135e96;
-	box-shadow: 0 3px 12px rgba(34, 113, 177, .12);
+	border-color: #2459a9;
+	color: #194783;
+	box-shadow: 0 6px 18px rgba(36, 89, 169, .1);
 }
+
+.adc-workspace-card:hover { transform: translateY(-2px); }
 
 .adc-workspace-card .dashicons {
 	grid-row: 1 / span 2;
-	width: 32px;
-	height: 32px;
-	font-size: 32px;
-	color: #2271b1;
+	display: grid;
+	place-items: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 12px;
+	background: #edf3fc;
+	font-size: 26px;
+	color: #2459a9;
 }
 
 .adc-workspace-card strong {
-	font-size: 15px;
+	font-size: 16px;
+	line-height: 1.5;
 }
 
 .adc-workspace-card small {
-	line-height: 1.55;
-	color: #50575e;
+	font-size: 13px;
+	line-height: 1.75;
+	color: #52657a;
 }
 
 @media (max-width: 782px) {
@@ -93,4 +117,10 @@
 	.adc-workspace-hero > .dashicons {
 		display: none;
 	}
+	.adc-admin .adc-workspace-hero h1 { font-size: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.adc-workspace-card { transition: none; }
+	.adc-workspace-card:hover { transform: none; }
 }
