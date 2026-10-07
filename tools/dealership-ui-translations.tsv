@@ -1260,3 +1260,80 @@ VIN الجديد	New VIN
 تم التقديم	Submitted
 تم الطلب	Ordered
 مسترد جزئيًا	Partially refunded
+
+ترجمات البيانات المخزّنة	Stored data translations
+راجع الترجمات دون تعديل السجلات الأصلية. تحتاج الترجمة إلى مراجعة جديدة عند تغيير النص الأصلي. تبقى أسماء العملاء ورسائلهم محفوظة كما أُدخلت.	Review translations without changing original records. A translation needs review again when its original text changes. Customer names and messages are preserved.
+يمكن ترجمة عناوين الصفحات والسيارات والعروض وأوصافها في محرر المحتوى.	Page, vehicle and offer titles and descriptions can be translated in their content editor.
+نوع السجل	Record type
+لغة الترجمة	Translation language
+النص الأصلي	Original text
+الترجمة المعتمدة	Approved translation
+تمت المراجعة	Reviewed
+تحتاج إلى مراجعة الترجمة	Needs translation review
+حفظ الترجمات المعتمدة	Save approved translations
+تم حفظ الترجمة.	Translation saved.
+تعذر حفظ الترجمة.	The translation could not be saved.
+تغيّر النص الأصلي. أعد تحميل الصفحة قبل مراجعة ترجمته.	The original text changed. Reload the page before reviewing its translation.
+الترجمة طويلة جدًا.	The translation is too long.
+لم يُعثر على السجل الأصلي.	The original record was not found.
+الحقل	Field
+يجب أن تحتوي الترجمة الإنجليزية على نص إنجليزي. يُحفظ النص العربي الأصلي بشكل مستقل.	English translations must contain English copy. The original Arabic text is preserved separately.
+أدخل النص الإنجليزي المعتمد. تظهر رسالة بالإنجليزية عند غياب الترجمة أو حاجتها إلى مراجعة بدل عرض المحتوى العربي.	Enter approved English copy. Missing or outdated translations show an English notice instead of Arabic content.
+راجعت النص الإنجليزي مقابل المحتوى الأصلي الحالي.	I reviewed the English copy against the current original content.
+الفروع	branches
+المواقع	locations
+المركبات	vehicles
+الموردون	suppliers
+طلبات التمويل	finance_requests
+فحوص المركبات	vehicle_inspections
+استلام المركبات	vehicle_receipts
+حالات المركبات	vehicle_issues
+حركات المركبات	vehicle_movements
+الاسم	name
+المدينة	city
+العنوان	address
+الماركة	brand
+الموديل	model
+الفئة	trim_name
+اللون الخارجي	exterior_color
+اللون الداخلي	interior_color
+بلد المنشأ	origin_country
+الضمان	warranty
+التجهيزات الداخلية	interior_features
+التجهيزات الخارجية	exterior_features
+تجهيزات السلامة	safety_features
+الملاحظات الداخلية	internal_notes
+الاسم المعروض	display_name
+الملاحظات	notes
+جهة التمويل	provider
+السبب	reason
+الإجراء المنفذ والنتيجة	resolution
+الاسم العربي	Arabic name
+الفروع	Branches
+المواقع	Locations
+المركبات	Vehicles
+الموردون	Suppliers
+طلبات التمويل	Finance requests
+فحوص المركبات	Vehicle inspections
+استلام المركبات	Vehicle receipts
+حالات المركبات	Vehicle issues
+حركات المركبات	Vehicle movements
+الاسم	Name
+المدينة	City
+العنوان	Address
+الماركة	Brand
+الموديل	Model
+الفئة	Trim
+اللون الخارجي	Exterior color
+اللون الداخلي	Interior color
+بلد المنشأ	Origin country
+الضمان	Warranty
+التجهيزات الداخلية	Interior features
+التجهيزات الخارجية	Exterior features
+تجهيزات السلامة	Safety features
+الملاحظات الداخلية	Internal notes
+الاسم المعروض	Display name
+الملاحظات	Notes
+جهة التمويل	Finance provider
+السبب	Reason
+الإجراء المنفذ والنتيجة	Resolution

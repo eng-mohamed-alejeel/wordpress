@@ -195,6 +195,12 @@ const { spawn } = require('node:child_process');
         check(await evaluate("[...document.querySelectorAll('.car-card')].some(x=>x.innerText.includes('مثال تجريبي') && /0\\s*كم/.test(x.innerText))"), 'New synthetic vehicle cards explicitly show zero mileage and demo labels');
         check(await evaluate("[...document.querySelectorAll('.car-image-placeholder')].every(x=>x.textContent.includes('صورة السيارة قيد الإضافة'))"), 'Unverified vehicle photos show an honest Arabic placeholder');
         check(await evaluate("document.querySelector('.site-footer a[href*=\"/faq/\"]') && document.querySelector('.site-footer a[href*=\"/buying-guide/\"]')"), 'Footer exposes FAQ and buying-guide navigation');
+        await visit('/?post_type=car&name=adc-demo-04&lang=en');
+        check(await evaluate("document.querySelector('h1')?.innerText.includes('[Demo]') && !/[\\u0600-\\u06ff]/.test(document.querySelector('h1').innerText)"), 'Stored demo vehicle title displays only English on its public page');
+        check(await evaluate("document.body.innerText.includes('Specifications, price and stock number are demo data') && !document.body.innerText.includes('سيارة معروضة لأغراض تطوير النظام')"), 'Stored demo vehicle description uses its reviewed English copy');
+        check(await evaluate("document.body.innerText.includes('Demo Riyadh branch') && !document.body.innerText.includes('فرع الرياض التجريبي')"), 'Stored branch name uses English copy on the vehicle page');
+        await visit('/?post_type=car&name=adc-demo-04');
+        check(await evaluate("document.querySelector('h1')?.innerText.includes('[تجريبي]') && document.body.innerText.includes('سيارة معروضة لأغراض تطوير النظام')"), 'Arabic vehicle page keeps its original title and description');
         await visit('/finance/?lang=en');
         check(await evaluate("document.querySelector('.entry-content').innerText.includes('Explore how the down payment') && !document.querySelector('.entry-content').innerText.includes('النتيجة إرشادية وغير ملزمة')"), 'Finance page shows only English editorial content');
         for (const width of [1440, 768, 390, 320]) {

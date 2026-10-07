@@ -130,7 +130,7 @@ add_filter( 'nav_menu_link_attributes', static function ( array $atts ): array {
 add_filter( 'nav_menu_item_title', static function ( string $title, $item ): string {
 	if ( is_admin() || 'en' !== car_dealer_catalog_language() ) { return $title; }
 	if ( isset( $item->object_id ) && in_array( get_post_type( (int) $item->object_id ), array( 'page', 'car', 'car_offer' ), true ) ) {
-		$translated = (string) get_post_meta( (int) $item->object_id, '_adc_title_en', true );
+		$translated = class_exists( '\AutoDealership\Content\PublicEditorialTranslations' ) ? \AutoDealership\Content\PublicEditorialTranslations::approved( (int) $item->object_id, '_adc_title_en' ) : (string) get_post_meta( (int) $item->object_id, '_adc_title_en', true );
 		if ( '' !== trim( $translated ) ) { return $translated; }
 	}
 	$labels = array(

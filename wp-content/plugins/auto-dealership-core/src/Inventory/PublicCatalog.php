@@ -117,8 +117,9 @@ final class PublicCatalog {
 		if ( $post_id < 1 || get_option( 'adc_db_version' ) !== Schema::VERSION ) {
 			return null;
 		}
-		if ( array_key_exists( $post_id, $cache ) ) {
-			return $cache[ $post_id ];
+		$cache_key = $post_id . ':' . \AutoDealership\Core\Localization::language();
+		if ( array_key_exists( $cache_key, $cache ) ) {
+			return $cache[ $cache_key ];
 		}
 
 		global $wpdb;
@@ -127,8 +128,8 @@ final class PublicCatalog {
 		$vehicles = Schema::table( 'vehicles' );
 		$sql = 'SELECT ' . $fields . ',b.name branch_name,b.city branch_city,v.public_post_id FROM ' . $vehicles . ' v INNER JOIN ' . Schema::table( 'branches' ) . " b ON b.id=v.branch_id AND b.active=1 INNER JOIN {$wpdb->posts} p ON p.ID=v.public_post_id AND p.post_type='car' AND p.post_status='publish' WHERE v.public_post_id=%d AND v.status='available' AND NOT EXISTS (SELECT 1 FROM $vehicles adc_duplicate WHERE adc_duplicate.public_post_id=v.public_post_id AND adc_duplicate.id<>v.id) LIMIT 1";
 		$row = $wpdb->get_row( $wpdb->prepare( $sql, $post_id ), ARRAY_A );
-		$cache[ $post_id ] = $row ? self::cast_item( $row ) : null;
-		return $cache[ $post_id ];
+		$cache[ $cache_key ] = $row ? self::cast_item( $row ) : null;
+		return $cache[ $cache_key ];
 	}
 
 	/** Matches the catalog query's public-visibility rule for comparison and other adapters. */
@@ -211,6 +212,8 @@ final class PublicCatalog {
 			$options[ $field ] = $wpdb->get_col( "SELECT DISTINCT v.$field" . $base . " AND v.$field<>'' ORDER BY v.$field ASC LIMIT 250" ) ?: array();
 		}
 		$options['branches'] = $wpdb->get_results( 'SELECT DISTINCT b.id,b.name,b.city' . $base . ' ORDER BY b.name ASC LIMIT 250', ARRAY_A ) ?: array();
+		foreach ( $options['branches'] as &$branch ) { $branch = \AutoDealership\Content\StoredTranslations::row( 'branches', $branch, true ); }
+		unset( $branch );
 		return $options;
 	}
 
@@ -350,6 +353,10 @@ final class PublicCatalog {
 		if ( array_key_exists( 'gallery_media_ids', $item ) ) {
 			$ids = json_decode( (string) $item['gallery_media_ids'], true );
 			$item['gallery_media_ids'] = is_array( $ids ) ? array_values( array_filter( array_map( 'absint', $ids ) ) ) : array();
+		}
+		$item = \AutoDealership\Content\StoredTranslations::row( 'vehicles', $item, true );
+		foreach ( array( 'branch_name' => 'name', 'branch_city' => 'city' ) as $key => $field ) {
+			if ( isset( $item[$key] ) ) { $item[$key] = \AutoDealership\Content\StoredTranslations::text( 'branches', (int) $item['branch_id'], $field, (string) $item[$key], true ); }
 		}
 		return $item;
 	}

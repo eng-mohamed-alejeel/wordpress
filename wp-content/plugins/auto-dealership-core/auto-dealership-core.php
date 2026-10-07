@@ -26,6 +26,9 @@ require_once ADC_PATH . 'src/Content/ContentRegistry.php';
 require_once ADC_PATH . 'src/Content/EditorialPageSetup.php';
 require_once ADC_PATH . 'src/Content/PublicShortcodes.php';
 require_once ADC_PATH . 'src/Content/PublicEditorialTranslations.php';
+require_once ADC_PATH . 'src/Content/StoredTranslations.php';
+require_once ADC_PATH . 'src/Content/TermTranslations.php';
+require_once ADC_PATH . 'src/Admin/StoredTranslationsPage.php';
 require_once ADC_PATH . 'src/Content/PublicStructuredData.php';
 require_once ADC_PATH . 'src/Content/PublicOfferView.php';
 require_once ADC_PATH . 'src/Content/PublicVehicleView.php';
@@ -136,6 +139,7 @@ register_activation_hook( ADC_FILE, array( 'AutoDealership\\Leads\\LegacyEngagem
 \AutoDealership\Content\ContentRegistry::boot();
 \AutoDealership\Content\PublicShortcodes::boot();
 \AutoDealership\Content\PublicEditorialTranslations::boot();
+\AutoDealership\Content\TermTranslations::boot();
 \AutoDealership\Content\PublicOfferView::boot();
 \AutoDealership\Inventory\CatalogPresentation::boot();
 \AutoDealership\Content\PublicStructuredData::boot();
@@ -333,6 +337,7 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Database\\SchemaGuard', 'b
 add_action( 'plugins_loaded', array( 'AutoDealership\\Inventory\\PublicCatalog', 'boot' ) );
 add_action( 'car_dealer_engagement_created', array( 'AutoDealership\\Leads\\LeadService', 'capture_theme_request' ), 10, 2 );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SettingsPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\StoredTranslationsPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AuditPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OutboxPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\IntegrationPage', 'boot' ) );

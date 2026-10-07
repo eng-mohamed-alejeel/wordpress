@@ -26,7 +26,7 @@ final class VehicleSpecificationsPage {
 		<form method="get"><input type="hidden" name="page" value="adc-vehicle-specifications"><label for="adc-spec-id"><?php esc_html_e( 'معرّف المركبة', 'auto-dealership-core' ); ?></label> <input id="adc-spec-id" name="vehicle_id" type="number" min="1" required value="<?php echo $id ?: ''; ?>"> <button class="button"><?php esc_html_e( 'عرض', 'auto-dealership-core' ); ?></button></form>
 		<?php if ( $id && ! $vehicle ) : ?><p><?php esc_html_e( 'المركبة غير موجودة أو خارج نطاق الوصول.', 'auto-dealership-core' ); ?></p><?php endif; ?>
 		<?php if ( $vehicle ) : ?>
-		<h2><?php echo esc_html( $vehicle['stock_number'] . ' — ' . $vehicle['brand'] . ' ' . $vehicle['model'] ); ?></h2>
+		<h2><?php echo esc_html( $vehicle['stock_number'] . ' — ' . \AutoDealership\Content\StoredTranslations::text( 'vehicles', (int) $vehicle['id'], 'brand', (string) $vehicle['brand'] ) . ' ' . \AutoDealership\Content\StoredTranslations::text( 'vehicles', (int) $vehicle['id'], 'model', (string) $vehicle['model'] ) ); ?></h2>
 		<p><?php esc_html_e( 'تظهر هذه المواصفات للعملاء عند إتاحة المركبة ونشر صفحتها. تُقفل التعديلات أثناء الحجز والبيع والتسليم.', 'auto-dealership-core' ); ?></p>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<input type="hidden" name="action" value="adc_save_vehicle_specifications"><input type="hidden" name="id" value="<?php echo $id; ?>">

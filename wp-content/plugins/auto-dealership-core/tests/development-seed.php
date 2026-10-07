@@ -277,6 +277,9 @@ try {
 	$delivery_id = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'deliveries' ) . ' WHERE sale_id=%d LIMIT 1', $settled_sale_id ) );
 	if ( ! $delivery_id ) { wp_set_current_user( $staff['manager_ryd'] ); $delivery_id = (int) $require_result( DeliveryService::prepare( $settled_sale_id ), 'delivery preparation 02' )['id']; }
 	wp_set_current_user( (int) $admins[0] );
+	wp_set_current_user( (int) $admins[0] );
+	require_once __DIR__ . '/development-translations-data.php';
+	adc_apply_development_translations( true );
 	update_option( 'adc_demo_seed_version', '2026-10-02-complete', false );
 	$public = PublicCatalog::catalog( array( 'per_page'=>48 ) );
 	echo wp_json_encode( array( 'database'=>DB_NAME, 'seed_version'=>get_option( 'adc_demo_seed_version' ), 'before'=>$baseline, 'after'=>$snapshot(), 'public_catalog_count'=>count( $public ), 'catalog_mode'=>PublicCatalog::mode(), 'demo_sale_id'=>$sale_id, 'demo_finance_attempts'=>(int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . Schema::table( 'finance_requests' ) . ' WHERE sale_id=%d', $sale_id ) ), 'demo_preparing_delivery_id'=>$delivery_id ), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) . "\n";

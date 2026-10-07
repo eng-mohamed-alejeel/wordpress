@@ -134,6 +134,7 @@ final class WorkspacePage {
 					self::item( 'adc_view_audit', 'admin.php?page=adc-audit', __( 'سجل التدقيق', 'auto-dealership-core' ), __( 'الأحداث الإدارية والتشغيلية للقراءة.', 'auto-dealership-core' ), 'dashicons-visibility' ),
 					self::item( 'manage_options', 'admin.php?page=adc-settings', __( 'إعدادات المنصة', 'auto-dealership-core' ), __( 'الفروع والسياسات والإعدادات المركزية.', 'auto-dealership-core' ), 'dashicons-admin-multisite' ),
 					self::item( 'manage_options', 'admin.php?page=adc-editorial-setup', __( 'إعداد صفحات الموقع', 'auto-dealership-core' ), __( 'مراجعة الصفحات التعريفية وإنشاء المسودات المفقودة صراحة.', 'auto-dealership-core' ), 'dashicons-admin-page' ),
+					self::item( 'manage_options', 'admin.php?page=adc-stored-translations', __( 'Stored data translations', 'auto-dealership-core' ), __( 'Original text', 'auto-dealership-core' ) . ' / ' . __( 'Approved translation', 'auto-dealership-core' ), 'dashicons-translation' ),
 					self::item( 'manage_options', 'users.php', __( 'المستخدمون', 'auto-dealership-core' ), __( 'حسابات الموظفين والأدوار والتعيينات.', 'auto-dealership-core' ), 'dashicons-admin-users' ),
 				),
 			),
