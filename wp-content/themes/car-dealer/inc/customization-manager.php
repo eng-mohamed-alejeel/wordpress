@@ -39,13 +39,28 @@ function car_dealer_customize_theme_settings( $manager ) {
 	);
 	foreach ( $fields as $key => $field ) {
 		$id = 'car_dealer_theme_settings[' . $key . ']';
-		$manager->add_setting( $id, array( 'type' => 'option', 'default' => $options[$key], 'capability' => 'manage_options', 'sanitize_callback' => $field[2], 'transport' => 'refresh' ) );
+		$manager->add_setting( $id, array( 'type' => 'option', 'default' => $options[$key], 'capability' => 'manage_options', 'sanitize_callback' => $field[2], 'transport' => 'color' === $field[1] ? 'postMessage' : 'refresh' ) );
 		$args = array( 'label' => __( $field[0], 'car-dealer' ), 'section' => 'color' === $field[1] ? 'car_dealer_appearance' : 'car_dealer_contact', 'type' => $field[1] );
 		if ( 'color' === $field[1] ) { $manager->add_control( new WP_Customize_Color_Control( $manager, $id, $args ) ); }
 		else { $manager->add_control( $id, $args ); }
 	}
 }
 add_action( 'customize_register', 'car_dealer_customize_theme_settings' );
+
+function car_dealer_enqueue_customize_preview() {
+	$file = get_template_directory() . '/assets/js/customize-preview.js';
+	wp_enqueue_script( 'car-dealer-customize-preview', get_template_directory_uri() . '/assets/js/customize-preview.js', array( 'customize-preview' ), (string) filemtime( $file ), true );
+}
+add_action( 'customize_preview_init', 'car_dealer_enqueue_customize_preview' );
+
+/** No widget editor is needed when neither theme nor plugins register sidebars. */
+function car_dealer_customize_skip_unused_widget_editor() {
+	global $wp_customize, $wp_registered_sidebars;
+	if ( empty( $wp_registered_sidebars ) && $wp_customize && isset( $wp_customize->widgets ) ) {
+		remove_action( 'customize_controls_enqueue_scripts', array( $wp_customize->widgets, 'enqueue_scripts' ) );
+	}
+}
+add_action( 'customize_controls_enqueue_scripts', 'car_dealer_customize_skip_unused_widget_editor', 0 );
 
 function car_dealer_register_theme_settings() {
 	register_setting( 'car_dealer_theme_settings', 'car_dealer_theme_settings', array(

@@ -18,6 +18,11 @@ final class Typography {
 		return plugins_url( 'auto-dealership-core/assets/css/typography.css' );
 	}
 	public static function enqueue(): void {
+		// Core Customizer controls/media dialogs keep WordPress's native typography.
+		if ( is_admin() && function_exists( 'get_current_screen' ) ) {
+			$screen = get_current_screen();
+			if ( $screen && 'customize' === $screen->base ) { return; }
+		}
 		$file = dirname( __DIR__, 2 ) . '/assets/css/typography.css';
 		wp_enqueue_style( 'autobrands-tajawal', self::stylesheet_url(), array(), (string) filemtime( $file ) );
 	}
