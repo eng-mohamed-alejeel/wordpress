@@ -21,10 +21,12 @@
     {
       "slug": "contact",
       "title": "تواصل معنا",
-      "content": "<h2>شركة أوتو براندز</h2><p>الفرع الرئيسي: جدة، حي الجوهرة.<br>الهاتف: 0550928190<br>البريد الإلكتروني: autobrands2020@gmail.com</p><p>فرع مكة المكرمة في مدينة السيارات تحت الإنشاء. تواصل معنا لتنسيق زيارة الفرع الرئيسي وتأكيد التوفر والموعد.</p><p>اذكر السيارة التي تهمك والسؤال الذي ترغب في توضيحه، وأضف بيانات تواصل صحيحة حتى يتمكن الفريق من متابعة طلبك.</p><h2>قبل إرسال الطلب</h2><ul><li>إرسال الاستفسار لا يُعد حجزًا للسيارة أو اتفاق شراء.</li><li>موعد تجربة القيادة يخضع لتأكيد التوفر والموعد من الفريق.</li><li>لا ترفق بيانات بطاقتك البنكية أو كلمات المرور أو مستندات حساسة في الرسالة.</li></ul>[car_dealer_contact_form]",
+      "content": "<h2>شركة أوتو براندز</h2>[ab_contact_grid]<p>فرع مكة المكرمة في مدينة السيارات تحت الإنشاء. تواصل معنا لتنسيق زيارة الفرع الرئيسي وتأكيد التوفر والموعد.</p><p>اذكر السيارة التي تهمك والسؤال الذي ترغب في توضيحه، وأضف بيانات تواصل صحيحة حتى يتمكن الفريق من متابعة طلبك.</p><h2>قبل إرسال الطلب</h2><ul><li>إرسال الاستفسار لا يُعد حجزًا للسيارة أو اتفاق شراء.</li><li>موعد تجربة القيادة يخضع لتأكيد التوفر والموعد من الفريق.</li><li>لا ترفق بيانات بطاقتك البنكية أو كلمات المرور أو مستندات حساسة في الرسالة.</li></ul>[car_dealer_contact_form]",
       "title_en": "Contact us",
-      "content_en": "<h2>Auto Brands Company</h2><p>Main branch: Al Jawharah district, Jeddah.<br>Phone: +966 55 092 8190<br>Email: autobrands2020@gmail.com</p><p>The Makkah branch in Cars City is under construction. Contact us to arrange a visit to the main branch and confirm availability and timing.</p><p>Tell us which vehicle interests you and what you would like to know. Provide accurate contact details so the team can follow up.</p><h2>Before you send</h2><ul><li>An enquiry does not reserve a vehicle or create a purchase agreement.</li><li>A test-drive appointment is subject to confirmation of availability and timing by the team.</li><li>Do not include bank card details, passwords or sensitive documents in your message.</li></ul>[car_dealer_contact_form]",
-      "template": "default"
+      "content_en": "<h2>Auto Brands Company</h2>[ab_contact_grid]<p>The Makkah branch in Cars City is under construction. Contact us to arrange a visit to the main branch and confirm availability and timing.</p><p>Tell us which vehicle interests you and what you would like to know. Provide accurate contact details so the team can follow up.</p><h2>Before you send</h2><ul><li>An enquiry does not reserve a vehicle or create a purchase agreement.</li><li>A test-drive appointment is subject to confirmation of availability and timing by the team.</li><li>Do not include bank card details, passwords or sensitive documents in your message.</li></ul>[car_dealer_contact_form]",
+      "template": "default",
+      "previous_content_hash": "7e6832678ea39602f442058e5361fc82c262b676ba8f94cdf1bab81017bbeb54",
+      "previous_content_en_hash": "935a14d97c6f0ce291a1cd3ce6ecdc3a2a905ee703ea977bb96249afeff17d3a"
     },
     {
       "slug": "faq",

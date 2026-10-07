@@ -25,6 +25,8 @@ function car_dealer_customize_theme_settings( $manager ) {
 	$manager->add_section( 'car_dealer_appearance', array( 'title' => __( 'مظهر المعرض', 'car-dealer' ), 'priority' => 35 ) );
 	$manager->add_section( 'car_dealer_contact', array( 'title' => __( 'بيانات التواصل', 'car-dealer' ), 'priority' => 36 ) );
 	$options = car_dealer_theme_options();
+	$manager->add_setting( 'car_dealer_theme_settings[description_en]', array( 'type' => 'option', 'default' => $options['description_en'], 'capability' => 'manage_options', 'sanitize_callback' => 'sanitize_textarea_field', 'transport' => 'refresh' ) );
+	$manager->add_control( 'car_dealer_theme_settings[description_en]', array( 'label' => 'وصف الموقع بالإنجليزية', 'section' => 'title_tagline', 'type' => 'textarea' ) );
 	$fields = array(
 		'primary_color' => array( 'اللون الرئيسي', 'color', 'sanitize_hex_color' ),
 		'accent_color' => array( 'لون الأزرار', 'color', 'sanitize_hex_color' ),
@@ -57,6 +59,7 @@ add_action( 'admin_init', 'car_dealer_register_theme_settings' );
 function car_dealer_sanitize_theme_settings( $input ) {
 	$input = is_array( $input ) ? $input : array();
 	return array(
+		'description_en' => sanitize_textarea_field( $input['description_en'] ?? car_dealer_theme_options()['description_en'] ),
 		'primary_color' => sanitize_hex_color( $input['primary_color'] ?? '' ) ?: '#102a43',
 		'accent_color' => sanitize_hex_color( $input['accent_color'] ?? '' ) ?: '#1677c8',
 		'phone' => sanitize_text_field( $input['phone'] ?? '' ),
@@ -70,6 +73,7 @@ function car_dealer_sanitize_theme_settings( $input ) {
 
 function car_dealer_theme_options() {
 	$defaults = array( 'primary_color' => '#102a43', 'accent_color' => '#1677c8', 'phone' => '', 'email' => '', 'address' => '', 'facebook' => '', 'instagram' => '', 'whatsapp' => '' );
+	$defaults['description_en'] = 'Explore available vehicles and contact our team.';
 	return wp_parse_args( get_option( 'car_dealer_theme_settings', array() ), $defaults );
 }
 
@@ -101,6 +105,7 @@ function car_dealer_render_settings_page() {
 				<label><?php esc_html_e( 'إنستغرام', 'car-dealer' ); ?><input type="url" name="car_dealer_theme_settings[instagram]" value="<?php echo esc_attr( $options['instagram'] ); ?>"></label>
 				<label><?php esc_html_e( 'واتساب', 'car-dealer' ); ?><input type="text" name="car_dealer_theme_settings[whatsapp]" value="<?php echo esc_attr( $options['whatsapp'] ); ?>"></label>
 				<label class="cd-wide"><?php esc_html_e( 'العنوان', 'car-dealer' ); ?><textarea name="car_dealer_theme_settings[address]" rows="4"><?php echo esc_textarea( $options['address'] ); ?></textarea></label>
+				<label class="cd-wide">وصف الموقع بالإنجليزية<textarea name="car_dealer_theme_settings[description_en]" rows="3" dir="ltr"><?php echo esc_textarea( $options['description_en'] ); ?></textarea></label>
 			</div></fieldset>
 			<?php submit_button( __( 'حفظ الإعدادات', 'car-dealer' ) ); ?>
 		</form>

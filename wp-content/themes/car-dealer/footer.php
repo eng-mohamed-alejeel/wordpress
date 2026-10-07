@@ -18,7 +18,7 @@
 					<div class="footer-brand">
 						<?php if ( has_custom_logo() ) : ?><?php the_custom_logo(); ?><?php else : ?><a href="<?php echo esc_url( car_dealer_site_url() ); ?>"><?php bloginfo( 'name' ); ?></a><?php endif; ?>
 					</div>
-					<p class="footer-description"><?php echo esc_html( car_dealer_text( get_bloginfo( 'description' ), 'Explore available vehicles and contact our team.' ) ); ?></p>
+					<p class="footer-description"><?php echo esc_html( car_dealer_text( get_bloginfo( 'description' ), $cd_options['description_en'] ?? 'Explore available vehicles and contact our team.' ) ); ?></p>
 
 				</div>
 				<?php if ( $cd_has_legal ) : ?><nav class="footer-col footer-policy-col" aria-label="<?php echo esc_attr( car_dealer_text( 'السياسات والمعلومات القانونية', 'Policies and legal information' ) ); ?>">

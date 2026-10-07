@@ -85,3 +85,33 @@ function car_dealer_setup_public_site() {
 add_action( 'admin_init', 'car_dealer_setup_public_site', 30 );
 add_action( 'after_switch_theme', 'car_dealer_setup_public_site' );
 add_action( 'activated_plugin', 'car_dealer_setup_public_site' );
+
+/** Upgrade only the shipped contact copy, preserving independently edited content. */
+function car_dealer_upgrade_contact_copy() {
+	if ( ! current_user_can( 'manage_options' ) || get_option( 'car_dealer_contact_copy_version' ) ) { return; }
+	$defaults = json_decode( (string) file_get_contents( __DIR__ . '/public-site-defaults.json' ), true );
+	foreach ( $defaults['pages'] ?? array() as $definition ) {
+		if ( 'contact' !== $definition['slug'] ) { continue; }
+		$page = get_page_by_path( 'contact', OBJECT, 'page' );
+		if ( ! $page ) { return; }
+		$english = get_post_meta( $page->ID, '_adc_content_en', true );
+		$ar_matches = hash( 'sha256', $page->post_content ) === ( $definition['previous_content_hash'] ?? '' );
+		$en_matches = hash( 'sha256', $english ) === ( $definition['previous_content_en_hash'] ?? '' );
+		if ( $ar_matches || $en_matches ) {
+			// Keep a recoverable snapshot before migrating the packaged text.
+			add_option( 'car_dealer_contact_copy_before_upgrade', array( 'page_id' => $page->ID, 'content' => $page->post_content, 'content_en' => $english ), '', false );
+			if ( $ar_matches ) {
+				$result = wp_update_post( wp_slash( array( 'ID' => $page->ID, 'post_content' => wp_kses_post( $definition['content'] ) ) ), true );
+				if ( is_wp_error( $result ) ) { return; }
+			}
+			if ( $en_matches ) {
+				update_post_meta( $page->ID, '_adc_content_en', wp_slash( wp_kses_post( $definition['content_en'] ) ) );
+				update_post_meta( $page->ID, '_adc_content_en_source_hash', hash( 'sha256', get_post( $page->ID )->post_content ) );
+			}
+		}
+		update_option( 'car_dealer_contact_copy_version', 1, false );
+	}
+}
+add_action( 'admin_init', 'car_dealer_upgrade_contact_copy', 31 );
+add_action( 'after_switch_theme', 'car_dealer_upgrade_contact_copy', 11 );
+add_action( 'activated_plugin', 'car_dealer_upgrade_contact_copy', 11 );

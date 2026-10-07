@@ -24,7 +24,7 @@ get_header(); ?>
 						</div>
 					<?php endif; ?>
 					<div class="entry-content">
-						<?php if ( 'en' === car_dealer_catalog_language() && get_post_meta( get_the_ID(), '_adc_content_en', true ) ) { the_content(); } else { echo do_shortcode('[ab_contact_hero][ab_contact_grid][ab_contact_map][ab_contact_form_section][ab_faq_section][ab_social_section]'); } ?>
+						<?php the_content(); ?>
 					</div>
 				</article>
 			<?php endwhile; ?>
