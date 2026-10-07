@@ -1,3 +1,11 @@
+# Local source, recovery files and command-line tools must not be served over HTTP.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^(?:\.git|\.tmp|docs|tools)(?:/|$) - [F,L]
+</IfModule>
+<FilesMatch "^(wp-config\.php|.*\.(?:sql|bak|ini|ps1|cjs))$">
+Require all denied
+</FilesMatch>
 
 # BEGIN WordPress
 # The directives (lines) between "BEGIN WordPress" and "END WordPress" are

@@ -1,3 +1,6 @@
 # Local WordPress credentials and generated recovery material.
 /wp-config.php
 /.tmp/
+/wp-content/cache/
+/wp-content/advanced-cache.php
+/wp-content/wp-cache-config.php
