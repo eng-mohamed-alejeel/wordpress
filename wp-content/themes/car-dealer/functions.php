@@ -62,7 +62,7 @@ function car_dealer_assets() {
 	// Cookie Consent
 	wp_enqueue_style( 'car-dealer-cookies', $uri . '/assets/css/components/_cookies.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/components/_cookies.css' ) );
 	wp_enqueue_script( 'car-dealer-cookie-consent', $uri . '/assets/js/cookie-consent.js', array(), filemtime( get_template_directory() . '/assets/js/cookie-consent.js' ), true );
-	wp_localize_script( 'car-dealer-cookie-consent', 'cdCookieConfig', array( 'templateUri' => $uri, 'language' => car_dealer_ui_language() ) );
+	wp_localize_script( 'car-dealer-cookie-consent', 'cdCookieConfig', array( 'templateUri' => $uri, 'language' => car_dealer_ui_language(), 'customizePreview' => is_customize_preview() ) );
 	
 }
 add_action( 'wp_enqueue_scripts', 'car_dealer_assets' );

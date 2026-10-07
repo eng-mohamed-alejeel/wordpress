@@ -9,7 +9,7 @@
 		'Instagram' => esc_url( (string) ( $cd_options['instagram'] ?? '' ) ),
 	) );
 	$cd_legal_links = car_dealer_legal_links();
-	$cd_has_legal = (bool) $cd_legal_links;
+	$cd_has_legal = (bool) $cd_legal_links || has_nav_menu( 'footer' );
 	?>
 	<footer id="colophon" class="site-footer">
 		<div class="container footer-container">
@@ -23,9 +23,11 @@
 				</div>
 				<?php if ( $cd_has_legal ) : ?><nav class="footer-col footer-policy-col" aria-label="<?php echo esc_attr( car_dealer_text( 'السياسات والمعلومات القانونية', 'Policies and legal information' ) ); ?>">
 					<h2 class="footer-title"><?php echo esc_html( car_dealer_text( 'السياسات والمعلومات القانونية', 'Policies and legal information' ) ); ?></h2>
+					<?php if ( has_nav_menu( 'footer' ) ) : wp_nav_menu( array( 'theme_location' => 'footer', 'container' => false, 'menu_class' => 'footer-links footer-legal-links', 'depth' => 1, 'fallback_cb' => false ) ); else : ?>
 					<ul class="footer-links footer-legal-links">
 						<?php foreach ( $cd_legal_links as $cd_legal_link ) : ?><li><a href="<?php echo esc_url( $cd_legal_link['url'] ); ?>"><?php echo esc_html( $cd_legal_link['label'] ); ?></a></li><?php endforeach; ?>
 					</ul>
+					<?php endif; ?>
 				</nav><?php endif; ?>
 				<div class="footer-col footer-contact-col">
 					<h2 class="footer-title"><?php echo esc_html( car_dealer_text( 'التواصل', 'Contact' ) ); ?></h2>

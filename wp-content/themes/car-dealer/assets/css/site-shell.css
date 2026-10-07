@@ -356,6 +356,17 @@ html[dir="rtl"] .ab-inventory-cta-actions .btn-icon { transform: rotate(180deg);
 .legal-edit { margin-top: 1rem; font-size: .875rem; }
 @media (max-width: 700px) { .legal-page { padding-inline: 0; } .site-footer .footer-legal-nav .footer-legal-links { gap: .25rem 1rem; } }
 /* Each auth form has its own action and nonce; hidden forms stay out of focus. */
+.ab-hero .ab-hero-copy { min-width: 0; }
+.ab-hero .ab-hero-copy h1 {
+  max-width: 720px;
+  font-size: clamp(2rem, 3.6vw, 3.5rem);
+  line-height: 1.4;
+  letter-spacing: normal;
+  margin-block: .5rem 1.25rem;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+html[dir="rtl"] .ab-hero .ab-hero-copy h1 { line-height: 1.55; }
 .cd-auth-form form[hidden], .cd-account-notice[hidden] { display: none !important; }
 @media (prefers-reduced-motion: no-preference) {
   .cd-auth-form form[data-auth-view]:not([hidden]) { animation: auth-form-enter .18s ease-out; }

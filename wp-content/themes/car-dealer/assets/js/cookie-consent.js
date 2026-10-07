@@ -4,6 +4,7 @@
  */
 (function() {
     'use strict';
+    if (window.cdCookieConfig && window.cdCookieConfig.customizePreview) return;
 
     var CONSENT_COOKIE_NAME = 'cd_cookie_consent';
     var CONSENT_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
