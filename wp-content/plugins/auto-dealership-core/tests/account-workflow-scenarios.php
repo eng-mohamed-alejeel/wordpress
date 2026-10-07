@@ -34,7 +34,7 @@ foreach ( array( false,true ) as $reverse ) {
 	$race = $crm_parallel( 'crm_intake', $mixed_account, $reverse ? array( $erase,$new ) : array( $new,$erase ) );
 	$erasure = $race[$reverse ? 0 : 1]; $intake = $race[$reverse ? 1 : 0];
 	adc_check( ! empty( $erasure['done'] ) && isset( $intake['id'] ), 'Concurrent account intake and privacy erasure complete under worker order ' . (int) $reverse . ': ' . wp_json_encode( array( 'erasure_done' => ! empty( $erasure['done'] ), 'erasure_error' => $erasure['error'] ?? '', 'intake_has_id' => isset( $intake['id'] ), 'intake_error' => $intake['error'] ?? '' ) ) );
-	adc_check( 'Erased customer' === $wpdb->get_var( "SELECT full_name FROM $customers WHERE id=$old_id" ) && null === $wpdb->get_var( $wpdb->prepare( "SELECT public_payload_hash FROM $crm_leads WHERE id=%d", $old['id'] ) ) && '' === (string) $wpdb->get_var( $wpdb->prepare( "SELECT email FROM $crm_messages WHERE id=%d", $old['legacy_request_id'] ) ), 'Concurrent fresh enquiry never restores erased identity or old compatibility content.' );
+	adc_check( __( 'Erased customer', 'auto-dealership-core' ) === $wpdb->get_var( "SELECT full_name FROM $customers WHERE id=$old_id" ) && null === $wpdb->get_var( $wpdb->prepare( "SELECT public_payload_hash FROM $crm_leads WHERE id=%d", $old['id'] ) ) && '' === (string) $wpdb->get_var( $wpdb->prepare( "SELECT email FROM $crm_messages WHERE id=%d", $old['legacy_request_id'] ) ), 'Concurrent fresh enquiry never restores erased identity or old compatibility content.' );
 	adc_check( (int) $wpdb->get_var( "SELECT COUNT(*) FROM $customers WHERE account_user_id=$mixed_account" ) <= 1, 'Mixed erasure/intake retains at most one current account-linked customer.' );
 }
 

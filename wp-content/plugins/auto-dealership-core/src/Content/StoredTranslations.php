@@ -24,6 +24,15 @@ final class StoredTranslations {
 
 	private static function key( string $type, int $id ): string { return 'adc_translation_' . $type . '_' . $id; }
 	public static function fingerprint( string $source ): string { return hash( 'sha256', $source ); }
+	/** Load page translations together, including absent copies, using WordPress option caches. */
+	public static function prime( string $type, array $ids ): void {
+		if ( ! isset( self::FIELDS[$type] ) || ! function_exists( 'wp_prime_option_caches' ) ) { return; }
+		$keys = array();
+		foreach ( array_unique( array_map( 'absint', $ids ) ) as $id ) {
+			if ( $id > 0 ) { $keys[] = self::key( $type, $id ); }
+		}
+		if ( $keys ) { wp_prime_option_caches( $keys ); }
+	}
 	public static function copies( string $type, int $id ): array {
 		$value = get_option( self::key( $type, $id ), array() );
 		return is_array( $value ) ? $value : array();

@@ -3,6 +3,7 @@
 namespace AutoDealership\Core { final class Localization { public static string $lang='ar'; public static function language(): string { return self::$lang; } } }
 namespace {
  define('ABSPATH',__DIR__.'/');
+ require dirname(__DIR__).'/src/Pricing/Money.php';
  class WP_Error { public function __construct(public string $code,public string $message,public array $data=[]) {} }
  require dirname(__DIR__).'/src/Tools/FinanceConfiguration.php';
  require dirname(__DIR__).'/src/Tools/LoanCalculator.php';

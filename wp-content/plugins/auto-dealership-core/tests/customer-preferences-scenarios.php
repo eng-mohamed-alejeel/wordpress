@@ -98,7 +98,7 @@ foreach ( array( 'user_id'=>$privacy_account, 'email'=>$privacy_profile_email, '
 $privacy_comment = car_dealer_crm_log( $privacy_profile, 'Private legacy note' );
 $privacy_export = PrivacyTools::export( $privacy_profile_email );
 $privacy_names = array_column( $privacy_export['data'][0]['data'] ?? array(), 'name' );
-adc_check( in_array( 'Account marketing preference', $privacy_names, true ) && in_array( 'Legacy CRM profile', $privacy_names, true ) && in_array( 'Legacy CRM activity', $privacy_names, true ), 'Privacy export includes account preference, legacy CRM identity and legacy activity history.' );
+adc_check( in_array( __( 'Account marketing preference', 'auto-dealership-core' ), $privacy_names, true ) && in_array( __( 'Legacy CRM profile', 'auto-dealership-core' ), $privacy_names, true ) && in_array( __( 'Legacy CRM activity', 'auto-dealership-core' ), $privacy_names, true ), 'Privacy export includes account preference, legacy CRM identity and legacy activity history.' );
 
 $failed_privacy_erase = $with_sql_failure(
 	static fn( string $query ): bool => str_contains( $query, "UPDATE {$wpdb->comments} SET comment_content=" ),
@@ -117,7 +117,7 @@ adc_check( ! $failed_privacy_audit['done'] && 'Legacy Privacy Person' === get_po
 $privacy_erasure = PrivacyTools::erase( $privacy_profile_email );
 clean_post_cache( $privacy_profile ); clean_user_cache( $privacy_account ); wp_cache_delete( $privacy_account, 'user_meta' );
 adc_check( $privacy_erasure['done'] && 'Erased customer' === get_post( $privacy_profile )->post_title && '1' === (string) get_post_meta( $privacy_profile, '_crm_privacy_erased', true ) && '' === (string) get_post_meta( $privacy_profile, '_crm_email', true ) && '[Personal data erased]' === get_comment( $privacy_comment )->comment_content, 'Successful privacy erasure anonymizes and retires the legacy CRM profile and activity.' );
-adc_check( ! metadata_exists( 'user', $privacy_account, 'adc_marketing_consent' ) && 'Erased customer' === $wpdb->get_var( $wpdb->prepare( "SELECT full_name FROM $customers WHERE id=%d", $privacy_customer ) ), 'Successful privacy erasure removes account preference metadata and anonymizes the canonical customer.' );
+adc_check( ! metadata_exists( 'user', $privacy_account, 'adc_marketing_consent' ) && __( 'Erased customer', 'auto-dealership-core' ) === $wpdb->get_var( $wpdb->prepare( "SELECT full_name FROM $customers WHERE id=%d", $privacy_customer ) ), 'Successful privacy erasure removes account preference metadata and anonymizes the canonical customer.' );
 $privacy_audit_data = (string) $wpdb->get_var( "SELECT after_data FROM $audit WHERE event_key='privacy.personal_data_erased' ORDER BY id DESC LIMIT 1" );
 adc_check( str_contains( $privacy_audit_data, 'customer_count' ) && ! str_contains( $privacy_audit_data, $privacy_profile_email ), 'Privacy erasure audit records counts without retaining the erased email address.' );
 

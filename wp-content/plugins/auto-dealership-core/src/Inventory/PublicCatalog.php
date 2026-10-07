@@ -172,6 +172,8 @@ final class PublicCatalog {
 		$args[] = $limit;
 		$args[] = ( $page - 1 ) * $limit;
 		$items = $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
+		\AutoDealership\Content\StoredTranslations::prime( 'vehicles', wp_list_pluck( $items, 'id' ) );
+		\AutoDealership\Content\StoredTranslations::prime( 'branches', wp_list_pluck( $items, 'branch_id' ) );
 		$post_ids = array_values( array_filter( array_map( 'absint', wp_list_pluck( $items, 'public_post_id' ) ) ) );
 		if ( $post_ids && function_exists( '_prime_post_caches' ) ) {
 			_prime_post_caches( $post_ids, true, true );
@@ -212,6 +214,7 @@ final class PublicCatalog {
 			$options[ $field ] = $wpdb->get_col( "SELECT DISTINCT v.$field" . $base . " AND v.$field<>'' ORDER BY v.$field ASC LIMIT 250" ) ?: array();
 		}
 		$options['branches'] = $wpdb->get_results( 'SELECT DISTINCT b.id,b.name,b.city' . $base . ' ORDER BY b.name ASC LIMIT 250', ARRAY_A ) ?: array();
+		\AutoDealership\Content\StoredTranslations::prime( 'branches', wp_list_pluck( $options['branches'], 'id' ) );
 		foreach ( $options['branches'] as &$branch ) { $branch = \AutoDealership\Content\StoredTranslations::row( 'branches', $branch, true ); }
 		unset( $branch );
 		return $options;
@@ -304,7 +307,9 @@ final class PublicCatalog {
 		if ( $major_price_units ) {
 			foreach ( array( 'min_price', 'max_price' ) as $key ) {
 				if ( isset( $filters[ $key ] ) ) {
-					$filters[ $key ] *= 100;
+					$minor = \AutoDealership\Pricing\Money::from_sar( (string) $raw[$key] );
+					if ( null === $minor ) { unset( $filters[$key] ); }
+					else { $filters[$key] = $minor; }
 				}
 			}
 		}

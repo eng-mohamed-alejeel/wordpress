@@ -32,8 +32,8 @@ final class FinancialExport {
 	private static function csv( array $rows ): string {
 		$stream = fopen( 'php://temp', 'w+' );
 		fwrite( $stream, "\xEF\xBB\xBF" );
-		fputcsv( $stream, array( 'sale_id','status','branch_id','stock_number','quote_number','final_amount','currency','invoice_reference','created_at','verified_amount' ) );
-		foreach ( $rows as $row ) { fputcsv( $stream, array_map( array( self::class, 'safe_cell' ), array_values( $row ) ) ); }
+		fputcsv( $stream, array( 'sale_id','status','branch_id','stock_number','quote_number','final_amount_sar','currency','invoice_reference','created_at','verified_amount_sar' ) );
+		foreach ( $rows as $row ) { foreach ( array( 'final_amount','verified_amount' ) as $field ) { $row[$field] = \AutoDealership\Pricing\Money::decimal( (string) $row[$field] ); } fputcsv( $stream, array_map( array( self::class, 'safe_cell' ), array_values( $row ) ) ); }
 		rewind( $stream ); $csv = stream_get_contents( $stream ); fclose( $stream ); return (string) $csv;
 	}
 

@@ -13,7 +13,7 @@
 العرض الترويجي النشط	Active promotion
 إضافة مورد	Add supplier
 صلاحية مدير الموقع مطلوبة.	Administrator access is required.
-جميع المبالغ بالهللات السعودية. تُدخل التكلفة الإجمالية صراحةً حتى تُعتمد معادلة العمل.	All monetary values use SAR halalas. Total cost is entered explicitly until an approved business formula is configured.
+جميع المبالغ بالريال السعودي. تُدخل التكلفة الإجمالية صراحةً حتى تُعتمد معادلة العمل.	All monetary values use SAR. Total cost is entered explicitly until an approved business formula is configured.
 الفروع المسموح بها	Allowed branches
 المبلغ	Amount
 هناك عملية إعداد صفحات أخرى قيد التنفيذ. حاول بعد قليل.	Another page setup operation is running. Try again shortly.
@@ -105,9 +105,9 @@
 طلب التمويل	Finance request
 صلاحية عرض التمويل مطلوبة.	Finance viewing permission is required.
 التصدير المالي	Financial export
-رسوم عرض السعر الثابتة (هللة)	Fixed quote fee (halalas)
-المبالغ الثابتة بالهللات، والنسب بنقاط الأساس.	Fixed values are halalas; percentage values are basis points.
-أعلى خصم للمدير العام (هللة)	General manager discount ceiling (halalas)
+رسوم عرض السعر الثابتة (ريال)	Fixed quote fee (SAR)
+المبالغ الثابتة بالريال، والنسب بنقاط الأساس.	Fixed amounts use SAR; percentage values use basis points.
+أعلى خصم للمدير العام (ريال)	General manager discount ceiling (SAR)
 غير معروف تاريخيًا	Historically unknown
 الاحتجاز والصيانة	Holds and maintenance
 غير نشط	Inactive
@@ -178,7 +178,7 @@
 رفض	Reject
 موضوع الطلب	Request subject
 الموعد المطلوب	Requested appointment
-المبلغ المطلوب (هللة)	Required amount (halalas)
+المبلغ المطلوب (ريال)	Required amount (SAR)
 مستندات التسليم المطلوبة	Required delivery documents
 مستندات التسليم المطلوبة غير مكتملة.	Required delivery documents are incomplete.
 الحجز	Reservation
@@ -314,7 +314,7 @@
 مستودع	warehouse
 ساحة	yard
 مركز خدمة	service
-المبلغ بالهللات	Amount in halalas
+المبلغ بالريال	Amount in SAR
 مرجع الاسترداد	Refund reference
 عكس تمويل	finance reversal
 الرمز	code
@@ -332,9 +332,9 @@
 المرجع الجمركي	Customs reference
 معرّفات مرفقات الصور أو المستندات الموجودة، مفصولة بفواصل	Existing image/PDF attachment IDs, comma separated
 سبب التغيير	Reason for change
-الدفعة الأولى (هللة)	Down payment (halalas)
+الدفعة الأولى (ريال)	Down payment (SAR)
 المدة بالأشهر	Term months
-القسط الشهري (هللة)	Monthly payment (halalas)
+القسط الشهري (ريال)	Monthly payment (SAR)
 قيد المراجعة	under_review
 معتمد	approved
 مرفوض	rejected
@@ -358,7 +358,7 @@ VIN الجديد	New VIN
 أدخل اسمًا وبريدًا صحيحًا وكلمة مرور من 10 أحرف على الأقل مع تأكيد مطابق.	Enter a valid name and email, and a password of at least 10 characters with matching confirmation.
 أدخل رقم هاتف صحيحًا بصيغة محلية أو دولية.	Enter a valid local or international phone number.
 أضف أرقام التواصل والبريد الذي يمكن للعملاء مراسلتك عليه.	Add the phone numbers and email address customers can use to contact you.
-أعلى خصم لمدير المبيعات (هللة)	Sales manager discount ceiling (halalas)
+أعلى خصم لمدير المبيعات (ريال)	Sales manager discount ceiling (SAR)
 أعيدت المهمة إلى الطابور وسُجل الإجراء في سجل التدقيق.	The job was requeued and the action was recorded in the audit log.
 أي خصم أعلى من الحد يتطلب صلاحية المدير العام. صفر يحول كل طلب خصم للمدير العام.	Discounts above the limit require general manager permission. Zero sends every discount request to the general manager.
 أُنشئ في %s UTC. المخزون والاستثناءات لقطة حالية، وبقية الأقسام ضمن الفترة المختارة.	Generated at %s UTC. Inventory and exceptions reflect the current snapshot; other sections cover the selected period.
@@ -429,7 +429,7 @@ VIN الجديد	New VIN
 الأحداث	Events
 الأحداث الإدارية والتشغيلية للقراءة.	Read administrative and operational events.
 الإجراء المنفذ والنتيجة	Action taken and result
-الإجمالي (هللة)	Total (halalas)
+الإجمالي (ريال)	Total (SAR)
 الإرجاع	Return
 الاستردادات المالية	Financial refunds
 الاستلام والفحص	Intake and inspection
@@ -470,18 +470,18 @@ VIN الجديد	New VIN
 الحجز غير موجود أو لم يعد قابلًا للإلغاء.	The booking does not exist or can no longer be cancelled.
 الحدث	Event
 الخصائص الفنية المقيدة للمركبات.	Restricted technical vehicle specifications.
-الخصم (هللة)	Discount (halalas)
+الخصم (ريال)	Discount (SAR)
 الخصومات واعتماد المبيعات والإلغاءات.	Discounts, sale approvals and cancellations.
 الرد الظاهر للعميل	Customer-visible reply
 الرسائل	Messages
 الرسالة	Message
 السجل	History
 السعر	Price
-السعر (هللة)	Price (halalas)
+السعر (ريال)	Price (SAR)
 السعر أو الحد الأدنى المعتمد غير صالح.	The price or approved minimum is invalid.
 السعر أو نسبة الضريبة غير صالحين للحساب.	The price or tax rate is invalid for calculation.
 السعر المقترح أقل من الحد الأدنى المعتمد.	The proposed price is below the approved minimum.
-السعر بالهللات	Price in halalas
+السعر بالريال	Price in SAR
 السعر بعد العرض	Offer price
 السعر قبل العرض	Original price
 السنة	Year
@@ -519,14 +519,14 @@ VIN الجديد	New VIN
 القرار	Decision
 القسط الشهري	Monthly payment
 القسط الشهري يبدأ من	Monthly payment from
-القيم المالية بالهللات السعودية. راجع إعدادات الضرائب وسياسات الحجز والخصومات مع مسؤول الشركة قبل التشغيل.	Financial amounts use SAR halalas. Review tax settings and reservation and discount policies with the company administrator before use.
+القيم المالية بالريال السعودي. راجع إعدادات الضرائب وسياسات الحجز والخصومات مع مسؤول الشركة قبل التشغيل.	Financial amounts use SAR. Review tax settings and reservation and discount policies with the company administrator before use.
 اللون الرئيسي	Primary color
 الماركات	Brands
 المبالغ المستردة	Refunds
-المبلغ (هللة)	Amount (halalas)
-المبلغ الأقصى (هللة)	Maximum amount (halalas)
-المبلغ المجمع (هللة)	Total amount (halalas)
-المبلغ المستلم (هللة سعودية)	Received amount (SAR halalas)
+المبلغ (ريال)	Amount (SAR)
+المبلغ الأقصى (ريال)	Maximum amount (SAR)
+المبلغ المجمع (ريال)	Total amount (SAR)
+المبلغ المستلم (ريال سعودي)	Received amount (SAR)
 المبيعات وخدمة العملاء	Sales and customer service
 المتابعة التالية	Next follow up
 المحاولات	Attempts
@@ -1337,3 +1337,8 @@ VIN الجديد	New VIN
 جهة التمويل	Finance provider
 السبب	Reason
 الإجراء المنفذ والنتيجة	Resolution
+
+أدخل مبلغًا صحيحًا بالريال السعودي بدقة منزلتين عشريتين كحد أقصى.	Enter a valid SAR amount with at most two decimal places.
+المبالغ الثابتة بالريال؛ النسب بنقاط الأساس؛ 1500 تعني 15%.	Fixed amounts use SAR; percentage values use basis points; 1500 means 15%.
+
+أعد تحميل هذا النموذج قبل إدخال المبالغ بالريال السعودي.	Reload this form before entering amounts in SAR.

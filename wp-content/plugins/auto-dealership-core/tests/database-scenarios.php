@@ -574,6 +574,7 @@ require __DIR__ . '/increment-1.25.php';
 require __DIR__ . '/increment-1.26.php';
 require __DIR__ . '/increment-1.27.php';
 require __DIR__ . '/increment-1.28.php';
+require __DIR__ . '/increment-currency.php';
 require __DIR__ . '/increment-crm.php';
 require __DIR__ . '/account-workflow-scenarios.php';
 require __DIR__ . '/customer-preferences-scenarios.php';
@@ -651,9 +652,9 @@ $privacy_email = 'privacy-quote@example.invalid';
 $wpdb->update( $customers, array( 'email' => $privacy_email ), array( 'id' => $customer_a ) );
 $export = PrivacyTools::export( $privacy_email );
 $export_items = $export['data'][0]['data'] ?? array();
-adc_check( count( array_filter( $export_items, static fn( $item ) => 'Quotation revision' === $item['name'] ) ) >= 1, 'Privacy export includes stored quotation identity snapshots and financial revisions.' );
+adc_check( count( array_filter( $export_items, static fn( $item ) => __( 'Quotation revision', 'auto-dealership-core' ) === $item['name'] ) ) >= 1, 'Privacy export includes stored quotation identity snapshots and financial revisions.' );
 $erasure = PrivacyTools::erase( $privacy_email );
-adc_check( $erasure['done'] && 'Erased customer' === $wpdb->get_var( $wpdb->prepare( "SELECT customer_name FROM $history_table WHERE quotation_id = %d AND version = 1", $pricing_quote['id'] ) ), 'Privacy erasure anonymizes customer identity in quote snapshots while retaining financial history.' );
+adc_check( $erasure['done'] && __( 'Erased customer', 'auto-dealership-core' ) === $wpdb->get_var( $wpdb->prepare( "SELECT customer_name FROM $history_table WHERE quotation_id = %d AND version = 1", $pricing_quote['id'] ) ), 'Privacy erasure anonymizes customer identity in quote snapshots while retaining financial history.' );
 $wpdb->update( Schema::table( 'branches' ), array( 'active' => 0 ), array( 'id' => $branch_a['id'] ) );
 BranchScope::clear_cache();
 wp_set_current_user( $sales_a );
@@ -910,7 +911,7 @@ try {
 	$catalog_items = is_array( $catalog['items'] ?? null ) ? $catalog['items'] : array();
 	$catalog_match = array_values( array_filter( $catalog_items, static fn( $item ) => $http_vehicle_id === (int) ( $item['id'] ?? 0 ) ) );
 	adc_check( 200 === $catalog_status && 1 === count( $catalog_match ) && ! array_key_exists( 'vin', $catalog_match[0] ) && ! array_key_exists( 'purchase_cost', $catalog_match[0] ), 'Public HTTP catalog exposes the mapped available vehicle without VIN or purchase cost.' );
-	adc_check( 'Silver' === $catalog_match[0]['exterior_color'] && 5 === (int) $catalog_match[0]['seats'] && 'awd' === $catalog_match[0]['drivetrain'] && ! array_key_exists( 'minimum_price', $catalog_match[0] ), 'Public HTTP catalog includes updated specifications without the private price floor.' );
+	adc_check( \AutoDealership\Core\Localization::label( 'Silver' ) === $catalog_match[0]['exterior_color'] && 5 === (int) $catalog_match[0]['seats'] && 'awd' === $catalog_match[0]['drivetrain'] && ! array_key_exists( 'minimum_price', $catalog_match[0] ), 'Public HTTP catalog includes updated specifications without the private price floor.' );
 	$catalog_filter_query = http_build_query( array(
 		'brand'=>'Synthetic', 'model'=>'Catalog HTTP', 'body_type'=>'suv', 'fuel_type'=>'hybrid',
 		'transmission'=>'automatic', 'engine_size'=>'2.0 L', 'drivetrain'=>'awd',

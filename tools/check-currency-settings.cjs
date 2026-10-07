@@ -1,0 +1,17 @@
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const input = {value:'12.34',after(node){this.unit=node;},closest(){return {querySelector(){return type;}};}};
+const type = {value:'fixed',addEventListener(name,fn){this.change=fn;}};
+const document = {querySelectorAll(){return [input];},createElement(){return {setAttribute(){}};}};
+vm.runInNewContext(fs.readFileSync('wp-content/plugins/auto-dealership-core/assets/js/currency-settings.js','utf8'),{document});
+assert.equal(input.step,'0.01');
+assert.equal(input.value,'12.34');
+assert.equal(input.unit.textContent,' (SAR)');
+type.value='percentage'; type.change();
+assert.equal(input.step,'1');
+assert.equal(input.max,'9999');
+assert.equal(input.value,'0');
+type.value='none'; type.change(); assert.equal(input.disabled,true);
+type.value='fixed'; type.change(); assert.equal(input.disabled,false);
+console.log('PASS: 8 currency settings checks.');

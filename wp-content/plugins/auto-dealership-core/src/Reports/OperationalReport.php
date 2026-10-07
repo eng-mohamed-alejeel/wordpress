@@ -137,11 +137,12 @@ final class OperationalReport {
 	private static function csv( array $report ): string {
 		$stream = fopen( 'php://temp', 'w+' );
 		fwrite( $stream, "\xEF\xBB\xBF" );
-		fputcsv( $stream, array( 'report','branch_id','branch_name','status','count','amount','currency','from','to','generated_at_utc' ) );
+		fputcsv( $stream, array( 'report','branch_id','branch_name','status','count','amount_sar','currency','from','to','generated_at_utc' ) );
 		foreach ( $report['sections'] as $section => $rows ) {
 			foreach ( $rows as $row ) {
 				$currency = in_array( $section, array( 'quotations','sales' ), true ) ? 'SAR' : '';
-				$cells = array( $section,$row['branch_id'],$row['branch_name'],$row['status'],$row['total'],$row['amount'],$currency,$report['from'],$report['to'],$report['generated_at'] );
+				$amount = $currency ? \AutoDealership\Pricing\Money::decimal( $row['amount'] ) : '';
+				$cells = array( $section,$row['branch_id'],$row['branch_name'],$row['status'],$row['total'],$amount,$currency,$report['from'],$report['to'],$report['generated_at'] );
 				fputcsv( $stream, array_map( array( self::class, 'safe_cell' ), $cells ) );
 			}
 		}

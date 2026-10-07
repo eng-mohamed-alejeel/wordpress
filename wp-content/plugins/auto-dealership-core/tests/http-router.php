@@ -67,6 +67,22 @@ if ( '/adc-test-session' === (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', 
 	exit;
 }
 $request_path = (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH );
+if ( '1' === getenv( 'ADC_CURRENCY_BROWSER' ) && '/adc-test-currency' === $request_path ) {
+	if ( ! current_user_can( 'manage_options' ) ) { http_response_code( 403 ); exit; }
+	require_once ABSPATH . 'wp-admin/includes/template.php';
+	$views = array( 'inventory'=>array( \AutoDealership\Admin\OperationsPages::class,'render' ), 'settings'=>array( \AutoDealership\Admin\SettingsPage::class,'render' ), 'payments'=>array( \AutoDealership\Admin\PaymentPages::class,'render' ), 'refunds'=>array( \AutoDealership\Admin\RefundPage::class,'render' ), 'acquisition'=>array( \AutoDealership\Admin\VehicleAcquisitionPage::class,'render' ), 'finance'=>array( \AutoDealership\Admin\WorkflowPages::class,'finance' ) );
+	$view = $views[$_GET['view'] ?? ''] ?? null;
+	if ( ! $view ) { http_response_code( 404 ); exit; }
+	$lang = \AutoDealership\Core\Localization::language();
+	header( 'Content-Type: text/html; charset=utf-8' );
+	echo '<!doctype html><html lang="' . esc_attr( $lang ) . '" dir="' . ( 'ar' === $lang ? 'rtl' : 'ltr' ) . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Currency acceptance</title><link rel="stylesheet" href="/wp-content/plugins/auto-dealership-core/assets/css/admin.css"><style>body{margin:24px;font-family:Arial,sans-serif}table{border-collapse:collapse;width:100%}td,th{padding:8px;border:1px solid #ddd}input,select{padding:6px;margin:3px}form{margin-block:16px}</style></head><body>';
+	echo '<div class="adc-admin"><div id="wpbody-content">';
+	call_user_func( $view );
+	echo '</div></div>';
+	echo '<script src="/wp-content/plugins/auto-dealership-core/assets/js/admin-layout.js"></script>';
+	if ( 'settings' === ( $_GET['view'] ?? '' ) ) { echo '<script src="/wp-content/plugins/auto-dealership-core/assets/js/currency-settings.js"></script>'; }
+	echo '</body></html>'; exit;
+}
 if ( $theme_test && '/adc-test-inventory' === $request_path ) {
 	if ( ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true ) || ! hash_equals( $session_key, (string) ( $_GET['key'] ?? '' ) ) ) { http_response_code( 403 ); exit; }
 	global $wpdb, $shortcode_tags, $wp_filter;

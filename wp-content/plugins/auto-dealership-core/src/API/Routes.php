@@ -37,6 +37,8 @@ final class Routes {
 
 	/** Registers the compatibility contract and the enveloped v2 contract together. */
 	private static function route( string $route, array $args ): void {
+		if ( isset( $args['callback'] ) ) { $args = CurrencyContract::endpoint( $args ); }
+		else { foreach ( $args as $index=>$endpoint ) { if ( is_array( $endpoint ) && isset( $endpoint['callback'] ) ) { $args[$index] = CurrencyContract::endpoint( $endpoint ); } } }
 		foreach ( array( 'auto-dealership/v1', 'auto-dealership/v2' ) as $namespace ) {
 			register_rest_route( $namespace, $route, $args );
 		}

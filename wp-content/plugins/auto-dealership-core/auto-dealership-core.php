@@ -131,6 +131,7 @@ require_once ADC_PATH . 'src/Admin/SupplierPage.php';
 require_once ADC_PATH . 'src/Admin/VehicleAcquisitionPage.php';
 require_once ADC_PATH . 'src/API/ResponseContract.php';
 require_once ADC_PATH . 'src/API/OpenApiSpecification.php';
+require_once ADC_PATH . 'src/API/CurrencyContract.php';
 require_once ADC_PATH . 'src/API/Routes.php';
 
 register_activation_hook( ADC_FILE, array( 'AutoDealership\\Core\\Capabilities', 'activate' ) );

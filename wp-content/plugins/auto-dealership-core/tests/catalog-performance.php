@@ -13,8 +13,11 @@ $performance_home_sentinel = '__adc_missing_home__';
 $performance_home = get_option( 'home', $performance_home_sentinel );
 $performance_home_url = $performance_home_sentinel === $performance_home ? 'http://catalog-performance.example.invalid' : (string) $performance_home;
 $performance_home_filter = static fn() => $performance_home_url;
+$performance_installing = wp_installing();
 
 try {
+	// The suite keeps installation mode on. Measure ordinary requests, where option caches are used.
+	wp_installing( false );
 	add_filter( 'pre_option_home', $performance_home_filter );
 	for ( $index = 1; $index <= 240; $index++ ) {
 		$post_id = wp_insert_post( array(
@@ -64,4 +67,5 @@ try {
 	}
 	foreach ( $performance_posts as $post_id ) { wp_delete_post( $post_id, true ); }
 	remove_filter( 'pre_option_home', $performance_home_filter );
+	wp_installing( $performance_installing );
 }

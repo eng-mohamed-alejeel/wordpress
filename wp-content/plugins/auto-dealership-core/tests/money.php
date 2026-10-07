@@ -34,4 +34,18 @@ $thrown = false;
 try { Money::calculate( PHP_INT_MAX, 0, 10000 ); } catch ( OverflowException $error ) { $thrown = true; }
 $check( $thrown, 'Final amount overflow is rejected.' );
 
+$check( 123456 === Money::from_sar( '1234.56' ), 'SAR input converts exactly to minor units.' );
+$check( 100000 === Money::from_sar( '1000' ), 'Integer user input is SAR.' );
+$check( 1 === Money::from_sar( '0.01' ), 'One halala is accepted as 0.01 SAR.' );
+$check( 12345 === Money::from_sar( '١٢٣٫٤٥' ), 'Arabic digits and decimal separator normalize exactly.' );
+$check( 12345 === Money::from_sar( '۱۲۳.۴۵' ), 'Persian digits normalize exactly.' );
+$check( '1234.56' === Money::decimal( 123456 ), 'User field values round trip.' );
+$check( '-12.34' === Money::decimal( -1234 ), 'Negative margins retain their sign.' );
+$check( '0.00' === Money::decimal( '0' ), 'Zero has two decimal places.' );
+$check( '999999999999999999.99' === Money::decimal( '99999999999999999999' ), 'SQL aggregate formatting does not overflow or lose precision.' );
+$check( PHP_INT_MAX === Money::from_sar( Money::format( PHP_INT_MAX ) ), 'Maximum integer round trips without floats.' );
+foreach ( array( '1.001','1e3','-1','1,234.56','1٬234٫56','1.','',array(),null,1.25 ) as $invalid ) {
+	$check( null === Money::from_sar( $invalid ), 'Ambiguous, excess precision and invalid types are rejected.' );
+}
+$check( null === Money::from_sar( Money::format( PHP_INT_MAX ) . '0' ), 'Overflow is rejected.' );
 echo "PASS: $checks money checks.\n";
