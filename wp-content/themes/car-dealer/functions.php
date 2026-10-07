@@ -42,6 +42,7 @@ require_once get_template_directory() . '/inc/accounts.php';
 require_once get_template_directory() . '/inc/public-catalog.php';
 require_once get_template_directory() . '/inc/localization.php';
 require_once get_template_directory() . '/inc/customization-manager.php';
+require_once get_template_directory() . '/inc/public-site-setup.php';
 
 function car_dealer_assets() {
 	$version = wp_get_theme()->get( 'Version' ); $uri = get_template_directory_uri();
