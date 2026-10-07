@@ -82,7 +82,7 @@ while ( have_posts() ) :
 		<div id="request-price"><?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $id, 'price_request', __( 'اطلب السعر', 'car-dealer' ), __( 'إرسال طلب السعر', 'car-dealer' ) ); } ?></div>
 		<div id="book-drive"><?php if ( function_exists( 'car_dealer_booking_form' ) ) { car_dealer_booking_form( $id ); } ?></div>
 		<div id="finance-request"><?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $id, 'finance_request', __( 'اطلب تمويل', 'car-dealer' ), __( 'إرسال طلب التمويل', 'car-dealer' ) ); } ?></div>
-		<?php echo do_shortcode( '[car_dealer_loan_calculator price="' . absint( $price ) . '"]' ); ?>
+		<?php echo do_shortcode( '[car_dealer_loan_calculator price="' . esc_attr( max( 0, (float) $price ) ) . '"]' ); ?>
 	</section>
 <?php endwhile; ?>
 <?php get_footer(); ?>

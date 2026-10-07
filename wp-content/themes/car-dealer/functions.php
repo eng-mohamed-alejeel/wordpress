@@ -277,32 +277,10 @@ function car_dealer_shortcode_cars( $atts, $model = array() ) {
 car_dealer_register_shortcode_adapter( 'car_dealer_cars', 'car_dealer_shortcode_cars', true, true );
 
 function car_dealer_shortcode_loan_calculator( $atts, $model = array() ) {
-	$atts = shortcode_atts( array( 'price' => 0 ), $atts, 'car_dealer_loan_calculator' );
-	$price = absint( $atts['price'] );
-	if ( ! isset( $model['price'], $model['down_payment'], $model['annual_rate'], $model['months'], $model['max_amount'], $model['max_months'], $model['max_rate'] ) ) {
-		return '';
-	}
-	ob_start();
-	?>
-	<div class="cd-tool cd-loan-calculator">
-		<?php if ( is_page( 'finance' ) ) : ?><h2><?php esc_html_e( 'قدّر قسطك الشهري', 'car-dealer' ); ?></h2><?php else : ?><h3><?php esc_html_e( 'حاسبة التمويل', 'car-dealer' ); ?></h3><?php endif; ?>
-		<?php if ( $price ) : ?><p><?php printf( esc_html__( 'سعر السيارة: %s', 'car-dealer' ), esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ) ); ?></p><?php endif; ?>
-		<form data-loan-calculator>
-			<input type="hidden" name="lang" value="<?php echo esc_attr( car_dealer_catalog_language() ); ?>">
-			<div class="cd-form-grid">
-				<label><?php esc_html_e( 'سعر السيارة', 'car-dealer' ); ?><input type="number" name="price" data-loan-price value="<?php echo esc_attr( $price > 0 ? $model['price'] : '' ); ?>" min="1" max="<?php echo esc_attr( $model['max_amount'] ); ?>" required></label>
-				<label><?php esc_html_e( 'الدفعة الأولى', 'car-dealer' ); ?><input type="number" name="down_payment" data-loan-down value="<?php echo esc_attr( $model['down_payment'] ); ?>" min="0" max="<?php echo esc_attr( $model['max_amount'] ); ?>" required></label>
-				<label><?php esc_html_e( 'النسبة السنوية التقديرية %', 'car-dealer' ); ?><input type="number" name="annual_rate" data-loan-rate value="<?php echo esc_attr( $model['annual_rate'] ); ?>" min="0" max="<?php echo esc_attr( $model['max_rate'] ); ?>" step="0.01" required></label>
-				<label><?php esc_html_e( 'المدة بالأشهر', 'car-dealer' ); ?><input type="number" name="months" data-loan-months value="<?php echo esc_attr( $model['months'] ); ?>" min="1" max="<?php echo esc_attr( $model['max_months'] ); ?>" required></label>
-			</div>
-			<button class="btn btn-primary" type="submit"><?php esc_html_e( 'احسب', 'car-dealer' ); ?></button>
-			<p class="cd-loan-result"><?php esc_html_e( 'القسط الشهري التقديري:', 'car-dealer' ); ?> <strong data-loan-result aria-live="polite">—</strong></p>
-			<p data-loan-status role="status"></p>
-			<small><?php esc_html_e( 'هذا تقدير إرشادي وليس عرض تمويل أو موافقة. تعتمد الشروط النهائية على مزود التمويل.', 'car-dealer' ); ?></small>
-		</form>
-	</div>
-	<?php
-	return ob_get_clean();
+ if ( ! class_exists( '\AutoDealership\Tools\LoanCalculator' ) ) { return ''; }
+ $atts = shortcode_atts( array( 'price'=>0 ), $atts, 'car_dealer_loan_calculator' );
+ if ( ! isset( $model['price'] ) ) { $model = \AutoDealership\Tools\LoanCalculator::view_model( max( 0, (float) $atts['price'] ) ); }
+ return \AutoDealership\Tools\LoanCalculator::render( $model );
 }
 car_dealer_register_shortcode_adapter( 'car_dealer_loan_calculator', 'car_dealer_shortcode_loan_calculator', true, true );
 

@@ -176,19 +176,6 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 </section>
 <?php endif; ?>
 
-<!-- ═══════════════ FINANCE BAND ═══════════════ -->
-<section class="ab-finance-band ab-finance-v2">
-	<div class="container ab-finance-grid">
-		<div class="ab-finance-copy">
-			<p class="eyebrow"><?php esc_html_e( 'تمويل', 'car-dealer' ); ?></p>
-			<h2><?php esc_html_e( 'قدّر قسطك الشهري', 'car-dealer' ); ?></h2>
-			<p><?php esc_html_e( 'احسب قسطًا تقديريًا للمقارنة الأولية. شروط التمويل الفعلية تعتمد على مزود الخدمة عند توفره.', 'car-dealer' ); ?></p>
-			<?php echo do_shortcode( '[car_dealer_loan_calculator]' ); ?>
-			<?php $cd_finance_page = car_dealer_page_url( 'finance' ); if ( $cd_finance_page ) : ?><a class="btn btn-outline" href="<?php echo esc_url( $cd_finance_page ); ?>"><?php echo esc_html( car_dealer_text( 'افتح حاسبة التمويل', 'Open Finance Calculator' ) ); ?></a><?php endif; ?>
-		</div>
-	</div>
-</section>
-
 <!-- ═══════════════ TESTIMONIALS ═══════════════ -->
 <?php echo do_shortcode( '[car_dealer_testimonials count="3"]' ); ?>
 

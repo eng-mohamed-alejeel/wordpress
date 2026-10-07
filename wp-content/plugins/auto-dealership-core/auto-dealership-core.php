@@ -82,7 +82,9 @@ require_once ADC_PATH . 'src/Pricing/Money.php';
 require_once ADC_PATH . 'src/Pricing/PricingPolicy.php';
 require_once ADC_PATH . 'src/Pricing/QuoteHistory.php';
 require_once ADC_PATH . 'src/Pricing/QuoteDocument.php';
+require_once ADC_PATH . 'src/Tools/FinanceConfiguration.php';
 require_once ADC_PATH . 'src/Tools/LoanCalculator.php';
+require_once ADC_PATH . 'src/Admin/FinanceCalculatorPage.php';
 require_once ADC_PATH . 'src/Tools/VehicleComparison.php';
 require_once ADC_PATH . 'src/Tools/PublicTools.php';
 require_once ADC_PATH . 'src/Sales/SalesService.php';
@@ -405,3 +407,5 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	\WP_CLI::add_command( 'adc migrate-leads', 'AutoDealership\\Core\\LegacyLeadMigrationCommand' );
 	\WP_CLI::add_command( 'adc migration-report', 'AutoDealership\\Core\\MigrationReportCommand' );
 }
+
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FinanceCalculatorPage', 'boot' ) );

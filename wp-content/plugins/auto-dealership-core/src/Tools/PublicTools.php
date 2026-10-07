@@ -33,6 +33,7 @@ final class PublicTools {
 			return;
 		}
 		wp_enqueue_script( 'adc-public-tools', plugins_url( 'assets/js/public-tools.js', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/js/public-tools.js' ), true );
+		wp_enqueue_style( 'adc-finance-calculator', plugins_url( 'assets/css/finance-calculator.css', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/finance-calculator.css' ) );
 		wp_localize_script( 'adc-public-tools', 'adcPublicTools', array(
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 			'nonce' => wp_create_nonce( 'adc_public_tools' ),
@@ -69,12 +70,11 @@ final class PublicTools {
 		if ( is_wp_error( $rate ) ) {
 			self::send_error( $rate );
 		}
-		$result = LoanCalculator::calculate( array(
-			'price' => self::field( 'price' ),
-			'down_payment' => self::field( 'down_payment', '0' ),
-			'annual_rate' => self::field( 'annual_rate' ),
-			'months' => self::field( 'months' ),
-		) );
+		$input = array();
+		foreach ( array( 'price', 'salary', 'months', 'sector', 'nationality', 'transfer', 'provider', 'campaign', 'category', 'chinese', 'employer', 'insurance_rate', 'obligations', 'brand', 'assumed_down', 'assumed_balloon', 'assumed_admin' ) as $key ) {
+			$input[ $key ] = self::field( $key );
+		}
+		$result = LoanCalculator::calculate( $input );
 		if ( is_wp_error( $result ) ) {
 			self::send_error( $result );
 		}
