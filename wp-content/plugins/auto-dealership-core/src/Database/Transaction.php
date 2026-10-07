@@ -19,7 +19,7 @@ final class Transaction {
 			if ( true === $audit() && false !== $wpdb->query( 'COMMIT' ) ) {
 				return true;
 			}
-		} catch ( \Throwable $error ) {
+		} catch ( \Throwable ) {
 			error_log( 'Auto Dealership Core: transaction audit failed.' );
 		}
 		$wpdb->query( 'ROLLBACK' );

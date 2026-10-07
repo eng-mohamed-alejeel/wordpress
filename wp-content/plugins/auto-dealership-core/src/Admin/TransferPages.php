@@ -59,6 +59,9 @@ final class TransferPages {
 		self::redirect( TransferService::receive( $id ) );
 	}
 
+	/**
+	 * @param mixed $result
+	 */
 	private static function redirect( $result ): void {
 		wp_safe_redirect( add_query_arg( is_wp_error( $result ) ? 'error' : 'saved', '1', admin_url( 'admin.php?page=adc-transfer-queue' ) ) );
 		exit;

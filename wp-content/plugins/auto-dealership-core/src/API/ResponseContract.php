@@ -12,6 +12,9 @@ final class ResponseContract {
 		add_filter( 'rest_post_dispatch', array( self::class, 'format' ), 20, 3 );
 	}
 
+	/**
+	 * @param mixed $result
+	 */
 	public static function begin( $result, \WP_REST_Server $server, \WP_REST_Request $request ) {
 		if ( preg_match( '#\A/auto-dealership/v[12](?:/|$)#', $request->get_route() ) ) {
 			self::$current_request_id = self::resolve_request_id( $request );
@@ -21,10 +24,13 @@ final class ResponseContract {
 
 	public static function current_request_id(): string { return self::$current_request_id; }
 
+	/**
+	 * @param mixed $response
+	 */
 	public static function format( $response, \WP_REST_Server $server, \WP_REST_Request $request ) {
 		$route = $request->get_route();
 		if ( ! preg_match( '#\A/auto-dealership/v([12])(?:/|$)#', $route, $match ) ) { return $response; }
-		if ( is_wp_error( $response ) ) { $response = $server->error_to_response( $response ); }
+		if ( is_wp_error( $response ) ) { $response = rest_convert_error_to_response( $response ); }
 		$response = rest_ensure_response( $response );
 		$request_id = self::$current_request_id ?: self::resolve_request_id( $request );
 		self::$current_request_id = $request_id;

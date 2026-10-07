@@ -1,5 +1,6 @@
 <?php
 /** Shared calculator view for the theme adapter and all shortcode fallbacks. */
+/** @var array{price: float, months: int, providers: array, settings: array, available_months: array} $model */
 defined('ABSPATH') || exit;
 use AutoDealership\Tools\LoanCalculator;
 use AutoDealership\Tools\FinanceConfiguration;

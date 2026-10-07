@@ -142,6 +142,9 @@ final class PublicOfferView {
 			|| in_array( get_post_meta( $post_id, '_car_inventory_status', true ), array( '', 'available' ), true );
 	}
 
+	/**
+	 * @param mixed $value
+	 */
 	private static function price( $value ): int {
 		return is_scalar( $value ) && preg_match( '/\A[0-9]{1,12}\z/', (string) $value ) ? max( 0, (int) $value ) : 0;
 	}

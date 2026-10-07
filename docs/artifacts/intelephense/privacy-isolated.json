@@ -1,0 +1,40 @@
+{
+  "server": "1.18.5",
+  "licensed": false,
+  "documents": 1,
+  "published": 1,
+  "rows": [
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 11,
+      "column": 40,
+      "code": "P1132",
+      "severity": 3,
+      "message": "Parameter $key has no type information available."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 11,
+      "column": 46,
+      "code": "P1132",
+      "severity": 3,
+      "message": "Parameter $value has no type information available."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 91,
+      "column": 48,
+      "code": "P1003",
+      "severity": 4,
+      "message": "Symbol '$page' is declared but not used."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 196,
+      "column": 47,
+      "code": "P1003",
+      "severity": 4,
+      "message": "Symbol '$page' is declared but not used."
+    }
+  ]
+}

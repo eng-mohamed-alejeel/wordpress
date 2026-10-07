@@ -1,3 +1,19 @@
 {
-    "Codegeex.RepoIndex": true
+    "Codegeex.RepoIndex": true,
+    "php.validate.executablePath": "C:/xampp/php/php.exe",
+    "intelephense.environment.phpVersion": "8.0.0",
+    "intelephense.files.exclude": [
+        "**/.git/**", "**/.svn/**", "**/.hg/**", "**/CVS/**",
+        "**/.DS_Store/**", "**/node_modules/**", "**/bower_components/**",
+        "**/vendor/**/{Tests,tests}/**", "**/.history/**", "**/vendor/**/vendor/**",
+        "**/.tmp/**", "**/docs/archive/**",
+        "**/auto-dealership-core/tests/branch-scope.php",
+        "**/auto-dealership-core/tests/stored-translations.php",
+        "**/auto-dealership-core/tests/pricing-policy.php",
+        "**/auto-dealership-core/tests/finance-calculator.php",
+        "**/auto-dealership-core/tests/localization.php",
+        "**/auto-dealership-core/tests/newsletter-language.php",
+        "**/auto-dealership-core/tests/cli-double.php",
+        "**/tools/restore-rehearsal.php"
+    ]
 }

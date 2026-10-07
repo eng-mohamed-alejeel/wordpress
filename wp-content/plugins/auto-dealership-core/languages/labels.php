@@ -51,8 +51,6 @@ return array(
 	'name' => 'Name',
 	'city' => 'City',
 	'address' => 'Address',
-	'brand' => 'Brand',
-	'model' => 'Model',
 	'trim_name' => 'Trim',
 	'exterior_color' => 'Exterior color',
 	'interior_color' => 'Interior color',

@@ -290,7 +290,7 @@ final class PublicCatalog {
 				$raw[ $new ] = $raw[ $old ];
 			}
 		}
-		foreach ( self::TEXT_FILTERS as $key => $column ) {
+		foreach ( array_keys( self::TEXT_FILTERS ) as $key ) {
 			if ( isset( $raw[ $key ] ) && is_scalar( $raw[ $key ] ) && '' !== trim( (string) $raw[ $key ] ) ) {
 				$limit = in_array( $key, array( 'brand', 'model', 'trim' ), true ) ? 120 : ( in_array( $key, array( 'exterior_color', 'interior_color' ), true ) ? 80 : 40 );
 				$filters[ $key ] = mb_substr( sanitize_text_field( (string) $raw[ $key ] ), 0, $limit );

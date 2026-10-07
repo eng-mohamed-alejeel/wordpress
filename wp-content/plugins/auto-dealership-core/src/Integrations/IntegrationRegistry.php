@@ -26,7 +26,7 @@ final class IntegrationRegistry {
 		try {
 			$declared_id = $adapter->id();
 			$declared_events = $adapter->events();
-		} catch ( \Throwable $error ) {
+		} catch ( \Throwable ) {
 			return self::error( 'adc_integration_adapter_invalid' );
 		}
 		$id = sanitize_key( $declared_id );
@@ -83,7 +83,7 @@ final class IntegrationRegistry {
 		try {
 			$environment = sanitize_key( $adapter->environment() );
 			$declared = $adapter->readiness_checks();
-		} catch ( \Throwable $error ) {
+		} catch ( \Throwable ) {
 			return $result;
 		}
 		if ( ! in_array( $environment, array( 'sandbox','production' ), true ) || ! is_array( $declared ) ) { return $result; }

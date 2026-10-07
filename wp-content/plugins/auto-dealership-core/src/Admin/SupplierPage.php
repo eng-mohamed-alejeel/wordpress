@@ -51,6 +51,9 @@ final class SupplierPage {
 		self::redirect( SupplierService::set_active( $id, '1' === (string) ( $_POST['active'] ?? '' ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) ) );
 	}
 
+	/**
+	 * @param mixed $result
+	 */
 	private static function redirect( $result ): void {
 		wp_safe_redirect( add_query_arg( is_wp_error( $result ) ? 'error' : 'saved', '1', admin_url( 'admin.php?page=adc-suppliers' ) ) );
 		exit;

@@ -1,0 +1,180 @@
+{
+  "php_files": 1663,
+  "published": 1663,
+  "diagnostics": 3505,
+  "files_with_diagnostics": 524,
+  "severity": {
+    "1": 1337,
+    "2": 291,
+    "3": 787,
+    "4": 1090
+  },
+  "codes": {
+    "P1132": 613,
+    "P1003": 711,
+    "P1010": 37,
+    "P1007": 341,
+    "P1013": 97,
+    "P1008": 396,
+    "P1108": 20,
+    "P1014": 272,
+    "P1116": 288,
+    "P1119": 12,
+    "P1006": 304,
+    "P1026": 2,
+    "P1133": 82,
+    "P1009": 158,
+    "P1124": 13,
+    "P1118": 2,
+    "P1080": 7,
+    "P1131": 55,
+    "P1130": 4,
+    "P1033": 1,
+    "P1129": 3,
+    "P1115": 2,
+    "P1011": 50,
+    "css-ruleorselectorexpected": 5,
+    "css-rcurlyexpected": 3,
+    "css-propertyvalueexpected": 1,
+    "emptyRules": 3,
+    "P1038": 1,
+    "P1123": 2,
+    "P1078": 18,
+    "css-lcurlyexpected": 2
+  },
+  "groups": {
+    "archive": {
+      "diagnostics": 83,
+      "files": 16,
+      "codes": {
+        "P1132": 71,
+        "P1003": 2,
+        "P1010": 7,
+        "P1007": 3
+      },
+      "severity": {
+        "1": 7,
+        "3": 71,
+        "4": 5
+      }
+    },
+    "tools": {
+      "diagnostics": 2,
+      "files": 2,
+      "codes": {
+        "P1013": 2
+      },
+      "severity": {
+        "1": 2
+      }
+    },
+    "wordpress": {
+      "diagnostics": 3007,
+      "files": 417,
+      "codes": {
+        "P1008": 186,
+        "P1108": 20,
+        "P1014": 262,
+        "P1116": 287,
+        "P1119": 11,
+        "P1003": 652,
+        "P1007": 331,
+        "P1132": 430,
+        "P1006": 304,
+        "P1013": 90,
+        "P1026": 2,
+        "P1010": 28,
+        "P1133": 82,
+        "P1009": 153,
+        "P1124": 13,
+        "P1131": 55,
+        "P1130": 4,
+        "P1033": 1,
+        "P1129": 3,
+        "P1115": 2,
+        "P1080": 6,
+        "P1011": 50,
+        "css-ruleorselectorexpected": 5,
+        "css-rcurlyexpected": 3,
+        "css-propertyvalueexpected": 1,
+        "emptyRules": 3,
+        "P1038": 1,
+        "P1123": 2,
+        "P1078": 18,
+        "css-lcurlyexpected": 2
+      },
+      "severity": {
+        "1": 1095,
+        "2": 290,
+        "3": 601,
+        "4": 1021
+      }
+    },
+    "plugin-production": {
+      "diagnostics": 76,
+      "files": 34,
+      "codes": {
+        "P1013": 4,
+        "P1118": 2,
+        "P1014": 8,
+        "P1003": 32,
+        "P1132": 27,
+        "P1080": 1,
+        "P1008": 2
+      },
+      "severity": {
+        "1": 15,
+        "3": 29,
+        "4": 32
+      }
+    },
+    "plugin-tests": {
+      "diagnostics": 250,
+      "files": 24,
+      "codes": {
+        "P1008": 208,
+        "P1014": 2,
+        "P1003": 10,
+        "P1007": 4,
+        "P1013": 1,
+        "P1132": 24,
+        "P1116": 1
+      },
+      "severity": {
+        "1": 211,
+        "2": 1,
+        "3": 24,
+        "4": 14
+      }
+    },
+    "third-party-content": {
+      "diagnostics": 82,
+      "files": 27,
+      "codes": {
+        "P1132": 58,
+        "P1003": 13,
+        "P1007": 3,
+        "P1119": 1,
+        "P1009": 5,
+        "P1010": 2
+      },
+      "severity": {
+        "1": 7,
+        "3": 59,
+        "4": 16
+      }
+    },
+    "theme-production": {
+      "diagnostics": 5,
+      "files": 4,
+      "codes": {
+        "P1132": 3,
+        "P1003": 2
+      },
+      "severity": {
+        "3": 3,
+        "4": 2
+      }
+    }
+  }
+}

@@ -248,6 +248,9 @@ function car_dealer_catalog_language_switch(): void {
 	<?php
 }
 
+/**
+ * @param mixed $price
+ */
 function car_dealer_catalog_format_price( $price ): string {
 	if ( ! $price ) {
 		return '';
@@ -256,6 +259,9 @@ function car_dealer_catalog_format_price( $price ): string {
 	return 'en' === car_dealer_catalog_language() ? 'SAR ' . number_format( $amount, floor( $amount ) === $amount ? 0 : 2 ) : car_dealer_format_price( $price );
 }
 
+/**
+ * @param mixed $distance
+ */
 function car_dealer_catalog_distance( $distance ): string {
 	return number_format_i18n( (int) $distance ) . ( 'en' === car_dealer_catalog_language() ? ' km' : ' كم' );
 }

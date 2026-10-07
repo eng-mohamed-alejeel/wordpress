@@ -109,6 +109,9 @@ final class PaymentPages {
 		self::redirect( ReservationService::decide_deposit( $id, 'verify' === $decision, self::input( 'reason' ) ) );
 	}
 
+	/**
+	 * @param mixed $result
+	 */
 	private static function redirect( $result ): void {
 		wp_safe_redirect( add_query_arg( is_wp_error( $result ) ? 'error' : 'saved', '1', admin_url( 'admin.php?page=adc-payments' ) ) );
 		exit;

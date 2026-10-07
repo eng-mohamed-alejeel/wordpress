@@ -14,6 +14,9 @@ defined( 'ABSPATH' ) || exit;
    تعريفات صفحات العرض لأداة الإعداد الصريحة في الإضافة
    ═══════════════════════════════════════════════════════════ */
 
+/**
+ * @param mixed $blueprints
+ */
 function car_dealer_editorial_page_blueprints( $blueprints ) {
 	$blueprints = is_array( $blueprints ) ? $blueprints : array();
 	return array_merge( $blueprints, array(

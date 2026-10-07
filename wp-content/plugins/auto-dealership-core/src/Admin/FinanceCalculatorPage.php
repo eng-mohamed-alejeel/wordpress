@@ -1,7 +1,6 @@
 <?php
 namespace AutoDealership\Admin;
 use AutoDealership\Tools\FinanceConfiguration as Config;
-use AutoDealership\Tools\LoanCalculator as Calculator;
 defined('ABSPATH') || exit;
 final class FinanceCalculatorPage {
  public static function boot(): void {
@@ -20,6 +19,9 @@ final class FinanceCalculatorPage {
  }
  private static function textarea(string $name,string $label,string $value): void { echo '<label class="adc-fa-field">'.esc_html($label).'<textarea name="'.esc_attr($name).'" rows="3" maxlength="16000">'.esc_textarea($value).'</textarea></label>'; }
  private static function checkbox(string $name,string $label,bool $checked): void { echo '<label class="adc-fa-check"><input name="'.esc_attr($name).'" type="checkbox" value="1"'.checked($checked,true,false).'> '.esc_html($label).'</label>'; }
+ /**
+  * @param string|int|float|null $value
+  */
  private static function select(string $name,string $label,array $choices,$value): void { echo '<label class="adc-fa-field">'.esc_html($label).'<select name="'.esc_attr($name).'">';foreach($choices as $k=>$text)echo '<option value="'.esc_attr($k).'"'.selected((string)$value,(string)$k,false).'>'.esc_html($text).'</option>';echo '</select></label>'; }
  private static function sectors(): array { return ['government'=>'حكومي / مدني','military'=>'عسكري','private_approved'=>'خاص معتمد','private_unapproved'=>'خاص غير معتمد','retired'=>'متقاعد','self_employed'=>'أصحاب مؤسسات']; }
  private static function fields(): array { return ['rate'=>'نسبة الربح السنوية الثابتة %','down'=>'الدفعة الأولى %','balloon'=>'الدفعة الأخيرة %','admin'=>'الرسوم الإدارية حسب النوع المختار','min_salary'=>'الحد الأدنى للراتب (ريال)','rebate'=>'دعم الوكيل %']; }

@@ -87,7 +87,13 @@ final class LoanCalculator {
  }
  public static function render(array $model): string { ob_start(); require __DIR__.'/views/loan-calculator.php'; return (string)ob_get_clean(); }
  public static function view_model(float $price=0): array { return ['price'=>round(min(self::MAX_AMOUNT,max(0,$price)),2),'months'=>60,'providers'=>self::rules(),'settings'=>FinanceConfiguration::get()['settings'],'available_months'=>FinanceConfiguration::months()]; }
+ /**
+  * @param mixed $value
+  */
  private static function decimal($value): ?float { return is_scalar($value)&&preg_match('/\A[0-9]{1,10}(?:\.[0-9]{1,2})?\z/',(string)$value)?(float)$value:null; }
+ /**
+  * @param mixed $value
+  */
  private static function money($value): ?int { return self::decimal($value)===null?null:\AutoDealership\Pricing\Money::from_sar((string)$value); }
  private static function invalid(): \WP_Error { return new \WP_Error('adc_loan_invalid',self::text('راجع السعر والراتب وخيارات التمويل.','Check price, salary and financing selections.'),['status'=>400]); }
 }

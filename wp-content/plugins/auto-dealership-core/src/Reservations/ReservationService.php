@@ -51,7 +51,7 @@ final class ReservationService {
 		}
 		try {
 			$policy = PricingPolicy::reservation_deposit( (int) $vehicle['retail_price'] );
-		} catch ( \InvalidArgumentException | \OverflowException $error ) {
+		} catch ( \InvalidArgumentException | \OverflowException ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_deposit_policy_invalid', __( 'Reservation deposit policy is invalid.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}

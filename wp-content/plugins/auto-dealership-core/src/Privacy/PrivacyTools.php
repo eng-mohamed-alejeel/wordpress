@@ -8,6 +8,10 @@ defined( 'ABSPATH' ) || exit;
 
 /** WordPress privacy exporter and personal-data eraser for dealership CRM data. */
 final class PrivacyTools {
+	/**
+	 * @param string $key
+	 * @param mixed $value
+	 */
 	private static function export_value( $key, $value ): string {
 		return in_array( $key, \AutoDealership\API\CurrencyContract::FIELDS, true ) && null !== $value ? \AutoDealership\Pricing\Money::decimal( $value ) . ' SAR' : (string) $value;
 	}

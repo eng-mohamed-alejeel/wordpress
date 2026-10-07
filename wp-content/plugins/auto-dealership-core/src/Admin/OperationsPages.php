@@ -142,6 +142,9 @@ final class OperationsPages {
 		if ( isset( $_GET['error'] ) ) { echo '<div class="notice notice-error"><p>' . esc_html__( 'تعذر حفظ العملية. تحقق من الصلاحيات والبيانات وحالة سير العمل.', 'auto-dealership-core' ) . '</p></div>'; }
 	}
 
+	/**
+	 * @param mixed $result
+	 */
 	private static function redirect( string $page, $result ): void {
 		$url = add_query_arg( is_wp_error( $result ) ? 'error' : 'saved', '1', admin_url( 'admin.php?page=' . $page ) );
 		wp_safe_redirect( $url );

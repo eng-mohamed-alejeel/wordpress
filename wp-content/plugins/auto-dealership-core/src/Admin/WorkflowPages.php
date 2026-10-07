@@ -3,7 +3,6 @@ namespace AutoDealership\Admin;
 
 use AutoDealership\Database\Schema;
 use AutoDealership\Delivery\DeliveryService;
-use AutoDealership\Inventory\VehicleService;
 use AutoDealership\Sales\SalesService;
 use AutoDealership\Security\BranchScope;
 
@@ -49,7 +48,6 @@ final class WorkflowPages {
 		if ( ! current_user_can( 'adc_review_discounts' ) && ! current_user_can( 'adc_approve_sales' ) ) {
 			wp_die( esc_html__( 'لا تملك صلاحية الاعتمادات.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );
 		}
-		global $wpdb;
 		list( $scope, $scope_args ) = self::branch_sql();
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><h1><?php esc_html_e( 'الاعتمادات', 'auto-dealership-core' ); ?></h1><?php self::queue_notice(); ?>
@@ -80,7 +78,6 @@ final class WorkflowPages {
 		if ( ! current_user_can( 'adc_view_finance' ) && ! current_user_can( 'adc_manage_finance' ) ) {
 			wp_die( esc_html__( 'لا تملك صلاحية عرض طلبات التمويل.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );
 		}
-		global $wpdb;
 		list( $scope, $scope_args ) = self::branch_sql();
 		$finance_sql = 'SELECT f.id,f.sale_id,f.attempt_number,f.previous_request_id,f.provider,f.requested_amount,f.down_payment,f.term_months,f.monthly_payment,f.status,f.provider_reference,f.decision_reason,f.requested_by,s.vehicle_id,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM ' . Schema::table( 'finance_requests' ) . ' f INNER JOIN ' . Schema::table( 'sales' ) . ' s ON s.id=f.sale_id INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=s.customer_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id WHERE 1=1' . $scope . ' ORDER BY f.created_at DESC LIMIT 100';
 		$requests = self::rows( $finance_sql, $scope_args );
@@ -104,7 +101,6 @@ final class WorkflowPages {
 		if ( ! current_user_can( 'adc_approve_delivery' ) && ! current_user_can( 'adc_confirm_vehicle_vin' ) ) {
 			wp_die( esc_html__( 'لا تملك صلاحية مهام التسليم.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );
 		}
-		global $wpdb;
 		list( $scope, $scope_args ) = self::branch_sql();
 		$approved_sales = array();
 		if ( current_user_can( 'adc_approve_delivery' ) ) {
@@ -130,6 +126,9 @@ final class WorkflowPages {
 		<?php
 	}
 
+	/**
+	 * @param mixed $result
+	 */
 	private static function redirect( string $page, $result ): void {
 		wp_safe_redirect( add_query_arg( is_wp_error( $result ) ? 'error' : 'saved', '1', admin_url( 'admin.php?page=' . $page ) ) );
 		exit;

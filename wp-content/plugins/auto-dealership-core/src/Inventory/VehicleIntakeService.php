@@ -59,6 +59,9 @@ final class VehicleIntakeService {
 		$issue_baseline = $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(MAX(inspection_baseline_id),0) FROM ' . Schema::table( 'vehicle_issues' ) . " WHERE vehicle_id=%d AND status='resolved'", $vehicle_id ) );
 		return null !== $baseline && null !== $issue_baseline && (int) $inspection['id'] > max( (int)$baseline, (int)$issue_baseline );
 	}
+	/**
+	 * @param mixed $values
+	 */
 	private static function media_ids( $values ) { if ( ! is_array( $values ) || count( $values ) > 10 ) { return self::error( 'adc_invalid_evidence', 400 ); } $ids=array(); foreach($values as $value){$id=absint($value); if($id<1 || 'attachment'!==get_post_type($id) || !str_starts_with((string)get_post_mime_type($id),'image/')){return self::error('adc_invalid_evidence',400);} $ids[$id]=$id;} return array_values($ids); }
 	private static function error( string $code, int $status ): \WP_Error { return new \WP_Error( $code, __( 'Vehicle intake operation could not be completed.', 'auto-dealership-core' ), array( 'status' => $status ) ); }
 }

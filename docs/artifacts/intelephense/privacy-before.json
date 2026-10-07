@@ -1,0 +1,80 @@
+{
+  "server": "1.18.5",
+  "licensed": false,
+  "documents": 1,
+  "published": 1,
+  "rows": [
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 11,
+      "column": 40,
+      "code": "P1132",
+      "severity": 3,
+      "message": "Parameter $key has no type information available."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 11,
+      "column": 46,
+      "code": "P1132",
+      "severity": 3,
+      "message": "Parameter $value has no type information available."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 77,
+      "column": 58,
+      "code": "P1014",
+      "severity": 1,
+      "message": "Undefined property '$comments'."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 91,
+      "column": 48,
+      "code": "P1003",
+      "severity": 4,
+      "message": "Symbol '$page' is declared but not used."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 205,
+      "column": 177,
+      "code": "P1014",
+      "severity": 1,
+      "message": "Undefined property '$usermeta'."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 244,
+      "column": 48,
+      "code": "P1014",
+      "severity": 1,
+      "message": "Undefined property '$comments'."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 253,
+      "column": 90,
+      "code": "P1014",
+      "severity": 1,
+      "message": "Undefined property '$usermeta'."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 277,
+      "column": 83,
+      "code": "P1014",
+      "severity": 1,
+      "message": "Undefined property '$comments'."
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+      "line": 196,
+      "column": 47,
+      "code": "P1003",
+      "severity": 4,
+      "message": "Symbol '$page' is declared but not used."
+    }
+  ]
+}

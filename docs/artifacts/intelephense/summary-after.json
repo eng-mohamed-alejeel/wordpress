@@ -1,0 +1,88 @@
+{
+  "documents": 1631,
+  "published": 1631,
+  "ownedErrors": 0,
+  "groups": {
+    "analysis-stubs": {
+      "diagnostics": 8,
+      "errors": 0,
+      "codes": {
+        "P1003": 8
+      }
+    },
+    "wordpress": {
+      "diagnostics": 3043,
+      "errors": 1184,
+      "codes": {
+        "P1008": 240,
+        "P1108": 20,
+        "P1116": 283,
+        "P1119": 11,
+        "P1003": 646,
+        "P1007": 303,
+        "P1009": 522,
+        "P1132": 423,
+        "P1006": 305,
+        "P1014": 6,
+        "P1013": 10,
+        "P1026": 2,
+        "P1010": 29,
+        "P1133": 89,
+        "P1124": 16,
+        "P1131": 55,
+        "P1130": 4,
+        "P1033": 1,
+        "P1129": 3,
+        "P1115": 2,
+        "P1080": 6,
+        "P1011": 50,
+        "css-ruleorselectorexpected": 5,
+        "css-rcurlyexpected": 3,
+        "css-propertyvalueexpected": 1,
+        "emptyRules": 3,
+        "P1038": 1,
+        "P1123": 2,
+        "css-lcurlyexpected": 2
+      }
+    },
+    "plugin-production": {
+      "diagnostics": 19,
+      "errors": 0,
+      "codes": {
+        "P1003": 19
+      }
+    },
+    "tests": {
+      "diagnostics": 1162,
+      "errors": 1154,
+      "codes": {
+        "P1008": 1147,
+        "P1010": 4,
+        "P1003": 4,
+        "P1132": 2,
+        "P1014": 3,
+        "P1116": 2
+      }
+    },
+    "third-party": {
+      "diagnostics": 87,
+      "errors": 12,
+      "codes": {
+        "P1132": 60,
+        "P1003": 13,
+        "P1119": 1,
+        "P1009": 6,
+        "P1010": 4,
+        "P1008": 2,
+        "P1133": 1
+      }
+    },
+    "theme-production": {
+      "diagnostics": 2,
+      "errors": 0,
+      "codes": {
+        "P1003": 2
+      }
+    }
+  }
+}

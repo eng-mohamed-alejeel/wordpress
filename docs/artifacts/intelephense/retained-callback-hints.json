@@ -1,0 +1,191 @@
+[
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Admin/FinanceCalculatorPage.php",
+    "line": 10,
+    "column": 32,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$hook' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/API/ResponseContract.php",
+    "line": 18,
+    "column": 41,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$server' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/API/ResponseContract.php",
+    "line": 30,
+    "column": 44,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$server' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Core/LegacyLeadMigrationCommand.php",
+    "line": 30,
+    "column": 28,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$args' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Core/Localization.php",
+    "line": 36,
+    "column": 77,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$context' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Core/MigrationReportCommand.php",
+    "line": 10,
+    "column": 28,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$args' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Core/VehicleMigrationCommand.php",
+    "line": 34,
+    "column": 28,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$args' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Database/SchemaGuard.php",
+    "line": 16,
+    "column": 40,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$server' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+    "line": 95,
+    "column": 48,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$page' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Privacy/PrivacyTools.php",
+    "line": 200,
+    "column": 47,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$page' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Security/SecurityAudit.php",
+    "line": 27,
+    "column": 32,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$user_login' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Security/SecurityAudit.php",
+    "line": 31,
+    "column": 57,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$error' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Security/SecurityAudit.php",
+    "line": 58,
+    "column": 57,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$new_pass' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Security/SecurityAudit.php",
+    "line": 66,
+    "column": 94,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$value' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Security/SecurityAudit.php",
+    "line": 66,
+    "column": 48,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$meta_id' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Security/SecurityAudit.php",
+    "line": 67,
+    "column": 96,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$value' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Security/SecurityAudit.php",
+    "line": 67,
+    "column": 50,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$meta_id' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Security/SecurityAudit.php",
+    "line": 68,
+    "column": 99,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$value' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/plugins/auto-dealership-core/src/Security/SecurityAudit.php",
+    "line": 68,
+    "column": 50,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$meta_ids' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/themes/car-dealer/inc/accounts.php",
+    "line": 37,
+    "column": 53,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$requested' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  },
+  {
+    "file": "wp-content/themes/car-dealer/inc/localization.php",
+    "line": 21,
+    "column": 76,
+    "code": "P1003",
+    "severity": 4,
+    "message": "Symbol '$context' is declared but not used.",
+    "reason": "Parameter position/name retained for WordPress filter/action or WP-CLI callback compatibility. No global diagnostic suppression."
+  }
+]

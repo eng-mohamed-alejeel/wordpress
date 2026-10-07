@@ -38,6 +38,9 @@ final class TermTranslations {
 			elseif ( '' === (string) get_term_meta( $id, '_adc_name_' . $language . '_source_hash', true ) && is_string( $_POST['adc_term_source_hash'] ?? null ) && preg_match( '/^[a-f0-9]{64}$/', $_POST['adc_term_source_hash'] ) ) { update_term_meta( $id, '_adc_name_' . $language . '_source_hash', $_POST['adc_term_source_hash'] ); }
 		}
 	}
+	/**
+	 * @param mixed $term
+	 */
 	public static function display( $term ) {
 		if ( ! $term instanceof \WP_Term || is_admin() || ! in_array( $term->taxonomy, self::TYPES, true ) ) { return $term; }
 		$language = Localization::language();
@@ -48,6 +51,9 @@ final class TermTranslations {
 		if ( 'en' === $language && preg_match( '/\p{Arabic}/u', $name ) ) { $name = 'Category #' . $term->term_id; }
 		$copy = clone $term; $copy->name = $name; return $copy;
 	}
+	/**
+	 * @param mixed $terms
+	 */
 	public static function terms( $terms ) {
 		if ( ! is_array( $terms ) ) { return $terms; }
 		return array_map( array( self::class, 'display' ), $terms );

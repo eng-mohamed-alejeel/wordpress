@@ -84,6 +84,9 @@ final class WorkspacePage {
 		return admin_url( $path );
 	}
 
+	/**
+	 * @param string|string[] $capabilities
+	 */
 	private static function item( $capabilities, string $path, string $title, string $description, string $icon ): array {
 		return compact( 'capabilities', 'path', 'title', 'description', 'icon' );
 	}
