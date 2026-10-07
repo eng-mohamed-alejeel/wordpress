@@ -55,7 +55,7 @@ function car_dealer_editorial_english_copy(): array {
 		'فريقنا جاهز للإجابة على جميع استفساراتك ومساعدتك في اختيار السيارة المناسبة لك. تواصل معنا عبر أي من القنوات أدناه.' => 'Contact our team about vehicles and available options using the channels below.',
 		'العنوان' => 'Address', 'الهاتف' => 'Phone', 'البريد الإلكتروني' => 'Email address',
 		'أرسل لنا رسالة' => 'Send us a message', 'املأ النموذج أدناه وسوف نتواصل معك في أقرب وقت' => 'Complete the form below and our team will review your message.',
-		'الأسئلة الشائعة' => 'Frequently asked questions', 'الأسئلة المتكررة' => 'Common questions',
+		'الأسئلة الشائعة' => 'FAQ', 'الأسئلة المتكررة' => 'Common questions',
 		'إجابات على أكثر الأسئلة شيوعاً' => 'Answers to common questions.',
 		'ما هي سياسات الضمان المتوفرة لديكم؟' => 'What warranty terms are available?',
 		'تختلف تغطية الضمان ومدته حسب السيارة والجهة المزوّدة. اطلب التفاصيل المكتوبة قبل إتمام الشراء.' => 'Coverage and duration vary by vehicle and provider. Request written details before purchase.',
@@ -242,8 +242,13 @@ function car_dealer_catalog_language_switch(): void {
 	$current = car_dealer_catalog_language();
 	?>
 	<nav class="catalog-language-switch site-language-switch" aria-label="<?php echo esc_attr( 'en' === $current ? 'Website language' : 'لغة الموقع' ); ?>">
+		<details class="language-dropdown">
+			<summary aria-label="<?php echo esc_attr( 'en' === $current ? 'Choose website language' : 'اختر لغة الموقع' ); ?>"><span class="language-globe" aria-hidden="true">◎</span><span><?php echo esc_html( 'en' === $current ? 'English' : 'العربية' ); ?></span><span class="language-chevron" aria-hidden="true"></span></summary>
+			<div class="language-options">
 		<a lang="ar" dir="rtl" hreflang="ar" href="<?php echo esc_url( car_dealer_catalog_language_url( 'ar' ) ); ?>" <?php echo 'ar' === $current ? 'aria-current="page"' : ''; ?>>العربية</a>
 		<a lang="en" dir="ltr" hreflang="en" href="<?php echo esc_url( car_dealer_catalog_language_url( 'en' ) ); ?>" <?php echo 'en' === $current ? 'aria-current="page"' : ''; ?>>English</a>
+			</div>
+		</details>
 	</nav>
 	<?php
 }

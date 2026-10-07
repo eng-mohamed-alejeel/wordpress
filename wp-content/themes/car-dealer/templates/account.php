@@ -11,15 +11,16 @@ ob_start();
 <?php if ( ! $core_available ) : ?>
 <section class="cd-account-panel"><h1><?php esc_html_e( 'الحساب غير متاح حاليًا', 'car-dealer' ); ?></h1><p><?php esc_html_e( 'خدمة المعرض غير متاحة. يرجى المحاولة لاحقًا.', 'car-dealer' ); ?></p></section>
 <?php elseif ( 'dashboard' !== $view ) : $register = 'register' === $view; ?>
-<section class="cd-auth-card">
-<div class="cd-auth-intro"><span><?php echo esc_html__( 'أهلاً بك في', 'car-dealer' ); ?> <?php echo esc_html( get_bloginfo( 'name' ) ); ?></span><h1><?php echo $register ? esc_html__( 'ابدأ رحلتك معنا', 'car-dealer' ) : esc_html__( 'سعداء بعودتك', 'car-dealer' ); ?></h1><p><?php echo esc_html__( 'حساب واحد لمتابعة طلباتك وحجوزات تجربة القيادة والتواصل مع المعرض.', 'car-dealer' ); ?></p><?php if ( $catalog_url ) : ?><a href="<?php echo esc_url( $catalog_url ); ?>"><?php echo esc_html__( 'استكشف السيارات ←', 'car-dealer' ); ?></a><?php endif; ?></div>
+<section class="cd-auth-card" data-auth-switch>
+<div class="cd-auth-intro"><span><?php echo esc_html__( 'أهلاً بك في', 'car-dealer' ); ?> <?php echo esc_html( get_bloginfo( 'name' ) ); ?></span><h1 data-login-title="<?php echo esc_attr__( 'سعداء بعودتك', 'car-dealer' ); ?>" data-register-title="<?php echo esc_attr__( 'ابدأ رحلتك معنا', 'car-dealer' ); ?>" aria-live="polite"><?php echo $register ? esc_html__( 'ابدأ رحلتك معنا', 'car-dealer' ) : esc_html__( 'سعداء بعودتك', 'car-dealer' ); ?></h1><p><?php echo esc_html__( 'حساب واحد لمتابعة طلباتك وحجوزات تجربة القيادة والتواصل مع المعرض.', 'car-dealer' ); ?></p><?php if ( $catalog_url ) : ?><a href="<?php echo esc_url( $catalog_url ); ?>"><?php echo esc_html__( 'استكشف السيارات ←', 'car-dealer' ); ?></a><?php endif; ?></div>
 <div class="cd-auth-form"><nav class="cd-auth-tabs" aria-label="<?php echo esc_attr( car_dealer_text( 'الحساب', 'Account' ) ); ?>"><a <?php echo ! $register ? 'aria-current="page"' : ''; ?> href="<?php echo esc_url( car_dealer_account_url( 'login' ) ); ?>"><?php echo esc_html__( 'تسجيل الدخول', 'car-dealer' ); ?></a><a <?php echo $register ? 'aria-current="page"' : ''; ?> href="<?php echo esc_url( car_dealer_account_url( 'register' ) ); ?>"><?php echo esc_html__( 'إنشاء حساب', 'car-dealer' ); ?></a></nav>
-<form method="post" action="<?php echo esc_url( car_dealer_account_url( $view ) ); ?>">
-<?php wp_nonce_field( 'cd_account_' . $view ); ?>
+<?php foreach ( array( 'login', 'register' ) as $form_view ) : $register = 'register' === $form_view; ?>
+<form data-auth-view="<?php echo esc_attr( $form_view ); ?>" <?php echo $form_view !== $view ? 'hidden' : ''; ?> method="post" action="<?php echo esc_url( car_dealer_account_url( $form_view ) ); ?>">
+<?php echo str_replace( array( 'id="_wpnonce"', 'id="_wp_http_referer"' ), array( 'id="auth-nonce-' . $form_view . '"', 'id="auth-referer-' . $form_view . '"' ), wp_nonce_field( 'cd_account_' . $form_view, '_wpnonce', true, false ) ); ?>
 <?php if ( $register ) : ?>
 <label><?php echo esc_html__( 'الاسم الكامل', 'car-dealer' ); ?><input name="display_name" autocomplete="name" required value="<?php echo esc_attr( car_dealer_account_field( 'display_name' ) ); ?>"></label>
 <label><?php echo esc_html__( 'البريد الإلكتروني', 'car-dealer' ); ?><input name="email" type="email" autocomplete="email" dir="ltr" required value="<?php echo esc_attr( car_dealer_account_field( 'email' ) ); ?>"></label>
-<label><?php echo esc_html__( 'رقم الهاتف', 'car-dealer' ); ?> <small><?php echo esc_html__( '(اختياري)', 'car-dealer' ); ?></small><input name="phone" type="tel" autocomplete="tel" dir="ltr" value="<?php echo esc_attr( car_dealer_account_field( 'phone' ) ); ?>"></label>
+<label><?php echo esc_html__( 'رقم الهاتف', 'car-dealer' ); ?><input name="phone" type="tel" autocomplete="tel" dir="ltr" required value="<?php echo esc_attr( car_dealer_account_field( 'phone' ) ); ?>"></label>
 <div class="cd-auth-trap" aria-hidden="true"><label><?php echo esc_html__( 'الموقع الإلكتروني', 'car-dealer' ); ?><input name="company_website" tabindex="-1" autocomplete="off"></label></div>
 <?php else : ?>
 <label><?php echo esc_html__( 'البريد الإلكتروني أو اسم المستخدم', 'car-dealer' ); ?><input name="login" autocomplete="username" required value="<?php echo esc_attr( car_dealer_account_field( 'login' ) ); ?>"></label>
@@ -37,7 +38,7 @@ ob_start();
   <a href="<?php echo esc_url( wp_lostpassword_url( car_dealer_account_url( 'login' ) ) ); ?>" class="cd-auth-forgot"><?php echo esc_html__( 'نسيت كلمة المرور؟', 'car-dealer' ); ?></a>
 </div>
 <?php endif; ?>
-</form></div></section>
+</form><?php endforeach; ?></div></section>
 <?php else : $user = wp_get_current_user(); $kind = car_dealer_account_kind( $user ); $labels = array( 'administrator' => 'مدير الموقع', 'manager' => 'مدير المعرض', 'sales' => 'مستشار المبيعات', 'staff' => 'موظف المعرض', 'customer' => 'حساب العميل' ); ?>
 <header class="cd-account-welcome"><div><span><?php echo esc_html__( $labels[$kind], 'car-dealer' ); ?></span><h1><?php echo esc_html__( 'مرحباً،', 'car-dealer' ); ?> <?php echo esc_html( $user->display_name ); ?></h1><p><?php echo esc_html__( 'كل ما تحتاجه لإدارة حسابك في مكان واحد.', 'car-dealer' ); ?></p></div><a class="btn" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>"><?php echo esc_html__( 'تسجيل الخروج', 'car-dealer' ); ?></a></header>
 <?php if ( isset( $_GET['saved'] ) ) : ?><p class="cd-account-notice" role="status"><?php echo esc_html__( 'تم تحديث بياناتك.', 'car-dealer' ); ?></p><?php endif; ?>

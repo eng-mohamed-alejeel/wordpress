@@ -160,7 +160,7 @@ final class CustomerAccount {
 		if ( '' === $name || self::length( $name ) > 250 || ! is_email( $email ) || strlen( $email ) > 100 || strlen( $password ) < 10 || strlen( $password ) > 4096 || ! hash_equals( $password, self::field( 'password_confirm' ) ) ) {
 			return self::error( 'adc_account_invalid', __( 'أدخل اسمًا وبريدًا صحيحًا وكلمة مرور من 10 أحرف على الأقل مع تأكيد مطابق.', 'auto-dealership-core' ) );
 		}
-		$phone = ContactIdentity::normalize_mobile( sanitize_text_field( self::field( 'phone' ) ), false );
+		$phone = ContactIdentity::normalize_mobile( sanitize_text_field( self::field( 'phone' ) ), true );
 		if ( is_wp_error( $phone ) ) {
 			return self::error( 'adc_account_invalid_phone', __( 'أدخل رقم هاتف صحيحًا بصيغة محلية أو دولية.', 'auto-dealership-core' ) );
 		}

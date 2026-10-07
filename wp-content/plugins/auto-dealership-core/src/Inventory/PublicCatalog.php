@@ -50,7 +50,7 @@ final class PublicCatalog {
 
 	/** Marks the public car archive for database-backed filtering and sorting. */
 	public static function prepare_theme_query( \WP_Query $query ): void {
-		if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'car' ) || ! self::is_authoritative() ) {
+		if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'car' ) ) {
 			return;
 		}
 
@@ -59,6 +59,9 @@ final class PublicCatalog {
 		$query->set( 'adc_public_catalog', true );
 		$query->set( 'adc_catalog_filters', $filters );
 		$query->set( 'posts_per_page', min( 48, max( 1, absint( get_option( 'posts_per_page', 12 ) ) ) ) );
+		// The catalog owns search in both modes, including header requests using `search`.
+		$query->set( 's', '' );
+		if ( ! self::is_authoritative() ) { return; }
 
 		// Avoid legacy taxonomy and WordPress search constraints in authoritative mode.
 		$query->set( 'car_brand', '' );
@@ -74,6 +77,9 @@ final class PublicCatalog {
 
 		global $wpdb;
 		$posts = $wpdb->posts;
+		if ( ! self::is_authoritative() && $query->get( 'adc_public_catalog' ) ) {
+			$clauses = self::compatibility_clauses( $clauses, (array) $query->get( 'adc_catalog_filters' ) );
+		}
 		$legacy_status = "COALESCE((SELECT adc_inventory_meta.meta_value FROM {$wpdb->postmeta} adc_inventory_meta WHERE adc_inventory_meta.post_id = $posts.ID AND adc_inventory_meta.meta_key = '_car_inventory_status' ORDER BY adc_inventory_meta.meta_id ASC LIMIT 1), '') IN ('', 'available')";
 		if ( get_option( 'adc_db_version' ) !== Schema::VERSION ) {
 			$clauses['where'] .= " AND $legacy_status";
@@ -100,7 +106,7 @@ final class PublicCatalog {
 
 		if ( (bool) $query->get( 'adc_public_catalog' ) ) {
 			$filters = (array) $query->get( 'adc_catalog_filters' );
-			list( $where, $args ) = self::where( $filters, 'adc_catalog_vehicle' );
+			list( $where, $args ) = self::where( $filters, 'adc_catalog_vehicle', "$posts.post_title" );
 			if ( $where ) {
 				$clauses['where'] .= $wpdb->prepare( ' AND ' . implode( ' AND ', $where ), $args );
 			}
@@ -301,7 +307,7 @@ final class PublicCatalog {
 				$filters[ $key ] = max( 0, absint( $raw[ $key ] ) );
 			}
 		}
-		if ( isset( $raw['model_year'] ) && '' !== (string) $raw['model_year'] ) {
+		if ( isset( $raw['model_year'] ) && is_scalar( $raw['model_year'] ) && '' !== (string) $raw['model_year'] ) {
 			$filters['min_year'] = $filters['max_year'] = absint( $raw['model_year'] );
 		}
 		if ( $major_price_units ) {
@@ -313,7 +319,7 @@ final class PublicCatalog {
 				}
 			}
 		}
-		if ( isset( $raw['s'] ) && is_scalar( $raw['s'] ) ) {
+		if ( isset( $raw['s'] ) && is_scalar( $raw['s'] ) && '' !== trim( (string) $raw['s'] ) ) {
 			$filters['search'] = mb_substr( sanitize_text_field( (string) $raw['s'] ), 0, 120 );
 		} elseif ( isset( $raw['search'] ) && is_scalar( $raw['search'] ) ) {
 			$filters['search'] = mb_substr( sanitize_text_field( (string) $raw['search'] ), 0, 120 );
@@ -325,7 +331,7 @@ final class PublicCatalog {
 		return $filters;
 	}
 
-	private static function where( array $filters, string $alias = 'v' ): array {
+	private static function where( array $filters, string $alias = 'v', string $title = 'p.post_title' ): array {
 		global $wpdb;
 		$where = array();
 		$args = array();
@@ -336,17 +342,57 @@ final class PublicCatalog {
 			}
 		}
 		foreach ( array( 'min_year' => array( 'model_year', '>=' ), 'max_year' => array( 'model_year', '<=' ), 'min_price' => array( 'retail_price', '>=' ), 'max_price' => array( 'retail_price', '<=' ), 'min_mileage' => array( 'mileage', '>=' ), 'max_mileage' => array( 'mileage', '<=' ), 'branch_id' => array( 'branch_id', '=' ) ) as $key => $rule ) {
-			if ( isset( $filters[ $key ] ) && $filters[ $key ] > 0 ) {
+			if ( isset( $filters[ $key ] ) && ( 'branch_id' !== $key || $filters[ $key ] > 0 ) ) {
 				$where[] = "$alias.{$rule[0]} {$rule[1]} %d";
 				$args[] = $filters[ $key ];
 			}
 		}
-		if ( ! empty( $filters['search'] ) ) {
-			$like = '%' . $wpdb->esc_like( $filters['search'] ) . '%';
-			$where[] = "($alias.brand LIKE %s OR $alias.model LIKE %s OR $alias.trim_name LIKE %s OR $alias.stock_number LIKE %s)";
-			array_push( $args, $like, $like, $like, $like );
+		foreach ( preg_split( '/\s+/u', trim( (string) ( $filters['search'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $word ) {
+			$like = '%' . $wpdb->esc_like( $word ) . '%';
+			$where[] = "($alias.brand LIKE %s OR $alias.model LIKE %s OR $alias.trim_name LIKE %s OR $alias.stock_number LIKE %s OR CAST($alias.model_year AS CHAR) LIKE %s OR $title LIKE %s)";
+			array_push( $args, $like, $like, $like, $like, $like, $like );
 		}
 		return array( $where, $args );
+	}
+
+	/** Apply filters to the same operational-or-editorial values used by vehicle cards. */
+	private static function compatibility_clauses( array $clauses, array $filters ): array {
+		global $wpdb;
+		$posts = $wpdb->posts;
+		$schema_ready = get_option( 'adc_db_version' ) === Schema::VERSION;
+		$value = static function ( string $meta, string $column, bool $price = false ) use ( $wpdb, $posts, $schema_ready ): string {
+			$legacy = $wpdb->prepare( "(SELECT cm.meta_value FROM {$wpdb->postmeta} cm WHERE cm.post_id=$posts.ID AND cm.meta_key=%s ORDER BY cm.meta_id ASC LIMIT 1)", $meta );
+			if ( ! $schema_ready ) { return $legacy; }
+			$table = Schema::table( 'vehicles' );
+			$branches = Schema::table( 'branches' );
+			$field = $price ? "cv.$column / 100" : "cv.$column";
+			return "COALESCE((SELECT $field FROM $table cv INNER JOIN $branches cb ON cb.id=cv.branch_id AND cb.active=1 WHERE cv.public_post_id=$posts.ID AND cv.status='available' LIMIT 1), $legacy)";
+		};
+		foreach ( array( 'model' => array( '_car_model', 'model' ), 'fuel_type' => array( '_car_fuel_type', 'fuel_type' ), 'transmission' => array( '_car_transmission', 'transmission' ) ) as $key => $field ) {
+			if ( ! empty( $filters[$key] ) ) {
+				$expression = $value( $field[0], $field[1] );
+				$clauses['where'] .= $wpdb->prepare( " AND $expression " . ( 'model' === $key ? 'LIKE %s' : '= %s' ), 'model' === $key ? '%' . $wpdb->esc_like( $filters[$key] ) . '%' : $filters[$key] );
+			}
+		}
+		foreach ( array( 'min_year' => array( '_car_year', 'model_year', '>=' ), 'max_year' => array( '_car_year', 'model_year', '<=' ), 'min_price' => array( '_car_price', 'retail_price', '>=' ), 'max_price' => array( '_car_price', 'retail_price', '<=' ) ) as $key => $field ) {
+			if ( ! isset( $filters[$key] ) ) { continue; }
+			$is_price = str_contains( $key, 'price' );
+			$expression = $value( $field[0], $field[1], $is_price );
+			$amount = $is_price ? $filters[$key] / 100 : $filters[$key];
+			$clauses['where'] .= $wpdb->prepare( " AND NULLIF($expression, '') IS NOT NULL AND CAST($expression AS DECIMAL(20,2)) {$field[2]} %f", $amount );
+		}
+		foreach ( preg_split( '/\s+/u', trim( (string) ( $filters['search'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $word ) {
+			$like = '%' . $wpdb->esc_like( $word ) . '%';
+			$operational_search = '';
+			if ( $schema_ready ) {
+				$table = Schema::table( 'vehicles' );
+				$operational_search = $wpdb->prepare( " OR EXISTS (SELECT 1 FROM $table sv WHERE sv.public_post_id=$posts.ID AND (sv.brand LIKE %s OR sv.model LIKE %s OR sv.trim_name LIKE %s OR sv.stock_number LIKE %s OR CAST(sv.model_year AS CHAR) LIKE %s))", $like, $like, $like, $like, $like );
+			}
+			$clauses['where'] .= $wpdb->prepare( " AND ($posts.post_title LIKE %s
+				OR EXISTS (SELECT 1 FROM {$wpdb->postmeta} sm WHERE sm.post_id=$posts.ID AND sm.meta_key IN ('_car_model','_car_make','_car_trim','_car_stock_number','_car_stock','_car_year','_adc_title_en') AND sm.meta_value LIKE %s)
+				OR EXISTS (SELECT 1 FROM {$wpdb->term_relationships} sr INNER JOIN {$wpdb->term_taxonomy} st ON st.term_taxonomy_id=sr.term_taxonomy_id INNER JOIN {$wpdb->terms} sn ON sn.term_id=st.term_id LEFT JOIN {$wpdb->termmeta} sl ON sl.term_id=sn.term_id AND sl.meta_key IN ('_adc_name_ar','_adc_name_en') WHERE sr.object_id=$posts.ID AND st.taxonomy IN ('car_brand','car_category') AND (sn.name LIKE %s OR sn.slug LIKE %s OR sl.meta_value LIKE %s))", $like, $like, $like, $like, $like ) . $operational_search . ')';
+		}
+		return $clauses;
 	}
 
 	private static function cast_item( array $item ): array {

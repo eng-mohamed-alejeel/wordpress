@@ -146,7 +146,7 @@ const { spawn } = require('node:child_process');
         check(true, 'Submitting vehicle search keeps the query and English');
         for (const [route, expected] of [
             ['/about/?lang=en', 'About us'], ['/contact/?lang=en', 'Contact us'],
-            ['/faq/?lang=en', 'Frequently asked questions'], ['/buying-guide/?lang=en', 'Your vehicle buying guide'],
+            ['/faq/?lang=en', 'FAQ'], ['/buying-guide/?lang=en', 'Your vehicle buying guide'],
             ['/finance/?lang=en', 'Finance Calculator'], ['/cars/?lang=en', 'Browse AUTO BRANDS Vehicles'],
             ['/offers/?lang=en', 'AUTO BRANDS Offers'], ['/?cd_account=login&lang=en', 'Welcome back']
         ]) {

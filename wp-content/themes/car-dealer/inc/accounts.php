@@ -13,7 +13,7 @@ function car_dealer_account_kind( WP_User $user ) {
 }
 function car_dealer_account_links() {
   if ( is_user_logged_in() ) {
-   return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url() ) . '">' . esc_html( car_dealer_text( 'حسابي', 'My account' ) ) . '</a></li><li class="menu-item cd-logout-link"><a href="' . esc_url( wp_logout_url( car_dealer_site_url() ) ) . '">' . esc_html( car_dealer_text( 'تسجيل الخروج', 'Log out' ) ) . '</a></li>';
+   return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url() ) . '">' . esc_html( car_dealer_text( 'حسابي', 'My account' ) ) . '</a></li>';
   }
   return '<li class="menu-item cd-account-link"><a href="' . esc_url( car_dealer_account_url( 'login' ) ) . '">' . esc_html( car_dealer_text( 'تسجيل الدخول', 'Log in' ) ) . '</a></li>';
 }
@@ -30,7 +30,7 @@ add_filter( 'wp_nav_menu_items', function ( $items, $args ) {
 function car_dealer_account_menu_fallback() {
   $catalog_url = car_dealer_archive_url( 'car' );
   echo '<ul id="primary-menu"><li><a href="' . esc_url( car_dealer_site_url() ) . '">' . esc_html( car_dealer_text( 'الرئيسية', 'Home' ) ) . '</a></li>';
-  if ( $catalog_url ) { echo '<li><a href="' . esc_url( $catalog_url ) . '">' . esc_html( car_dealer_text( 'السيارات', 'Vehicles' ) ) . '</a></li>'; }
+  if ( $catalog_url ) { echo '<li><a href="' . esc_url( $catalog_url ) . '">' . esc_html( car_dealer_text( 'كل السيارات', 'All vehicles' ) ) . '</a></li>'; }
   echo car_dealer_account_links() . '</ul>';
 }
 add_action( 'wp_enqueue_scripts', function () { wp_enqueue_style( 'car-dealer-account', get_template_directory_uri() . '/assets/css/account.css', array( 'car-dealer-main' ), filemtime( __DIR__ . '/../assets/css/account.css' ) ); } );

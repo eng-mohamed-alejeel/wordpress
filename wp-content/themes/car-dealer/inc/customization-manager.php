@@ -2,6 +2,24 @@
 /** Theme settings and controlled dynamic styles migrated from legacy modules. */
 defined( 'ABSPATH' ) || exit;
 
+/** Keep logo selection usable on hosts without an image editor. */
+function car_dealer_customize_logo_control( $manager ) {
+	if ( wp_image_editor_supports( array( 'mime_type' => 'image/png' ) ) ) { return; }
+	$control = $manager->get_control( 'custom_logo' );
+	if ( ! $control instanceof WP_Customize_Cropped_Image_Control ) { return; }
+	$manager->remove_control( 'custom_logo' );
+	$manager->add_control( new WP_Customize_Media_Control( $manager, 'custom_logo', array(
+		'label' => $control->label,
+		'section' => $control->section,
+		'settings' => 'custom_logo',
+		'priority' => $control->priority,
+		'mime_type' => 'image',
+		'button_labels' => $control->button_labels,
+		'description' => __( 'اختر شعارًا جاهزًا من مكتبة الوسائط؛ ستُستخدم الصورة الأصلية دون قص.', 'car-dealer' ),
+	) ) );
+}
+add_action( 'customize_register', 'car_dealer_customize_logo_control', 100 );
+
 function car_dealer_register_theme_settings() {
 	register_setting( 'car_dealer_theme_settings', 'car_dealer_theme_settings', array(
 		'type' => 'array',

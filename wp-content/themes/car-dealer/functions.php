@@ -109,6 +109,21 @@ function car_dealer_site_url(): string {
 }
 
 /** Resolve editorial links by slug; an intentionally empty site has no fixed page IDs. */
+function car_dealer_legal_links(): array {
+	$links = array();
+	foreach ( array(
+		'privacy-policy' => array( 'سياسة الخصوصية', 'Privacy policy' ),
+		'terms' => array( 'شروط الاستخدام', 'Terms of use' ),
+		'cookie-policy' => array( 'سياسة ملفات الارتباط', 'Cookie policy' ),
+		'reservation-policy' => array( 'سياسة الحجز والإلغاء', 'Reservations and cancellations' ),
+	) as $slug => $labels ) {
+		$page = get_page_by_path( $slug, OBJECT, 'page' );
+		if ( ! $page || 'publish' !== $page->post_status ) { continue; }
+		$links[] = array( 'id' => (int) $page->ID, 'url' => car_dealer_catalog_localized_url( get_permalink( $page ) ), 'label' => car_dealer_text( $labels[0], $labels[1] ) );
+	}
+	return $links;
+}
+
 function car_dealer_page_url( string $slug ): string {
 	$page = get_page_by_path( sanitize_title( $slug ), OBJECT, 'page' );
 	return $page instanceof WP_Post && 'publish' === $page->post_status ? car_dealer_catalog_localized_url( (string) get_permalink( $page ) ) : '';
@@ -134,7 +149,7 @@ add_filter( 'nav_menu_item_title', static function ( string $title, $item ): str
 		if ( '' !== trim( $translated ) ) { return $translated; }
 	}
 	$labels = array(
-		'الرئيسية' => 'Home', 'السيارات' => 'Vehicles', 'العروض' => 'Offers',
+		'الرئيسية' => 'Home', 'السيارات' => 'Vehicles', 'كل السيارات' => 'All vehicles', 'العروض' => 'Offers',
 		'التمويل' => 'Finance Calculator', 'حاسبة التمويل' => 'Finance Calculator', 'من نحن' => 'About us', 'تواصل معنا' => 'Contact us',
 		'حسابي' => 'My account', 'تسجيل الدخول' => 'Log in',
 	);

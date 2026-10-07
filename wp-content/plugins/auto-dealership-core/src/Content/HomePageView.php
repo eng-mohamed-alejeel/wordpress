@@ -8,7 +8,7 @@ final class HomePageView {
 	/** @return array<string,mixed> */
 	public static function view(): array {
 		$featured = self::cars( 6, array( 'key' => '_car_featured', 'value' => '1' ) );
-		$latest = self::cars( 8 );
+		$latest = self::cars( 36 );
 		$demand = self::cars( 3, array( 'key' => '_car_demand', 'value' => 'yes' ) );
 		$offer_ids = array();
 		if ( PublicOfferView::enabled() ) {

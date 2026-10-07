@@ -135,7 +135,22 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l7-7-7-7"/></svg>
 			</a><?php endif; ?>
 		</div>
-		<?php echo car_dealer_render_shortcode_car_ids( $latest_ids, 'car-grid car-grid-latest' ); ?>
+		<div class="latest-rows">
+		<?php foreach ( array_chunk( $latest_ids, max( 1, (int) ceil( count( $latest_ids ) / 3 ) ) ) as $row_index => $row_ids ) :
+			$row_id = 'latest-vehicles-row-' . ( $row_index + 1 );
+			$row_label = car_dealer_text( 'أحدث السيارات — الصف ', 'Latest vehicles — row ' ) . ( $row_index + 1 );
+		?>
+			<div class="latest-row" data-vehicle-row>
+				<div class="latest-row-controls">
+					<button type="button" data-scroll-direction="left" aria-controls="<?php echo esc_attr( $row_id ); ?>" aria-label="<?php echo esc_attr( car_dealer_text( 'تحريك لليسار: ', 'Scroll left: ' ) . $row_label ); ?>"><span aria-hidden="true">←</span></button>
+					<button type="button" data-scroll-direction="right" aria-controls="<?php echo esc_attr( $row_id ); ?>" aria-label="<?php echo esc_attr( car_dealer_text( 'تحريك لليمين: ', 'Scroll right: ' ) . $row_label ); ?>"><span aria-hidden="true">→</span></button>
+				</div>
+				<div id="<?php echo esc_attr( $row_id ); ?>" class="latest-row-track" tabindex="0" role="region" aria-label="<?php echo esc_attr( $row_label ); ?>">
+					<?php echo car_dealer_render_shortcode_car_ids( $row_ids, 'car-grid car-grid-latest' ); ?>
+				</div>
+			</div>
+		<?php endforeach; ?>
+		</div>
 	</div>
 </section>
 <?php endif; ?>
@@ -179,19 +194,21 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 <!-- ═══════════════ TESTIMONIALS ═══════════════ -->
 <?php echo do_shortcode( '[car_dealer_testimonials count="3"]' ); ?>
 
-<!-- ═══════════════ WHATSAPP CTA ═══════════════ -->
-<section class="ab-whatsapp-cta ab-cta-v2">
+<!-- ═══════════════ BROWSE INVENTORY CTA ═══════════════ -->
+<section class="ab-whatsapp-cta ab-cta-v2 ab-inventory-cta">
 	<div class="container">
 		<div class="ab-cta-content">
-			<div class="ab-cta-icon" aria-hidden="true">
-				<svg viewBox="0 0 64 64" fill="currentColor"><path d="M32 4C16.536 4 4 16.536 4 32c0 5.336 1.392 10.36 3.84 14.72L4 60l13.76-3.68A27.84 27.84 0 0032 60c15.464 0 28-12.536 28-28S47.464 4 32 4zm14.08 38.56c-.64 1.28-2.88 2.4-4 2.56-1.12.16-2.56.16-4.16-.48-1.6-.64-3.52-1.44-5.92-2.88-5.12-3.04-8.32-8.16-8.64-8.64-.32-.48-2.56-3.36-2.56-6.4 0-3.04 1.6-4.48 2.24-5.12.64-.64 1.28-.64 1.76-.64h1.28c.48 0 1.12 0 1.6 1.12.48 1.28 1.76 4.32 1.92 4.64.16.32.16.64 0 .96-.16.32-.32.64-.64.96-.32.32-.64.8-.96 1.12-.32.32-.64.64-.32 1.28.32.64 1.6 2.88 3.52 4.8 2.24 2.24 4 3.04 4.64 3.36.64.32 1.12.32 1.44-.16.32-.48 1.6-1.92 2.08-2.56.48-.64.96-.48 1.6-.16.64.32 4 1.92 4.64 2.24.64.32 1.12.48 1.28.8.16.32.16 1.6-.48 2.88z"/></svg>
+			<div class="ab-inventory-cta-copy">
+				<h2><?php echo esc_html( car_dealer_text( 'اعثر على سيارتك القادمة', 'Find your next car' ) ); ?></h2>
+				<p><?php echo esc_html( car_dealer_text( 'تصفّح السيارات المتاحة وقارن المواصفات والأسعار.', 'Browse available vehicles and compare specifications and prices.' ) ); ?></p>
 			</div>
-			<h2><?php esc_html_e( 'جاهز لاختيار سيارتك القادمة؟', 'car-dealer' ); ?></h2>
-			<p><?php esc_html_e( 'اختر سيارة وأرسل طلبك عبر الموقع.', 'car-dealer' ); ?></p>
+			<div class="ab-inventory-cta-actions">
 			<?php if ( $catalog_url ) : ?><a class="btn btn-primary btn-xl" href="<?php echo esc_url( $catalog_url ); ?>">
 				<?php esc_html_e( 'استعرض السيارات', 'car-dealer' ); ?>
 				<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
 			</a><?php endif; ?>
+			<?php $cta_contact_url = car_dealer_page_url( 'contact' ); if ( $cta_contact_url ) : ?><a class="btn btn-outline" href="<?php echo esc_url( $cta_contact_url ); ?>"><?php echo esc_html( car_dealer_text( 'تواصل معنا', 'Contact us' ) ); ?></a><?php endif; ?>
+			</div>
 		</div>
 	</div>
 </section>
