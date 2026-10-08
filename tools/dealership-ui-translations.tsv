@@ -1414,3 +1414,110 @@ VIN الجديد	New VIN
 كتالوج الموقع	Website catalog
 إدارة ماركات السيارات في كتالوج الموقع.	Manage car brands in the website catalog.
 إدارة فئات السيارات في كتالوج الموقع.	Manage car categories in the website catalog.
+
+# Arabic<TAB>English
+عميل المعرض	Dealership Customer
+موظف المبيعات	Dealership Sales
+مدير المبيعات	Dealership Sales Manager
+المدير العام	Dealership General Manager
+مسؤول المخزون	Dealership Inventory
+مسؤول المالية	Dealership Finance
+مسؤول المشتريات	Dealership Purchasing
+مسؤول التسليم	Dealership Delivery
+مسؤول خدمة العملاء	Dealership Customer Service
+مسؤول التسويق	Dealership Marketing
+مدقق المعرض	Dealership Auditor
+مساحة العمل	Workspace
+دخول مساحة العمل	Access workspace
+العملاء والمبيعات	Leads and sales
+عرض فرصه البيعية	View own leads
+إدارة فرصه البيعية	Manage own leads
+عرض فرص الفروع المعيّنة	View assigned branch leads
+إدارة فرص الفروع المعيّنة	Manage assigned branch leads
+المخزون والمشتريات	Inventory and purchasing
+عرض المخزون	View inventory
+إدارة المخزون	Manage inventory
+نقل المخزون	Transfer inventory
+تأكيد رقم الهيكل	Confirm vehicle VIN
+تعديل رقم الهيكل	Change vehicle VIN
+عرض الموردين	View suppliers
+إدارة الموردين	Manage suppliers
+عرض تكاليف المركبات	View vehicle costs
+إدارة تكاليف المركبات	Manage vehicle costs
+إنشاء الحجوزات	Create reservations
+إدارة الحجوزات	Manage reservations
+مراجعة الخصومات	Review discounts
+اعتماد الخصومات المرتفعة	Approve high discounts
+اعتماد المبيعات	Approve sales
+إلغاء المبيعات	Cancel sales
+اعتماد التسليم	Approve delivery
+معالجة المرتجعات	Process returns
+إدارة التسعير	Manage pricing
+المالية	Finance
+عرض المالية	View finance
+إدارة المالية	Manage finance
+تسجيل المدفوعات	Record payments
+التحقق من المدفوعات	Verify payments
+تسجيل المبالغ المستردة	Record refunds
+التحقق من المبالغ المستردة	Verify refunds
+التقارير والرقابة	Reports and oversight
+عرض سجل التدقيق	View audit log
+عرض التقارير	View reports
+عرض قائمة الإرسال	View outbox
+إدارة قائمة الإرسال	Manage outbox
+عرض التكاملات	View integrations
+إدارة التكاملات	Manage integrations
+عرض مشتركي التسويق	View marketing subscribers
+كتالوج الموقع	Website catalog
+تحرير السيارات	Edit vehicles
+تحرير محتوى الآخرين: السيارات	Edit others: vehicles
+نشر السيارات	Publish vehicles
+قراءة المحتوى الخاص: السيارات	Read private: vehicles
+حذف السيارات	Delete vehicles
+حذف المحتوى الخاص: السيارات	Delete private: vehicles
+حذف المحتوى المنشور: السيارات	Delete published: vehicles
+حذف محتوى الآخرين: السيارات	Delete others: vehicles
+تحرير المحتوى الخاص: السيارات	Edit private: vehicles
+تحرير المحتوى المنشور: السيارات	Edit published: vehicles
+تحرير العروض	Edit offers
+تحرير محتوى الآخرين: العروض	Edit others: offers
+نشر العروض	Publish offers
+قراءة المحتوى الخاص: العروض	Read private: offers
+حذف العروض	Delete offers
+حذف المحتوى الخاص: العروض	Delete private: offers
+حذف المحتوى المنشور: العروض	Delete published: offers
+حذف محتوى الآخرين: العروض	Delete others: offers
+تحرير المحتوى الخاص: العروض	Edit private: offers
+تحرير المحتوى المنشور: العروض	Edit published: offers
+إدارة العلامات التجارية	Manage vehicle brands
+تعيين العلامات التجارية	Assign vehicle brands
+إدارة تصنيفات السيارات	Manage vehicle categories
+تعيين تصنيفات السيارات	Assign vehicle categories
+صلاحيات المستخدم	User permissions
+تخصيص صلاحيات هذا المستخدم	Customize permissions for this user
+عند تعطيل التخصيص، تُزال الاستثناءات وتُستخدم صلاحيات الدور. عند تفعيله، تُمنح الصلاحيات المحددة وتُمنع غير المحددة. تبقى قيود الفروع سارية.	When customization is disabled, overrides are removed and role permissions apply. When enabled, checked permissions are granted and unchecked permissions are denied. Branch restrictions still apply.
+حسابات الإدارة محمية من تعديل الصلاحيات الفردية.	Administrator accounts are protected from individual permission changes.
+صلاحية موروثة من الدور	Inherited role permission
+صلاحية مخصصة للمستخدم	User permission override
+تعذر حفظ الصلاحيات. تحقق من صلاحية المسؤول والطلب ثم أعد المحاولة.	Permissions could not be saved. Check administrator access and the request, then try again.
+صلاحيات الدور الافتراضية	Default role permissions
+هذا الدور لا يمتلك صلاحيات افتراضية.	This role has no default permissions.
+تُطبّق هذه الصلاحيات عند إنشاء الحساب. تبقى قيود الفروع سارية.	These permissions apply when the account is created. Branch restrictions still apply.
+صلاحيات WordPress	WordPress permissions
+تُطبّق صلاحيات الدور ما لم تُخصص صلاحيات المستخدم. تبقى قيود الفروع سارية.	Role defaults apply unless individual permissions are customized. Branch restrictions still apply.
+الأدوار والصلاحيات	Roles and permissions
+أدخل معرّفًا صالحًا للدور واسميه بالعربية والإنجليزية.	Enter a valid role identifier and both Arabic and English names.
+صلاحية غير مدعومة.	Unsupported permission.
+معرّف الدور غير متاح.	The role identifier is unavailable.
+تم حفظ الدور بنجاح.	Role saved successfully.
+تسري التغييرات على جميع مستخدمي هذا الدور. تبقى استثناءات الصلاحيات الفردية سارية. تُحفظ صلاحيات إدارة WordPress الحالية.	Changes apply to all users of this role. Individual permission overrides remain in effect. WordPress administration permissions are preserved.
+اختر دورًا	Select a role
+عرض الدور	View role
+إنشاء دور جديد	Create a new role
+تعديل صلاحيات الدور الافتراضية	Edit role defaults
+معرّف الدور	Role identifier
+اسم الدور بالعربية	Arabic role name
+اسم الدور بالإنجليزية	English role name
+يجب أن يبدأ معرّف الدور الجديد بـ adc_role_. تُضاف صلاحية الوصول الأساسي للحساب دائمًا.	New role identifiers must begin with adc_role_. Basic account access is always included.
+إنشاء الدور	Create role
+حفظ الدور	Save role

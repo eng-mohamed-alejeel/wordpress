@@ -30,7 +30,9 @@ final class Capabilities {
 	);
 
 	public static function activate(): void {
+		$definitions = get_option( 'adc_role_definitions', array() );
 		foreach ( self::ROLE_CAPABILITIES as $slug => $capabilities ) {
+			if ( isset( $definitions[$slug]['caps'] ) ) { $capabilities = array_merge( array( 'read' ), $definitions[$slug]['caps'] ); }
 			$role = get_role( $slug );
 			if ( ! $role ) {
 				$role = add_role( $slug, self::role_label( $slug ), array( 'read' => true ) );
@@ -58,7 +60,10 @@ final class Capabilities {
 		}
 	}
 
-	private static function role_label( string $slug ): string {
+	public static function role_label( string $slug ): string {
+		$definitions = get_option( 'adc_role_definitions', array() );
+		$lang = Localization::language();
+		if ( ! empty( $definitions[$slug][$lang] ) ) { return $definitions[$slug][$lang]; }
 		$labels = array(
 			'car_dealer_customer' => __( 'Dealership Customer', 'auto-dealership-core' ),
 			'dealership_sales' => __( 'Dealership Sales', 'auto-dealership-core' ),
@@ -75,12 +80,29 @@ final class Capabilities {
 		return $labels[ $slug ] ?? $slug;
 	}
 
-	/** Read-only role matrix used by documentation and administrative diagnostics. */
+	/** Translate display names per request without changing stored role identifiers. */
+	public static function localize_roles(): void {
+		$roles = wp_roles();
+		$definitions = get_option( 'adc_role_definitions', array() );
+		foreach ( array_unique( array_merge( array_keys( self::ROLE_CAPABILITIES ), array_keys( $definitions ) ) ) as $slug ) {
+			if ( isset( $roles->roles[$slug] ) ) {
+				$roles->roles[$slug]['name'] = self::role_label( $slug );
+				$roles->role_names[$slug] = self::role_label( $slug );
+			}
+		}
+	}
+
+	/** Meta capabilities require an object ID and must never be assigned directly. */
+	public static function assignable_capabilities(): array {
+		return array_values( array_diff( self::all_capabilities(), array( 'read', 'edit_car', 'read_car', 'delete_car', 'edit_car_offer', 'read_car_offer', 'delete_car_offer' ) ) );
+	}
+
+	/** Factory defaults; registered roles may have administrator-managed overrides. */
 	public static function role_matrix(): array {
 		return self::ROLE_CAPABILITIES;
 	}
 
-	private static function all_capabilities(): array {
+	public static function all_capabilities(): array {
 		$caps = self::CONTENT_CAPABILITIES;
 		foreach ( self::ROLE_CAPABILITIES as $role_caps ) {
 			$caps = array_merge( $caps, $role_caps );

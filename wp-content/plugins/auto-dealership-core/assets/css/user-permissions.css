@@ -1,0 +1,16 @@
+.adc-role-defaults { margin-block-start: 14px; padding: 16px 20px; max-width: 800px; border: 1px solid #c3c4c7; border-inline-start: 4px solid #2271b1; border-radius: 6px; background: #fff; }
+.adc-role-defaults h3 { margin-block: 0 8px; font-size: 15px; }
+.adc-role-defaults h4 { margin-block: 16px 6px; font-size: 13px; }
+.adc-role-defaults ul { margin-block: 4px 0; padding-inline-start: 20px; list-style: disc; columns: 2 240px; column-gap: 28px; }
+.adc-role-defaults li { break-inside: avoid; margin-block-end: 6px; }
+.adc-role-defaults[hidden] { display: none; }
+.adc-user-permissions { margin-block: 28px; max-width: 1200px; }
+.adc-permission-group { margin-block: 18px; padding: 18px; border: 1px solid #c3c4c7; border-radius: 8px; background: #fff; }
+.adc-permission-group legend { padding-inline: 8px; font-weight: 600; font-size: 15px; }
+.adc-permission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.adc-permission-grid label { display: flex; align-items: flex-start; gap: 8px; padding: 6px; }
+.adc-permission-grid input { flex-shrink: 0; margin-top: 3px; }
+.adc-permission-grid small { display: block; margin-block-start: 5px; color: #646970; }
+.adc-permission-grid label:focus-within { outline: 2px solid #2271b1; outline-offset: 2px; }
+.adc-permission-group:disabled { opacity: .7; }
+@media (max-width: 480px) { .adc-permission-grid { grid-template-columns: 1fr; } }

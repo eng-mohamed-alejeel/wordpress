@@ -109,6 +109,8 @@ require_once ADC_PATH . 'src/Admin/IntegrationPage.php';
 require_once ADC_PATH . 'src/Admin/SecurityPage.php';
 require_once ADC_PATH . 'src/Admin/Navigation.php';
 require_once ADC_PATH . 'src/Admin/WorkspacePage.php';
+require_once ADC_PATH . 'src/Admin/UserPermissions.php';
+require_once ADC_PATH . 'src/Admin/RoleManager.php';
 require_once ADC_PATH . 'src/Admin/EditorialSetupPage.php';
 require_once ADC_PATH . 'src/Admin/OperationsPages.php';
 require_once ADC_PATH . 'src/Admin/RequestPage.php';
@@ -414,3 +416,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 }
 
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FinanceCalculatorPage', 'boot' ) );
+
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\UserPermissions', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\RoleManager', 'boot' ) );
+add_action( 'init', array( 'AutoDealership\\Core\\Capabilities', 'localize_roles' ), 20 );
