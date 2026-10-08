@@ -19,6 +19,8 @@ try {
 	wp_set_current_user( $admin );
 	$input = array( 'slug' => $slug, 'ar' => 'دور اختبار', 'en' => 'Test role', 'caps' => array( 'adc_view_workspace', 'adc_view_inventory' ), 'new' => '1' );
 	$check( $slug === RoleManager::save_role( $input ), 'Create a bilingual role.' );
+	$clone = $input; $clone['slug'] .= '_copy'; $clone['caps'] = array(); $clone['clone_source'] = 'dealership_inventory';
+	$check( $clone['slug'] === RoleManager::save_role( $clone ) && get_role( $clone['slug'] )->has_cap( 'adc_manage_inventory' ) && ! get_role( $clone['slug'] )->has_cap( 'manage_options' ), 'Clone copies scoped defaults even without JavaScript.' );
 	$check( get_role( $slug )->has_cap( 'read' ) && ! get_role( $slug )->has_cap( 'manage_options' ), 'Custom role preserves account access without system privileges.' );
 	$check( is_wp_error( RoleManager::save_role( $input ) ), 'Reject duplicate role.' );
 	$input['new'] = '0'; $input['caps'][] = 'manage_options';
@@ -26,7 +28,7 @@ try {
 	$input['slug'] = 'administrator'; $input['caps'] = array();
 	$check( is_wp_error( RoleManager::save_role( $input ) ), 'Protect administrator role.' );
 	$input['slug'] = $slug;
-	$_POST = array( 'adc_permissions_present' => '1', 'adc_permissions_custom' => '1', 'adc_permissions_nonce' => wp_create_nonce( 'adc_user_permissions_0' ), 'adc_permissions' => array( 'adc_view_workspace', 'adc_view_reports' ) );
+	$_POST = array( 'adc_permissions_present' => '1', 'adc_permissions_custom' => '1', 'adc_permissions_nonce' => wp_create_nonce( 'adc_user_permissions_0' ), 'adc_permissions' => array( 'adc_view_workspace', 'adc_view_reports' ), 'adc_permissions_reason' => 'Creation regression test' );
 	$data = (object) array( 'role' => $slug, 'user_login' => $slug ); $errors = new WP_Error(); UserPermissions::validate( $errors, false, $data );
 	$check( ! $errors->has_errors(), 'Validate individual permissions before account creation.' );
 	$id = wp_insert_user( array( 'user_login' => $slug, 'user_pass' => wp_generate_password( 40 ), 'role' => $slug ) );

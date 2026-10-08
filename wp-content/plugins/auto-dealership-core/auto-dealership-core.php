@@ -111,6 +111,9 @@ require_once ADC_PATH . 'src/Admin/Navigation.php';
 require_once ADC_PATH . 'src/Admin/WorkspacePage.php';
 require_once ADC_PATH . 'src/Admin/UserPermissions.php';
 require_once ADC_PATH . 'src/Admin/RoleManager.php';
+require_once ADC_PATH . 'src/Security/AccessPolicy.php';
+register_deactivation_hook( ADC_FILE, array( 'AutoDealership\\Security\\AccessPolicy', 'deactivate' ) );
+require_once ADC_PATH . 'src/Admin/AccessReviewPage.php';
 require_once ADC_PATH . 'src/Admin/EditorialSetupPage.php';
 require_once ADC_PATH . 'src/Admin/OperationsPages.php';
 require_once ADC_PATH . 'src/Admin/RequestPage.php';
@@ -419,4 +422,6 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FinanceCalculatorPa
 
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\UserPermissions', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\RoleManager', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Security\\AccessPolicy', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AccessReviewPage', 'boot' ) );
 add_action( 'init', array( 'AutoDealership\\Core\\Capabilities', 'localize_roles' ), 20 );

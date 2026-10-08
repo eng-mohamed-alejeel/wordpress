@@ -118,6 +118,7 @@ final class Navigation {
 				array( 'adc-stored-translations', 'ترجمات البيانات', 'manage_options', StoredTranslationsPage::class, 'render' ),
 				array( 'users.php', 'المستخدمون والصلاحيات', 'list_users' ),
 				array( 'adc-roles', 'Roles and permissions', 'manage_options', RoleManager::class, 'render' ),
+				array( 'adc-access-review', 'Account access review', 'manage_options', AccessReviewPage::class, 'render' ),
 			) ),
 			'audit' => array( 'الرقابة والتكاملات', 'dashicons-visibility', array(
 				array( 'adc-audit', 'سجل التدقيق', 'adc_view_audit', AuditPage::class, 'render' ),

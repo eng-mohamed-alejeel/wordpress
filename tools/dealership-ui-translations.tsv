@@ -1521,3 +1521,85 @@ VIN الجديد	New VIN
 يجب أن يبدأ معرّف الدور الجديد بـ adc_role_. تُضاف صلاحية الوصول الأساسي للحساب دائمًا.	New role identifiers must begin with adc_role_. Basic account access is always included.
 إنشاء الدور	Create role
 حفظ الدور	Save role
+مراجعة وصول الحسابات	Account access review
+تم حفظ إعدادات الوصول.	Access settings saved.
+المستخدم غير موجود.	User not found.
+آخر مراجعة مجدولة	Last scheduled review
+حسابات تحتاج إلى مراجعة	Accounts needing review
+تُجرى المراجعات يوميًا. تشير التنبيهات إلى نقاط تحتاج للمراجعة ولا تثبت وقوع مخالفة. يبدأ تتبع آخر تسجيل دخول عند تفعيل هذه الميزة.	Reviews run daily. Flags indicate items to review, not confirmed violations. Last login tracking starts when this feature is enabled.
+البحث عن المستخدمين	Search users
+الأدوار	Roles
+حالة الحساب	Account status
+آخر تسجيل دخول	Last login
+تنبيهات المراجعة	Review flags
+معلّق	Suspended
+لم يبدأ التتبع بعد	Not tracked yet
+الصلاحيات الفعلية	Effective permissions
+لم يُعثر على مستخدمين.	No users found.
+فصل المهام المالية	Financial separation of duties
+لا يستطيع مسجّل المدفوعات اعتماد مدفوعاته، ولا طالب الاسترداد اعتماد طلبه، ولا طالب الخصم البت في طلبه. تسري هذه القيود على مسؤولي النظام أيضًا.	Payment recorders cannot verify their own payments. Refund requesters cannot approve their own refunds. Discount requesters cannot decide their own requests. These restrictions also apply to administrators.
+جميع الحسابات	All accounts
+نطاق الفروع	Branch scope
+جميع الفروع	All branches
+لم يُعيّن فرع نشط	No active branch assigned
+تشمل الصلاحيات الفعلية افتراضيات الدور والاستثناءات الفردية والمنح المؤقتة وتعليق الحساب. تبقى قيود المحتوى والعمليات المالية سارية.	Effective permissions include role defaults, individual overrides, temporary grants and suspension. Object-specific and financial restrictions still apply.
+الصلاحية	Permission
+المصدر	Source
+الوصول الفعلي	Effective access
+تنتهي في	Expires
+ممنوحة	Granted
+ممنوعة	Denied
+منح فردي	Individual grant
+منع فردي	Individual denial
+منح مؤقت	Temporary grant
+محظورة بسبب تعليق الحساب	Blocked by account suspension
+إعادة تفعيل الحساب	Resume account
+تعليق الحساب	Suspend account
+إنهاء جميع الجلسات	End all sessions
+منح صلاحية مؤقتة	Grant a temporary permission
+إلغاء الصلاحية المؤقتة	Revoke temporary permission
+يتجاوز المنح المؤقت المنع الفردي حتى انتهاء مدته، ثم تعود الصلاحية الأصلية.	Temporary grants override individual denials until expiration, then the original permission applies again.
+سبب التغيير	Change reason
+الصلاحيات الفعلية وأدوات الحساب	Effective permissions and account controls
+سبب تغيير الفروع	Branch change reason
+لم يُعيّن فرع نشط. لن تتاح عمليات الفروع.	No active branch assigned. Branch operations will be unavailable.
+يلزم إدخال سبب التغيير.	A change reason is required.
+هذا الحساب معلّق. تواصل مع مسؤول النظام.	This account is suspended. Contact the administrator.
+هذا الحساب محمي أو لا تملك صلاحية الوصول إليه.	This account is protected or access is denied.
+اختر وقت انتهاء مستقبليًا.	Choose a future expiration time.
+اختر وقت انتهاء مستقبليًا خلال سنة واحدة.	Choose a future expiration time within one year.
+عملية غير مدعومة.	Unsupported operation.
+تعذر حفظ تغيير الوصول.	The access change could not be saved.
+المدفوعات: التسجيل والتحقق	Payments: recording and verification
+الاستردادات: الطلب والتحقق	Refunds: requesting and verification
+الخصومات: الطلب والمراجعة	Discounts: requesting and review
+لا يوجد تسجيل دخول منذ 90 يومًا	No login for 90 days
+لا يوجد تسجيل دخول متتبّع	No tracked login
+استثناءات فردية للصلاحيات	Individual permission overrides
+صلاحيات مؤقتة	Temporary permissions
+صلاحيات حساسة	Sensitive permissions
+تغيّر الوصول منذ المعاينة. راجع الأثر مجددًا.	Access changed since the preview. Review the impact again.
+يمكن حذف الأدوار المخصصة فقط. اختر دورًا بديلًا مختلفًا.	Only custom roles can be deleted. Choose a different replacement role.
+تعذر نقل المستخدمين. تم الإبقاء على الدور.	Users could not be transferred. The role was retained.
+لا توجد افتراضيات محفوظة لهذا الدور.	No saved defaults are available for this role.
+نسخ الصلاحيات من دور	Copy permissions from role
+معاينة الأثر قبل الحفظ	Preview impact before saving
+استعادة الافتراضيات الأصلية	Restore original defaults
+الدور البديل للمستخدمين	Replacement role for users
+معاينة النقل والحذف	Preview transfer and deletion
+مراجعة أثر الدور	Review role impact
+راجع هذه التغييرات قبل تطبيقها. قد لا يتأثر المستخدمون ذوو الاستثناءات الفردية. يؤدي نقل الأدوار إلى إنهاء الجلسات النشطة أيضًا.	Review these changes before applying them. Users with individual overrides may be unaffected. Role transfers also end active sessions.
+الصلاحيات المضافة	Permissions added
+الصلاحيات المسحوبة	Permissions removed
+الاستثناءات الفردية	Individual overrides
+لا يوجد مستخدمون معيّنون لهذا الدور حاليًا.	No users currently assigned to this role.
+تطبيق التغييرات بعد مراجعتها	Apply reviewed changes
+البحث في الصلاحيات	Search permissions
+جميع الصلاحيات	All permissions
+الممنوحة فقط	Granted only
+المخصصة فقط	Customized only
+الممنوعة فقط	Denied only
+تُعدّل مربعات الاختيار الصلاحيات الدائمة. تظهر المنح المؤقتة وتعليق الحساب في تقرير الوصول الفعلي.	Checkboxes edit permanent permissions. Temporary grants and suspension are shown in the effective access report.
+إلغاء	Cancel
+بحث	Search
+تحرير المستخدم	Edit user

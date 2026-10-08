@@ -20,7 +20,7 @@ $id = wp_insert_user( array( 'user_login' => 'adc_permissions_' . wp_generate_pa
 if ( is_wp_error( $id ) ) { throw new RuntimeException( $id->get_error_message() ); }
 $old_post = $_POST;
 $submit = static function ( array $selected, bool $custom = true, ?string $nonce = null ) use ( $id ): WP_Error {
-	$_POST = array( 'adc_permissions_present' => '1', 'adc_permissions_nonce' => $nonce ?? wp_create_nonce( 'adc_user_permissions_' . $id ), 'adc_permissions' => $selected );
+	$_POST = array( 'adc_permissions_present' => '1', 'adc_permissions_nonce' => $nonce ?? wp_create_nonce( 'adc_user_permissions_' . $id ), 'adc_permissions' => $selected, 'adc_permissions_reason' => 'Permission regression test' );
 	if ( $custom ) { $_POST['adc_permissions_custom'] = '1'; }
 	$errors = new WP_Error();
 	UserPermissions::validate( $errors, true, (object) array( 'ID' => $id ) );

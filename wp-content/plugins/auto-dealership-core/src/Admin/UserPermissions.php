@@ -21,9 +21,12 @@ final class UserPermissions {
 
 	public static function enqueue(): void {
 		$screen = get_current_screen();
-		if ( $screen && str_ends_with( $screen->id, '_page_adc-roles' ) ) {
+		if ( $screen && ( str_ends_with( $screen->id, '_page_adc-roles' ) || str_ends_with( $screen->id, '_page_adc-access-review' ) ) ) {
 			$css = 'assets/css/user-permissions.css';
 			wp_enqueue_style( 'adc-user-permissions', plugins_url( $css, ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/' . $css ) );
+			$file = 'assets/js/user-permissions.js';
+			wp_enqueue_script( 'adc-user-permissions', plugins_url( $file, ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/' . $file ), true );
+			wp_localize_script( 'adc-user-permissions', 'adcRolePermissions', array( 'roles' => self::role_defaults(), 'protectedRoles' => array( 'administrator' ) ) );
 		}
 		if ( $screen && in_array( $screen->base, array( 'profile', 'user-edit', 'user' ), true ) ) {
 			$file = 'assets/js/user-permissions.js';
@@ -39,6 +42,9 @@ final class UserPermissions {
 				$css = 'assets/css/user-permissions.css';
 				wp_enqueue_style( 'adc-user-permissions', plugins_url( $css, ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/' . $css ) );
 			}
+		}
+		if ( wp_script_is( 'adc-user-permissions', 'enqueued' ) ) {
+			wp_localize_script( 'adc-user-permissions', 'adcPermissionFilters', array( 'search' => __( 'Search permissions', 'auto-dealership-core' ), 'all' => __( 'All permissions', 'auto-dealership-core' ), 'granted' => __( 'Granted only', 'auto-dealership-core' ), 'custom' => __( 'Customized only', 'auto-dealership-core' ), 'denied' => __( 'Denied only', 'auto-dealership-core' ) ) );
 		}
 	}
 
@@ -60,7 +66,7 @@ final class UserPermissions {
 		return $result;
 	}
 
-	private static function native_label( string $cap ): string {
+	public static function native_label( string $cap ): string {
 		$labels = array(
 			'read' => array( 'القراءة الأساسية والدخول إلى الحساب', 'Basic reading and account access' ),
 			'manage_options' => array( 'إدارة إعدادات الموقع', 'Manage site settings' ),
@@ -131,6 +137,7 @@ final class UserPermissions {
 
 	public static function render( \WP_User $user, bool $creating = false ): void {
 		if ( $creating ? ! self::can_create() : ! self::authorized( $user ) ) { return; }
+		if ( ! $creating ) { echo '<p><a class="button" href="' . esc_url( add_query_arg( array( 'page' => 'adc-access-review', 'user_id' => $user->ID ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Effective permissions and account controls', 'auto-dealership-core' ) . '</a></p>'; }
 		echo '<section class="adc-user-permissions" data-creating="' . ( $creating ? '1' : '0' ) . '"><h2>' . esc_html__( 'User permissions', 'auto-dealership-core' ) . '</h2>';
 		if ( self::protected_user( $user ) ) {
 			echo '<p>' . esc_html__( 'Administrator accounts are protected from individual permission changes.', 'auto-dealership-core' ) . '</p></section>';
@@ -142,18 +149,20 @@ final class UserPermissions {
 		if ( $posted ) { $custom = '1' === ( $_POST['adc_permissions_custom'] ?? '0' ); }
 		echo '<input type="hidden" name="adc_permissions_present" value="1"><p><label><input type="checkbox" name="adc_permissions_custom" value="1" ' . checked( $custom, true, false ) . '> ' . esc_html__( 'Customize permissions for this user', 'auto-dealership-core' ) . '</label></p>';
 		echo '<p class="description">' . esc_html__( 'When customization is disabled, overrides are removed and role permissions apply. When enabled, checked permissions are granted and unchecked permissions are denied. Branch restrictions still apply.', 'auto-dealership-core' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Checkboxes edit permanent permissions. Temporary grants and suspension are shown in the effective access report.', 'auto-dealership-core' ) . '</p>';
 		$groups = array();
 		foreach ( self::catalog() as $cap => $entry ) { $groups[$entry[0]][$cap] = $entry[1]; }
 		foreach ( $groups as $group => $items ) {
 			echo '<fieldset class="adc-permission-group"><legend>' . esc_html__( $group, 'auto-dealership-core' ) . '</legend><div class="adc-permission-grid">';
 			foreach ( $items as $cap => $label ) {
 				$origin = array_key_exists( $cap, $user->caps ) ? 'User permission override' : 'Inherited role permission';
-				$enabled = $posted && $custom ? in_array( $cap, $_POST['adc_permissions'] ?? array(), true ) : $user->has_cap( $cap );
-				echo '<label><input type="checkbox" name="adc_permissions[]" value="' . esc_attr( $cap ) . '" ' . checked( $enabled, true, false ) . '> <span>' . esc_html__( $label, 'auto-dealership-core' ) . '<small>' . esc_html__( $origin, 'auto-dealership-core' ) . '</small></span></label>';
+				$enabled = $posted && $custom ? in_array( $cap, $_POST['adc_permissions'] ?? array(), true ) : ! empty( $user->allcaps[$cap] );
+				echo '<label data-custom="' . ( array_key_exists( $cap, $user->caps ) ? '1' : '0' ) . '"><input type="checkbox" name="adc_permissions[]" value="' . esc_attr( $cap ) . '" ' . checked( $enabled, true, false ) . '> <span>' . esc_html__( $label, 'auto-dealership-core' ) . '<small>' . esc_html__( $origin, 'auto-dealership-core' ) . '</small></span></label>';
 			}
 			echo '</div></fieldset>';
 		}
 		echo '</section>';
+		echo '<p><label>' . esc_html__( 'Change reason', 'auto-dealership-core' ) . '<br><textarea name="adc_permissions_reason" maxlength="2000" rows="2" class="large-text"></textarea></label></p>';
 	}
 
 	/** Validate before WordPress writes the profile; commit only after successful save. */
@@ -178,7 +187,12 @@ final class UserPermissions {
 			$errors->add( 'adc_permissions_invalid', __( 'Permissions could not be saved. Check administrator access and the request, then try again.', 'auto-dealership-core' ) );
 			return;
 		}
-		if ( ! $errors->has_errors() ) { self::$pending[$id] = array( 'custom' => '1' === $custom, 'selected' => $selected, 'login' => (string) ( $data->user_login ?? '' ) ); }
+		$reason = $_POST['adc_permissions_reason'] ?? '';
+		if ( ! is_string( $reason ) || mb_strlen( $reason ) > 2000 ) { $errors->add( 'adc_reason_invalid', __( 'A change reason is required.', 'auto-dealership-core' ) ); return; }
+		$planned = $user ? $user->caps : array();
+		foreach ( Capabilities::assignable_capabilities() as $cap ) { if ( '1' === $custom ) { $planned[$cap] = in_array( $cap, $selected, true ); } else { unset( $planned[$cap] ); } }
+		if ( $planned !== ( $user ? $user->caps : array() ) && '' === trim( sanitize_textarea_field( wp_unslash( $reason ) ) ) ) { $errors->add( 'adc_reason_required', __( 'A change reason is required.', 'auto-dealership-core' ) ); return; }
+		if ( ! $errors->has_errors() ) { self::$pending[$id] = array( 'custom' => '1' === $custom, 'selected' => $selected, 'login' => (string) ( $data->user_login ?? '' ), 'reason' => sanitize_textarea_field( wp_unslash( $reason ) ) ); }
 	}
 
 	public static function save_new( int $id ): void {
@@ -208,7 +222,14 @@ final class UserPermissions {
 		}
 		// One metadata update produces one existing SecurityAudit event for the complete change.
 		if ( $caps !== $user->caps ) {
+			$before = $user->caps;
+			if ( ! \AutoDealership\Database\Transaction::begin() ) { wp_die( esc_html__( 'The access change could not be saved.', 'auto-dealership-core' ), '', array( 'response' => 500 ) ); }
 			update_user_meta( $id, $user->cap_key, $caps );
+			$verified = get_user_meta( $id, $user->cap_key, true ) === $caps;
+			if ( ! \AutoDealership\Database\Transaction::commit( static fn() => $verified && \AutoDealership\Audit\AuditLog::record( 'security.user_permissions_changed', 'user', $id, $request['reason'], $before, $caps ) ) ) {
+				clean_user_cache( $id ); wp_cache_delete( $id, 'user_meta' );
+				wp_die( esc_html__( 'The access change could not be saved.', 'auto-dealership-core' ), '', array( 'response' => 500 ) );
+			}
 			$user->caps = $caps;
 			$user->get_role_caps();
 		}

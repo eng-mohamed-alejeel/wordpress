@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Restricted configuration and branch assignment screens. */
 final class SettingsPage {
+	private static array $pending_branches = array();
 	public static function boot(): void {
 		add_action( 'admin_enqueue_scripts', static function (): void {
 			if ( 'adc-settings' === ( $_GET['page'] ?? '' ) ) { wp_enqueue_script( 'adc-currency-settings', plugins_url( 'assets/js/currency-settings.js', __DIR__ . '/../../auto-dealership-core.php' ), array(), '1.0.0', true ); }
@@ -19,8 +20,8 @@ final class SettingsPage {
 		add_action( 'admin_post_adc_create_branch', array( self::class, 'create_branch' ) );
 		add_action( 'show_user_profile', array( self::class, 'branch_field' ) );
 		add_action( 'edit_user_profile', array( self::class, 'branch_field' ) );
-		add_action( 'personal_options_update', array( self::class, 'save_branch' ) );
-		add_action( 'edit_user_profile_update', array( self::class, 'save_branch' ) );
+		add_action( 'user_profile_update_errors', array( self::class, 'validate_branch' ), 30, 3 );
+		add_action( 'profile_update', array( self::class, 'save_branch' ), 30 );
 	}
 
 	public static function menu(): void {
@@ -177,6 +178,7 @@ final class SettingsPage {
 		$branches = BranchService::public_list();
 		$current = BranchScope::assigned_branch( (int) $user->ID );
 		$assigned = BranchScope::assigned_branches( (int) $user->ID );
+		if ( ! BranchScope::is_global( $user->ID ) && $user->has_cap( 'adc_view_workspace' ) && ! array_filter( $assigned, array( BranchScope::class, 'is_active' ) ) ) { echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'No active branch assigned. Branch operations will be unavailable.', 'auto-dealership-core' ) . '</p></div>'; }
 		wp_nonce_field( 'adc_assign_branch_' . (int) $user->ID, 'adc_branch_nonce' );
 		echo '<input type="hidden" name="adc_branch_scope_present" value="1">';
 		echo '<div><label for="adc_branch_ids"><strong>' . esc_html__( 'Allowed branches', 'auto-dealership-core' ) . '</strong></label><br><select name="adc_branch_ids[]" id="adc_branch_ids" multiple size="' . esc_attr( (string) min( 10, max( 3, count( $branches ) ) ) ) . '">';
@@ -188,28 +190,45 @@ final class SettingsPage {
 		<h2><?php esc_html_e( 'Dealership access', 'auto-dealership-core' ); ?></h2>
 		<table class="form-table"><tr><th><label for="adc_branch_id"><?php esc_html_e( 'Assigned branch', 'auto-dealership-core' ); ?></label></th><td><select name="adc_branch_id" id="adc_branch_id"><option value="0"><?php esc_html_e( 'No branch', 'auto-dealership-core' ); ?></option><?php foreach ( $branches as $branch ) : ?><option value="<?php echo absint( $branch['id'] ); ?>" <?php selected( $current, (int) $branch['id'] ); ?>><?php echo esc_html( \AutoDealership\Content\StoredTranslations::text( 'branches', (int) $branch['id'], 'name', (string) $branch['name'] ) . ' — ' . \AutoDealership\Content\StoredTranslations::text( 'branches', (int) $branch['id'], 'city', (string) $branch['city'] ) ); ?></option><?php endforeach; ?></select><p class="description"><?php esc_html_e( 'Only administrators can assign staff branch scope.', 'auto-dealership-core' ); ?></p></td></tr></table>
 		<?php
+		echo '<p><label>' . esc_html__( 'Branch change reason', 'auto-dealership-core' ) . '<br><textarea name="adc_branch_reason" maxlength="2000" rows="2" class="large-text"></textarea></label></p>';
 	}
 
-	public static function save_branch( int $user_id ): void {
+	public static function validate_branch( \WP_Error $errors, bool $update, $data ): void {
+		$user_id = (int) ( $data->ID ?? 0 );
+		unset( self::$pending_branches[$user_id] );
+		if ( ! isset( $_POST['adc_branch_scope_present'] ) ) { return; }
+		$invalid = static function () use ( $errors ): void { $errors->add( 'adc_invalid_branch', __( 'Every assigned branch must be active and valid.', 'auto-dealership-core' ) ); };
 		if ( ! current_user_can( 'manage_options' ) || ! current_user_can( 'edit_user', $user_id ) || ! isset( $_POST['adc_branch_id'], $_POST['adc_branch_scope_present'] ) ) {
-			return;
+			$invalid(); return;
 		}
 		if ( ! isset( $_POST['adc_branch_nonce'] ) || ! is_string( $_POST['adc_branch_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['adc_branch_nonce'] ), 'adc_assign_branch_' . $user_id ) || ! is_string( $_POST['adc_branch_id'] ) ) {
-			return;
+			$invalid(); return;
 		}
 		$branch_id = filter_var( wp_unslash( $_POST['adc_branch_id'] ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 0 ) ) );
 		if ( false === $branch_id ) {
-			return;
+			$invalid(); return;
 		}
 		$raw_branches = $_POST['adc_branch_ids'] ?? array();
-		if ( ! is_array( $raw_branches ) ) { return; }
+		if ( ! is_array( $raw_branches ) ) { $invalid(); return; }
 		$branch_ids = array();
 		foreach ( wp_unslash( $raw_branches ) as $value ) {
-			if ( ! is_string( $value ) ) { return; }
+			if ( ! is_string( $value ) ) { $invalid(); return; }
 			$valid = filter_var( $value, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
-			if ( false === $valid ) { return; }
+			if ( false === $valid || ! \AutoDealership\Inventory\VehicleService::branch_exists( (int) $valid ) ) { $invalid(); return; }
 			$branch_ids[] = (int) $valid;
 		}
-		ConfigurationService::assign_branches( $user_id, $branch_id, $branch_ids );
+		if ( count( $branch_ids ) > 25 || ( 0 === $branch_id && $branch_ids ) || ( $branch_id > 0 && ! in_array( $branch_id, $branch_ids, true ) ) ) { $invalid(); return; }
+		$reason = $_POST['adc_branch_reason'] ?? '';
+		if ( ! is_string( $reason ) || mb_strlen( $reason ) > 2000 ) { $errors->add( 'adc_branch_reason', __( 'A change reason is required.', 'auto-dealership-core' ) ); return; }
+		$normalized = $branch_id ? array_merge( array( $branch_id ), array_values( array_diff( array_unique( $branch_ids ), array( $branch_id ) ) ) ) : array();
+		if ( ( $branch_id !== BranchScope::assigned_branch( $user_id ) || $normalized !== BranchScope::assigned_branches( $user_id ) ) && '' === trim( sanitize_textarea_field( wp_unslash( $reason ) ) ) ) { $errors->add( 'adc_branch_reason', __( 'A change reason is required.', 'auto-dealership-core' ) ); return; }
+		if ( ! $errors->has_errors() ) { self::$pending_branches[$user_id] = array( $branch_id, $branch_ids, sanitize_textarea_field( wp_unslash( $reason ) ) ); }
+	}
+
+	public static function save_branch( int $user_id ): void {
+		if ( ! isset( self::$pending_branches[$user_id] ) ) { return; }
+		$input = self::$pending_branches[$user_id]; unset( self::$pending_branches[$user_id] );
+		$result = ConfigurationService::assign_branches( $user_id, $input[0], $input[1], $input[2] );
+		if ( is_wp_error( $result ) ) { wp_die( esc_html( $result->get_error_message() ), '', array( 'response' => 500, 'back_link' => true ) ); }
 	}
 }

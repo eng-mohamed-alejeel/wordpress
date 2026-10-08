@@ -93,7 +93,7 @@ final class ConfigurationService {
 		return self::assign_branches( $user_id, $branch_id, $branch_id > 0 ? array( $branch_id ) : array() );
 	}
 
-	public static function assign_branches( int $user_id, int $primary_branch_id, array $branch_ids ) {
+	public static function assign_branches( int $user_id, int $primary_branch_id, array $branch_ids, string $reason = '' ) {
 		if ( $user_id < 1 || ! current_user_can( 'manage_options' ) || ! current_user_can( 'edit_user', $user_id ) ) {
 			return new \WP_Error( 'adc_forbidden', __( 'Branch assignment permission is required.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
@@ -122,7 +122,7 @@ final class ConfigurationService {
 		update_user_meta( $user_id, 'adc_branch_ids', $branches );
 		BranchScope::clear_cache();
 		$verified = BranchScope::assigned_branch( $user_id ) === $primary_branch_id && BranchScope::assigned_branches( $user_id ) === $branches;
-		$audited = $verified && AuditLog::record( 'user.branches_assigned', 'user', $user_id, '', array( 'primary_branch_id' => $before_primary, 'branch_ids' => $before_branches ), array( 'primary_branch_id' => $primary_branch_id, 'branch_ids' => $branches ) );
+		$audited = $verified && AuditLog::record( 'user.branches_assigned', 'user', $user_id, $reason, array( 'primary_branch_id' => $before_primary, 'branch_ids' => $before_branches ), array( 'primary_branch_id' => $primary_branch_id, 'branch_ids' => $branches ) );
 		if ( ! $audited ) {
 			$primary_existed ? update_user_meta( $user_id, 'adc_branch_id', $before_primary ) : delete_user_meta( $user_id, 'adc_branch_id' );
 			$list_existed ? update_user_meta( $user_id, 'adc_branch_ids', $before_branches ) : delete_user_meta( $user_id, 'adc_branch_ids' );
