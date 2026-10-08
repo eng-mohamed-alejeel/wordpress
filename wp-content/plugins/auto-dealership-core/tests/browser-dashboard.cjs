@@ -102,6 +102,17 @@ const { spawn } = require('node:child_process');
           }
           check(!/Fatal error|Warning:|Parse error|لا تملك صلاحية|لا توجد لديك صلاحية/.test(state.text),'Page renders: '+route);
           if (process.env.ADC_LAYOUT_AUDIT === '1') {
+            if (process.env.ADC_NATIVE_FIXTURE === '1') await evaluate(`(() => {
+              if (!document.body.classList.contains('adc-admin-native')) return;
+              const table=document.querySelector('.wp-list-table');
+              const template=document.querySelector('#inline-edit');
+              if (table && template) {
+                const row=template.cloneNode(true); row.id='adc-layout-preview'; row.dataset.layoutFixture='true';
+                row.style.display='table-row'; table.querySelector('tbody').append(row);
+              }
+              const box=document.querySelector('#car-details, #car-offer-details');
+              if (box) box.style.display='block';
+            })()`);
             if (process.env.ADC_LAYOUT_FIXTURE === '1' && await evaluate('document.body.classList.contains("adc-admin")')) {
               await evaluate(`(() => {
                 const fixture=document.createElement('div');fixture.dataset.layoutFixture='true';
@@ -149,7 +160,7 @@ const { spawn } = require('node:child_process');
               }
             }
             await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
-            await evaluate('document.querySelector("[data-layout-fixture]")?.remove()');
+            await evaluate('document.querySelectorAll("[data-layout-fixture]").forEach(e=>e.remove())');
           }
           return state;
         }

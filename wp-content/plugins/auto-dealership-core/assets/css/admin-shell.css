@@ -1,0 +1,13 @@
+/* Administration chrome only: editors and media dialogs retain their layout. */
+.adc-admin-shell #adminmenuwrap, .adc-admin-shell #adminmenuback, .adc-admin-shell #adminmenu { background: #182b42; }
+.adc-admin-shell #adminmenu a { color: #e1ebfa; }
+.adc-admin-shell #adminmenu .wp-submenu { background: #102138; }
+.adc-admin-shell #adminmenu li.menu-top:hover, .adc-admin-shell #adminmenu li.opensub > a.menu-top { background: #233e5e; color: #fff; }
+.adc-admin-shell #adminmenu .wp-has-current-submenu > a, .adc-admin-shell #adminmenu li.current > a { background: #2459a9; color: #fff; }
+.adc-admin-shell #adminmenu .wp-menu-image:before { color: #c5d6ed; }
+.adc-admin-shell #wpadminbar { background: #102138; }
+.adc-admin-shell #wpfooter { color: #52657a; border-top: 1px solid #dce4ee; padding-block: 14px; }
+.adc-admin-shell #screen-meta { border-color: #dce4ee; background: #fff; }
+.adc-admin-shell #screen-meta-links .show-settings { border-color: #dce4ee; border-radius: 0 0 7px 7px; color: #52657a; }
+.adc-admin-shell .notice { border-radius: 8px; }
+.adc-admin-shell .notice-dismiss:focus-visible { outline: 2px solid #2459a9; outline-offset: -4px; }

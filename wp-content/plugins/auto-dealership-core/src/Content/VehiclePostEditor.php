@@ -53,14 +53,14 @@ final class VehiclePostEditor {
 		foreach ( $fields as $key => $label ) {
 			$value    = null !== $mapped_status && '_car_inventory_status' === $key ? $mapped_status : get_post_meta( $post->ID, $key, true );
 			$readonly = null !== $mapped_status && '_car_inventory_status' === $key;
-			echo '<p><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><br><input type="text" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" style="width:100%" ' . ( $readonly ? 'readonly aria-readonly="true"' : '' ) . '></p>';
+			echo '<p><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><br><input type="text" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" class="widefat" ' . ( $readonly ? 'readonly aria-readonly="true"' : '' ) . '></p>';
 		}
 		if ( null !== $mapped_status ) {
 			echo '<p class="description">' . esc_html__( 'حالة السيارة مرتبطة بالمخزون التشغيلي وتُعرض هنا للقراءة فقط.', 'auto-dealership-core' ) . '</p>';
 		}
 
 		$features = get_post_meta( $post->ID, '_car_features', true );
-		echo '<p><label for="_car_features">' . esc_html__( 'المزايا (سطر لكل ميزة)', 'auto-dealership-core' ) . '</label><br><textarea id="_car_features" name="_car_features" rows="5" style="width:100%">' . esc_textarea( is_array( $features ) ? implode( "\n", $features ) : $features ) . '</textarea></p>';
+		echo '<p><label for="_car_features">' . esc_html__( 'المزايا (سطر لكل ميزة)', 'auto-dealership-core' ) . '</label><br><textarea id="_car_features" name="_car_features" rows="5" class="widefat">' . esc_textarea( is_array( $features ) ? implode( "\n", $features ) : $features ) . '</textarea></p>';
 		echo '<p><label for="_car_featured"><input type="checkbox" id="_car_featured" name="_car_featured" value="1" ' . checked( get_post_meta( $post->ID, '_car_featured', true ), '1', false ) . '> ' . esc_html__( 'سيارة مميزة', 'auto-dealership-core' ) . '</label></p>';
 		echo '<p><label for="_car_demand"><input type="checkbox" id="_car_demand" name="_car_demand" value="yes" ' . checked( get_post_meta( $post->ID, '_car_demand', true ), 'yes', false ) . '> ' . esc_html__( 'سيارة مطلوبة', 'auto-dealership-core' ) . '</label></p>';
 	}

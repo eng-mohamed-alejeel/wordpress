@@ -8,6 +8,11 @@ final class WorkspacePage {
 	public static function boot(): void {
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue' ) );
 		add_filter( 'admin_body_class', array( self::class, 'body_class' ) );
+		add_action( 'customize_controls_enqueue_scripts', array( self::class, 'enqueue_customizer' ) );
+	}
+
+	public static function enqueue_customizer(): void {
+		wp_enqueue_style( 'adc-admin-customizer', plugins_url( 'assets/css/admin-customizer.css', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin-customizer.css' ) );
 	}
 
 	private static function is_plugin_screen(): bool {
@@ -18,22 +23,24 @@ final class WorkspacePage {
 	}
 
 	public static function body_class( string $classes ): string {
-		return self::is_plugin_screen() ? $classes . ' adc-admin' : ( self::is_content_screen() ? $classes . ' adc-admin-native' : $classes );
+		return $classes . ' adc-admin-shell' . ( self::is_plugin_screen() ? ' adc-admin' : ( self::is_content_screen() ? ' adc-admin-native' : '' ) );
 	}
 
 	private static function is_content_screen(): bool {
 		$screen = get_current_screen();
-		return $screen && in_array( $screen->post_type, array( 'car', 'car_offer' ), true ) && in_array( $screen->base, array( 'edit', 'edit-tags', 'term', 'post' ), true );
+		return $screen && ( ( in_array( $screen->post_type, array( 'car', 'car_offer' ), true ) && in_array( $screen->base, array( 'edit', 'edit-tags', 'term', 'post' ), true ) ) || ( current_user_can( 'manage_options' ) && in_array( $screen->base, array( 'dashboard', 'edit', 'edit-tags', 'term', 'post', 'upload', 'users', 'user-edit', 'profile', 'plugins', 'plugin-install', 'themes', 'theme-install', 'tools', 'import', 'export', 'options-general', 'options-writing', 'options-reading', 'options-discussion', 'options-media', 'options-permalink', 'options-privacy', 'update-core' ), true ) ) );
 	}
 
 	public static function enqueue(): void {
+		wp_enqueue_style( 'adc-admin-tokens', plugins_url( 'assets/css/admin-tokens.css', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin-tokens.css' ) );
+		wp_enqueue_style( 'adc-admin-shell', plugins_url( 'assets/css/admin-shell.css', ADC_FILE ), array( 'adc-admin-tokens' ), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin-shell.css' ) );
 		if ( self::is_content_screen() ) {
-			wp_enqueue_style( 'adc-admin-native', plugins_url( 'assets/css/admin-native.css', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin-native.css' ) );
+			wp_enqueue_style( 'adc-admin-native', plugins_url( 'assets/css/admin-native.css', ADC_FILE ), array( 'adc-admin-tokens' ), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin-native.css' ) );
 		}
 		if ( ! self::is_plugin_screen() ) {
 			return;
 		}
-		wp_enqueue_style( 'adc-admin', plugins_url( 'assets/css/admin.css', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin.css' ) );
+		wp_enqueue_style( 'adc-admin', plugins_url( 'assets/css/admin.css', ADC_FILE ), array( 'adc-admin-tokens' ), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin.css' ) );
 		wp_enqueue_script( 'adc-admin-layout', plugins_url( 'assets/js/admin-layout.js', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/js/admin-layout.js' ), true );
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 		if ( 'adc-workspace' === $page || str_starts_with( $page, 'adc-area-' ) ) {

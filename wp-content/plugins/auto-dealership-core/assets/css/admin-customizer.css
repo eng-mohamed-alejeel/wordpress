@@ -1,0 +1,11 @@
+/* Customizer controls only; the public preview keeps the theme's presentation. */
+#customize-controls { background: #f3f6fb; color: #182b42; }
+#customize-controls .customize-info, #customize-controls .accordion-section-title { background: #fff; border-color: #dce4ee; }
+#customize-controls .accordion-section-title:hover, #customize-controls .accordion-section-title:focus { background: #edf3fc; color: #2459a9; border-inline-start-color: #2459a9; }
+#customize-controls .customize-control { margin-bottom: 20px; }
+#customize-controls .customize-control :is(input[type="text"], input[type="url"], input[type="number"], input[type="email"], select, textarea) { box-sizing: border-box; border-color: #aab9cb; border-radius: 7px; min-height: 40px; }
+#customize-controls .customize-control textarea { min-height: 96px; }
+#customize-controls .customize-control-title { color: #182b42; }
+#customize-controls .customize-control-description { color: #52657a; }
+#customize-controls .button { border-radius: 7px; }
+#customize-controls .button-primary { border-color: #2459a9; background: #2459a9; }
