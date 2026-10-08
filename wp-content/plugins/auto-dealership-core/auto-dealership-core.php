@@ -311,6 +311,7 @@ if ( ! function_exists( 'adc_core_owns_engagement_admin_pages' ) ) {
 }
 
 add_action( 'plugins_loaded', static function (): void {
+	\AutoDealership\Core\Capabilities::sync_administrator();
 	if ( get_option( 'adc_roles_version' ) !== ADC_VERSION ) {
 		\AutoDealership\Core\Capabilities::activate();
 		update_option( 'adc_roles_version', ADC_VERSION, false );

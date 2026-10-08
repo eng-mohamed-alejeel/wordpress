@@ -42,13 +42,20 @@ final class Capabilities {
 			}
 		}
 
+		self::sync_administrator();
+		update_option( 'adc_roles_version', ADC_VERSION, false );
+	}
+
+	/** Keep the system administrator complete when new dealership permissions are added. */
+	public static function sync_administrator(): void {
 		$administrator = get_role( 'administrator' );
 		if ( $administrator ) {
 			foreach ( self::all_capabilities() as $capability ) {
-				$administrator->add_cap( $capability );
+				if ( ! $administrator->has_cap( $capability ) ) {
+					$administrator->add_cap( $capability );
+				}
 			}
 		}
-		update_option( 'adc_roles_version', ADC_VERSION, false );
 	}
 
 	private static function role_label( string $slug ): string {

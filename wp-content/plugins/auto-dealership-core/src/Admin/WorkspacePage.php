@@ -50,6 +50,11 @@ final class WorkspacePage {
 		}
 
 		$user = wp_get_current_user();
+		$logo_id = (int) get_theme_mod( 'custom_logo' );
+		$logo = $logo_id ? wp_get_attachment_image( $logo_id, 'medium', false, array( 'class' => 'adc-workspace-logo', 'alt' => get_bloginfo( 'name' ), 'loading' => 'eager' ) ) : '';
+		if ( ! $logo && get_site_icon_url( 128 ) ) {
+			$logo = '<img class="adc-workspace-logo" src="' . esc_url( get_site_icon_url( 128 ) ) . '" alt="' . esc_attr( get_bloginfo( 'name' ) ) . '">';
+		}
 		?>
 		<div class="wrap adc-workspace" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<header class="adc-workspace-hero">
@@ -58,7 +63,7 @@ final class WorkspacePage {
 					<h1><?php echo esc_html( $area_allowed ? $groups[0]['title'] : sprintf( __( 'مرحبًا، %s', 'auto-dealership-core' ), $user->display_name ) ); ?></h1>
 					<p><?php esc_html_e( 'تظهر الوحدات المتاحة وفق صلاحيات دورك ونطاق عملك الحالي.', 'auto-dealership-core' ); ?></p>
 				</div>
-				<span class="dashicons dashicons-car" aria-hidden="true"></span>
+				<?php if ( $logo ) : ?><div class="adc-workspace-brand"><?php echo $logo; // WordPress attachment markup or escaped site icon. ?></div><?php endif; ?>
 			</header>
 
 			<?php foreach ( $groups as $group ) : ?>

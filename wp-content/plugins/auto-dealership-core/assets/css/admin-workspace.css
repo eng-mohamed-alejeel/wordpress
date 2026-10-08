@@ -15,7 +15,7 @@
 	box-shadow: 0 8px 24px rgba(21, 42, 70, .12);
 }
 
-.adc-workspace-hero span:first-child {
+.adc-workspace-hero > div > span:first-child {
 	display: block;
 	margin-bottom: 5px;
 	color: #dbe8fc;
@@ -37,16 +37,20 @@
 
 .adc-admin .adc-workspace-hero h1 { font-size: 30px; font-weight: 700; line-height: 1.5; }
 
-.adc-workspace-hero > .dashicons {
+.adc-workspace-brand {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	flex-shrink: 0;
-	width: 76px;
-	height: 76px;
+	box-sizing: border-box;
+	width: 180px;
+	min-height: 108px;
 	padding: 16px;
 	border: 1px solid rgba(255, 255, 255, .18);
 	border-radius: 18px;
-	background: rgba(255, 255, 255, .08);
-	font-size: 76px;
+	background: #fff;
 }
+.adc-workspace-logo { display: block; width: auto; height: auto; max-width: 100%; max-height: 100px; object-fit: contain; }
 
 .adc-workspace-section {
 	margin-bottom: 32px;
@@ -113,10 +117,15 @@
 @media (max-width: 782px) {
 	.adc-workspace-hero {
 		padding: 22px;
+		flex-direction: column;
+		align-items: stretch;
 	}
 
-	.adc-workspace-hero > .dashicons {
-		display: none;
+	.adc-workspace-brand {
+		align-self: flex-start;
+		width: 140px;
+		min-height: 80px;
+		padding: 12px;
 	}
 	.adc-admin .adc-workspace-hero h1 { font-size: 24px; }
 }
