@@ -66,8 +66,20 @@ final class WorkspacePage {
 				<?php if ( ! $items ) { continue; } ?>
 				<section class="adc-workspace-section">
 					<?php if ( ! $area_allowed ) : ?><h2><?php echo esc_html( $group['title'] ); ?></h2><?php endif; ?>
+					<?php
+					$sections = array( '' => $items );
+					if ( 'inventory' === $group['id'] ) {
+						$sections = array(
+							'المركبات التشغيلية' => array_filter( $items, static fn( array $item ): bool => ! str_contains( $item['path'], 'post_type=car' ) ),
+							'كتالوج الموقع' => array_filter( $items, static fn( array $item ): bool => str_contains( $item['path'], 'post_type=car' ) ),
+						);
+					}
+					foreach ( $sections as $section_title => $section_items ) :
+						if ( ! $section_items ) { continue; }
+					?>
+					<?php if ( $section_title ) : ?><h3><?php echo esc_html__( $section_title, 'auto-dealership-core' ); ?></h3><?php endif; ?>
 					<div class="adc-workspace-grid">
-						<?php foreach ( $items as $item ) : ?>
+						<?php foreach ( $section_items as $item ) : ?>
 							<a class="adc-workspace-card" href="<?php echo esc_url( self::url( $item['path'] ) ); ?>">
 								<span class="dashicons <?php echo esc_attr( $item['icon'] ); ?>" aria-hidden="true"></span>
 								<strong><?php echo esc_html( $item['title'] ); ?></strong>
@@ -75,6 +87,7 @@ final class WorkspacePage {
 							</a>
 						<?php endforeach; ?>
 					</div>
+					<?php endforeach; ?>
 				</section>
 			<?php endforeach; ?>
 		</div>

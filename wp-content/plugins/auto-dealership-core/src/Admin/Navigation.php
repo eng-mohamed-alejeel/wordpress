@@ -7,6 +7,16 @@ defined( 'ABSPATH' ) || exit;
 final class Navigation {
 	public static function boot(): void {
 		add_action( 'admin_menu', array( self::class, 'menu' ), 99 );
+		add_filter( 'parent_file', array( self::class, 'parent_file' ) );
+	}
+
+	public static function parent_file( string $parent ): string {
+		$screen = get_current_screen();
+		if ( $screen && in_array( $screen->base, array( 'edit-tags', 'term' ), true ) && in_array( $screen->taxonomy, array( 'car_brand', 'car_category' ), true ) ) {
+			$GLOBALS['submenu_file'] = 'edit-tags.php?taxonomy=' . $screen->taxonomy . '&post_type=car';
+			return 'adc-area-inventory';
+		}
+		return $parent;
 	}
 
 	public static function groups(): array {
@@ -28,6 +38,9 @@ final class Navigation {
 				array( 'adc-transfer-queue', 'متابعة نقل المركبات', 'adc_transfer_inventory', TransferPages::class, 'render' ),
 				array( 'adc-vehicle-issues', 'الاحتجاز والصيانة', 'adc_manage_inventory', VehicleIssuePage::class, 'render' ),
 				array( 'adc-vehicle-returns', 'مرتجعات المركبات', 'adc_process_returns', VehicleReturnPage::class, 'render' ),
+				array( 'edit.php?post_type=car', 'صفحات السيارات', 'edit_cars' ),
+				array( 'edit-tags.php?taxonomy=car_brand&post_type=car', 'ماركات السيارات', 'manage_car_brands' ),
+				array( 'edit-tags.php?taxonomy=car_category&post_type=car', 'فئات السيارات', 'manage_car_categories' ),
 			) ),
 			'purchasing' => array( 'المشتريات', 'dashicons-store', array(
 				array( 'adc-suppliers', 'الموردون', 'adc_view_suppliers', SupplierPage::class, 'render' ),
@@ -47,10 +60,7 @@ final class Navigation {
 				array( 'adc-delivery', 'تجهيز وتسليم المركبات', array( 'adc_approve_delivery', 'adc_confirm_vehicle_vin' ), WorkflowPages::class, 'delivery' ),
 			) ),
 			'content' => array( 'محتوى الموقع', 'dashicons-admin-page', array(
-				array( 'edit.php?post_type=car', 'السيارات المنشورة', 'edit_cars' ),
 				array( 'edit.php?post_type=car_offer', 'العروض الترويجية', 'edit_car_offers' ),
-				array( 'edit-tags.php?taxonomy=car_brand&post_type=car', 'ماركات السيارات المنشورة', 'manage_car_brands' ),
-				array( 'edit-tags.php?taxonomy=car_category&post_type=car', 'فئات السيارات المنشورة', 'manage_car_categories' ),
 				array( 'edit.php?post_type=page', 'صفحات الموقع', 'edit_pages' ),
 				array( 'upload.php', 'مكتبة الوسائط', 'upload_files' ),
 				array( 'customize.php', 'مظهر الموقع وبيانات التواصل', 'customize' ),
@@ -98,6 +108,8 @@ final class Navigation {
 			'admin.php?page=adc-quotes' => __( 'إنشاء ومراجعة عروض الأسعار المسموح بها.', 'auto-dealership-core' ),
 			'admin.php?page=adc-inventory' => __( 'المركبات وحالاتها التشغيلية حسب الفرع.', 'auto-dealership-core' ),
 			'edit.php?post_type=car' => __( 'إدارة صفحات السيارات التحريرية.', 'auto-dealership-core' ),
+			'edit-tags.php?taxonomy=car_brand&post_type=car' => __( 'إدارة ماركات السيارات في كتالوج الموقع.', 'auto-dealership-core' ),
+			'edit-tags.php?taxonomy=car_category&post_type=car' => __( 'إدارة فئات السيارات في كتالوج الموقع.', 'auto-dealership-core' ),
 			'edit.php?post_type=car_offer' => __( 'إدارة محتوى عروض السيارات.', 'auto-dealership-core' ),
 			'admin.php?page=adc-transfers' => __( 'إنشاء طلب نقل لمركبة متاحة إلى فرع آخر.', 'auto-dealership-core' ),
 			'admin.php?page=adc-transfer-queue' => __( 'اعتماد وإرسال واستلام النقل بين الفروع.', 'auto-dealership-core' ),

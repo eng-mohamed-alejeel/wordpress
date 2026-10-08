@@ -163,6 +163,7 @@ const { spawn } = require('node:child_process');
         for(const group of groups) {
           await admin('admin.php?page=adc-area-'+group);
           check(await evaluate('document.querySelectorAll(".adc-workspace-section").length===1 && document.querySelectorAll(".adc-workspace-card").length>0'),'Group landing: '+group);
+          if (group==='inventory') check(await evaluate('document.querySelectorAll(".adc-workspace-section h3").length===2 && [...document.querySelectorAll(".adc-workspace-grid")].map(grid=>grid.querySelectorAll(".adc-workspace-card").length).join(",")==="8,3"'),'Inventory separates operations and website catalog');
         }
         const fields={pricing:['vat_rate_bps','pricing_fee_amount','promotion_code','seller_name'],reservations:['reservation_hours','reservation_deposit_type'],branches:['default_branch_id','code'],delivery:['delivery_required_documents[]'],privacy:['privacy_retention_days'],catalog:['public_catalog_mode']};
         for(const [section,expected] of Object.entries(fields)) {
@@ -201,8 +202,13 @@ const { spawn } = require('node:child_process');
         const other=['adc-crm','car-dealer-messages','car-dealer-bookings','adc-quotes','adc-customer-identities','adc-inventory','adc-vehicle-specifications','adc-transfers','adc-transfer-queue','adc-vehicle-returns','adc-suppliers','adc-vehicle-acquisition','adc-finance','adc-payments','adc-refunds','adc-financial-export','adc-delivery','adc-editorial-setup','car-dealer-subscribers','adc-operational-reports','adc-finance-calculator','adc-catalog-cutover','adc-stored-translations','adc-audit','adc-public-security','adc-integrations','adc-outbox','adc-sale-cancellations'];
         for(const page of other) await admin('admin.php?page='+page);
         await admin('edit.php?post_type=car');
-        check(await evaluate('!!document.querySelector("#adminmenu .wp-has-current-submenu a[href*=adc-area-content]")'),'Published cars highlight content menu');
+        check(await evaluate('!!document.querySelector("#adminmenu .wp-has-current-submenu a[href*=adc-area-inventory]")'),'Car pages highlight inventory menu');
         await admin('edit.php?post_type=car_offer');
+        check(await evaluate('!!document.querySelector("#adminmenu .wp-has-current-submenu a[href*=adc-area-content]")'),'Offers retain content menu');
+        for (const taxonomy of ['car_brand','car_category']) {
+          await admin('edit-tags.php?taxonomy='+taxonomy+'&post_type=car');
+          check(await evaluate('!!document.querySelector("#adminmenu .wp-has-current-submenu a[href*=adc-area-inventory]")'),'Car taxonomy highlights inventory: '+taxonomy);
+        }
         await admin('admin.php?page=adc-workspace');
         await call('Page.captureScreenshot',{format:'png'}).then(r=>fs.writeFileSync(path.join(captures,'workspace-desktop.png'),Buffer.from(r.data,'base64')));
         await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
