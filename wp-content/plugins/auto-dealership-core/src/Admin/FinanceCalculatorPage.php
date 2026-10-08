@@ -9,7 +9,7 @@ final class FinanceCalculatorPage {
  }
  public static function assets(string $hook): void {
   if(($_GET['page']??'')!=='adc-finance-calculator')return;
-  wp_enqueue_style('adc-finance-admin',plugins_url('assets/css/finance-admin.css',ADC_FILE),[],(string)filemtime(ADC_PATH.'assets/css/finance-admin.css'));
+  wp_enqueue_style('adc-finance-admin',plugins_url('assets/css/finance-admin.css',ADC_FILE),['adc-admin'],(string)filemtime(ADC_PATH.'assets/css/finance-admin.css'));
   wp_enqueue_script('adc-finance-admin',plugins_url('assets/js/finance-admin.js',ADC_FILE),[],(string)filemtime(ADC_PATH.'assets/js/finance-admin.js'),true);
  }
  private static function guard(): void { if(!current_user_can('manage_options'))wp_die('غير مسموح.','',['response'=>403]); }

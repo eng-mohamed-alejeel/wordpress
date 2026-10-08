@@ -60,7 +60,7 @@ final class CatalogCutoverPage {
 		<?php
 	}
 
-	private static function metric( string $label, bool $pass, string $value ): void { ?><tr><th><?php echo esc_html__( $label, 'auto-dealership-core' ); ?></th><td><strong style="color:<?php echo esc_attr( $pass ? '#16794b' : '#b32d2e' ); ?>"><?php echo esc_html( $pass ? '✓' : '✕' ); ?></strong> <?php echo esc_html__( $value, 'auto-dealership-core' ); ?></td></tr><?php }
+	private static function metric( string $label, bool $pass, string $value ): void { ?><tr><th><?php echo esc_html__( $label, 'auto-dealership-core' ); ?></th><td><strong class="<?php echo $pass ? 'adc-metric-pass' : 'adc-metric-fail'; ?>"><?php echo esc_html( $pass ? '✓' : '✕' ); ?></strong> <?php echo esc_html__( $value, 'auto-dealership-core' ); ?></td></tr><?php }
 
 	private static function issues( string $title, array $rows, array $columns, int $total ): void {
 		echo '<h2>' . esc_html__( $title, 'auto-dealership-core' ) . ' <span class="count">(' . absint( $total ) . ')</span></h2>';

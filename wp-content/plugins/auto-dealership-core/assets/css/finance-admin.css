@@ -1,15 +1,14 @@
 .adc-finance-admin { max-width:1280px; }
-.adc-finance-admin .adc-fa-card { margin:1.5rem 0; padding:1.5rem; background:#fff; border:1px solid #ccd5df; border-radius:8px; box-shadow:0 2px 6px #102a4308; }
+.adc-finance-admin .adc-fa-card { margin:24px 0; padding:24px; background:var(--adc-surface); border:1px solid var(--adc-border); border-radius:12px; box-shadow:0 3px 14px rgb(24 43 66 / 4%); }
 .adc-finance-admin .adc-fa-card h2 { margin-block-start:0; }
 .adc-finance-admin .adc-fa-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr)); gap:1rem; margin-block:1rem; }
 .adc-finance-admin .adc-fa-field { display:flex; flex-direction:column; justify-content:end; gap:.4rem; font-weight:600; min-width:0; }
 .adc-finance-admin .adc-fa-field input,.adc-finance-admin .adc-fa-field select,.adc-finance-admin .adc-fa-field textarea { width:100%; max-width:100%; box-sizing:border-box; font-weight:400; }
-.adc-finance-admin .adc-fa-field input,.adc-finance-admin .adc-fa-field select { min-height:40px; }
+.adc-finance-admin .adc-fa-field input,.adc-finance-admin .adc-fa-field select { min-height:var(--adc-control-height); }
 .adc-finance-admin .adc-fa-check { display:block; margin-block:.8rem; }
 .adc-finance-admin .adc-fa-checks { display:flex; flex-wrap:wrap; gap:1rem; margin-block:1rem; }
-.adc-finance-admin .adc-fa-rule { padding:1rem; border:1px solid #c9d6e2; border-inline-start:4px solid #2271b1; border-radius:5px; margin-block:1rem; background:#f6f9fc; }
+.adc-finance-admin .adc-fa-rule { padding:1rem; border:1px solid var(--adc-border); border-inline-start:4px solid var(--adc-accent); border-radius:7px; margin-block:1rem; background:var(--adc-soft); }
 .adc-finance-admin summary { font-weight:700; cursor:pointer; }
 .adc-finance-admin .adc-fa-delete { color:#a01b25; }
-.adc-finance-admin td form { display:inline-block; margin:.3rem; }
 .adc-finance-admin table { table-layout:fixed; overflow-wrap:anywhere; }
-@media(max-width:600px){.adc-finance-admin .adc-fa-card{padding:1rem}.adc-finance-admin table{table-layout:auto}.adc-finance-admin td form{display:block}}
+@media(max-width:600px){.adc-finance-admin .adc-fa-card{padding:1rem}.adc-finance-admin table{table-layout:auto}}

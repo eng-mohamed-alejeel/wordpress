@@ -60,7 +60,7 @@ final class EditorialSetupPage {
 					<fieldset>
 						<legend class="screen-reader-text"><?php esc_html_e( 'الصفحات المطلوب إنشاؤها', 'auto-dealership-core' ); ?></legend>
 						<?php foreach ( $missing as $row ) : ?>
-							<label style="display:block;margin:.5rem 0"><input type="checkbox" name="pages[]" value="<?php echo esc_attr( $row['slug'] ); ?>" checked> <?php echo esc_html( $row['title'] . ' — /' . $row['slug'] . '/' ); ?></label>
+							<label class="adc-check"><input type="checkbox" name="pages[]" value="<?php echo esc_attr( $row['slug'] ); ?>" checked> <?php echo esc_html( $row['title'] . ' — /' . $row['slug'] . '/' ); ?></label>
 						<?php endforeach; ?>
 					</fieldset>
 					<p><label for="adc-editorial-reason"><strong><?php esc_html_e( 'سبب الإعداد', 'auto-dealership-core' ); ?></strong></label><br><textarea id="adc-editorial-reason" name="reason" rows="3" class="large-text" minlength="5" maxlength="500" required></textarea></p>

@@ -1,0 +1,20 @@
+/* Dealership content screens keep WordPress table and editor behavior. */
+.adc-admin-native { --adc-accent: #2459a9; --adc-control-height: 42px; background: #f1f4f8; }
+.adc-admin-native #wpbody-content > .wrap > h1 { color: #182b42; font-weight: 700; }
+.adc-admin-native .wrap .button { border-radius: 7px; }
+.adc-admin-native .wrap .button-primary { background: var(--adc-accent); border-color: var(--adc-accent); }
+.adc-admin-native .wrap .button-primary:hover { background: #194783; border-color: #194783; }
+.adc-admin-native .wrap :is(input[type="text"], input[type="search"], input[type="number"], input[type="url"], select, textarea) { border-radius: 7px; border-color: #aab9cb; }
+.adc-admin-native .wrap .tablenav .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.adc-admin-native .wrap .tablenav .actions :is(select, .button) { margin: 0; }
+.adc-admin-native .wrap .tablenav { height: auto; min-height: var(--adc-control-height); }
+.adc-admin-native .wrap :is(.tablenav .actions, .search-box) :is(input[type="search"], select, .button) { box-sizing: border-box; height: var(--adc-control-height); min-height: var(--adc-control-height); line-height: 24px; padding-block: 8px; }
+.adc-admin-native .wrap .search-box { display: flex; align-items: center; gap: 8px; }
+.adc-admin-native .wrap .search-box input { margin: 0; }
+.adc-admin-native .wrap .wp-list-table { border-color: #dce4ee; box-shadow: none; }
+.adc-admin-native .wrap .wp-list-table thead th { background: #edf2f9; }
+.adc-admin-native .wrap :is(.postbox, #poststuff .stuffbox) { border-color: #dce4ee; border-radius: 8px; }
+@media (max-width: 782px) {
+	.adc-admin-native { --adc-control-height: 44px; }
+	.adc-admin-native .wrap .tablenav .actions { overflow: visible; }
+}

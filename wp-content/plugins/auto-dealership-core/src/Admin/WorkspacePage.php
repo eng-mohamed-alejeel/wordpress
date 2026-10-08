@@ -18,10 +18,18 @@ final class WorkspacePage {
 	}
 
 	public static function body_class( string $classes ): string {
-		return self::is_plugin_screen() ? $classes . ' adc-admin' : $classes;
+		return self::is_plugin_screen() ? $classes . ' adc-admin' : ( self::is_content_screen() ? $classes . ' adc-admin-native' : $classes );
+	}
+
+	private static function is_content_screen(): bool {
+		$screen = get_current_screen();
+		return $screen && in_array( $screen->post_type, array( 'car', 'car_offer' ), true ) && in_array( $screen->base, array( 'edit', 'edit-tags', 'term', 'post' ), true );
 	}
 
 	public static function enqueue(): void {
+		if ( self::is_content_screen() ) {
+			wp_enqueue_style( 'adc-admin-native', plugins_url( 'assets/css/admin-native.css', ADC_FILE ), array(), (string) filemtime( dirname( ADC_FILE ) . '/assets/css/admin-native.css' ) );
+		}
 		if ( ! self::is_plugin_screen() ) {
 			return;
 		}

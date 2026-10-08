@@ -94,7 +94,64 @@ const { spawn } = require('node:child_process');
           await wait('document.readyState==="complete" && !!document.querySelector("#wpbody-content .wrap")',route);
           const state=await evaluate('({url:location.href,text:document.body.innerText,heading:document.querySelector(".wrap h1")?.innerText})');
           check(!/Fatal error|Warning:|Parse error|لا تملك صلاحية|لا توجد لديك صلاحية/.test(state.text),'Page renders: '+route);
+          if (process.env.ADC_LAYOUT_AUDIT === '1') {
+            if (process.env.ADC_LAYOUT_FIXTURE === '1' && await evaluate('document.body.classList.contains("adc-admin")')) {
+              await evaluate(`(() => {
+                const fixture=document.createElement('div');fixture.dataset.layoutFixture='true';
+                fixture.innerHTML='<div class="adc-table-scroll"><table class="widefat"><tbody><tr><td>Layout review</td><td><form><label class="adc-field">Document reference with a deliberately long label<input name="layout_reference" value="Reference"></label><label class="adc-field">Condition<select name="layout_condition"><option>Good condition</option></select></label><label class="adc-field">Review date<input name="layout_date" type="date"></label><label class="adc-field">Notes<textarea name="layout_notes">Long notes for reviewing the action layout.</textarea></label><button type="button" class="button button-primary">Save changes</button></form></td></tr></tbody></table></div>';
+                document.querySelector('#wpbody-content > .wrap').append(fixture);
+              })()`);
+            }
+            if (process.env.ADC_LAYOUT_DIRECTION === 'ltr') await evaluate('document.querySelector("#wpbody-content > .wrap").dir="ltr"');
+            for (const width of [1440, 768, 390]) {
+              await call('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 783 });
+              await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+              const layout = await evaluate(`(() => {
+                const plugin = document.body.classList.contains('adc-admin');
+                const visible = e => e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().height > 0;
+                const controls = [...document.querySelectorAll('.adc-admin .wrap input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]), .adc-admin .wrap select:not([multiple])')].filter(visible);
+                const expected = parseFloat(getComputedStyle(document.body).getPropertyValue('--adc-control-height'));
+                const buttons=[...document.querySelectorAll('.adc-admin .wrap .button')].filter(visible);
+                const misaligned=buttons.filter(button => {
+                  const parent=button.parentElement;
+                  if (!['FORM','P'].includes(parent.tagName) || getComputedStyle(parent).display !== 'flex') return false;
+                  const b=button.getBoundingClientRect();
+                  return [...parent.children].some(child => {
+                    const control=child.matches('input:not([type="hidden"]),select') ? child : child.matches('label') ? child.querySelector('input:not([type="checkbox"]):not([type="radio"]),select') : null;
+                    if (!control || !visible(control)) return false;
+                    const r=control.getBoundingClientRect();
+                    return Math.min(r.bottom,b.bottom)-Math.max(r.top,b.top)>5 && Math.abs(r.bottom-b.bottom)>1;
+                  });
+                }).map(e=>e.textContent.trim() || e.value);
+                return { plugin, native: document.body.classList.contains('adc-admin-native'), overflow: document.documentElement.scrollWidth - innerWidth,
+                  shortButtons: buttons.filter(e=>e.getBoundingClientRect().height < expected-1).map(e=>e.textContent.trim() || e.value), misaligned,
+                  wrongHeights: controls.filter(e => Math.abs(e.getBoundingClientRect().height - expected) > 1).map(e => ({name:e.name,height:e.getBoundingClientRect().height})),
+                  clipped: controls.filter(e => { const r=e.getBoundingClientRect(); return !e.closest('.adc-table-scroll') && (r.left < -1 || r.right > innerWidth + 1); }).map(e=>e.name) };
+              })()`);
+              if (layout.plugin) {
+                check(layout.overflow <= 2, 'Viewport fits '+width+': '+route+'; overflow='+layout.overflow);
+                check(layout.wrongHeights.length === 0, 'Consistent controls '+width+': '+route+' '+JSON.stringify(layout.wrongHeights));
+                check(layout.clipped.length === 0, 'Unclipped fields '+width+': '+route+' '+JSON.stringify(layout.clipped));
+                check(layout.shortButtons.length === 0, 'Consistent buttons '+width+': '+route+' '+JSON.stringify(layout.shortButtons));
+                check(layout.misaligned.length === 0, 'Aligned actions '+width+': '+route+' '+JSON.stringify(layout.misaligned));
+              }
+              if (layout.native) check(layout.overflow <= 2, 'Native content viewport fits '+width+': '+route+'; overflow='+layout.overflow);
+              if (width !== 768 && /adc-(inventory-identity|suppliers|vehicle-issues|finance-calculator|settings)|post_type=car/.test(route)) {
+                const name=route.replace(/[^a-z0-9-]/gi,'_');
+                await call('Page.captureScreenshot',{format:'png'}).then(r=>fs.writeFileSync(path.join(captures,name+'-'+width+'.png'),Buffer.from(r.data,'base64')));
+              }
+            }
+            await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+            await evaluate('document.querySelector("[data-layout-fixture]")?.remove()');
+          }
           return state;
+        }
+        if (process.env.ADC_LAYOUT_ROUTES) {
+          for (const route of process.env.ADC_LAYOUT_ROUTES.split(',')) await admin(route);
+          check(errors.length===0,'No browser runtime exceptions');
+          check(badAssets.length===0,'No failed JS/CSS responses');
+          console.log('Dashboard focused layout acceptance: '+passed+' checks passed.');
+          return;
         }
         const groups=['customers','inventory','purchasing','approvals','finance','delivery','content','marketing','reports','settings','audit'];
         await admin('admin.php?page=adc-workspace');

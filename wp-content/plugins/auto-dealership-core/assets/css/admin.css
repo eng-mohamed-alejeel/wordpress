@@ -9,6 +9,9 @@
 	--adc-border: #dce4ee;
 	--adc-surface: #fff;
 	--adc-soft: #f3f6fb;
+	--adc-control-height: 42px;
+	--adc-control-radius: 7px;
+	--adc-gap: 16px;
 	background: #f1f4f8;
 }
 .adc-admin #wpbody-content > .wrap {
@@ -47,28 +50,21 @@
 }
 .adc-admin .wrap .card > h2:first-child,
 .adc-admin .wrap .card > h3:first-child { margin-block-start: 0; }
-.adc-admin .wrap form.card > p { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; }
-.adc-admin .wrap form.card > p > label { flex: 1 1 220px; }
-.adc-admin .wrap form.card > p > label:not(:has(input[type="checkbox"], input[type="radio"])) {
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
-	gap: 6px;
-	font-weight: 500;
-}
 .adc-admin .wrap :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea) {
 	box-sizing: border-box;
 	max-width: 100%;
-	min-height: 40px;
+	min-height: var(--adc-control-height);
+	margin: 0;
 	padding: 6px 12px;
 	border: 1px solid #aab9cb;
-	border-radius: 7px;
+	border-radius: var(--adc-control-radius);
 	background-color: var(--adc-surface);
 	color: var(--adc-ink);
 	font-size: 14px;
 	line-height: 1.6;
 }
-.adc-admin .wrap select { padding-inline-end: 30px; }
+.adc-admin .wrap select { height: var(--adc-control-height); padding-inline-end: 30px; }
+.adc-admin .wrap input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]) { height: var(--adc-control-height); }
 .adc-admin .wrap textarea { min-height: 96px; resize: vertical; }
 .adc-admin .wrap input::placeholder,
 .adc-admin .wrap textarea::placeholder { color: #65768a; opacity: 1; }
@@ -82,14 +78,20 @@
 .adc-admin .wrap input[readonly],
 .adc-admin .wrap textarea[readonly] { background-color: var(--adc-soft); }
 .adc-admin .wrap .button {
-	min-height: 38px;
-	padding: 4px 15px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	min-height: var(--adc-control-height);
+	max-width: 100%;
+	margin: 0;
+	padding: 8px 15px;
 	border-color: #b5c5d9;
 	border-radius: 7px;
 	background: #fff;
 	color: var(--adc-accent);
 	font-size: 14px;
-	line-height: 2;
+	line-height: 24px;
 	white-space: normal;
 	text-align: center;
 	transition: background-color .15s, border-color .15s;
@@ -114,7 +116,7 @@
 	background: #fff;
 	overscroll-behavior-inline: contain;
 }
-.adc-admin .wrap .widefat { border: 1px solid var(--adc-border); border-spacing: 0; box-shadow: none; }
+.adc-admin .wrap table.widefat { border: 1px solid var(--adc-border); border-spacing: 0; box-shadow: none; }
 .adc-admin .adc-table-scroll > .widefat { min-width: 760px; border: 0; }
 .adc-admin .wrap .widefat th { padding: 14px 16px; background: #edf2f9; color: #334b68; font-weight: 700; text-align: start; }
 .adc-admin .wrap .widefat td { padding: 16px; color: var(--adc-ink); vertical-align: top; line-height: 1.7; overflow-wrap: anywhere; }
@@ -122,11 +124,87 @@
 .adc-admin .wrap .widefat tbody tr:last-child > * { border-bottom: 0; }
 .adc-admin .wrap .striped > tbody > :nth-child(odd) { background: #f8fafd; }
 .adc-admin .wrap .widefat tbody tr:hover { background: #f0f5fc; }
-.adc-admin .wrap .widefat td form { margin-block: 6px; }
-.adc-admin .wrap .widefat td form > :is(input:not([type="hidden"]), select, textarea, .button) { margin-block: 3px; }
 .adc-admin .wrap .widefat code { display: inline-block; direction: ltr; unicode-bidi: isolate; white-space: nowrap; background: #edf2f7; border-radius: 4px; }
 .adc-admin .wrap .notice { margin-block: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgb(24 43 66 / 4%); }
 .adc-admin .wrap pre { max-width: 100%; overflow: auto; padding: 16px; border: 1px solid var(--adc-border); border-radius: 8px; background: var(--adc-soft); }
+/* A row can belong to a card, a filter or an operation outside a card. */
+.adc-admin .wrap :is(form, form > p, form > div:not(.adc-fa-grid):not(.adc-fa-checks)):has(> :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select, textarea), > label > :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea)) {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: var(--adc-gap);
+	margin-block: 16px;
+}
+.adc-admin .wrap form > :is(h2, h3, p, table, .adc-table-scroll, fieldset, .notice, .card, .adc-fa-grid, .adc-fa-checks) { flex-basis: 100%; min-width: 0; }
+.adc-admin .wrap form > input[type="hidden"] { display: none; }
+.adc-admin .wrap form label:has(:is(input, select, textarea)):not(:has(input[type="checkbox"], input[type="radio"])) {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+	max-width: 100%;
+	font-weight: 500;
+}
+.adc-admin .wrap form label:has(input[type="checkbox"], input[type="radio"]) { line-height: 1.8; }
+.adc-admin .wrap input:is([type="checkbox"], [type="radio"]) { flex-shrink: 0; accent-color: var(--adc-accent); }
+.adc-admin .wrap form > p > :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]), select, label:not(:has(input[type="checkbox"], input[type="radio"]))) { flex: 1 1 200px; min-width: 0; }
+.adc-admin .wrap form > p > textarea { flex: 1 1 100%; width: 100%; }
+.adc-admin .wrap form > .adc-field { flex: 1 1 220px; }
+.adc-admin .wrap form .adc-field:has(> textarea) { flex-basis: 100%; }
+.adc-admin .wrap .adc-field > :is(input, select, textarea) { width: 100%; }
+.adc-admin .wrap .adc-check { display: block; margin-block: 8px; }
+.adc-admin .wrap .adc-export-actions { margin-block: 16px; }
+.adc-admin .wrap .adc-metric-pass { color: #16794b; }
+.adc-admin .wrap .adc-metric-fail { color: #b32d2e; }
+.adc-admin .wrap form > p.submit { flex-basis: 100%; margin-block: 20px 0; padding: 0; }
+.adc-admin .wrap table.widefat td form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: 10px;
+	margin: 8px 0;
+}
+.adc-admin .wrap table.widefat td form > :is(input:not([type="hidden"]), select, textarea, label) { flex: 1 1 180px; min-width: 0; width: 100%; margin: 0; }
+.adc-admin .wrap table.widefat td form > textarea { flex-basis: 100%; }
+.adc-admin .wrap table.widefat td form > .button { flex: 0 1 auto; margin: 0; }
+.adc-admin .wrap table.widefat td form > br { display: none; }
+.adc-admin .adc-table-scroll > table.widefat:not(:has(tr > :nth-child(3))) { min-width: 600px; }
+.adc-admin .wrap .form-table th { vertical-align: top; text-align: start; }
+.adc-admin .wrap .form-table td > label:has(input[type="checkbox"]) { display: block; margin-block: 8px; }
+.adc-admin .wrap .nav-tab-wrapper {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-block: 0 24px;
+	padding: 0 0 12px;
+	border-bottom: 1px solid var(--adc-border);
+}
+.adc-admin .wrap .nav-tab {
+	float: none;
+	margin: 0;
+	padding: 10px 18px;
+	border: 1px solid var(--adc-border);
+	border-radius: 7px;
+	background: var(--adc-surface);
+	color: var(--adc-muted);
+	font-size: 14px;
+	line-height: 1.5;
+	white-space: normal;
+}
+.adc-admin .wrap .nav-tab:hover { background: #edf3fc; color: var(--adc-accent); }
+.adc-admin .wrap .nav-tab-active { border-color: var(--adc-accent); background: var(--adc-accent); color: #fff; }
+.adc-admin .wrap .nav-tab-active:hover { background: #194783; color: #fff; }
+.adc-admin .wrap .tablenav,
+.adc-admin .wrap .tablenav-pages { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; float: none; height: auto; min-height: var(--adc-control-height); margin-block: 16px; }
+.adc-admin .wrap .tablenav-pages { margin: 0; }
+.adc-admin .wrap .page-numbers { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: var(--adc-control-height); min-height: var(--adc-control-height); padding: 6px 12px; border: 1px solid var(--adc-border); border-radius: 7px; background: #fff; text-decoration: none; }
+.adc-admin .wrap .page-numbers.current { background: var(--adc-accent); border-color: var(--adc-accent); color: #fff; }
+.adc-admin .wrap .subsubsub { display: flex; flex-wrap: wrap; gap: 8px; float: none; margin-block: 12px 20px; }
+.adc-admin .wrap .subsubsub a { display: inline-block; padding: 6px 10px; border-radius: 6px; background: var(--adc-surface); }
+.adc-admin .wrap .subsubsub a.current { color: var(--adc-accent); background: #e5edfa; }
+.adc-admin .wrap .button:focus-visible { outline: 2px solid var(--adc-accent); outline-offset: 3px; box-shadow: none; }
+.adc-admin .wrap .button:disabled,
+.adc-admin .wrap .button.disabled { border-color: var(--adc-border) !important; background: var(--adc-soft) !important; color: var(--adc-muted) !important; text-shadow: none !important; }
 @media (max-width: 782px) {
 	.adc-admin #wpbody-content > .wrap { margin-block-start: 16px; }
 	.adc-admin .wrap > h1 { padding: 16px; font-size: 22px; }
@@ -134,7 +212,11 @@
 	.adc-admin .wrap .form-table th { padding: 16px 16px 6px; border-bottom: 0; }
 	.adc-admin .wrap .form-table td { padding: 6px 16px 18px; }
 	.adc-admin .wrap .form-table :is(input.regular-text, textarea, select) { width: 100%; }
-	.adc-admin .wrap .button { min-height: 44px; padding-block: 6px; }
+	.adc-admin { --adc-control-height: 44px; }
+	.adc-admin .wrap form:not(.adc-queue-search) > :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]), select, textarea, label) { max-width: 100%; }
+	.adc-admin .adc-queue-search { gap: 10px; }
+	.adc-admin .adc-queue-search label { flex: 1 1 180px; }
+	.adc-admin .adc-queue-search input { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
 	.adc-admin .wrap .button { transition: none; }

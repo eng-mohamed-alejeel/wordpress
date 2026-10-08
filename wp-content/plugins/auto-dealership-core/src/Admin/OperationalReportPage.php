@@ -39,7 +39,7 @@ final class OperationalReportPage {
 			<?php if ( is_wp_error( $report ) ) : ?>
 				<div class="notice notice-error inline"><p><?php echo esc_html( $report->get_error_message() ); ?> <code><?php echo esc_html( $report->get_error_code() ); ?></code></p></div>
 			<?php else : ?>
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:1em 0"><input type="hidden" name="action" value="adc_operational_report_export"><input type="hidden" name="from" value="<?php echo esc_attr( $from ); ?>"><input type="hidden" name="to" value="<?php echo esc_attr( $to ); ?>"><?php wp_nonce_field( 'adc_operational_report_export' ); ?><?php submit_button( __( 'تنزيل CSV مدقق', 'auto-dealership-core' ), 'primary', 'submit', false ); ?></form>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="adc-export-actions"><input type="hidden" name="action" value="adc_operational_report_export"><input type="hidden" name="from" value="<?php echo esc_attr( $from ); ?>"><input type="hidden" name="to" value="<?php echo esc_attr( $to ); ?>"><?php wp_nonce_field( 'adc_operational_report_export' ); ?><?php submit_button( __( 'تنزيل CSV مدقق', 'auto-dealership-core' ), 'primary', 'submit', false ); ?></form>
 				<p><small><?php echo esc_html( sprintf( __( 'أُنشئ في %s UTC. المخزون والاستثناءات لقطة حالية، وبقية الأقسام ضمن الفترة المختارة.', 'auto-dealership-core' ), $report['generated_at'] ) ); ?></small></p>
 				<?php foreach ( OperationalReport::SECTIONS as $section ) { self::table( $section, $report['sections'][ $section ] ); } ?>
 			<?php endif; ?>
