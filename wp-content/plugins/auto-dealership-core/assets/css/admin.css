@@ -1,4 +1,7 @@
 /* Shared presentation, confined to registered dealership administration screens. */
+.adc-admin .adc-queue-search { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin-block: 16px; }
+.adc-admin .adc-queue-search label { display: grid; gap: 4px; max-width: 100%; }
+.adc-admin .adc-queue-search input[type="search"] { max-width: 100%; }
 .adc-admin {
 	--adc-ink: #182b42;
 	--adc-muted: #52657a;

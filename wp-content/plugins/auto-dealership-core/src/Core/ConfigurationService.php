@@ -21,6 +21,13 @@ final class ConfigurationService {
 	);
 	private const DELIVERY_DOCUMENTS = array( 'invoice', 'customer_identity', 'vehicle_registration', 'insurance', 'handover_form', 'finance_clearance' );
 
+	/** Merge a section with persisted values before validating the complete policy. */
+	public static function update_section( array $input, array $fields ) {
+		$current = array();
+		foreach ( self::values() as $key => $value ) { $current[substr( $key, 4 )] = $value; }
+		return self::update( array_replace( $current, array_intersect_key( $input, array_flip( $fields ) ) ) );
+	}
+
 	public static function update( array $input ) {
 		if ( ! current_user_can( 'manage_options' ) ) { return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية حفظ الإعدادات.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }
 		$default_branch = absint( $input['default_branch_id'] ?? 0 );

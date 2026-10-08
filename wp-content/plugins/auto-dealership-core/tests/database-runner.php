@@ -98,6 +98,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( 0 );
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
+	if ( '1' === getenv( 'ADC_DASHBOARD_ONLY' ) ) { require __DIR__ . '/dashboard-queue-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_CURRENCY_ONLY' ) ) { require __DIR__ . '/currency-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_THEME_CUTOVER' ) ) { require __DIR__ . '/theme-cutover.php'; exit; }
 	if ( '1' === getenv( 'ADC_JOURNEY_ONLY' ) ) { require __DIR__ . '/account-journey-fixture.php'; exit; }

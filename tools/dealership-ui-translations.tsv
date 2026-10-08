@@ -1342,3 +1342,62 @@ VIN الجديد	New VIN
 المبالغ الثابتة بالريال؛ النسب بنقاط الأساس؛ 1500 تعني 15%.	Fixed amounts use SAR; percentage values use basis points; 1500 means 15%.
 
 أعد تحميل هذا النموذج قبل إدخال المبالغ بالريال السعودي.	Reload this form before entering amounts in SAR.
+
+العملاء والمبيعات	Customers and sales
+حجوزات تجربة القيادة	Test-drive bookings
+عروض أسعار العملاء	Customer quotations
+المركبات التشغيلية	Operational vehicles
+الاستلام والفحص وحركة المواقع	Intake, inspections and locations
+تصحيح رقم الهيكل VIN	VIN corrections
+إنشاء طلب نقل	Create transfer request
+متابعة نقل المركبات	Track vehicle transfers
+المشتريات	Purchasing
+اقتناء المركبات وتكاليفها	Vehicle acquisition and costs
+اعتماد الخصومات والمبيعات	Discount and sale approvals
+المالية	Finance
+محتوى الموقع	Website content
+العروض الترويجية	Promotional offers
+ماركات السيارات المنشورة	Published vehicle brands
+فئات السيارات المنشورة	Published vehicle categories
+صفحات الموقع	Website pages
+مكتبة الوسائط	Media library
+مظهر الموقع وبيانات التواصل	Website appearance and contact details
+التسويق	Marketing
+مشتركو النشرة البريدية	Newsletter subscribers
+التقارير	Reports
+سياسات وإعدادات المنصة	Platform policies and settings
+إعدادات حاسبة التمويل	Finance calculator settings
+مطابقة الكتالوج	Catalog matching
+ترجمات البيانات	Data translations
+المستخدمون والصلاحيات	Users and permissions
+الرقابة والتكاملات	Audit and integrations
+أمن الواجهة العامة	Public API security
+أقسام الصفحة	Page sections
+صفحات المركبات	Vehicle pages
+نظرة عامة	Overview
+التسعير والضرائب	Pricing and taxes
+الحجز والعربون	Reservations and deposits
+سياسة التسليم	Delivery policy
+الاحتفاظ بالبيانات	Data retention
+مصدر الكتالوج	Catalog source
+أقسام الإعدادات	Settings sections
+قسم إعدادات غير صالح.	Invalid settings section.
+فحص المركبات	Vehicle inspections
+حركة المواقع	Location movements
+استلام وفحص المركبات وحركة المواقع	Vehicle intake, inspections and locations
+تم حفظ التغيير.	The change was saved.
+تعذر تنفيذ العملية.	The operation could not be completed.
+تصحيح رقم الهيكل يتطلب سببًا موثقًا ولا يسمح به بعد بدء البيع أو التسليم.	VIN correction requires a documented reason and is not allowed after sale or delivery begins.
+لا توجد مركبات في هذه الصفحة لهذه المرحلة.	No vehicles on this page are in this phase.
+العلامات التجارية	Brands
+الاحتجاز	Holds
+الصيانة	Maintenance
+اعتماد المبيعات	Sale approvals
+لا توجد حالات مفتوحة.	There are no open cases.
+بيانات التواصل	Contact details
+الشبكات الاجتماعية	Social networks
+فتح تخصيص الموقع	Open website customization
+اختر شعارًا جاهزًا من مكتبة الوسائط؛ ستُستخدم الصورة الأصلية دون قص.	Choose a prepared logo from the media library; the original image will be used without cropping.
+
+البحث في القائمة	Search the queue
+إجمالي النتائج: %d	Total results: %d

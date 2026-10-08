@@ -40,7 +40,29 @@ final class VehicleIssueService {
 		$movement=1===$vehicle?$wpdb->insert(Schema::table('vehicle_movements'),array('vehicle_id'=>(int)$i['vehicle_id'],'from_branch_id'=>(int)$i['branch_id'],'to_branch_id'=>(int)$i['branch_id'],'from_location_id'=>(int)$i['location_id'],'to_location_id'=>(int)$i['location_id'],'from_status'=>$i['issue_type'],'to_status'=>'inspection','actor_user_id'=>get_current_user_id(),'reason'=>$resolution,'created_at'=>$now),array('%d','%d','%d','%d','%d','%s','%s','%d','%s','%s')):false;
 		if(1!==$updated||1!==$vehicle||1!==$movement||!Transaction::commit(static fn()=>AuditLog::record('vehicle.issue_resolved','vehicle_issue',$issue_id,$resolution,array('status'=>'open'),array('status'=>'resolved','vehicle_id'=>(int)$i['vehicle_id'])))){$wpdb->query('ROLLBACK');return self::error('adc_issue_failed',500);} return array('id'=>$issue_id,'status'=>'resolved','vehicle_id'=>(int)$i['vehicle_id']);
 	}
-	public static function list_open(): array { global $wpdb; list($scope,$args)=BranchScope::predicate('v.branch_id'); $sql='SELECT i.id,i.vehicle_id,i.issue_type,i.reason,i.assigned_user_id,i.review_at,i.created_at,v.stock_number,v.brand,v.model FROM '.Schema::table('vehicle_issues').' i INNER JOIN '.Schema::table('vehicles').' v ON v.id=i.vehicle_id WHERE i.status=\'open\' AND '.$scope.' ORDER BY i.created_at ASC LIMIT 200'; return $wpdb->get_results($args?$wpdb->prepare($sql,$args):$sql,ARRAY_A)?:array(); }
+	public static function list_open( string $type = '' ): array {
+		return self::open_page( $type, 1, '', 200 )['rows'];
+	}
+
+	public static function open_page( string $type, int $page = 1, string $search = '', int $limit = 50 ): array {
+		global $wpdb;
+		list( $scope, $args ) = BranchScope::predicate( 'v.branch_id' );
+		if ( in_array( $type, array( 'hold', 'maintenance' ), true ) ) {
+			$scope .= ' AND i.issue_type = %s';
+			$args[] = $type;
+		}
+		$search = mb_substr( sanitize_text_field( $search ), 0, 120 );
+		if ( '' !== $search ) {
+			$scope .= ' AND (v.stock_number LIKE %s OR v.vin LIKE %s OR v.brand LIKE %s OR v.model LIKE %s OR i.reason LIKE %s)';
+			$args = array_merge( $args, array_fill( 0, 5, '%' . $wpdb->esc_like( $search ) . '%' ) );
+		}
+		$from = ' FROM ' . Schema::table( 'vehicle_issues' ) . ' i INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=i.vehicle_id WHERE i.status=\'open\' AND ' . $scope;
+		$total = (int) $wpdb->get_var( $args ? $wpdb->prepare( 'SELECT COUNT(*)' . $from, $args ) : 'SELECT COUNT(*)' . $from );
+		$limit = max( 1, min( 200, $limit ) ); $pages = max( 1, (int) ceil( $total / $limit ) ); $page = min( $pages, max( 1, $page ) );
+		$sql = 'SELECT i.id,i.vehicle_id,i.issue_type,i.reason,i.assigned_user_id,i.review_at,i.created_at,v.stock_number,v.brand,v.model' . $from . ' ORDER BY i.created_at ASC,i.id ASC LIMIT %d OFFSET %d';
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $args, array( $limit, ( $page - 1 ) * $limit ) ) ), ARRAY_A ) ?: array();
+		return compact( 'rows', 'total', 'page', 'pages', 'search' );
+	}
 	private static function date(string $value){if(''===trim($value)){return null;}$d=\DateTimeImmutable::createFromFormat('!Y-m-d',$value,new \DateTimeZone('UTC'));return $d&&$d->format('Y-m-d')===$value?$value.' 00:00:00':false;}
 	private static function error(string $code,int $status):\WP_Error{return new \WP_Error($code,__('Vehicle issue operation could not be completed.','auto-dealership-core'),array('status'=>$status));}
 }

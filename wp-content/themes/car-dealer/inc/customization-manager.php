@@ -24,6 +24,7 @@ add_action( 'customize_register', 'car_dealer_customize_logo_control', 100 );
 function car_dealer_customize_theme_settings( $manager ) {
 	$manager->add_section( 'car_dealer_appearance', array( 'title' => __( 'مظهر المعرض', 'car-dealer' ), 'priority' => 35 ) );
 	$manager->add_section( 'car_dealer_contact', array( 'title' => __( 'بيانات التواصل', 'car-dealer' ), 'priority' => 36 ) );
+	$manager->add_section( 'car_dealer_social', array( 'title' => __( 'الشبكات الاجتماعية', 'car-dealer' ), 'priority' => 37 ) );
 	$options = car_dealer_theme_options();
 	$manager->add_setting( 'car_dealer_theme_settings[description_en]', array( 'type' => 'option', 'default' => $options['description_en'], 'capability' => 'manage_options', 'sanitize_callback' => 'sanitize_textarea_field', 'transport' => 'refresh' ) );
 	$manager->add_control( 'car_dealer_theme_settings[description_en]', array( 'label' => 'وصف الموقع بالإنجليزية', 'section' => 'title_tagline', 'type' => 'textarea' ) );
@@ -40,7 +41,7 @@ function car_dealer_customize_theme_settings( $manager ) {
 	foreach ( $fields as $key => $field ) {
 		$id = 'car_dealer_theme_settings[' . $key . ']';
 		$manager->add_setting( $id, array( 'type' => 'option', 'default' => $options[$key], 'capability' => 'manage_options', 'sanitize_callback' => $field[2], 'transport' => 'color' === $field[1] ? 'postMessage' : 'refresh' ) );
-		$args = array( 'label' => __( $field[0], 'car-dealer' ), 'section' => 'color' === $field[1] ? 'car_dealer_appearance' : 'car_dealer_contact', 'type' => $field[1] );
+		$args = array( 'label' => __( $field[0], 'car-dealer' ), 'section' => 'color' === $field[1] ? 'car_dealer_appearance' : ( in_array( $key, array( 'facebook', 'instagram', 'whatsapp' ), true ) ? 'car_dealer_social' : 'car_dealer_contact' ), 'type' => $field[1] );
 		if ( 'color' === $field[1] ) { $manager->add_control( new WP_Customize_Color_Control( $manager, $id, $args ) ); }
 		else { $manager->add_control( $id, $args ); }
 	}
@@ -93,40 +94,22 @@ function car_dealer_theme_options() {
 }
 
 function car_dealer_register_settings_menu() {
-	add_theme_page( __( 'مظهر المعرض', 'car-dealer' ), __( 'مظهر المعرض', 'car-dealer' ), 'manage_options', 'car-dealer-settings', 'car_dealer_render_settings_page' );
+	// Keep bookmarked URLs registered, but use the Customizer as the single editor.
+	add_submenu_page( null, __( 'مظهر المعرض', 'car-dealer' ), __( 'مظهر المعرض', 'car-dealer' ), 'manage_options', 'car-dealer-settings', 'car_dealer_render_settings_page' );
 }
 add_action( 'admin_menu', 'car_dealer_register_settings_menu', 25 );
 
 function car_dealer_render_settings_page() {
-	$options = car_dealer_theme_options();
-	?>
-	<div class="wrap cd-admin" dir="<?php echo 'en' === car_dealer_ui_language() ? 'ltr' : 'rtl'; ?>">
-		<h1><?php esc_html_e( 'مظهر المعرض وبيانات التواصل', 'car-dealer' ); ?></h1>
-		<p class="cd-page-description"><?php echo esc_html__( 'خصص هوية الموقع وبيانات التواصل التي تظهر لعملائك.', 'car-dealer' ); ?></p>
-		<?php settings_errors(); ?>
-		<form method="post" action="options.php" class="cd-panel">
-			<?php settings_fields( 'car_dealer_theme_settings' ); ?>
-			<fieldset class="cd-settings-section"><legend><?php echo esc_html__( 'الهوية البصرية', 'car-dealer' ); ?></legend><p><?php echo esc_html__( 'اختر ألوان واجهة موقع المعرض.', 'car-dealer' ); ?></p>
-			<div class="cd-settings-grid">
-				<label><?php esc_html_e( 'اللون الرئيسي', 'car-dealer' ); ?><input type="color" name="car_dealer_theme_settings[primary_color]" value="<?php echo esc_attr( $options['primary_color'] ); ?>"></label>
-				<label><?php esc_html_e( 'لون الأزرار', 'car-dealer' ); ?><input type="color" name="car_dealer_theme_settings[accent_color]" value="<?php echo esc_attr( $options['accent_color'] ); ?>"></label>
-			</div></fieldset>
-			<fieldset class="cd-settings-section"><legend><?php echo esc_html__( 'التواصل مع المعرض', 'car-dealer' ); ?></legend><p><?php echo esc_html__( 'أضف أرقام التواصل والبريد الذي يمكن للعملاء مراسلتك عليه.', 'car-dealer' ); ?></p><div class="cd-settings-grid">
-				<label><?php esc_html_e( 'الهاتف', 'car-dealer' ); ?><input type="text" name="car_dealer_theme_settings[phone]" value="<?php echo esc_attr( $options['phone'] ); ?>"></label>
-				<label><?php esc_html_e( 'البريد', 'car-dealer' ); ?><input type="email" name="car_dealer_theme_settings[email]" value="<?php echo esc_attr( $options['email'] ); ?>"></label>
-			</div></fieldset>
-			<fieldset class="cd-settings-section"><legend><?php echo esc_html__( 'حسابات التواصل والموقع', 'car-dealer' ); ?></legend><p><?php echo esc_html__( 'استخدم الروابط الكاملة لحسابات المعرض، وأضف عنواناً واضحاً لزيارته.', 'car-dealer' ); ?></p><div class="cd-settings-grid">
-				<label><?php esc_html_e( 'فيسبوك', 'car-dealer' ); ?><input type="url" name="car_dealer_theme_settings[facebook]" value="<?php echo esc_attr( $options['facebook'] ); ?>"></label>
-				<label><?php esc_html_e( 'إنستغرام', 'car-dealer' ); ?><input type="url" name="car_dealer_theme_settings[instagram]" value="<?php echo esc_attr( $options['instagram'] ); ?>"></label>
-				<label><?php esc_html_e( 'واتساب', 'car-dealer' ); ?><input type="text" name="car_dealer_theme_settings[whatsapp]" value="<?php echo esc_attr( $options['whatsapp'] ); ?>"></label>
-				<label class="cd-wide"><?php esc_html_e( 'العنوان', 'car-dealer' ); ?><textarea name="car_dealer_theme_settings[address]" rows="4"><?php echo esc_textarea( $options['address'] ); ?></textarea></label>
-				<label class="cd-wide">وصف الموقع بالإنجليزية<textarea name="car_dealer_theme_settings[description_en]" rows="3" dir="ltr"><?php echo esc_textarea( $options['description_en'] ); ?></textarea></label>
-			</div></fieldset>
-			<?php submit_button( __( 'حفظ الإعدادات', 'car-dealer' ) ); ?>
-		</form>
-	</div>
-	<?php
+	if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية الوصول.', 'car-dealer' ), '', array( 'response' => 403 ) ); }
+	echo '<div class="wrap"><h1>' . esc_html__( 'مظهر المعرض وبيانات التواصل', 'car-dealer' ) . '</h1><p><a class="button button-primary" href="' . esc_url( admin_url( 'customize.php' ) ) . '">' . esc_html__( 'فتح تخصيص الموقع', 'car-dealer' ) . '</a></p></div>';
 }
+
+function car_dealer_redirect_legacy_settings() {
+	if ( 'car-dealer-settings' !== ( $_GET['page'] ?? '' ) || ! current_user_can( 'manage_options' ) ) { return; }
+	wp_safe_redirect( admin_url( 'customize.php' ) );
+	exit;
+}
+add_action( 'admin_init', 'car_dealer_redirect_legacy_settings' );
 
 function car_dealer_dynamic_theme_styles() {
 	$options = car_dealer_theme_options();

@@ -245,7 +245,7 @@ final class VehicleService {
 		return PublicCatalog::catalog_total( $filters );
 	}
 
-	public static function list_for_current_user( int $page = 1 ): array {
+	public static function list_for_current_user( int $page = 1, string $phase = '' ): array {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_view_inventory' ) && ! current_user_can( 'manage_options' ) ) {
 			return array();
@@ -254,9 +254,13 @@ final class VehicleService {
 		$table = Schema::table( 'vehicles' );
 		list( $scope, $args ) = BranchScope::predicate( 'branch_id' );
 		$where = ' WHERE ' . $scope;
+		if ( in_array( $phase, array( 'received', 'inspection' ), true ) ) {
+			$where .= ' AND status = %s';
+			$args[] = $phase;
+		}
 		$args[] = 50;
 		$args[] = ( $page - 1 ) * 50;
-		$sql = 'SELECT id,vin,stock_number,brand,model,trim_name,model_year,condition_key,branch_id,status,mileage,retail_price,currency FROM ' . $table . $where . ' ORDER BY id DESC LIMIT %d OFFSET %d';
+		$sql = 'SELECT id,vin,stock_number,brand,model,trim_name,model_year,condition_key,branch_id,location_id,status,mileage,retail_price,currency FROM ' . $table . $where . ' ORDER BY id DESC LIMIT %d OFFSET %d';
 		return $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
 	}
 
