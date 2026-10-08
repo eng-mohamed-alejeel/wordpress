@@ -28,7 +28,10 @@ final class WorkspacePage {
 
 	private static function is_content_screen(): bool {
 		$screen = get_current_screen();
-		return $screen && ( ( in_array( $screen->post_type, array( 'car', 'car_offer' ), true ) && in_array( $screen->base, array( 'edit', 'edit-tags', 'term', 'post' ), true ) ) || ( current_user_can( 'manage_options' ) && in_array( $screen->base, array( 'dashboard', 'edit', 'edit-tags', 'term', 'post', 'upload', 'users', 'user-edit', 'profile', 'plugins', 'plugin-install', 'themes', 'theme-install', 'tools', 'import', 'export', 'options-general', 'options-writing', 'options-reading', 'options-discussion', 'options-media', 'options-permalink', 'options-privacy', 'update-core' ), true ) ) );
+		if ( ! $screen ) { return false; }
+		if ( in_array( $screen->post_type, array( 'car', 'car_offer' ), true ) && in_array( $screen->base, array( 'edit', 'edit-tags', 'term', 'post' ), true ) ) { return true; }
+		$system_screens = array( 'dashboard', 'edit', 'edit-comments', 'comment', 'edit-tags', 'term', 'post', 'upload', 'users', 'user-edit', 'profile', 'plugins', 'plugin-install', 'themes', 'theme-install', 'tools', 'import', 'export', 'options-general', 'options-writing', 'options-reading', 'options-discussion', 'options-media', 'options-permalink', 'options-privacy', 'update-core' );
+		return current_user_can( 'manage_options' ) && ( in_array( $screen->base, $system_screens, true ) || 'settings_page_wpsupercache' === $screen->id );
 	}
 
 	public static function enqueue(): void {
