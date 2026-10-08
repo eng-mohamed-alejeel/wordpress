@@ -8,6 +8,44 @@ final class Navigation {
 	public static function boot(): void {
 		add_action( 'admin_menu', array( self::class, 'menu' ), 99 );
 		add_filter( 'parent_file', array( self::class, 'parent_file' ) );
+		add_action( 'admin_menu', array( self::class, 'hide_wordpress_menu' ), 999 );
+		add_filter( 'custom_menu_order', '__return_true' );
+		add_filter( 'menu_order', array( self::class, 'menu_order' ) );
+		add_action( 'admin_bar_menu', array( self::class, 'admin_bar' ), 999 );
+		add_action( 'load-index.php', array( self::class, 'dashboard_redirect' ) );
+	}
+
+	private static function is_system_admin(): bool {
+		return in_array( 'administrator', wp_get_current_user()->roles, true ) || ( is_multisite() && is_super_admin() );
+	}
+
+	private static function wordpress_pages(): array {
+		return array( 'index.php', 'edit.php', 'upload.php', 'edit.php?post_type=page', 'edit-comments.php', 'themes.php', 'plugins.php', 'users.php', 'tools.php', 'options-general.php' );
+	}
+
+	public static function hide_wordpress_menu(): void {
+		if ( self::is_system_admin() ) { return; }
+		foreach ( self::wordpress_pages() as $page ) { remove_menu_page( $page ); }
+	}
+
+	public static function menu_order( $order ): array {
+		$order = is_array( $order ) ? $order : array();
+		$dealership = array( 'adc-workspace' );
+		foreach ( self::groups() as $group ) { $dealership[] = 'adc-area-' . $group['id']; }
+		// Preserve every remaining plugin/system destination and its relative order.
+		return array_merge( array_values( array_intersect( $dealership, $order ) ), array_values( array_diff( $order, $dealership ) ) );
+	}
+
+	public static function admin_bar( \WP_Admin_Bar $bar ): void {
+		if ( self::is_system_admin() ) { return; }
+		foreach ( array( 'wp-logo', 'updates', 'comments', 'new-post', 'new-page', 'new-media', 'new-user', 'appearance', 'themes', 'widgets', 'menus', 'customize', 'dashboard' ) as $node ) { $bar->remove_node( $node ); }
+	}
+
+	public static function dashboard_redirect(): void {
+		if ( ! self::is_system_admin() && current_user_can( 'adc_view_workspace' ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=adc-workspace' ) );
+			exit;
+		}
 	}
 
 	public static function parent_file( string $parent ): string {
@@ -135,6 +173,7 @@ final class Navigation {
 	}
 
 	public static function allowed( array $item ): bool {
+		if ( in_array( $item['slug'], array_merge( self::wordpress_pages(), array( 'customize.php' ) ), true ) && ! self::is_system_admin() ) { return false; }
 		if ( in_array( $item['slug'], array( 'car-dealer-messages', 'car-dealer-bookings', 'car-dealer-subscribers' ), true ) && ! EngagementPages::enabled() ) { return false; }
 		if ( 'adc-quotes' === $item['slug'] ) { return \AutoDealership\Pricing\QuoteHistory::can_read(); }
 		if ( in_array( $item['slug'], array( 'adc-inventory-identity', 'adc-vehicle-vin' ), true ) && ! current_user_can( 'adc_view_inventory' ) && ! current_user_can( 'manage_options' ) ) { return false; }

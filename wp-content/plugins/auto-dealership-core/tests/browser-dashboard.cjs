@@ -93,6 +93,13 @@ const { spawn } = require('node:child_process');
           await call('Page.navigate',{url:root+'/wp-admin/'+route});
           await wait('document.readyState==="complete" && !!document.querySelector("#wpbody-content .wrap")',route);
           const state=await evaluate('({url:location.href,text:document.body.innerText,heading:document.querySelector(".wrap h1")?.innerText})');
+          if (route==='admin.php?page=adc-workspace') {
+            check(await evaluate(`(() => {
+              const links=[...document.querySelectorAll('#adminmenu > li > a')].map(a=>a.getAttribute('href'));
+              const workspace=links.indexOf('admin.php?page=adc-workspace');
+              return workspace===0 && ['index.php','plugins.php','options-general.php'].every(href=>links.indexOf(href)>workspace);
+            })()`),'Dealership menu appears before administrator WordPress tools');
+          }
           check(!/Fatal error|Warning:|Parse error|لا تملك صلاحية|لا توجد لديك صلاحية/.test(state.text),'Page renders: '+route);
           if (process.env.ADC_LAYOUT_AUDIT === '1') {
             if (process.env.ADC_LAYOUT_FIXTURE === '1' && await evaluate('document.body.classList.contains("adc-admin")')) {

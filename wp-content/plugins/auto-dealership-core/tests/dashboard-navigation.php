@@ -16,6 +16,14 @@ require ABSPATH . 'wp-admin/includes/admin.php';
 $GLOBALS['pagenow'] = 'admin.php';
 require ABSPATH . 'wp-admin/menu.php';
 $count = 0;
+foreach ( array( 'index.php', 'edit.php', 'upload.php', 'edit.php?post_type=page', 'edit-comments.php', 'themes.php', 'plugins.php', 'users.php', 'tools.php', 'options-general.php' ) as $native ) {
+ if ( in_array( $native, array_column( $menu, 2 ), true ) ) { throw new RuntimeException( 'WordPress tool visible to dealership role: ' . $native ); }
+}
+require_once ABSPATH . WPINC . '/class-wp-admin-bar.php';
+$bar = new WP_Admin_Bar();
+foreach ( array( 'wp-logo', 'updates', 'comments', 'new-post', 'my-account' ) as $id ) { $bar->add_node( array( 'id'=>$id, 'title'=>$id ) ); }
+Navigation::admin_bar( $bar );
+if ( $bar->get_node( 'wp-logo' ) || $bar->get_node( 'updates' ) || $bar->get_node( 'comments' ) || $bar->get_node( 'new-post' ) || ! $bar->get_node( 'my-account' ) ) { throw new RuntimeException( 'Incorrect employee admin toolbar visibility.' ); }
 foreach ( Navigation::groups() as $group ) {
  if ( '--english' === ( $argv[2] ?? '' ) ) {
   foreach ( array_merge( array( $group['title'] ), array_column( $group['items'], 'title' ) ) as $title ) {
