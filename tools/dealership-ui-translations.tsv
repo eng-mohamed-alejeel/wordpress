@@ -1603,3 +1603,11 @@ VIN الجديد	New VIN
 إلغاء	Cancel
 بحث	Search
 تحرير المستخدم	Edit user
+لا توجد عروض أسعار مسجّلة حتى الآن.	No quotations have been recorded yet.
+لا توجد عروض أسعار ضمن نطاق وصولك.	No quotations within your access scope.
+ميزة إدارة الروابط القديمة معطّلة في إعدادات الموقع.	The legacy link manager is disabled in site settings.
+رفع الملفات دون قيود معطّل في إعدادات الموقع. يمكن رفع أنواع الملفات المسموح بها عند امتلاك صلاحية الرفع.	Unrestricted uploads are disabled in site settings. Allowed file types can still be uploaded with upload permission.
+رفع الملفات دون قيود يتطلب مدير الشبكة في المواقع المتعددة.	Unrestricted uploads require a network super administrator.
+ممنوعة بتخصيص فردي لصلاحيات المستخدم.	Denied by an individual permission override.
+غير ممنوحة من الأدوار أو الصلاحيات الفردية.	Not granted by roles or individual permissions.
+ممنوعة بواسطة ووردبريس أو سياسة وصول مفعّلة.	Blocked by WordPress or an active access policy.

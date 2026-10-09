@@ -33,9 +33,22 @@ final class AccessReviewPage {
 			$expires = (int) ( $temporary[$cap]['expires'] ?? 0 );
 			if ( $expires > time() ) { $source = 'Temporary grant'; }
 			if ( AccessPolicy::suspended( $user->ID ) ) { $source = 'Blocked by account suspension'; }
-			$result[$cap] = array( 'label' => __( $catalog[$cap][1] ?? UserPermissions::native_label( $cap ), 'auto-dealership-core' ), 'source' => $source, 'allowed' => $user->has_cap( $cap ), 'expires' => $expires );
+			$allowed = $user->has_cap( $cap );
+			$result[$cap] = array( 'label' => __( $catalog[$cap][1] ?? UserPermissions::native_label( $cap ), 'auto-dealership-core' ), 'source' => $source, 'allowed' => $allowed, 'expires' => $expires, 'reason' => $allowed ? '' : self::denial_reason( $user, $cap ) );
 		}
 		return $result;
+	}
+
+	private static function denial_reason( \WP_User $user, string $cap ): string {
+		if ( AccessPolicy::suspended( $user->ID ) ) { return 'Blocked by account suspension'; }
+		if ( 'manage_links' === $cap && ! get_option( 'link_manager_enabled' ) ) { return 'The legacy link manager is disabled in site settings.'; }
+		if ( 'unfiltered_upload' === $cap ) {
+			if ( ! defined( 'ALLOW_UNFILTERED_UPLOADS' ) || ! ALLOW_UNFILTERED_UPLOADS ) { return 'Unrestricted uploads are disabled in site settings. Allowed file types can still be uploaded with upload permission.'; }
+			if ( is_multisite() && ! is_super_admin( $user->ID ) ) { return 'Unrestricted uploads require a network super administrator.'; }
+		}
+		if ( array_key_exists( $cap, $user->caps ) && ! $user->caps[$cap] ) { return 'Denied by an individual permission override.'; }
+		if ( empty( $user->allcaps[$cap] ) ) { return 'Not granted by roles or individual permissions.'; }
+		return 'Blocked by WordPress or an active access policy.';
 	}
 
 	public static function render(): void {
@@ -81,7 +94,9 @@ final class AccessReviewPage {
 		echo '<section class="adc-permission-report"><div class="adc-table-scroll"><table class="widefat striped"><thead><tr>';
 		foreach ( array( 'Permission', 'Source', 'Effective access', 'Expires' ) as $title ) { echo '<th>' . esc_html__( $title, 'auto-dealership-core' ) . '</th>'; } echo '</tr></thead><tbody>';
 		foreach ( self::report( $user ) as $cap => $row ) {
-			echo '<tr data-granted="' . ( $row['allowed'] ? '1' : '0' ) . '" data-custom="' . ( array_key_exists( $cap, $user->caps ) ? '1' : '0' ) . '"><td>' . esc_html( $row['label'] ) . '</td><td>' . esc_html__( $row['source'], 'auto-dealership-core' ) . '</td><td>' . esc_html__( $row['allowed'] ? 'Granted' : 'Denied', 'auto-dealership-core' ) . '</td><td>' . esc_html( $row['expires'] ? wp_date( 'Y-m-d H:i T', $row['expires'] ) : '—' ) . '</td></tr>';
+			echo '<tr data-granted="' . ( $row['allowed'] ? '1' : '0' ) . '" data-custom="' . ( array_key_exists( $cap, $user->caps ) ? '1' : '0' ) . '"><td>' . esc_html( $row['label'] ) . '</td><td>' . esc_html__( $row['source'], 'auto-dealership-core' ) . '</td><td>' . esc_html__( $row['allowed'] ? 'Granted' : 'Denied', 'auto-dealership-core' );
+			if ( $row['reason'] ) { echo '<p class="description">' . esc_html__( $row['reason'], 'auto-dealership-core' ) . '</p>'; }
+			echo '</td><td>' . esc_html( $row['expires'] ? wp_date( 'Y-m-d H:i T', $row['expires'] ) : '—' ) . '</td></tr>';
 		}
 		echo '</tbody></table></div></section>';
 		if ( ! AccessPolicy::protected_user( $user ) ) {

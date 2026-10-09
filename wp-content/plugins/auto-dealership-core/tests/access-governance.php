@@ -19,14 +19,23 @@ $users = array(); $prefix = 'adc_role_governance_' . strtolower( wp_generate_pas
 $password = wp_generate_password( 40 );
 try {
 	wp_set_current_user( $admin );
+	$report = AccessReviewPage::report( get_userdata( $admin ) );
+	if ( ! get_option( 'link_manager_enabled' ) ) {
+		$check( ! $report['manage_links']['allowed'] && 'The legacy link manager is disabled in site settings.' === $report['manage_links']['reason'], 'Explain disabled link manager without changing administrator permissions.' );
+	}
+	if ( ! defined( 'ALLOW_UNFILTERED_UPLOADS' ) || ! ALLOW_UNFILTERED_UPLOADS ) {
+		$check( ! $report['unfiltered_upload']['allowed'] && str_starts_with( $report['unfiltered_upload']['reason'], 'Unrestricted uploads are disabled' ), 'Explain site restriction on unrestricted uploads.' );
+	}
 	$id = wp_insert_user( array( 'user_login' => $prefix, 'user_pass' => $password, 'role' => 'dealership_finance' ) );
 	if ( is_wp_error( $id ) ) { throw new RuntimeException( $id->get_error_message() ); } $users[] = $id;
 	$user = get_userdata( $id );
 	$check( count( AccessPolicy::financial_flags( $user ) ) === 2, 'Review detects payment and refund dual duties.' );
 	$user->add_cap( 'adc_view_inventory', false );
+	$check( 'Denied by an individual permission override.' === AccessReviewPage::report( get_userdata( $id ) )['adc_view_inventory']['reason'], 'Identify individual denial separately from site restrictions.' );
 	$date = wp_date( 'Y-m-d\TH:i', time() + HOUR_IN_SECONDS );
 	$check( true === AccessPolicy::change( $id, 'grant', array( 'cap' => 'adc_view_inventory', 'expires' => $date ), 'Temporary cover' ), 'Grant a time-limited permission.' );
 	$check( user_can( $id, 'adc_view_inventory' ), 'Temporary grant overrides an explicit denial.' );
+	$check( '' === AccessReviewPage::report( get_userdata( $id ) )['adc_view_inventory']['reason'], 'Granted permissions have no denial explanation.' );
 	$check( 'Temporary grant' === AccessReviewPage::report( get_userdata( $id ) )['adc_view_inventory']['source'], 'Effective report identifies temporary source.' );
 	ob_start(); \AutoDealership\Admin\UserPermissions::render( get_userdata( $id ) ); $profile = ob_get_clean();
 	$check( (bool) preg_match( '/value="adc_view_inventory"\s*>/', $profile ), 'Profile edits retain permanent denial beneath a temporary grant.' );
@@ -37,6 +46,7 @@ try {
 	$check( true === AccessPolicy::change( $id, 'suspend', array(), 'Employee departure' ), 'Suspend account.' );
 	$check( ! WP_Session_Tokens::get_instance( $id )->verify( $token ), 'Suspension terminates existing sessions.' );
 	$check( ! user_can( $id, 'read' ) && ! user_can( $id, 'adc_view_inventory' ), 'Suspension denies both native and temporary capabilities.' );
+	$check( 'Blocked by account suspension' === AccessReviewPage::report( get_userdata( $id ) )['adc_view_inventory']['reason'], 'Suspension explains denial even when a temporary grant exists.' );
 	ob_start(); \AutoDealership\Admin\UserPermissions::render( get_userdata( $id ) ); $profile = ob_get_clean();
 	$check( (bool) preg_match( '/value="adc_record_payments"\s+checked=/', $profile ), 'Suspension does not erase permanent permissions in the editor.' );
 	$check( 0 === AccessPolicy::current_user( $id ), 'Existing authenticated requests are rejected.' );
