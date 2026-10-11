@@ -1,0 +1,34 @@
+[
+    {
+        "post_id": 67,
+        "title": "JMC جراند افنيو",
+        "url": "http://localhost/wordpress/cars/jmc-%d8%ac%d8%b1%d8%a7%d9%86%d8%af-%d8%a7%d9%81%d9%86%d9%8a%d9%88/",
+        "reads_live_inventory": true,
+        "options": [
+            {
+                "brand": "JMC",
+                "model": "جراند افنيو",
+                "trim_name": "غمارتين دبل بنزين",
+                "exterior_color": "ابيض",
+                "model_year": "2024",
+                "listed_price": "6800000"
+            }
+        ]
+    },
+    {
+        "post_id": 70,
+        "title": "JMC فيجوس",
+        "url": "http://localhost/wordpress/cars/__trashed/",
+        "reads_live_inventory": true,
+        "options": [
+            {
+                "brand": "JMC",
+                "model": "فيجوس",
+                "trim_name": "غمارة جوانب ديزل",
+                "exterior_color": "ابيض",
+                "model_year": "2026",
+                "listed_price": "5200000"
+            }
+        ]
+    }
+]

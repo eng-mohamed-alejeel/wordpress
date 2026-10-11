@@ -1,3 +1,4 @@
+param([switch]$ReviewWorkingTree)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
@@ -8,10 +9,13 @@ $runtimePaths = @(
     'wp-content/plugins/auto-dealership-core/assets',
     'wp-content/plugins/auto-dealership-core/auto-dealership-core.php',
     'wp-content/plugins/auto-dealership-core/readme.txt',
+    'wp-content/plugins/auto-dealership-core/languages',
     'wp-content/plugins/auto-dealership-core/src',
     'wp-content/themes/car-dealer/assets',
     'wp-content/themes/car-dealer/inc',
+    'wp-content/themes/car-dealer/languages',
     'wp-content/themes/car-dealer/templates',
+    'wp-content/themes/car-dealer/404.php',
     'wp-content/themes/car-dealer/archive-car.php',
     'wp-content/themes/car-dealer/archive-car_offer.php',
     'wp-content/themes/car-dealer/footer.php',
@@ -20,6 +24,7 @@ $runtimePaths = @(
     'wp-content/themes/car-dealer/index.php',
     'wp-content/themes/car-dealer/page-about.php',
     'wp-content/themes/car-dealer/page-contact.php',
+    'wp-content/themes/car-dealer/page-legal.php',
     'wp-content/themes/car-dealer/page-privacy.php',
     'wp-content/themes/car-dealer/page-terms.php',
     'wp-content/themes/car-dealer/page.php',
@@ -32,7 +37,7 @@ $head = (& git -C $repo rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or $head -notmatch '^[0-9a-f]{40}$') { throw 'Cannot identify the release commit.' }
 
 $changes = @(& git -C $repo status --porcelain --untracked-files=all -- $paths)
-if ($LASTEXITCODE -ne 0 -or $changes.Count -ne 0) { throw 'Plugin or theme files differ from the release commit.' }
+if ($LASTEXITCODE -ne 0 -or ($changes.Count -ne 0 -and -not $ReviewWorkingTree)) { throw 'Plugin or theme files differ from the release commit. Use -ReviewWorkingTree only for a review artifact.' }
 $trackedConfig = @(& git -C $repo ls-tree --name-only HEAD -- wp-config.php)
 if ($LASTEXITCODE -ne 0 -or $trackedConfig.Count -ne 0) { throw 'The release commit still contains wp-config.php.' }
 $indexedConfig = @(& git -C $repo ls-files -- wp-config.php)
@@ -40,6 +45,10 @@ if ($LASTEXITCODE -ne 0 -or $indexedConfig.Count -ne 0) { throw 'The Git index s
 
 $allFiles = @(& git -C $repo ls-tree -r --name-only HEAD -- $paths)
 $trackedFiles = @(& git -C $repo ls-tree -r --name-only HEAD -- $runtimePaths)
+if ($ReviewWorkingTree) {
+    $allFiles = @(& git -C $repo ls-files --cached --others --exclude-standard -- $paths)
+    $trackedFiles = @(& git -C $repo ls-files --cached --others --exclude-standard -- $runtimePaths)
+}
 if ($LASTEXITCODE -ne 0 -or $trackedFiles.Count -eq 0) { throw 'Cannot list runtime files.' }
 $runtimeSet = @{}
 foreach ($path in $trackedFiles) { $runtimeSet[$path] = $true }
@@ -63,20 +72,40 @@ if ($version -ne $themeMatch.Groups[1].Value.Trim()) { throw 'Plugin and theme v
 $output = Join-Path $repo '.tmp/release-packages'
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 $name = 'auto-dealership-{0}-{1}.zip' -f $version, $head.Substring(0, 12)
+if ($ReviewWorkingTree) { $name = 'auto-dealership-{0}-{1}-review-{2}.zip' -f $version, $head.Substring(0, 12), ([guid]::NewGuid().ToString('N').Substring(0, 8)) }
 $archivePath = Join-Path $output $name
 $manifestPath = Join-Path $output ($name + '.manifest.json')
 if ((Test-Path -LiteralPath $archivePath) -or (Test-Path -LiteralPath $manifestPath)) {
     throw 'This commit already has a local package; refusing to overwrite it.'
 }
 
-& git -C $repo archive --format=zip "--output=$archivePath" HEAD -- $runtimePaths
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $archivePath)) { throw 'Git archive failed.' }
-
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+Add-Type -AssemblyName System.IO.Compression
+if ($ReviewWorkingTree) {
+    $reviewArchive = [System.IO.Compression.ZipFile]::Open($archivePath, [System.IO.Compression.ZipArchiveMode]::Create)
+    try {
+        foreach ($path in $trackedFiles) {
+            if ($path -match '(^|/)\.\.(/|$)' -or $path.StartsWith('/') -or $path.Contains(':')) { throw "Unsafe working-tree path: $path" }
+            $absolute = Join-Path $repo $path
+            if (-not (Test-Path -LiteralPath $absolute -PathType Leaf)) { throw "Missing working-tree file: $path" }
+            [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($reviewArchive, $absolute, $path, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+        }
+    } finally { $reviewArchive.Dispose() }
+} else {
+    & git -C $repo archive --format=zip "--output=$archivePath" HEAD -- $runtimePaths
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $archivePath)) { throw 'Git archive failed.' }
+}
 $archive = [System.IO.Compression.ZipFile]::OpenRead($archivePath)
 $files = @()
 $required = @(
     'wp-content/plugins/auto-dealership-core/auto-dealership-core.php',
+    'wp-content/plugins/auto-dealership-core/languages/ui.php',
+    'wp-content/plugins/auto-dealership-core/languages/permissions.php',
+    'wp-content/plugins/auto-dealership-core/src/Database/ExtensionSchema.php',
+    'wp-content/plugins/auto-dealership-core/src/Admin/PurchaseOrderPage.php',
+    'wp-content/plugins/auto-dealership-core/src/Pricing/ArchivedQuotationTemplate.php',
+    'wp-content/themes/car-dealer/languages/ui.php',
+    'wp-content/mu-plugins/autobrands-typography.php',
     'wp-content/themes/car-dealer/style.css'
 )
 $seen = @{}
@@ -84,7 +113,7 @@ try {
     foreach ($entry in $archive.Entries) {
         $path = $entry.FullName
         if ($path.EndsWith('/')) { continue }
-        if ($path -notmatch '^wp-content/(plugins/auto-dealership-core|themes/car-dealer)/' -or
+        if (($path -notmatch '^wp-content/(plugins/auto-dealership-core|themes/car-dealer)/' -and $path -ne 'wp-content/mu-plugins/autobrands-typography.php') -or
             $path -match '(^|/)\.\.(/|$)' -or $path -match '(^|/)wp-config\.php$' -or
             $path -match '^wp-content/plugins/auto-dealership-core/tests/' -or
             $path -in @('wp-content/themes/car-dealer/build-css.js', 'wp-content/themes/car-dealer/merge-css.ps1') -or
@@ -115,6 +144,7 @@ $manifest = [ordered]@{
     package = $name
     package_sha256 = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
     source_commit = $head
+    working_tree_review = [bool]$ReviewWorkingTree
     plugin_version = $version
     theme_version = $version
     file_count = $files.Count

@@ -5,7 +5,9 @@ $featured_ids = $home['featured_ids'] ?? array();
 $latest_ids = $home['latest_ids'] ?? array();
 $demand_ids = $home['demand_ids'] ?? array();
 $offer_ids = $home['offer_ids'] ?? array();
-$total_cars = (int) ( $home['published_car_count'] ?? 0 );
+$total_cars = (int) ( $home['available_car_count'] ?? 0 );
+$catalog_car_count = (int) ( $home['published_car_count'] ?? 0 );
+$car_count_step = $total_cars > 50 ? (int) ( floor( ( $total_cars - 1 ) / 50 ) * 50 ) : $total_cars;
 $hero_image = $featured_ids ? get_the_post_thumbnail_url( $featured_ids[0], 'full' ) : '';
 $whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً AUTO BRANDS، أريد الاستفسار عن السيارات المتاحة.', 'Hello AUTO BRANDS, I would like to ask about the available vehicles.' ) );
 $catalog_url = car_dealer_archive_url( 'car' );
@@ -36,13 +38,13 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 					<?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?>
 				</a><?php endif; ?>
 			</div>
-			<?php if ( $total_cars > 0 ) : ?><div class="ab-hero-stats"><div class="ab-stat"><strong><?php echo esc_html( number_format_i18n( $total_cars ) ); ?></strong><span><?php esc_html_e( 'سيارة منشورة', 'car-dealer' ); ?></span></div></div><?php endif; ?>
+			<?php if ( $catalog_car_count > 0 ) : ?><div class="ab-hero-stats"><div class="ab-stat"><strong><?php echo esc_html( number_format_i18n( $catalog_car_count ) ); ?></strong><span><?php echo esc_html( car_dealer_text( 'خيارًا من السيارات', $catalog_car_count === 1 ? 'Vehicle option' : 'Vehicle options' ) ); ?></span></div></div><?php endif; ?>
 		</div>
 		<?php if ( $total_cars > 0 ) : ?><div class="ab-hero-panel">
 			<div class="ab-hero-panel-inner">
-				<span class="ab-panel-label"><?php esc_html_e( 'Premium Automotive', 'car-dealer' ); ?></span>
-				<strong class="ab-panel-number"><?php echo esc_html( number_format_i18n( $total_cars ) ); ?></strong>
-				<small class="ab-panel-sub"><?php esc_html_e( 'سيارة منشورة', 'car-dealer' ); ?></small>
+				<span class="ab-panel-label"><?php echo esc_html( $total_cars > 50 ? car_dealer_text( 'أكثر من', 'More than' ) : car_dealer_text( 'اختر سيارتك', 'Choose your vehicle' ) ); ?></span>
+				<strong class="ab-panel-number"><?php echo esc_html( number_format_i18n( $car_count_step ) ); ?></strong>
+				<small class="ab-panel-sub"><?php echo esc_html( car_dealer_text( 'سيارة متاحة', $total_cars === 1 ? 'Available vehicle' : 'Available vehicles' ) ); ?></small>
 				<?php if ( $catalog_url ) : ?><a class="btn btn-primary btn-sm" href="<?php echo esc_url( $catalog_url ); ?>"><?php esc_html_e( 'تصفح الآن', 'car-dealer' ); ?></a><?php endif; ?>
 			</div>
 		</div><?php endif; ?>
@@ -170,7 +172,7 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l7-7-7-7"/></svg>
 			</a><?php endif; ?>
 		</div>
-		<div class="offer-grid offer-grid-v2"><?php foreach ( $offer_ids as $offer_id ) { car_dealer_offer_card( $offer_id ); } ?></div>
+		<?php ob_start(); foreach ( $offer_ids as $offer_id ) { car_dealer_offer_card( $offer_id ); } car_dealer_offer_rail( ob_get_clean() ); ?>
 	</div>
 </section>
 <?php endif; ?>

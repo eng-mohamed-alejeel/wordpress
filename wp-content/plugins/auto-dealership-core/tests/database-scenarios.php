@@ -912,12 +912,14 @@ try {
 	$catalog_match = array_values( array_filter( $catalog_items, static fn( $item ) => $http_vehicle_id === (int) ( $item['id'] ?? 0 ) ) );
 	adc_check( 200 === $catalog_status && 1 === count( $catalog_match ) && ! array_key_exists( 'vin', $catalog_match[0] ) && ! array_key_exists( 'purchase_cost', $catalog_match[0] ), 'Public HTTP catalog exposes the mapped available vehicle without VIN or purchase cost.' );
 	adc_check( \AutoDealership\Core\Localization::label( 'Silver' ) === $catalog_match[0]['exterior_color'] && 5 === (int) $catalog_match[0]['seats'] && 'awd' === $catalog_match[0]['drivetrain'] && ! array_key_exists( 'minimum_price', $catalog_match[0] ), 'Public HTTP catalog includes updated specifications without the private price floor.' );
+	$public_catalog_price = \AutoDealership\Pricing\Money::calculate(12000000,0,(int)get_option('adc_vat_rate_bps',0))['final_amount'];
+	adc_check( $public_catalog_price === (int)$catalog_match[0]['retail_price'], 'Public HTTP catalog includes configured VAT while inventory retains its net price.' );
 	$catalog_filter_query = http_build_query( array(
 		'brand'=>'Synthetic', 'model'=>'Catalog HTTP', 'body_type'=>'suv', 'fuel_type'=>'hybrid',
 		'transmission'=>'automatic', 'engine_size'=>'2.0 L', 'drivetrain'=>'awd',
 		'exterior_color'=>'Silver', 'interior_color'=>'Black', 'condition'=>'new',
 		'model_year'=>2026, 'min_year'=>2026, 'max_year'=>2026,
-		'min_price'=>12000000, 'max_price'=>12000000, 'min_mileage'=>200, 'max_mileage'=>300,
+		'min_price'=>$public_catalog_price, 'max_price'=>$public_catalog_price, 'min_mileage'=>200, 'max_mileage'=>300,
 		'branch_id'=>$branch_b['id'], 'search'=>'HTTP-201', 'sort'=>'price_asc', 'page'=>1, 'per_page'=>1,
 	), '', '&', PHP_QUERY_RFC3986 );
 	list( $catalog_filter_status, $catalog_filter_body ) = $http_request( $vehicles_path . '&' . $catalog_filter_query );

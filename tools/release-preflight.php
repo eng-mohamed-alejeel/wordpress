@@ -100,8 +100,19 @@ $duplicate_mappings = $count( "SELECT COUNT(*) FROM (SELECT public_post_id FROM 
 $invalid_mappings = $count( "SELECT COUNT(*) FROM $vehicles v LEFT JOIN {$wpdb->posts} p ON p.ID=v.public_post_id WHERE v.public_post_id>0 AND (p.ID IS NULL OR p.post_type<>'car' OR p.post_status<>'publish')" );
 $public_eligible = $count( "SELECT COUNT(*) FROM $vehicles v INNER JOIN $branches b ON b.id=v.branch_id AND b.active=1 INNER JOIN {$wpdb->posts} p ON p.ID=v.public_post_id AND p.post_type='car' AND p.post_status='publish' WHERE v.status='available'" );
 $mapping_ready = $vehicle_count > 0 && $mapped > 0 && 0 === $unmapped_posts && 0 === $duplicate_mappings && 0 === $invalid_mappings && $public_eligible > 0;
+if ( 'models' === $mode ) {
+	$models = $wpdb->prefix . 'adc_catalog_models'; $stock = $wpdb->prefix . 'adc_onyx_stock';
+	$available = "s.present=1 AND (s.vehicle_id IS NULL OR EXISTS (SELECT 1 FROM $vehicles gv INNER JOIN $branches gb ON gb.id=gv.branch_id AND gb.active=1 WHERE gv.id=s.vehicle_id AND gv.status='available'))";
+	$vehicle_count = $count( "SELECT COUNT(*) FROM $stock WHERE present=1" );
+	$mapped = $count( "SELECT COUNT(*) FROM $models WHERE public_post_id>0" );
+	$public_eligible = $count( "SELECT COUNT(*) FROM $models m INNER JOIN {$wpdb->posts} p ON p.ID=m.public_post_id AND p.post_status='publish' AND p.post_type='car' WHERE EXISTS (SELECT 1 FROM $stock s WHERE s.model_id=m.id AND $available)" );
+	$unmapped_posts = 0; // Unselected editorial car pages are excluded by grouped catalog queries.
+	$duplicate_mappings = $count( "SELECT COUNT(*) FROM (SELECT public_post_id FROM $models WHERE public_post_id>0 GROUP BY public_post_id HAVING COUNT(*)>1) d" );
+	$invalid_mappings = $count( "SELECT COUNT(*) FROM $models m LEFT JOIN {$wpdb->posts} p ON p.ID=m.public_post_id WHERE m.public_post_id>0 AND (p.ID IS NULL OR p.post_type<>'car')" );
+	$mapping_ready = $vehicle_count > 0 && $public_eligible > 0 && 0 === $duplicate_mappings && 0 === $invalid_mappings;
+}
 $add( 'catalog_reconciliation', $mapping_ready ? 'pass' : 'fail', 'Published vehicle mappings and eligible public rows must reconcile.', array( 'vehicles' => $vehicle_count, 'mapped' => $mapped, 'unmapped_published_posts' => $unmapped_posts, 'duplicate_mappings' => $duplicate_mappings, 'invalid_mappings' => $invalid_mappings, 'eligible_rows' => $public_eligible ) );
-$add( 'catalog_cutover', 'authoritative' === $mode && $mapping_ready && ! $has_demo ? 'pass' : 'fail', 'The reviewed real inventory must be the active public catalog authority.', array( 'mode' => $mode ) );
+$add( 'catalog_cutover', in_array( $mode, array( 'authoritative', 'models' ), true ) && $mapping_ready && ! $has_demo ? 'pass' : 'fail', 'The reviewed real inventory must be the active public catalog authority.', array( 'mode' => $mode ) );
 
 $enabled_events = $stored_array( $option( 'adc_integration_enabled_events' ) );
 $add( 'provider_safety', is_array( $enabled_events ) && array() === $enabled_events ? 'pass' : 'fail', 'Provider routes must remain disabled until their contracts and staging evidence are approved.', array( 'enabled_event_count' => is_array( $enabled_events ) ? count( $enabled_events ) : -1 ) );
@@ -145,6 +156,20 @@ $add( 'accessibility_performance', 'manual', 'Attach human Arabic/English access
 $add( 'recovery_offsite', 'manual', 'Attach encrypted off-site backup, separate-host restore and recovery-time/data-loss evidence.' );
 $add( 'deployment_approval', 'manual', 'Record release artifact, maintenance window, rollback trigger, operators and technical/business sign-off.' );
 
+require_once dirname( __DIR__ ) . '/wp-content/plugins/auto-dealership-core/src/Operations/ReleaseEvidence.php';
+$plugin_source = file_get_contents( dirname( __DIR__ ) . '/wp-content/plugins/auto-dealership-core/auto-dealership-core.php' );
+$release_version = preg_match( '/Version:\s*([0-9.]+)/', $plugin_source ?: '', $release_match ) ? $release_match[1] : '';
+$approved_evidence = \AutoDealership\Operations\ReleaseEvidence::approved( (string) $option( 'siteurl' ), $release_version );
+foreach ( $checks as &$check ) {
+	if ( 'manual' !== $check['status'] || ! isset( $approved_evidence[$check['id']] ) ) { continue; }
+	$evidence = $approved_evidence[$check['id']];
+	$check['status'] = 'pass';
+	$check['summary'] .= ' Independently approved human evidence recorded for this environment and release.';
+	$check['metrics']['evidence_id'] = (int) $evidence['id'];
+	$check['metrics']['artifact_hash'] = $evidence['artifact_hash'];
+	$check['metrics']['valid_until_utc'] = $evidence['valid_until'];
+}
+unset( $check );
 $totals = array( 'pass' => 0, 'fail' => 0, 'manual' => 0 );
 foreach ( $checks as $check ) { ++$totals[ $check['status'] ]; }
 echo json_encode( array( 'generated_at_utc' => gmdate( 'c' ), 'wordpress_version' => $wp_version, 'database_server' => (string) $wpdb->get_var( 'SELECT VERSION()' ), 'checks' => $checks, 'totals' => $totals, 'release_ready' => 0 === $totals['fail'] && 0 === $totals['manual'] ), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR ) . "\n";

@@ -19,6 +19,7 @@ final class TransferService {
 		$vehicle = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,status FROM $vehicles WHERE id = %d FOR UPDATE", $vehicle_id ), ARRAY_A );
 		if ( ! $vehicle || ! VehicleService::user_can_access_branch( (int) $vehicle['branch_id'] ) ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_vehicle_scope', __( 'Vehicle is not in your branch scope.', 'auto-dealership-core' ), array( 'status' => 404 ) ); }
 		if ( 'available' !== $vehicle['status'] || $target_branch_id === (int) $vehicle['branch_id'] ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_transfer_state', __( 'Only available vehicles can be requested for transfer to another branch.', 'auto-dealership-core' ), array( 'status' => 409 ) ); }
+		$source=OnyxOperationalPolicy::current($vehicle_id,true);if(is_wp_error($source)){$wpdb->query('ROLLBACK');return $source;}
 		$now = current_time( 'mysql', true );
 		$updated = $wpdb->update( $vehicles, array( 'status' => 'transferred', 'updated_at' => $now ), array( 'id' => $vehicle_id, 'branch_id' => (int) $vehicle['branch_id'], 'status' => 'available' ), array( '%s', '%s' ), array( '%d', '%d', '%s' ) );
 		$ok = 1 === $updated ? $wpdb->insert( Schema::table( 'vehicle_transfers' ), array( 'vehicle_id' => $vehicle_id, 'from_branch_id' => (int) $vehicle['branch_id'], 'to_branch_id' => $target_branch_id, 'requested_by' => get_current_user_id(), 'status' => 'requested', 'reason' => $reason, 'created_at' => $now, 'updated_at' => $now ), array( '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s' ) ) : false;

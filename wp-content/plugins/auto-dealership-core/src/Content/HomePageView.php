@@ -18,7 +18,7 @@ final class HomePageView {
 			) );
 			foreach ( $offers->posts as $post_id ) {
 				if ( PublicOfferView::for_post( (int) $post_id ) ) { $offer_ids[] = (int) $post_id; }
-				if ( 3 === count( $offer_ids ) ) { break; }
+				if ( 8 === count( $offer_ids ) ) { break; }
 			}
 		}
 		$count = new \WP_Query( array(
@@ -31,7 +31,18 @@ final class HomePageView {
 			'demand_ids' => $demand,
 			'offer_ids' => $offer_ids,
 			'published_car_count' => (int) $count->found_posts,
+			'available_car_count' => self::available_car_count(),
 		);
+	}
+
+	private static function available_car_count(): int {
+		global $wpdb;
+		if ( get_option( 'adc_db_version' ) === \AutoDealership\Database\Schema::VERSION ) {
+			$table = \AutoDealership\Database\Schema::table( 'onyx_stock' );
+			$total = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $table . ' s WHERE ' . \AutoDealership\Inventory\GroupedModelCatalog::availability() );
+			return $wpdb->last_error ? 0 : (int) $total;
+		}
+		return 0;
 	}
 
 	/** @return int[] */

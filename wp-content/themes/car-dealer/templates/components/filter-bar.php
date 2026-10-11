@@ -7,6 +7,10 @@ $get = static function ( $key ) {
 $archive_url = car_dealer_archive_url( 'car' );
 $filter_model = function_exists( 'adc_catalog_filter_options' ) ? adc_catalog_filter_options() : array();
 $authoritative = 'authoritative' === ( $filter_model['mode'] ?? '' );
+if ( class_exists( '\AutoDealership\Inventory\GroupedModelCatalog' ) && \AutoDealership\Inventory\GroupedModelCatalog::enabled() ) {
+    include __DIR__ . '/catalog-filters.php';
+    return;
+}
 
 if ( ! $authoritative ) {
 	$categories = $filter_model['categories'] ?? array();

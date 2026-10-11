@@ -49,6 +49,7 @@ final class ReservationService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_reservation_scope', __( 'العميل أو السيارة غير متاحين لهذه العملية.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
+		$source=\AutoDealership\Inventory\OnyxOperationalPolicy::current($vehicle_id,true);if(is_wp_error($source)){$wpdb->query('ROLLBACK');return $source;}if($source){$vehicle['retail_price']=$source['listed_price'];}
 		try {
 			$policy = PricingPolicy::reservation_deposit( (int) $vehicle['retail_price'] );
 		} catch ( \InvalidArgumentException | \OverflowException ) {

@@ -164,6 +164,10 @@ final class PrivacyTools {
 			foreach ( $versions as $version ) {
 				$items[] = array( 'name' => __( 'Quotation revision', 'auto-dealership-core' ), 'value' => implode( '; ', array_map( static fn( $key, $value ) => $key . ': ' . self::export_value( $key, $value ), array_keys( $version ), array_values( $version ) ) ) . '; monetary values are expressed in SAR' );
 			}
+			$archives = $wpdb->get_results( $wpdb->prepare( 'SELECT a.document_number,a.source_version,a.template_version,a.checksum,a.created_at FROM ' . Schema::table( 'document_archive' ) . ' a INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=a.quotation_id WHERE q.customer_id=%d ORDER BY a.id', (int) $customer['id'] ), ARRAY_A ) ?: array();
+			foreach ( $archives as $archive ) {
+				$items[] = array( 'name'=>__( 'Archived quotation document', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $value ) => $key . ': ' . (string) $value, array_keys( $archive ), array_values( $archive ) ) ) );
+			}
 		}
 		foreach ( self::legacy_rows( $email ) as $request ) {
 			$items[] = array( 'name' => __( 'Legacy website request', 'auto-dealership-core' ), 'value' => sprintf( '%s #%d; status %s; vehicle %d; created %s; %s', $request['request_type'], (int) $request['id'], $request['status'], (int) $request['car_id'], $request['created_at'], sanitize_textarea_field( (string) ( $request['message'] ?? '' ) ) ) );

@@ -54,7 +54,7 @@ function car_dealer_assets() {
 		wp_enqueue_style( 'autobrands-tajawal', plugins_url( 'auto-dealership-core/assets/css/typography.css' ), array(), $version );
 	}
 	wp_enqueue_style( 'car-dealer-style', get_stylesheet_uri(), array(), $version );
-	wp_enqueue_style( 'car-dealer-main', $uri . '/assets/css/main.css', array( 'car-dealer-style' ), $version );
+	wp_enqueue_style( 'car-dealer-main', $uri . '/assets/css/main.css', array( 'car-dealer-style' ), filemtime( get_template_directory() . '/assets/css/main.css' ) );
 	wp_enqueue_style( 'car-dealer-home-v2', $uri . '/assets/css/home-v2.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_style( 'car-dealer-floating', $uri . '/assets/css/floating-buttons.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_style( 'car-dealer-site-shell', $uri . '/assets/css/site-shell.css', array( 'car-dealer-floating' ), filemtime( get_template_directory() . '/assets/css/site-shell.css' ) );
@@ -203,10 +203,11 @@ function car_dealer_offer_card( $post_id = null ) {
 	$monthly = $offer['monthly_payment'];
 	$new_price = $offer['price'];
 	$old_price = $offer['old_price'];
-	$url = $offer['url'];
+	$url = car_dealer_catalog_localized_url( $offer['url'] );
 	$title = $offer['title'];
 	$image = get_the_post_thumbnail( $post_id, 'medium_large' );
 	if ( ! $image ) { $image = get_the_post_thumbnail( $offer['car_id'], 'medium_large' ); }
+	if ( ! $image ) { $image = '<span class="offer-placeholder">' . car_dealer_vehicle_placeholder() . '</span>'; }
 	?>
 	<article class="offer-card">
 		<?php if ( $image ) : ?>
@@ -219,8 +220,27 @@ function car_dealer_offer_card( $post_id = null ) {
 			<?php if ( $old_price ) : ?><p class="offer-old"><?php echo esc_html( car_dealer_format_price( $old_price ) ); ?></p><?php endif; ?>
 			<?php if ( $new_price ) : ?><p class="offer-price"><?php echo esc_html( car_dealer_format_price( $new_price ) ); ?></p><?php endif; ?>
 			<?php if ( $monthly ) : ?><p class="car-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
+			<div class="offer-card-actions">
+				<a class="btn btn-primary" href="<?php echo esc_url( $url . '#offer-lead' ); ?>"><?php esc_html_e( 'احصل على العرض', 'car-dealer' ); ?></a>
+				<a class="btn btn-outline" href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( car_dealer_text( 'تفاصيل العرض', 'Offer details' ) ); ?></a>
+			</div>
 		</div>
 	</article>
+	<?php
+}
+
+/** Shared, keyboard-accessible horizontal offer rail for home and archive. */
+function car_dealer_offer_rail( string $cards ): void {
+	if ( trim( $cards ) === '' ) { return; }
+	$id = wp_unique_id( 'website-offers-' );
+	?>
+	<div class="offer-rail" data-horizontal-row>
+		<div class="offer-rail-controls">
+			<button type="button" data-scroll-direction="left" aria-controls="<?php echo esc_attr( $id ); ?>" aria-label="<?php echo esc_attr( car_dealer_text( 'تحريك العروض لليسار', 'Scroll offers left' ) ); ?>"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button>
+			<button type="button" data-scroll-direction="right" aria-controls="<?php echo esc_attr( $id ); ?>" aria-label="<?php echo esc_attr( car_dealer_text( 'تحريك العروض لليمين', 'Scroll offers right' ) ); ?>"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></button>
+		</div>
+		<div id="<?php echo esc_attr( $id ); ?>" class="offer-rail-track" data-horizontal-track tabindex="0" role="region" aria-label="<?php echo esc_attr( car_dealer_text( 'العروض الحالية', 'Current offers' ) ); ?>"><?php echo $cards; ?></div>
+	</div>
 	<?php
 }
 
@@ -312,9 +332,47 @@ function car_dealer_get_comparison() {
 	return function_exists( 'adc_public_comparison_ids' ) ? adc_public_comparison_ids() : array();
 }
 
+function car_dealer_comparison_url(): string {
+    $page = get_page_by_path( 'comparison' );
+    return $page && $page->post_status === 'publish' ? car_dealer_catalog_localized_url( get_permalink( $page ) ) : '';
+}
+
+add_action( 'wp_footer', static function (): void {
+    $url = car_dealer_comparison_url(); if ( ! $url ) { return; }
+    $count = count( car_dealer_get_comparison() );
+    echo '<aside class="cd-comparison-bar" data-comparison-bar' . ( $count ? '' : ' hidden' ) . '><a class="btn btn-primary" href="' . esc_url( $url ) . '">' . esc_html( car_dealer_text( 'عرض المقارنة', 'View comparison' ) ) . ' (<span data-comparison-count>' . $count . '</span>)</a></aside>';
+} );
+
+add_action( 'template_redirect', static function (): void {
+    if ( is_page( 'comparison' ) ) { if ( ! defined( 'DONOTCACHEPAGE' ) ) { define( 'DONOTCACHEPAGE', true ); } nocache_headers(); }
+} );
+
 function car_dealer_shortcode_comparison( $model = array() ) {
-	$ids = isset( $model['post_ids'] ) && is_array( $model['post_ids'] ) ? $model['post_ids'] : car_dealer_get_comparison();
-	if ( ! $ids ) { return '<p class="empty-state">' . esc_html__( 'لم تضف سيارات للمقارنة بعد.', 'car-dealer' ) . '</p>'; }
-	return car_dealer_render_shortcode_car_ids( $ids, 'car-grid cd-comparison-grid' );
+    $ids = isset( $model['post_ids'] ) && is_array( $model['post_ids'] ) ? $model['post_ids'] : car_dealer_get_comparison();
+    $views = array(); foreach ( $ids as $id ) { $view = car_dealer_vehicle_view( (int) $id ); if ( $view ) { $views[(int)$id] = $view; } }
+    ob_start();
+    echo '<section class="cd-comparison-workspace" data-comparison-page><p>' . esc_html( car_dealer_text( 'قارن حتى 4 سيارات، واختر الأنسب لك. تظهر البيانات المتوفرة فقط.', 'Compare up to 4 vehicles and choose your best fit. Only available data is shown.' ) ) . '</p>';
+    if ( ! $views ) { echo '<p class="empty-state">' . esc_html( car_dealer_text( 'لم تضف سيارات للمقارنة بعد.', 'No vehicles selected for comparison yet.' ) ) . '</p>'; }
+    else {
+        echo '<div class="cd-comparison-scroll" tabindex="0" role="region" aria-label="' . esc_attr( car_dealer_text( 'جدول مقارنة السيارات', 'Vehicle comparison table' ) ) . '"><table class="cd-comparison-table"><thead><tr><th scope="col">' . esc_html( car_dealer_text( 'المواصفات', 'Specifications' ) ) . '</th>';
+        foreach ( $views as $id => $view ) {
+            $url = car_dealer_catalog_localized_url( get_permalink( $id ) );
+            echo '<th scope="col"><a href="' . esc_url( $url ) . '">' . ( get_the_post_thumbnail( $id, 'medium', array( 'loading' => 'lazy' ) ) ?: '<span class="cd-comparison-placeholder">' . car_dealer_vehicle_placeholder() . '</span>' ) . '<span>' . esc_html( get_the_title( $id ) ) . '</span></a>';
+            car_dealer_comparison_button( $id ); echo '</th>';
+        }
+        echo '</tr></thead><tbody>';
+        foreach ( array( 'brand_name'=>array('الماركة','Brand'), 'model'=>array('الطراز','Model'), 'trim'=>array('الفئة','Trim'), 'year'=>array('الموديل','Model year'), 'color'=>array('الألوان المتاحة','Available colors'), 'price'=>array('السعر','Price'), 'price_label'=>array('تفاصيل السعر','Price inclusions'), 'monthly'=>array('القسط الشهري','Monthly payment'), 'fuel'=>array('الوقود','Fuel'), 'transmission'=>array('ناقل الحركة','Transmission') ) as $key => $labels ) {
+            $values = array(); foreach ( $views as $id => $view ) {
+                $value = $key === 'trim' ? ( isset( $view['catalog_model'] ) ? implode( ' / ', array_unique( array_filter( wp_list_pluck( $view['catalog_model']['options'], 'trim_name' ) ) ) ) : ( $view['vehicle']['trim_name'] ?? '' ) ) : ( $view[$key] ?? '' );
+                $values[$id] = in_array( $key, array( 'price', 'monthly' ), true ) ? car_dealer_catalog_format_price( $value ) : car_dealer_catalog_value_label( (string)$value );
+                if ( $key === 'price' && $values[$id] !== '' && ! empty( $view['price_from'] ) ) { $values[$id] = car_dealer_text( 'يبدأ من ', 'From ' ) . $values[$id]; }
+            }
+            if ( ! array_filter( $values ) ) { continue; }
+            echo '<tr><th scope="row">' . esc_html( car_dealer_text( $labels[0], $labels[1] ) ) . '</th>'; foreach ( $values as $value ) { echo '<td>' . esc_html( $value !== '' ? $value : '—' ) . '</td>'; } echo '</tr>';
+        }
+        echo '</tbody></table></div>';
+    }
+    $catalog = car_dealer_archive_url( 'car' ); if ( $catalog ) { echo '<p><a class="btn btn-outline" href="' . esc_url( $catalog ) . '">' . esc_html( car_dealer_text( 'اختيار سيارات للمقارنة', 'Choose vehicles to compare' ) ) . '</a></p>'; }
+    echo '</section>'; return ob_get_clean();
 }
 car_dealer_register_shortcode_adapter( 'car_dealer_comparison', 'car_dealer_shortcode_comparison', false, true );

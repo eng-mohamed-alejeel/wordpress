@@ -1,0 +1,17 @@
+<?php
+/** Convert same-origin local editorial links to portable relative URLs, with backup and audit. */
+if(PHP_SAPI!=='cli'||!in_array($argv[1]??'',array('--inspect','--apply'),true)){exit(1);}
+define('DISABLE_WP_CRON',true);require dirname(__DIR__).'/wp-load.php';
+$origin=wp_parse_url(home_url());if(!in_array($origin['host']??'',array('localhost','127.0.0.1'),true)){exit(2);}
+$admins=get_users(array('role'=>'administrator','number'=>1,'fields'=>'ID'));if(!$admins){exit(3);}wp_set_current_user((int)$admins[0]);
+$plan=array();
+foreach(get_posts(array('post_type'=>'page','post_status'=>'publish','numberposts'=>-1))as$page){
+	$links=array();$rewrite=static function(string$content)use($origin,&$links):string{return preg_replace_callback('~(href\s*=\s*["\'])(https?://[^"\']+)(["\'])~i',static function(array$m)use($origin,&$links):string{$url=wp_parse_url(html_entity_decode($m[2],ENT_QUOTES,'UTF-8'));if(($url['host']??'')!==$origin['host']||($url['port']??80)!==($origin['port']??80)){return$m[0];}$path=($url['path']??'/').(isset($url['query'])?'?'.$url['query']:'').(isset($url['fragment'])?'#'.$url['fragment']:'');$links[]=$path;return$m[1].esc_url($path).$m[3];},$content);};
+	$en=(string)get_post_meta($page->ID,'_adc_content_en',true);$new=$rewrite($page->post_content);$new_en=$rewrite($en);
+	if($new!==$page->post_content||$new_en!==$en){$plan[]=array('id'=>$page->ID,'old'=>$page->post_content,'old_en'=>$en,'old_en_hash'=>get_post_meta($page->ID,'_adc_content_en_source_hash',true),'new'=>$new,'new_en'=>$new_en,'paths'=>$links,'slug'=>$page->post_name,'title'=>$page->post_title,'old_status'=>$page->post_status,'new_status'=>(in_array($page->post_name,array('sample-page','مثال-على-صفحة'),true) && in_array($page->post_title,array('Sample Page','مثال على صفحة'),true) && str_contains($page->post_content,'/wp-admin/')) ? 'draft' : $page->post_status);}
+}
+echo wp_json_encode(array_map(static fn($p)=>array('id'=>$p['id'],'paths'=>$p['paths'],'status'=>$p['new_status'],'slug'=>$p['slug'],'title'=>$p['title']),$plan),JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)."\n";if('--inspect'===$argv[1]||!$plan){exit;}
+$backup=tempnam(sys_get_temp_dir(),'adc-links-backup-');if(false===file_put_contents($backup,wp_json_encode($plan),LOCK_EX)){exit(4);}
+if(!\AutoDealership\Database\Transaction::begin()){exit(5);}
+try{foreach($plan as$p){$saved=wp_update_post(wp_slash(array('ID'=>$p['id'],'post_content'=>$p['new'],'post_status'=>$p['new_status'])),true);if(is_wp_error($saved)){throw new RuntimeException($saved->get_error_code());}update_post_meta($p['id'],'_adc_content_en',wp_slash($p['new_en']));if(!$p['old_en_hash']||hash_equals($p['old_en_hash'],hash('sha256',$p['old']))){update_post_meta($p['id'],'_adc_content_en_source_hash',hash('sha256',$p['new']));}if(get_post($p['id'])->post_content!==$p['new']||(string)get_post_meta($p['id'],'_adc_content_en',true)!==$p['new_en']){throw new RuntimeException('Link verification failed');}}if(!\AutoDealership\Database\Transaction::commit(static fn()=>\AutoDealership\Audit\AuditLog::record('content.local_links_normalized','settings',0,'Same-origin editorial links now use portable relative URLs',null,array('page_ids'=>array_column($plan,'id'))))){throw new RuntimeException('Audit failed');}}catch(Throwable$e){global$wpdb;$wpdb->query('ROLLBACK');foreach($plan as$p){clean_post_cache($p['id']);}fwrite(STDERR,$e->getMessage()."\n");exit(6);}
+if(function_exists('wp_cache_clear_cache')){wp_cache_clear_cache();}echo "Links normalized. Backup: $backup\n";

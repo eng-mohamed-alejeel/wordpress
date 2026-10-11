@@ -2,9 +2,9 @@
 <?php $catalog_language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar'; $catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl'; ?>
 <section class="archive-hero ab-inventory-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 	<div class="container">
-		<p class="eyebrow"><?php echo esc_html__( 'AUTO BRANDS INVENTORY', 'car-dealer' ); ?></p>
+		<p class="eyebrow"><?php echo esc_html(car_dealer_text('سيارات AUTO BRANDS','AUTO BRANDS Vehicles')); ?></p>
 		<h1><?php esc_html_e( 'استعرض سيارات AUTO BRANDS', 'car-dealer' ); ?></h1>
-		<p><?php esc_html_e( 'فلترة دقيقة حسب الماركة، الموديل، السنة، السعر، نوع السيارة، الوقود وناقل الحركة.', 'car-dealer' ); ?></p>
+		<p><?php echo esc_html(car_dealer_text('اختر سيارتك حسب الماركة والطراز والفئة واللون والسنة والسعر.','Find your vehicle by brand, model, trim, color, year and price.')); ?></p>
 	</div>
 </section>
 <div class="container archive-content" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
@@ -12,7 +12,20 @@
 		<p class="empty-state" role="status"><?php esc_html_e( 'كتالوج السيارات غير متاح حاليًا. يرجى المحاولة لاحقًا.', 'car-dealer' ); ?></p>
 	<?php else : get_template_part( 'templates/components/filter-bar' ); ?>
 	<?php if ( have_posts() ) : ?>
-		<p class="catalog-result-count" role="status" aria-live="polite"><?php printf( esc_html( _n( 'سيارة واحدة مطابقة', '%s سيارة مطابقة', (int) $GLOBALS['wp_query']->found_posts, 'car-dealer' ) ), esc_html( number_format_i18n( (int) $GLOBALS['wp_query']->found_posts ) ) ); ?></p>
+		<?php
+		$result_count = (int) $GLOBALS['wp_query']->found_posts;
+		if ( 'en' === $catalog_language ) {
+			$result_label = $result_count === 1 ? '1 available option' : number_format_i18n( $result_count ) . ' available options';
+		} elseif ( $result_count === 1 ) {
+			$result_label = 'خيار واحد متاح';
+		} elseif ( $result_count === 2 ) {
+			$result_label = 'خياران متاحان';
+		} else {
+			$last_two = $result_count % 100;
+			$result_label = number_format_i18n( $result_count ) . ( $last_two >= 3 && $last_two <= 10 ? ' خيارات متاحة' : ' خيارًا متاحًا' );
+		}
+		?>
+		<p class="catalog-result-count" role="status" aria-live="polite"><?php echo esc_html( $result_label ); ?></p>
 		<div class="car-grid"><?php while ( have_posts() ) { the_post(); get_template_part( 'templates/components/car-card' ); } ?></div>
 		<div class="pagination"><?php the_posts_pagination( array( 'prev_text' => __( 'السابق', 'car-dealer' ), 'next_text' => __( 'التالي', 'car-dealer' ) ) ); ?></div>
 	<?php else : ?>

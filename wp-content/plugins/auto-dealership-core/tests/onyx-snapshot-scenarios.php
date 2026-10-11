@@ -1,0 +1,53 @@
+<?php
+if(PHP_SAPI!=='cli'||!preg_match('/\Aadc_verify_[a-f0-9]{16}\z/',DB_NAME)){exit(1);}
+use AutoDealership\Inventory\OnyxImportService as Snapshot;
+use AutoDealership\Inventory\GroupedModelCatalog as SnapshotCatalog;
+use AutoDealership\Database\Schema;
+global $wpdb;
+$snapshot_checks=0;$assert=static function(bool $ok,string $message)use(&$snapshot_checks){if(!$ok){throw new RuntimeException($message);}++$snapshot_checks;echo "PASS $message\n";};
+$actor=(int)get_user_by('login','verify_admin')->ID;wp_set_current_user($actor);
+$fixture=tempnam(sys_get_temp_dir(),'adc_final_stock_');
+$headers=array('الهيكل','الماركة','الطراز','الفئة','اللون','الموديل','سعر البيع','المورد','المخزن','ملاحظات','اللون الداخلي','عمر المخزون');
+$write=static function(array $rows)use($fixture,$headers){$xml='<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';foreach(array_merge(array($headers),$rows)as$i=>$cells){$xml.='<row r="'.($i+1).'">';foreach($cells as$j=>$value){$xml.='<c r="'.chr(65+$j).($i+1).'" t="inlineStr"><is><t>'.htmlspecialchars((string)$value,ENT_XML1|ENT_QUOTES,'UTF-8').'</t></is></c>';}$xml.='</row>';}$xml.='</sheetData></worksheet>';$zip=new ZipArchive();$zip->open($fixture,ZipArchive::OVERWRITE);$zip->addFromString('xl/worksheets/sheet1.xml',$xml);$zip->close();};
+$a=array('000001','Snapshot Brand','Snapshot Model','LE','White','2026','68000','Snapshot Supplier','Main warehouse','','Black','10');$b=$a;$b[0]='000002';$b[4]='Black';$c=$a;$c[0]='A000003';$c[3]='XLE';$c[5]='2025';$c[6]='70000';
+try{
+	$unlinked=wp_insert_post(array('post_type'=>'car','post_status'=>'publish','post_title'=>'Unlinked historical catalog car','post_content'=>'Keep legacy content'));
+	$write(array($a,$b,$c));$upload=Snapshot::upload($fixture,'complete-final-stock.xlsx');
+	$assert(is_array($upload)&&empty($upload['invalid'])&&$upload['rows']===3,'One upload completes validation, reconciliation and publication without a manual approval');
+	$assert(get_post_status($unlinked)==='draft'&&get_post($unlinked)->post_content==='Keep legacy content','Unlinked historical car outside final Onyx inventory is also withdrawn without deleting its content');
+	$stock=Schema::table('onyx_stock');$models=Schema::table('catalog_models');
+	$sources=$wpdb->get_results("SELECT * FROM $stock WHERE source_identifier IN ('000001','000002','A000003') ORDER BY source_identifier",ARRAY_A);$ids=wp_list_pluck($sources,'id');
+	$assert(count($sources)===3&&$sources[0]['source_identifier']==='000001'&&(int)$wpdb->get_var("SELECT COUNT(*) FROM $stock WHERE present=1")===3,'Final file matches exact chassis strings, preserves leading zeros and replaces all previous availability');
+	$pages=$wpdb->get_results($wpdb->prepare("SELECT * FROM $models WHERE brand=%s",'Snapshot Brand'),ARRAY_A);$le=array_values(array_filter($pages,static fn($p)=>$p['trim_name']==='LE'))[0];$xle=array_values(array_filter($pages,static fn($p)=>$p['trim_name']==='XLE'))[0];$le_id=(int)$le['public_post_id'];$xle_id=(int)$xle['public_post_id'];
+	$assert(count($pages)===2&&get_post_status($le_id)==='publish'&&get_post_status($xle_id)==='publish','New configurations automatically publish independently with no required image or description');
+	$assert(get_option('adc_public_catalog_mode')==='models'&&\AutoDealership\Inventory\PublicCatalog::catalog_total()===2,'Upload automatically selects the source catalog and displays only final-file inventory');
+	$assert(count(SnapshotCatalog::view($le_id)['catalog_model']['colors'])===2,'Two chassis and colors of the same configuration share its independent page');
+	wp_update_post(array('ID'=>$le_id,'post_content'=>'Preserved staff description'));update_post_meta($le_id,'_car_plate_type','commercial_transport');update_post_meta($le_id,'_car_features','Preserved features');$old_url=get_permalink($le_id);
+	$again=Snapshot::upload($fixture,'same-final-stock.xlsx');$after_ids=$wpdb->get_col("SELECT id FROM $stock WHERE source_identifier IN ('000001','000002','A000003') ORDER BY source_identifier");
+	$assert(is_array($again)&&$again['model_drafts_created']===0&&array_map('intval',$ids)===array_map('intval',$after_ids),'Repeated final file reuses chassis records and pages without creating duplicates');
+	$assert(get_post($le_id)->post_content==='Preserved staff description'&&get_post_meta($le_id,'_car_plate_type',true)==='commercial_transport'&&get_post_meta($le_id,'_car_features',true)==='Preserved features'&&get_permalink($le_id)===$old_url,'Automatic publication preserves descriptions, plate fees, features and URLs');
+	wp_update_post(array('ID'=>$xle_id,'post_status'=>'future','post_date'=>gmdate('Y-m-d H:i:s',time()+86400*3),'post_date_gmt'=>gmdate('Y-m-d H:i:s',time()+86400*3)));$scheduled=Snapshot::upload($fixture,'current-stock-supersedes-schedule.xlsx');
+	$assert(is_array($scheduled)&&get_post_status($xle_id)==='publish','Final current stock publishes available vehicles immediately even if their page was previously scheduled');
+	$write(array($a));$reduced=Snapshot::upload($fixture,'sold-two-units.xlsx');
+	$assert(is_array($reduced)&&(int)$wpdb->get_var("SELECT COUNT(*) FROM $stock WHERE present=1")===1&&(int)$wpdb->get_var("SELECT COUNT(*) FROM $stock WHERE source_identifier IN ('000001','000002','A000003')")===3,'Missing vehicles become unavailable/sold according to Onyx without deleting their historical records');
+	$assert(get_post_status($le_id)==='publish'&&get_post_status($xle_id)==='draft'&&SnapshotCatalog::view($xle_id)===null&&\AutoDealership\Inventory\PublicCatalog::catalog_total()===1,'Remaining unit keeps its page published; sold-out configuration is automatically unpublished');
+	$assert(SnapshotCatalog::view($le_id)['catalog_model']['colors']===array('White'),'Sold color is removed from the surviving page without removing the remaining vehicle');
+	$d=$c;$d[0]='A000004';$d[3]='New trim';$write(array($c,$d));$before=$wpdb->get_results("SELECT * FROM $stock ORDER BY id",ARRAY_A);$before_posts=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='car'");update_option('adc_public_catalog_mode','compatibility');
+	$fault=static function(string $sql):string{return str_contains($sql,'INSERT INTO')&&str_contains($sql,Schema::table('audit_events'))&&str_contains($sql,'inventory.onyx_imported')?'INSERT INTO adc_missing_final_stock_audit VALUES(1)':$sql;};$wpdb->suppress_errors(true);add_filter('query',$fault);$failed=Snapshot::upload($fixture,'rollback-final.xlsx');remove_filter('query',$fault);$wpdb->suppress_errors(false);
+	$assert(is_wp_error($failed)&&$before===$wpdb->get_results("SELECT * FROM $stock ORDER BY id",ARRAY_A),'Final audit failure restores all stock rows and availability changes atomically');
+	$assert(get_post_status($le_id)==='publish'&&get_post_status($xle_id)==='draft'&&(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='car'")===$before_posts&&get_option('adc_public_catalog_mode')==='compatibility','Failed upload restores publication statuses, new pages and cached catalog settings');
+	$write(array($a,$b,$c));$returned=Snapshot::upload($fixture,'returned-stock.xlsx');
+	$assert(is_array($returned)&&get_post_status($xle_id)==='publish'&&get_permalink($le_id)===$old_url&&array_map('intval',$ids)===array_map('intval',$wpdb->get_col("SELECT id FROM $stock WHERE source_identifier IN ('000001','000002','A000003') ORDER BY source_identifier")),'Returning vehicles reactivate the original records and republish the same pages without duplicates');
+	$before=$wpdb->get_results("SELECT * FROM $stock ORDER BY id",ARRAY_A);$write(array($a,$a));$invalid=Snapshot::upload($fixture,'duplicate-chassis.xlsx');
+	$assert(is_array($invalid)&&!empty($invalid['invalid'])&&$before===$wpdb->get_results("SELECT * FROM $stock ORDER BY id",ARRAY_A),'Duplicate chassis aborts automatic synchronization without hiding or overwriting live inventory');
+	$write(array($a,$b,$c));$restricted=get_user_by('id',$actor);$cap=get_post_type_object('car')->cap->publish_posts;$restricted->add_cap($cap,false);wp_set_current_user(0);wp_set_current_user($actor);$denied=Snapshot::upload($fixture,'forbidden-publication.xlsx');$restricted->remove_cap($cap);wp_set_current_user(0);wp_set_current_user($actor);
+	$assert(is_wp_error($denied)&&$denied->get_error_code()==='adc_onyx_publication_forbidden'&&$before===$wpdb->get_results("SELECT * FROM $stock ORDER BY id",ARRAY_A),'Uploader without publication capability cannot partially apply inventory or publish cars');
+	$write(array());$empty=Snapshot::upload($fixture,'zero-current-stock.xlsx');
+	$assert(is_array($empty)&&$empty['rows']===0&&(int)$wpdb->get_var("SELECT COUNT(*) FROM $stock WHERE present=1")===0&&\AutoDealership\Inventory\PublicCatalog::catalog_total()===0,'Valid final file with headers and zero vehicles automatically withdraws all availability and publication');
+	$assert(get_post_status($le_id)==='draft'&&get_post_status($xle_id)==='draft'&&get_post($le_id)->post_content==='Preserved staff description','Empty inventory unpublishes pages while preserving their editable content and identity');
+	$write(array($a,$b,$c));$restored=Snapshot::upload($fixture,'restored-after-empty.xlsx');
+	$assert(is_array($restored)&&get_post_status($le_id)==='publish'&&get_post_status($xle_id)==='publish','Restoring inventory after zero stock republishes existing pages automatically');
+	$_GET=array();ob_start();\AutoDealership\Admin\OnyxInventoryPage::render();$html=ob_get_clean();
+	$assert(!str_contains($html,'name="mode"')&&!str_contains($html,'value="adc_onyx_apply"')&&str_contains($html,'name="workbook"'),'Upload screen offers one automatic final-stock action without mode selection or manual approval');
+}finally{unlink($fixture);}
+echo "Onyx final snapshot checks passed: $snapshot_checks\n";

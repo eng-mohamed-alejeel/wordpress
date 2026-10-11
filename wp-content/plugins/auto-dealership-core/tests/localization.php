@@ -66,4 +66,17 @@ $GLOBALS['test_admin'] = true; $GLOBALS['test_ajax'] = true; $GLOBALS['test_loca
 check( 'The comparison could not be updated.' === __( 'تعذر تحديث المقارنة.', 'auto-dealership-core' ), 'AJAX response follows request language rather than admin locale' );
 $_REQUEST = array( 'lang'=>array('en') );
 check( 'ar' === \AutoDealership\Core\Localization::language(), 'Non-scalar language input falls back safely' );
+
+$GLOBALS['test_admin'] = false; $GLOBALS['test_ajax'] = false;
+$_GET = array( 'lang' => 'en' );
+check( 'Ask about this offer' === __( 'احصل على العرض', 'car-dealer' ), 'Offer card and request CTA use English public language' );
+check( 'Monthly payment from %s' === __( 'قسط يبدأ من %s', 'car-dealer' ), 'Offer monthly price label uses English public language' );
+check( 'There are no published offers at the moment.' === __( 'لا توجد عروض منشورة حالياً.', 'car-dealer' ), 'Offer empty state uses English public language' );
+check( 'Offer details' === car_dealer_text( 'تفاصيل العرض', 'Offer details' ), 'Offer details CTA uses English public language' );
+$_GET = array( 'lang' => 'ar' );
+check( 'احصل على العرض' === __( 'احصل على العرض', 'car-dealer' ) && 'تفاصيل العرض' === car_dealer_text( 'تفاصيل العرض', 'Offer details' ), 'Offer CTAs return to Arabic without inheriting administrator locale' );
+$GLOBALS['test_admin'] = true; $GLOBALS['test_locale'] = 'ar'; $_GET = array( 'lang' => 'en' );
+check( 'تغير العرض. أعد تحميل الصفحة قبل الحفظ.' === __( 'This offer changed. Reload before saving.', 'auto-dealership-core' ), 'Offer save conflict follows Arabic administrator locale' );
+$GLOBALS['test_locale'] = 'en';
+check( 'This offer changed. Reload before saving.' === __( 'This offer changed. Reload before saving.', 'auto-dealership-core' ), 'Offer save conflict follows English administrator locale' );
 echo "Localization regression passed.\n";

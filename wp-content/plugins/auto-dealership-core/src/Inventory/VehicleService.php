@@ -66,6 +66,18 @@ final class VehicleService {
 			return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$now = current_time( 'mysql', true );
+		$source_id = absint( $input['onyx_stock_id'] ?? 0 );
+		$sources = InventoryIdentityLookup::sources( $vin );
+		if ( $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_onyx_lookup_failed', __( 'Inventory identity lookup is unavailable. Retry before creating the vehicle.', 'auto-dealership-core' ), array( 'status' => 500 ) ); }
+		$source = null;
+		if ( $sources || $source_id ) {
+			$source = $source_id ? $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . Schema::table( 'onyx_stock' ) . ' WHERE id=%d FOR UPDATE', $source_id ), ARRAY_A ) : null;
+			if ( ( ! current_user_can( 'manage_options' ) && ( !$source || (int)(InventoryWorkspace::warehouse_branches()[$source['warehouse_name']]??0)!==$branch_id || !BranchScope::allows($branch_id) ) ) || '1' !== (string) ( $input['onyx_link_confirmed'] ?? '' ) || ! $source || count( $sources ) !== 1 || (int) $sources[0]['id'] !== $source_id || ! $source['present'] || $source['vehicle_id'] || (int) $source['model_year'] !== $year ) {
+				$wpdb->query( 'ROLLBACK' );
+				return new \WP_Error( 'adc_onyx_link_required', __( 'Confirm the matching active Onyx stock record and model year before creating this vehicle.', 'auto-dealership-core' ), array( 'status' => 409 ) );
+			}
+		}
+		if($source){$brand=$source['brand'];$model=$source['model'];$year=(int)$source['model_year'];$input['trim']=$source['trim_name'];$retail_price=(int)$source['listed_price'];if($retail_price<1||($minimum_price&&$minimum_price>$retail_price)){$wpdb->query('ROLLBACK');return new \WP_Error('adc_invalid_vehicle_price','Invalid Onyx price',array('status'=>409));}}
 		$result = $wpdb->insert(
 			Schema::table( 'vehicles' ),
 			array(
@@ -101,6 +113,10 @@ final class VehicleService {
 			return new \WP_Error( 'adc_vehicle_conflict', __( 'تعذر إنشاء السيارة. تحقق من عدم تكرار رقم الهيكل أو المخزون.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
 		$id = (int) $wpdb->insert_id;
+		if ( $source && 1 !== $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::table( 'onyx_stock' ) . ' SET vehicle_id=%d WHERE id=%d AND vehicle_id IS NULL', $id, $source_id ) ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'adc_onyx_link_conflict', __( 'The Onyx record was already linked. Refresh the inventory.', 'auto-dealership-core' ), array( 'status' => 409 ) );
+		}
 		if ( $specifications ) {
 			$formats = array_map( static fn( $field ) => isset( VehicleSpecifications::NUMBER_LIMITS[$field] ) ? '%d' : '%s', array_keys( $specifications ) );
 			if ( false === $wpdb->update( Schema::table( 'vehicles' ), $specifications, array( 'id'=>$id ), $formats, array( '%d' ) ) ) {
@@ -108,7 +124,10 @@ final class VehicleService {
 				return new \WP_Error( 'adc_specification_save_failed', '', array( 'status'=>500 ) );
 			}
 		}
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'vehicle.created', 'vehicle', $id, 'Vehicle received into inventory', null, array( 'vin' => $vin, 'branch_id' => $branch_id, 'status' => 'received' ) ) ) ) {
+		if ( ! Transaction::commit( static function () use ( $id, $vin, $branch_id, $source_id ): bool {
+			return AuditLog::record( 'vehicle.created', 'vehicle', $id, 'Vehicle received into inventory', null, array( 'vin' => $vin, 'branch_id' => $branch_id, 'status' => 'received' ) )
+				&& ( ! $source_id || AuditLog::record( 'inventory.onyx_linked', 'onyx_stock', $source_id, 'Verified full VIN linked during inventory receipt', null, array( 'vehicle_id' => $id ) ) );
+		} ) ) {
 			return new \WP_Error( 'adc_vehicle_conflict', __( 'تعذر توثيق إنشاء السيارة.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return self::get( $id, current_user_can( 'adc_view_inventory' ) );
@@ -134,6 +153,7 @@ final class VehicleService {
 			return new \WP_Error( 'adc_vehicle_not_found', __( 'السيارة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status' => 404 ) );
 		}
 		$from = $vehicle['status'];
+		if($to==='available'){$source=OnyxOperationalPolicy::current($id,true);if(is_wp_error($source)){$wpdb->query('ROLLBACK');return $source;}}
 		$active_transfer = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'vehicle_transfers' ) . " WHERE vehicle_id = %d AND status IN ('requested','approved','dispatched') LIMIT 1", $id ) );
 		if ( $active_transfer ) {
 			$wpdb->query( 'ROLLBACK' );
@@ -202,6 +222,8 @@ final class VehicleService {
 		if ( ! $row || ! self::user_can_access_branch( (int) $row['branch_id'] ) ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_vehicle_not_found', '', array( 'status' => 404 ) ); }
 		if ( ! in_array( $row['status'], array( 'ordered','in_transit','received','inspection','hold','maintenance','returned' ), true ) ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_vin_state_locked', '', array( 'status' => 409 ) ); }
 		if ( hash_equals( $row['vin'], $vin ) ) { $wpdb->query( 'ROLLBACK' ); return array( 'id' => $id, 'updated' => false ); }
+		$onyx_identifier = $wpdb->get_var( $wpdb->prepare( 'SELECT source_identifier FROM ' . Schema::table( 'onyx_stock' ) . ' WHERE vehicle_id=%d', $id ) );
+		if ( $onyx_identifier && ! str_ends_with( $vin, (string) $onyx_identifier ) ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_onyx_identity_mismatch', __( 'The corrected VIN must still match the linked Onyx identifier.', 'auto-dealership-core' ), array( 'status' => 409 ) ); }
 		$changed = $wpdb->update( $table, array( 'vin' => $vin, 'updated_at' => current_time( 'mysql', true ) ), array( 'id' => $id, 'vin' => $row['vin'] ), array( '%s','%s' ), array( '%d','%s' ) );
 		$before_hash = hash( 'sha256', $row['vin'] ); $after_hash = hash( 'sha256', $vin );
 		if ( 1 !== $changed || ! Transaction::commit( static fn() => AuditLog::record( 'vehicle.vin_changed', 'vehicle', $id, $reason, array( 'vin_sha256' => $before_hash ), array( 'vin_sha256' => $after_hash ) ) ) ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_vin_change_failed', '', array( 'status' => 409 ) ); }
@@ -211,7 +233,7 @@ final class VehicleService {
 	public static function get( int $id, bool $include_private = false ): ?array {
 		global $wpdb;
 		$inventory_access = current_user_can( 'adc_view_inventory' ) || current_user_can( 'adc_manage_inventory' );
-		if ( ! $inventory_access && ! current_user_can( 'adc_view_finance' ) && ! BranchScope::is_global() ) {
+		if ( ! $inventory_access && ! current_user_can( 'adc_view_finance' ) && !current_user_can('adc_view_vehicle_costs') && !current_user_can('adc_manage_vehicle_costs') && ! BranchScope::is_global() ) {
 			return null;
 		}
 		$fields = 'id,stock_number,brand,brand_id,model,trim_name,model_year,condition_key,branch_id,location_id,status,body_type,fuel_type,transmission,mileage,retail_price,currency';
@@ -245,23 +267,22 @@ final class VehicleService {
 		return PublicCatalog::catalog_total( $filters );
 	}
 
-	public static function list_for_current_user( int $page = 1, string $phase = '' ): array {
+	public static function list_for_current_user(int $page=1,string $phase=''):array {
+		$result=self::page_for_current_user($page,$phase);return is_wp_error($result)?array():$result['rows'];
+	}
+	/** Explicit load result; filtering precedes pagination and totals share the same scope. */
+	public static function page_for_current_user(int $page=1,string $phase='') {
 		global $wpdb;
-		if ( ! current_user_can( 'adc_view_inventory' ) && ! current_user_can( 'manage_options' ) ) {
-			return array();
-		}
-		$page = max( 1, $page );
-		$table = Schema::table( 'vehicles' );
-		list( $scope, $args ) = BranchScope::predicate( 'branch_id' );
-		$where = ' WHERE ' . $scope;
-		if ( in_array( $phase, array( 'received', 'inspection' ), true ) ) {
-			$where .= ' AND status = %s';
-			$args[] = $phase;
-		}
-		$args[] = 50;
-		$args[] = ( $page - 1 ) * 50;
-		$sql = 'SELECT id,vin,stock_number,brand,model,trim_name,model_year,condition_key,branch_id,location_id,status,mileage,retail_price,currency FROM ' . $table . $where . ' ORDER BY id DESC LIMIT %d OFFSET %d';
-		return $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
+		if(!current_user_can('adc_view_inventory')&&!current_user_can('adc_manage_inventory')&&!current_user_can('adc_view_finance')&&!current_user_can('adc_view_vehicle_costs')&&!current_user_can('adc_manage_vehicle_costs')&&!current_user_can('manage_options')){return new \WP_Error('adc_forbidden','Inventory access denied');}
+		$table=Schema::table('vehicles');list($scope,$args)=BranchScope::predicate('v.branch_id');$where=' WHERE '.$scope;
+		if(in_array($phase,array('received','inspection','available'),true)){$where.=' AND v.status=%s';$args[]=$phase;}
+		if($phase==='available'){$where.=' AND '.OnyxOperationalPolicy::predicate('v');}
+		$count='SELECT COUNT(*) FROM '.$table.' v'.$where;$total=(int)$wpdb->get_var($args?$wpdb->prepare($count,$args):$count);if($wpdb->last_error){return new \WP_Error('adc_inventory_load','Unable to load inventory');}
+		$pages=max(1,(int)ceil($total/50));$page=min(max(1,$page),$pages);
+		$vin=(current_user_can('adc_view_inventory')||current_user_can('adc_manage_inventory')||BranchScope::is_global())?'v.vin':'NULL AS vin';
+		$sql='SELECT v.id,'.$vin.',v.stock_number,v.brand,v.model,v.trim_name,v.model_year,v.condition_key,v.branch_id,v.location_id,v.status,v.mileage,v.retail_price,v.currency FROM '.$table.' v'.$where.' ORDER BY v.id DESC LIMIT 50 OFFSET %d';
+		$rows=$wpdb->get_results($wpdb->prepare($sql,array_merge($args,array(($page-1)*50))),ARRAY_A);if($wpdb->last_error){return new \WP_Error('adc_inventory_load','Unable to load inventory');}
+		return array('rows'=>$rows??array(),'total'=>$total,'pages'=>$pages,'page'=>$page,'phase'=>$phase);
 	}
 
 	public static function branch_exists( int $branch_id ): bool {

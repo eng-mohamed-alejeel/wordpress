@@ -45,7 +45,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 	require ABSPATH . 'wp-settings.php';
 	add_filter( 'pre_wp_mail', '__return_true' );
-	if ( in_array( $scenario, array( 'reserve', 'finance_attempt', 'migrate', 'crm_intake', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase', 'outbox', 'rate_limit' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
+	if ( in_array( $scenario, array( 'reserve', 'finance_attempt', 'migrate', 'crm_intake', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase', 'outbox', 'rate_limit', 'purchase_create' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
 		require __DIR__ . '/../auto-dealership-core.php';
 		wp_set_current_user( $actor );
 		global $wpdb;
@@ -71,8 +71,10 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 			$result = \AutoDealership\Leads\CustomerIdentity::merge( (int) $input['source_id'], (int) $input['target_id'], $input['revision'], 'CONCURRENT-REVIEW', true );
 		} elseif ( 'finance_attempt' === $scenario ) {
 			$result = \AutoDealership\Sales\SalesService::create_finance_request( (int) ( $input['sale_id'] ?? 0 ), (string) ( $input['provider'] ?? '' ), (int) ( $input['amount'] ?? 0 ), true );
+		} elseif ( 'purchase_create' === $scenario ) {
+			$result = \AutoDealership\Purchasing\PurchaseOrderService::create( $input );
 		} elseif ( 'crm_quote' === $scenario ) {
-			$result = \AutoDealership\Sales\SalesService::create_quote( (int) $input['customer_id'], (int) $input['vehicle_id'], $input['valid_until'] );
+			$result = \AutoDealership\Sales\SalesService::create_quote( (int) $input['customer_id'], (int) $input['vehicle_id'], $input['valid_until'], $input['promotion_code'] ?? '', $input['idempotency_key'] ?? '', $input['preview_signature'] ?? '' );
 		} elseif ( 'crm_erase' === $scenario ) {
 			$result = \AutoDealership\Privacy\PrivacyTools::erase( $input['email'] );
 		} else {
@@ -99,10 +101,21 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
 	if ( '1' === getenv( 'ADC_DASHBOARD_ONLY' ) ) { require __DIR__ . '/dashboard-queue-scenarios.php'; exit; }
+	if ( '1' === getenv( 'ADC_SALES_JOURNEY_ONLY' ) ) { require __DIR__ . '/sales-journey-scenarios.php'; exit; }
+	if ( '1' === getenv( 'ADC_PURCHASING_ONLY' ) ) { require __DIR__ . '/purchasing-scenarios.php'; exit; }
+	if ( '1' === getenv( 'ADC_ONYX_ONLY' ) ) { require __DIR__ . '/onyx-scenarios.php'; exit; }
+	if ( '1' === getenv( 'ADC_CATALOG_ONLY' ) ) { require __DIR__ . '/onyx-scenarios.php'; require __DIR__ . '/catalog-publishing-scenarios.php'; require __DIR__ . '/onyx-names-suppliers-scenarios.php'; require __DIR__ . '/onyx-snapshot-scenarios.php'; require __DIR__ . '/inventory-workspace-scenarios.php'; require __DIR__ . '/offer-publishing-scenarios.php';
+	require __DIR__ . '/profit-margin-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_CURRENCY_ONLY' ) ) { require __DIR__ . '/currency-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_THEME_CUTOVER' ) ) { require __DIR__ . '/theme-cutover.php'; exit; }
 	if ( '1' === getenv( 'ADC_JOURNEY_ONLY' ) ) { require __DIR__ . '/account-journey-fixture.php'; exit; }
 	require __DIR__ . '/database-scenarios.php';
+	require __DIR__ . '/purchasing-scenarios.php';
+	require __DIR__ . '/onyx-scenarios.php';
+	require __DIR__ . '/catalog-publishing-scenarios.php';
+	require __DIR__ . '/onyx-names-suppliers-scenarios.php';
+	require __DIR__ . '/onyx-snapshot-scenarios.php'; require __DIR__ . '/inventory-workspace-scenarios.php'; require __DIR__ . '/offer-publishing-scenarios.php';
+	require __DIR__ . '/profit-margin-scenarios.php';
 	exit;
 }
 

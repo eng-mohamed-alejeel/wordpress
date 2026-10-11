@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.29.13
+ * Version: 1.37.0
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.29.13' );
+define( 'ADC_VERSION', '1.37.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -36,6 +36,12 @@ require_once ADC_PATH . 'src/Content/HomePageView.php';
 require_once ADC_PATH . 'src/Audit/AuditLog.php';
 require_once ADC_PATH . 'src/Content/PostMetaStore.php';
 require_once ADC_PATH . 'src/Content/VehiclePostEditor.php';
+require_once ADC_PATH . 'src/Content/CatalogPublishingService.php';
+require_once ADC_PATH . 'src/Admin/CatalogPublishingPage.php';
+require_once ADC_PATH . 'src/Content/OfferPublishingService.php';
+require_once ADC_PATH . 'src/Admin/OfferPublishingPage.php';
+\AutoDealership\Admin\OfferPublishingPage::boot();
+\AutoDealership\Admin\CatalogPublishingPage::boot();
 require_once ADC_PATH . 'src/Content/OfferPostEditor.php';
 require_once ADC_PATH . 'src/Database/SchemaInspector.php';
 require_once ADC_PATH . 'src/Database/Schema.php';
@@ -57,7 +63,25 @@ require_once ADC_PATH . 'src/Security/PublicRequestGuard.php';
 require_once ADC_PATH . 'src/Security/SecurityAudit.php';
 require_once ADC_PATH . 'src/Reference/ReferenceService.php';
 require_once ADC_PATH . 'src/Purchasing/SupplierService.php';
+require_once ADC_PATH . 'src/Purchasing/SupplierNameDirectory.php';
+require_once ADC_PATH . 'src/Purchasing/PurchaseOrderService.php';
+require_once ADC_PATH . 'src/Admin/PurchaseOrderPage.php';
+require_once ADC_PATH . 'src/Operations/ReleaseEvidence.php';
+require_once ADC_PATH . 'src/Admin/ReleaseEvidencePage.php';
+require_once ADC_PATH . 'src/Inventory/OnyxOperationalPolicy.php';
+require_once ADC_PATH . 'src/Inventory/InventoryWorkspace.php';
+require_once ADC_PATH . 'src/Admin/InventoryWorkspacePage.php';
+require_once ADC_PATH . 'src/Admin/InventoryListState.php';
 require_once ADC_PATH . 'src/Inventory/VehicleService.php';
+require_once ADC_PATH . 'src/Inventory/OnyxWorkbook.php';
+require_once ADC_PATH . 'src/Inventory/OnyxModelDrafts.php';
+require_once ADC_PATH . 'src/Inventory/OnyxPublicationSync.php';
+require_once ADC_PATH . 'src/Inventory/OnyxCatalogConfigurations.php';
+require_once ADC_PATH . 'src/Inventory/OnyxImportService.php';
+require_once ADC_PATH . 'src/Inventory/InventoryIdentityLookup.php';
+\AutoDealership\Inventory\InventoryIdentityLookup::boot();
+require_once ADC_PATH . 'src/Admin/OnyxInventoryPage.php';
+\AutoDealership\Admin\OnyxInventoryPage::boot();
 require_once ADC_PATH . 'src/Inventory/VehicleSpecifications.php';
 require_once ADC_PATH . 'src/Inventory/VehicleAcquisitionService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleIntakeService.php';
@@ -65,6 +89,10 @@ require_once ADC_PATH . 'src/Inventory/VehicleIssueService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleReturnService.php';
 require_once ADC_PATH . 'src/Inventory/TransferService.php';
 require_once ADC_PATH . 'src/Inventory/PublicCatalog.php';
+require_once ADC_PATH . 'src/Inventory/GroupedModelCatalog.php';
+require_once ADC_PATH . 'src/Inventory/OnyxCatalogNames.php';
+\AutoDealership\Inventory\OnyxCatalogNames::boot();
+\AutoDealership\Inventory\GroupedModelCatalog::boot();
 require_once ADC_PATH . 'src/Inventory/CatalogPresentation.php';
 require_once ADC_PATH . 'src/Inventory/CatalogMappingService.php';
 require_once ADC_PATH . 'src/Reservations/ReservationService.php';
@@ -79,9 +107,13 @@ require_once ADC_PATH . 'src/Leads/MarketingSubscription.php';
 require_once ADC_PATH . 'src/Leads/RequestWorkflow.php';
 require_once ADC_PATH . 'src/Leads/EngagementQuery.php';
 require_once ADC_PATH . 'src/Pricing/Money.php';
+require_once ADC_PATH . 'src/Pricing/PublicVehiclePrice.php';
+require_once ADC_PATH . 'src/Pricing/ProfitMargin.php';
 require_once ADC_PATH . 'src/Pricing/PricingPolicy.php';
 require_once ADC_PATH . 'src/Pricing/QuoteHistory.php';
 require_once ADC_PATH . 'src/Pricing/QuoteDocument.php';
+require_once ADC_PATH . 'src/Pricing/DocumentArchive.php';
+require_once ADC_PATH . 'src/Pricing/ArchivedQuotationTemplate.php';
 require_once ADC_PATH . 'src/Tools/FinanceConfiguration.php';
 require_once ADC_PATH . 'src/Tools/LoanCalculator.php';
 require_once ADC_PATH . 'src/Admin/FinanceCalculatorPage.php';
@@ -103,6 +135,8 @@ require_once ADC_PATH . 'src/Privacy/RetentionService.php';
 require_once ADC_PATH . 'src/Reports/FinancialExport.php';
 require_once ADC_PATH . 'src/Reports/OperationalReport.php';
 require_once ADC_PATH . 'src/Admin/SettingsPage.php';
+require_once ADC_PATH . 'src/Admin/ProfitMarginPage.php';
+\AutoDealership\Admin\ProfitMarginPage::boot();
 require_once ADC_PATH . 'src/Admin/AuditPage.php';
 require_once ADC_PATH . 'src/Admin/OutboxPage.php';
 require_once ADC_PATH . 'src/Admin/IntegrationPage.php';
@@ -126,6 +160,10 @@ require_once ADC_PATH . 'src/Admin/RefundPage.php';
 require_once ADC_PATH . 'src/Admin/SaleCancellationPage.php';
 require_once ADC_PATH . 'src/Admin/TransferPages.php';
 require_once ADC_PATH . 'src/Admin/QuotePages.php';
+require_once ADC_PATH . 'src/Admin/SalesJourneyPage.php';
+require_once ADC_PATH . 'src/Admin/CustomerWorkspacePage.php';
+require_once ADC_PATH . 'src/Admin/FollowUpPage.php';
+require_once ADC_PATH . 'src/Content/ReservationPolicyView.php';
 require_once ADC_PATH . 'src/Admin/FinancialExportPage.php';
 require_once ADC_PATH . 'src/Admin/OperationalReportPage.php';
 require_once ADC_PATH . 'src/Admin/ReferencePage.php';
@@ -317,6 +355,8 @@ if ( ! function_exists( 'adc_core_owns_engagement_admin_pages' ) ) {
 
 add_action( 'plugins_loaded', static function (): void {
 	\AutoDealership\Core\Capabilities::sync_administrator();
+	\AutoDealership\Core\Capabilities::migrate_sales_permissions();
+	\AutoDealership\Core\Capabilities::migrate_purchase_permissions();
 	if ( get_option( 'adc_roles_version' ) !== ADC_VERSION ) {
 		\AutoDealership\Core\Capabilities::activate();
 		update_option( 'adc_roles_version', ADC_VERSION, false );
@@ -366,6 +406,10 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\RefundPage', 'boot'
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SaleCancellationPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\TransferPages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\QuotePages', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SalesJourneyPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\CustomerWorkspacePage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FollowUpPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Content\\ReservationPolicyView', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FinancialExportPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OperationalReportPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\ReferencePage', 'boot' ) );
@@ -375,6 +419,9 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleSpecificatio
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleIssuePage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleReturnPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SupplierPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\PurchaseOrderPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\ReleaseEvidencePage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Pricing\\DocumentArchive', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\VehicleAcquisitionPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Privacy\\PrivacyTools', 'boot' ) );
 add_action( 'plugins_loaded', static function (): void {

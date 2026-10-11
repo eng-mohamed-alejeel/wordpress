@@ -24,6 +24,10 @@ final class VehiclePostEditor {
 		add_action( 'add_meta_boxes_car', array( self::class, 'add_meta_box' ) );
 		add_action( 'save_post_car', array( self::class, 'save' ), 10, 3 );
 		add_action( 'admin_notices', array( self::class, 'render_notice' ) );
+		add_action( 'admin_enqueue_scripts', static function(): void {
+			$screen = get_current_screen();
+			if ( $screen && 'car' === $screen->post_type ) { wp_enqueue_script( 'adc-plate-fields', plugins_url( 'assets/js/plate-fields.js', ADC_FILE ), array(), ADC_VERSION, true ); }
+		} );
 	}
 
 	public static function owns_theme_editor(): bool {
@@ -50,6 +54,12 @@ final class VehiclePostEditor {
 		);
 
 		$mapped_status = self::mapped_status( $post->ID );
+		if ( \AutoDealership\Inventory\GroupedModelCatalog::is_mapped( $post->ID ) ) {
+			$fields = array();
+			$english = \AutoDealership\Core\Localization::language() === 'en';
+			echo '<p>'.esc_html( $english ? 'Vehicle fields update automatically from Onyx inventory. Add photos, description and editorial features here.' : 'تُحدَّث حقول السيارة تلقائيًا من مخزون أونكس. أضف هنا الصور والوصف والمزايا التحريرية.' ).'</p>';
+			\AutoDealership\Inventory\GroupedModelCatalog::render_variants( $post->ID );
+		}
 		foreach ( $fields as $key => $label ) {
 			$value    = null !== $mapped_status && '_car_inventory_status' === $key ? $mapped_status : get_post_meta( $post->ID, $key, true );
 			$readonly = null !== $mapped_status && '_car_inventory_status' === $key;
@@ -59,6 +69,12 @@ final class VehiclePostEditor {
 			echo '<p class="description">' . esc_html__( 'حالة السيارة مرتبطة بالمخزون التشغيلي وتُعرض هنا للقراءة فقط.', 'auto-dealership-core' ) . '</p>';
 		}
 
+		$plate_type = get_post_meta( $post->ID, '_car_plate_type', true );
+		echo '<fieldset><legend>'.esc_html__( 'Plate fees added to the published price', 'auto-dealership-core' ).'</legend>';
+		foreach ( array( 'private_transport'=>__( 'Private transport plates — SAR 900', 'auto-dealership-core' ), 'commercial_transport'=>__( 'Commercial transport plates — SAR 1,200', 'auto-dealership-core' ) ) as $type=>$label ) {
+			echo '<p><label><input type="checkbox" name="_car_plate_types[]" value="'.esc_attr( $type ).'" '.checked( $plate_type, $type, false ).'> '.esc_html( $label ).'</label></p>';
+		}
+		echo '<p class="description">'.esc_html__( 'Select one type only. Plate fees are added after vehicle VAT; leave both unchecked to exclude them.', 'auto-dealership-core' ).'</p></fieldset>';
 		$features = get_post_meta( $post->ID, '_car_features', true );
 		echo '<p><label for="_car_features">' . esc_html__( 'المزايا (سطر لكل ميزة)', 'auto-dealership-core' ) . '</label><br><textarea id="_car_features" name="_car_features" rows="5" class="widefat">' . esc_textarea( is_array( $features ) ? implode( "\n", $features ) : $features ) . '</textarea></p>';
 		echo '<p><label for="_car_featured"><input type="checkbox" id="_car_featured" name="_car_featured" value="1" ' . checked( get_post_meta( $post->ID, '_car_featured', true ), '1', false ) . '> ' . esc_html__( 'سيارة مميزة', 'auto-dealership-core' ) . '</label></p>';
@@ -73,6 +89,11 @@ final class VehiclePostEditor {
 
 		$values = array();
 		$errors = array();
+		$types = $_POST['_car_plate_types'] ?? array();
+		if ( ! is_array( $types ) || count( $types ) > 1 || ( $types && ( ! is_string( reset( $types ) ) || ! in_array( reset( $types ), array( 'private_transport', 'commercial_transport' ), true ) ) ) ) {
+			self::notice( __( 'Select only one valid plate type.', 'auto-dealership-core' ) ); return;
+		}
+		$values['_car_plate_type'] = $types ? reset( $types ) : '';
 		$values['_car_price']           = self::decimal( '_car_price', $errors );
 		$values['_car_monthly_payment'] = self::decimal( '_car_monthly_payment', $errors );
 		$values['_car_year']            = self::year( $errors );

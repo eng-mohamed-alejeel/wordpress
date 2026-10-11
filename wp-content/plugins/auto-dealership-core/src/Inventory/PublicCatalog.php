@@ -9,6 +9,7 @@ defined( 'ABSPATH' ) || exit;
 final class PublicCatalog {
 	public const MODE_COMPATIBILITY = 'compatibility';
 	public const MODE_AUTHORITATIVE = 'authoritative';
+	public const MODE_MODELS = 'models';
 	public const OPTION_MODE = 'adc_public_catalog_mode';
 
 	private const TEXT_FILTERS = array(
@@ -40,7 +41,7 @@ final class PublicCatalog {
 
 	public static function mode(): string {
 		$mode = sanitize_key( (string) get_option( self::OPTION_MODE, self::MODE_COMPATIBILITY ) );
-		return self::MODE_AUTHORITATIVE === $mode ? self::MODE_AUTHORITATIVE : self::MODE_COMPATIBILITY;
+		return in_array( $mode, array( self::MODE_AUTHORITATIVE, 'models' ), true ) ? $mode : self::MODE_COMPATIBILITY;
 	}
 
 	/** Authoritative reads require an explicitly selected mode and a verified schema. */
@@ -61,7 +62,7 @@ final class PublicCatalog {
 		$query->set( 'posts_per_page', min( 48, max( 1, absint( get_option( 'posts_per_page', 12 ) ) ) ) );
 		// The catalog owns search in both modes, including header requests using `search`.
 		$query->set( 's', '' );
-		if ( ! self::is_authoritative() ) { return; }
+		if ( ! self::is_authoritative() && ! GroupedModelCatalog::enabled() ) { return; }
 
 		// Avoid legacy taxonomy and WordPress search constraints in authoritative mode.
 		$query->set( 'car_brand', '' );
@@ -77,6 +78,8 @@ final class PublicCatalog {
 
 		global $wpdb;
 		$posts = $wpdb->posts;
+		if ( GroupedModelCatalog::enabled() ) { return GroupedModelCatalog::clauses( $clauses, $query ); }
+		if ( get_option( 'adc_db_version' ) === Schema::VERSION ) { $clauses = GroupedModelCatalog::filter_linked_availability( $clauses ); }
 		if ( ! self::is_authoritative() && $query->get( 'adc_public_catalog' ) ) {
 			$clauses = self::compatibility_clauses( $clauses, (array) $query->get( 'adc_catalog_filters' ) );
 		}
@@ -112,6 +115,7 @@ final class PublicCatalog {
 			}
 			$sort = isset( self::SORTS[ $filters['sort'] ?? '' ] ) ? $filters['sort'] : 'newest';
 			$clauses['orderby'] = str_replace( 'v.', 'adc_catalog_vehicle.', self::SORTS[ $sort ] );
+			if ( str_starts_with($sort, 'price_') ) { $clauses['orderby'] = str_replace('adc_catalog_vehicle.retail_price', \AutoDealership\Pricing\PublicVehiclePrice::sql('adc_catalog_vehicle.retail_price', "$posts.ID"), $clauses['orderby']); }
 		}
 
 		return $clauses;
@@ -143,6 +147,7 @@ final class PublicCatalog {
 		if ( $post_id < 1 || 'car' !== get_post_type( $post_id ) || 'publish' !== get_post_status( $post_id ) ) {
 			return false;
 		}
+		if ( GroupedModelCatalog::enabled() || GroupedModelCatalog::is_mapped( $post_id ) ) { return null !== GroupedModelCatalog::view( $post_id ); }
 		if ( get_option( 'adc_db_version' ) !== Schema::VERSION ) {
 			return in_array( get_post_meta( $post_id, '_car_inventory_status', true ), array( '', 'available' ), true );
 		}
@@ -161,6 +166,7 @@ final class PublicCatalog {
 
 	/** Public REST/read-model list. Monetary filters use stored minor units. */
 	public static function catalog( array $raw_filters = array() ): array {
+		if ( GroupedModelCatalog::enabled() ) { return GroupedModelCatalog::catalog( self::normalize_filters( $raw_filters ) ); }
 		global $wpdb;
 		$filters = self::normalize_filters( $raw_filters );
 		$page = max( 1, absint( $filters['page'] ?? 1 ) );
@@ -174,7 +180,9 @@ final class PublicCatalog {
 		if ( $where ) {
 			$sql .= ' AND ' . implode( ' AND ', $where );
 		}
-		$sql .= ' ORDER BY ' . self::SORTS[ $sort ] . ' LIMIT %d OFFSET %d';
+		$order = self::SORTS[$sort];
+		if ( str_starts_with($sort, 'price_') ) { $order = str_replace('v.retail_price', \AutoDealership\Pricing\PublicVehiclePrice::sql('v.retail_price', 'v.public_post_id'), $order); }
+		$sql .= ' ORDER BY ' . $order . ' LIMIT %d OFFSET %d';
 		$args[] = $limit;
 		$args[] = ( $page - 1 ) * $limit;
 		$items = $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
@@ -188,6 +196,8 @@ final class PublicCatalog {
 		foreach ( $items as &$item ) {
 			$item = self::cast_item( $item );
 			$post_id = $item['public_post_id'];
+			$item['price_breakdown'] = \AutoDealership\Pricing\PublicVehiclePrice::public_breakdown(\AutoDealership\Pricing\PublicVehiclePrice::calculate((int)$item['retail_price'], $post_id));
+			$item['retail_price'] = $item['price_breakdown']['final_amount'];
 			$item['title'] = get_the_title( $post_id );
 			$item['url'] = get_permalink( $post_id );
 			$item['image'] = get_the_post_thumbnail_url( $post_id, 'large' ) ?: '';
@@ -198,6 +208,7 @@ final class PublicCatalog {
 	}
 
 	public static function catalog_total( array $raw_filters = array() ): int {
+		if ( GroupedModelCatalog::enabled() ) { return (int) GroupedModelCatalog::query( self::normalize_filters( $raw_filters ) )->found_posts; }
 		global $wpdb;
 		$filters = self::normalize_filters( $raw_filters );
 		list( $where, $args ) = self::where( $filters );
@@ -211,6 +222,7 @@ final class PublicCatalog {
 
 	/** Values for public filter controls, bounded to eligible catalog records. */
 	public static function filter_options(): array {
+		if ( GroupedModelCatalog::enabled() ) { return GroupedModelCatalog::options(); }
 		global $wpdb;
 		$options = array();
 		$table = Schema::table( 'vehicles' );
@@ -228,6 +240,7 @@ final class PublicCatalog {
 
 	/** Presentation choices for both operational and editorial compatibility catalogs. */
 	public static function presentation_filter_options(): array {
+		if ( GroupedModelCatalog::enabled() ) { return array( 'mode' => self::MODE_AUTHORITATIVE, 'options' => GroupedModelCatalog::options() ); }
 		if ( self::is_authoritative() ) {
 			return array( 'mode' => self::MODE_AUTHORITATIVE, 'options' => self::filter_options() );
 		}
@@ -244,6 +257,7 @@ final class PublicCatalog {
 
 	/** Administrative cutover counts; no customer or financial fields are returned. */
 	public static function readiness(): array {
+		if ( GroupedModelCatalog::enabled() ) { return GroupedModelCatalog::readiness(); }
 		$schema_ready = get_option( 'adc_db_version' ) === Schema::VERSION;
 		$result = array(
 			'schema_ready' => $schema_ready,
@@ -343,7 +357,8 @@ final class PublicCatalog {
 		}
 		foreach ( array( 'min_year' => array( 'model_year', '>=' ), 'max_year' => array( 'model_year', '<=' ), 'min_price' => array( 'retail_price', '>=' ), 'max_price' => array( 'retail_price', '<=' ), 'min_mileage' => array( 'mileage', '>=' ), 'max_mileage' => array( 'mileage', '<=' ), 'branch_id' => array( 'branch_id', '=' ) ) as $key => $rule ) {
 			if ( isset( $filters[ $key ] ) && ( 'branch_id' !== $key || $filters[ $key ] > 0 ) ) {
-				$where[] = "$alias.{$rule[0]} {$rule[1]} %d";
+				$expression = $rule[0] === 'retail_price' ? \AutoDealership\Pricing\PublicVehiclePrice::sql("$alias.retail_price", "$alias.public_post_id") : "$alias.{$rule[0]}";
+				$where[] = "$expression {$rule[1]} %d";
 				$args[] = $filters[ $key ];
 			}
 		}
@@ -362,11 +377,18 @@ final class PublicCatalog {
 		$schema_ready = get_option( 'adc_db_version' ) === Schema::VERSION;
 		$value = static function ( string $meta, string $column, bool $price = false ) use ( $wpdb, $posts, $schema_ready ): string {
 			$legacy = $wpdb->prepare( "(SELECT cm.meta_value FROM {$wpdb->postmeta} cm WHERE cm.post_id=$posts.ID AND cm.meta_key=%s ORDER BY cm.meta_id ASC LIMIT 1)", $meta );
-			if ( ! $schema_ready ) { return $legacy; }
-			$table = Schema::table( 'vehicles' );
-			$branches = Schema::table( 'branches' );
-			$field = $price ? "cv.$column / 100" : "cv.$column";
-			return "COALESCE((SELECT $field FROM $table cv INNER JOIN $branches cb ON cb.id=cv.branch_id AND cb.active=1 WHERE cv.public_post_id=$posts.ID AND cv.status='available' LIMIT 1), $legacy)";
+			if ( $price ) { $legacy = "ROUND(CAST($legacy AS DECIMAL(20,2))*100)"; }
+			$result = $legacy;
+			if ( $schema_ready ) {
+				$table = Schema::table('vehicles'); $branches = Schema::table('branches');
+				$result = "COALESCE((SELECT cv.$column FROM $table cv INNER JOIN $branches cb ON cb.id=cv.branch_id AND cb.active=1 WHERE cv.public_post_id=$posts.ID AND cv.status='available' LIMIT 1), $legacy)";
+				if ( $price || $column === 'model_year' ) {
+					$stock = Schema::table('onyx_stock'); $models = Schema::table('catalog_models');
+					$source = $price ? 'listed_price' : 'model_year';
+					$result = "COALESCE((SELECT MIN(NULLIF(s.$source,0)) FROM $stock s INNER JOIN $models gm ON gm.id=s.model_id WHERE gm.public_post_id=$posts.ID AND ".GroupedModelCatalog::availability()."), $result)";
+				}
+			}
+			return $price ? \AutoDealership\Pricing\PublicVehiclePrice::sql($result, "$posts.ID") : $result;
 		};
 		foreach ( array( 'model' => array( '_car_model', 'model' ), 'fuel_type' => array( '_car_fuel_type', 'fuel_type' ), 'transmission' => array( '_car_transmission', 'transmission' ) ) as $key => $field ) {
 			if ( ! empty( $filters[$key] ) ) {
@@ -378,7 +400,7 @@ final class PublicCatalog {
 			if ( ! isset( $filters[$key] ) ) { continue; }
 			$is_price = str_contains( $key, 'price' );
 			$expression = $value( $field[0], $field[1], $is_price );
-			$amount = $is_price ? $filters[$key] / 100 : $filters[$key];
+			$amount = $filters[$key];
 			$clauses['where'] .= $wpdb->prepare( " AND NULLIF($expression, '') IS NOT NULL AND CAST($expression AS DECIMAL(20,2)) {$field[2]} %f", $amount );
 		}
 		foreach ( preg_split( '/\s+/u', trim( (string) ( $filters['search'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY ) ?: array() as $word ) {
@@ -392,6 +414,7 @@ final class PublicCatalog {
 				OR EXISTS (SELECT 1 FROM {$wpdb->postmeta} sm WHERE sm.post_id=$posts.ID AND sm.meta_key IN ('_car_model','_car_make','_car_trim','_car_stock_number','_car_stock','_car_year','_adc_title_en') AND sm.meta_value LIKE %s)
 				OR EXISTS (SELECT 1 FROM {$wpdb->term_relationships} sr INNER JOIN {$wpdb->term_taxonomy} st ON st.term_taxonomy_id=sr.term_taxonomy_id INNER JOIN {$wpdb->terms} sn ON sn.term_id=st.term_id LEFT JOIN {$wpdb->termmeta} sl ON sl.term_id=sn.term_id AND sl.meta_key IN ('_adc_name_ar','_adc_name_en') WHERE sr.object_id=$posts.ID AND st.taxonomy IN ('car_brand','car_category') AND (sn.name LIKE %s OR sn.slug LIKE %s OR sl.meta_value LIKE %s))", $like, $like, $like, $like, $like ) . $operational_search . ')';
 		}
+		if ( in_array($filters['sort'] ?? '', array('price_asc', 'price_desc'), true) ) { $clauses['orderby'] = $value('_car_price', 'retail_price', true).(($filters['sort'] === 'price_asc') ? ' ASC' : ' DESC').", $posts.ID DESC"; }
 		return $clauses;
 	}
 

@@ -148,10 +148,10 @@ final class Routes {
 			'permission_callback'=>static fn()=>current_user_can( 'adc_view_finance' ) || current_user_can( 'adc_record_payments' ) || current_user_can( 'adc_verify_payments' ),
 		) );
 		self::route( '/quotations', array(
-			'methods' => 'POST', 'callback' => array( self::class, 'create_quote' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_reservations' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'customer_id' => array( 'type' => 'integer', 'required' => true ), 'vehicle_id' => array( 'type' => 'integer', 'required' => true ), 'valid_until' => array( 'type' => 'string', 'required' => true, 'format' => 'date' ), 'promotion_code'=>array( 'type'=>'string','maxLength'=>64 ) ),
+			'methods' => 'POST', 'callback' => array( self::class, 'create_quote' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_quotes' ) || current_user_can( 'manage_options' ), 'args' => array( 'customer_id' => array( 'type' => 'integer', 'required' => true ), 'vehicle_id' => array( 'type' => 'integer', 'required' => true ), 'valid_until' => array( 'type' => 'string', 'required' => true, 'format' => 'date' ), 'promotion_code'=>array( 'type'=>'string','maxLength'=>64 ) ),
 		) );
 		self::route( '/quotations/(?P<id>\d+)/discounts', array(
-			'methods' => 'POST', 'callback' => array( self::class, 'request_discount' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_reservations' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'amount' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ), 'reason' => array( 'type' => 'string', 'required' => true ) ),
+			'methods' => 'POST', 'callback' => array( self::class, 'request_discount' ), 'permission_callback' => static fn() => current_user_can( 'adc_request_discounts' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'amount' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ), 'reason' => array( 'type' => 'string', 'required' => true ) ),
 		) );
 		self::route( '/quotations/(?P<id>\d+)/versions', array(
 			'methods' => 'GET', 'callback' => array( self::class, 'quote_versions' ), 'permission_callback' => array( QuoteHistory::class, 'can_read' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ), 'page' => array( 'type' => 'integer', 'minimum' => 1, 'default' => 1 ) ),
@@ -160,7 +160,7 @@ final class Routes {
 			'methods' => 'POST', 'callback' => array( self::class, 'decide_discount' ), 'permission_callback' => static fn() => current_user_can( 'adc_review_discounts' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'approve' => array( 'type' => 'boolean', 'required' => true ), 'reason' => array( 'type' => 'string' ) ),
 		) );
 		self::route( '/sales', array(
-			'methods' => 'POST', 'callback' => array( self::class, 'create_sale' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_reservations' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'quotation_id' => array( 'type' => 'integer', 'required' => true ), 'reservation_id' => array( 'type' => 'integer', 'required' => true ) ),
+			'methods' => 'POST', 'callback' => array( self::class, 'create_sale' ), 'permission_callback' => static fn() => current_user_can( 'adc_start_sales' ) || current_user_can( 'manage_options' ), 'args' => array( 'quotation_id' => array( 'type' => 'integer', 'required' => true ), 'reservation_id' => array( 'type' => 'integer', 'required' => true ) ),
 		) );
 		self::route( '/sales/(?P<id>\d+)/approval', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'approve_sale' ), 'permission_callback' => static fn() => current_user_can( 'adc_approve_sales' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'invoice_reference' => array( 'type' => 'string', 'required' => true ) ),

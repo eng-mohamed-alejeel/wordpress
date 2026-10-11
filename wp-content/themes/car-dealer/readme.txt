@@ -1,8 +1,8 @@
 === Car Dealer ===
-Version: 1.29.13
+Version: 1.31.0
 Requires WordPress: 6.7 or newer
 Requires PHP: 8.0 or newer
-Companion plugin: Auto Dealership Core 1.29.13 or newer
+Companion plugin: Auto Dealership Core 1.31.0 or newer
 
 This theme owns layout, public styles, navigation, forms and page templates. The companion plugin owns dealership content types, vehicle and offer read models, shortcodes, public request handlers, accounts, permissions and staff operations.
 

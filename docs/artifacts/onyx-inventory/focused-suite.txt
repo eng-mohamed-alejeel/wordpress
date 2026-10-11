@@ -1,0 +1,32 @@
+PASS Actual Onyx export validates all 523 rows
+PASS Onyx leading zeros retained as exact string
+PASS First import previews new stock without creating operational VINs
+PASS Reviewed Onyx stock imported atomically
+PASS Stale preview cannot overwrite a newer import
+PASS Repeated apply is idempotent
+PASS Repeated export previews all records unchanged
+PASS Repeated upload creates no duplicate stock
+PASS Admin upload, stock list and second-page navigation render correctly
+PASS Full VIN suffix lookup finds Onyx identity
+PASS Server rejects unconfirmed Onyx duplicate even without JavaScript
+PASS Verified full VIN creates and links one operational vehicle
+PASS Linked Onyx stock cannot create a second operational vehicle
+PASS Existing exact VIN link retry is idempotent
+PASS VIN correction cannot break linked Onyx identity
+PASS Preceding VIN letter selects the more specific Onyx suffix
+PASS Grouped model page aggregates available variants
+PASS Public group data contains no chassis or private stock fields
+PASS Only one published card per model despite many physical stock rows
+PASS Grouped readiness counts eligible model pages rather than VIN cards
+PASS Public catalog list and total agree on grouped model pagination
+PASS Public search cannot find model by private chassis identifier
+PASS Reserved linked physical unit excluded from grouped availability
+PASS Absent source stock removes model availability
+PASS Partial export preserves absent stock
+PASS Complete snapshot explicitly previews all missing units
+PASS Audit failure rolls back snapshot availability changes
+PASS Approved complete snapshot hides absent units without deleting history
+PASS Anonymous inventory import forbidden
+PASS Anonymous chassis lookup forbidden
+Onyx checks passed: 30
+Disposable test database removed. Source database was not contacted.

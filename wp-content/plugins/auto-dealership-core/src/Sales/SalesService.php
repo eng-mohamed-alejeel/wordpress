@@ -14,20 +14,31 @@ defined( 'ABSPATH' ) || exit;
 
 /** Quotes, separation-of-duties discount review and controlled sale approval. */
 final class SalesService {
-	public static function create_quote( int $customer_id, int $vehicle_id, string $valid_until, string $promotion_code = '' ) {
+	public static function create_quote( int $customer_id, int $vehicle_id, string $valid_until, string $promotion_code = '', string $idempotency_key = '', string $preview_signature = '' ) {
 		global $wpdb;
-		if ( ! current_user_can( 'adc_create_reservations' ) && ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'adc_create_quotes' ) && ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية إنشاء عرض سعر.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
+		if ( '' !== $idempotency_key && ! wp_is_uuid( $idempotency_key ) ) { return new \WP_Error( 'adc_quote_key', 'Invalid quotation request key.', array( 'status'=>400 ) ); }
 		if ( ! Transaction::begin() ) {
 			return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$vehicle = $wpdb->get_row( $wpdb->prepare( 'SELECT id,branch_id,status,retail_price,minimum_price FROM ' . Schema::table( 'vehicles' ) . ' WHERE id = %d FOR UPDATE', $vehicle_id ), ARRAY_A );
+		$quote_number = '' !== $idempotency_key ? 'Q-' . strtoupper( str_replace( '-', '', $idempotency_key ) ) : 'Q-' . gmdate( 'Ymd' ) . '-' . strtoupper( wp_generate_password( 8, false, false ) );
+		if ( '' !== $idempotency_key ) {
+			$existing = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . Schema::table( 'quotations' ) . ' WHERE quote_number=%s FOR UPDATE', $quote_number ), ARRAY_A );
+			if ( $existing ) {
+				$allowed = $vehicle && CustomerScope::allows( $customer_id, (int) $vehicle['branch_id'] ) && (int) $existing['owner_user_id'] === get_current_user_id() && (int) $existing['customer_id'] === $customer_id && (int) $existing['vehicle_id'] === $vehicle_id && $existing['valid_until'] === $valid_until && $existing['promotion_code'] === sanitize_key( $promotion_code );
+				$wpdb->query( 'ROLLBACK' );
+				return $allowed ? array( 'id'=>(int) $existing['id'], 'quote_number'=>$quote_number, 'version'=>(int) $existing['version'], 'status'=>$existing['status'], 'currency'=>'SAR' ) : new \WP_Error( 'adc_quote_replay_conflict', 'Quotation request does not match the original submission.', array( 'status'=>409 ) );
+			}
+		}
 		$date = \DateTimeImmutable::createFromFormat( '!Y-m-d', $valid_until, new \DateTimeZone( 'UTC' ) );
 		if ( ! $vehicle || ! CustomerScope::allows( $customer_id, (int) $vehicle['branch_id'] ) || 'available' !== $vehicle['status'] || ! $date || $date->format( 'Y-m-d' ) !== $valid_until || $valid_until < gmdate( 'Y-m-d' ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_invalid_quote', __( 'السيارة أو العميل أو تاريخ صلاحية العرض غير صالح.', 'auto-dealership-core' ), array( 'status' => 400 ) );
 		}
+		$source=\AutoDealership\Inventory\OnyxOperationalPolicy::current($vehicle_id,true);if(is_wp_error($source)){$wpdb->query('ROLLBACK');return $source;}if($source){$vehicle['retail_price']=$source['listed_price'];}
 		$base = Money::parse( $vehicle['retail_price'] );
 		$tax_rate = Money::parse( get_option( 'adc_vat_rate_bps', 0 ) );
 		try {
@@ -41,7 +52,10 @@ final class SalesService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_price_floor', __( 'The promotion would place the quotation below the approved minimum price.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
-		$quote_number = 'Q-' . gmdate( 'Ymd' ) . '-' . strtoupper( wp_generate_password( 8, false, false ) );
+		if ( '' !== $preview_signature && ! hash_equals( hash_hmac( 'sha256', wp_json_encode( $amounts ), wp_salt( 'nonce' ) ), $preview_signature ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'adc_quote_preview_changed', __( 'Pricing changed. Preview the quotation again before saving.', 'auto-dealership-core' ), array( 'status'=>409 ) );
+		}
 		$now = current_time( 'mysql', true );
 		$ok = $wpdb->insert( Schema::table( 'quotations' ), array_merge( $amounts, PricingPolicy::seller_snapshot(), array( 'quote_number' => $quote_number, 'customer_id' => $customer_id, 'vehicle_id' => $vehicle_id, 'branch_id' => (int) $vehicle['branch_id'], 'owner_user_id' => get_current_user_id(), 'valid_until' => $valid_until, 'status' => 'approved', 'version' => 1, 'created_at' => $now ) ) );
 		if ( false === $ok ) {
@@ -57,7 +71,7 @@ final class SalesService {
 
 	public static function request_discount( int $quote_id, int $amount, string $reason ) {
 		global $wpdb;
-		if ( ! current_user_can( 'adc_create_reservations' ) && ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'adc_request_discounts' ) && ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية طلب الخصم.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
 		$reason = sanitize_textarea_field( $reason );
@@ -81,6 +95,7 @@ final class SalesService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_invalid_discount', __( 'لا يمكن طلب هذا الخصم على العرض المحدد.', 'auto-dealership-core' ), array( 'status' => 400 ) );
 		}
+		$source=\AutoDealership\Inventory\OnyxOperationalPolicy::current((int)$quote['vehicle_id'],true);if(is_wp_error($source)){$wpdb->query('ROLLBACK');return $source;}
 		if ( null === $vehicle['purchase_cost'] ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_purchase_cost_required', __( 'Purchase cost must be recorded before a margin-based discount request can be submitted.', 'auto-dealership-core' ), array( 'status' => 409 ) );
@@ -187,7 +202,7 @@ final class SalesService {
 
 	public static function create_sale( int $quote_id, int $reservation_id ) {
 		global $wpdb;
-		if ( ! current_user_can( 'adc_create_reservations' ) && ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'adc_start_sales' ) && ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية إنشاء عملية البيع.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
 		if ( ! Transaction::begin() ) {
@@ -203,6 +218,7 @@ final class SalesService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_sale_precondition', __( 'لا تتطابق بيانات العرض والحجز أو لم تعد صالحة.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
+		$source=\AutoDealership\Inventory\OnyxOperationalPolicy::current((int)$q['vehicle_id'],true);if(is_wp_error($source)){$wpdb->query('ROLLBACK');return $source;}
 		$now = current_time( 'mysql', true );
 		$ok = $wpdb->insert( Schema::table( 'sales' ), array( 'quotation_id' => $quote_id, 'reservation_id' => $reservation_id, 'customer_id' => (int) $q['customer_id'], 'vehicle_id' => (int) $q['vehicle_id'], 'status' => 'pending_approval', 'owner_user_id' => get_current_user_id(), 'created_at' => $now, 'updated_at' => $now ), array( '%d', '%d', '%d', '%d', '%s', '%d', '%s', '%s' ) );
 		if ( false === $ok ) {
@@ -239,6 +255,7 @@ final class SalesService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_sale_approval_denied', __( 'لا يمكن اعتماد هذه العملية أو أنها حُسمت مسبقًا.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
+		$source=\AutoDealership\Inventory\OnyxOperationalPolicy::current((int)$sale['vehicle_id'],true);if(is_wp_error($source)){$wpdb->query('ROLLBACK');return $source;}
 		$finance_pending = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM " . Schema::table( 'finance_requests' ) . " WHERE sale_id = %d AND status IN ('submitted','under_review') LIMIT 1", $sale_id ) );
 		if ( $finance_pending ) {
 			$wpdb->query( 'ROLLBACK' );

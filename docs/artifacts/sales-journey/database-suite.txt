@@ -1,0 +1,711 @@
+PASS: Installed schema matches columns, defaults, indexes and InnoDB.
+PASS: Schema version advances only after successful verification.
+PASS: Repeat schema installation is idempotent.
+PASS: Missing unique VIN index is detected.
+PASS: A truncated VIN index cannot satisfy full VIN uniqueness.
+PASS: Missing index is repaired without replacing the table.
+PASS: Signedness drift is detected.
+PASS: Consent default drift is detected.
+php.exe : Auto Dealership Core: schema verification failed; review administrator diagnostics.
+At line:2 char:1
++ & C:\xampp\php\php.exe wp-content/plugins/auto-dealership-core/tests/ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Auto Dealership...or diagnostics.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Auto Dealership Core: schema verification failed; review administrator diagnostics.
+PASS: Nontransactional tables block the installed version marker.
+PASS: Service transactions refuse an unverified schema.
+PASS: Incomplete schema returns HTTP 503 before dealership REST dispatch.
+PASS: Schema guard does not block other WordPress APIs.
+PASS: Verified repair restores the version marker.
+PASS: Create synthetic branches.
+PASS: Migration inventory classifies eligible and invalid legacy vehicles without writing target rows: {"source_total":2,"mapped":0,"matched":0,"drifted":0,"eligible_unmapped":1,"invalid_identity":1,"workflow_blocked":0,"unresolved_branch":0,"vin_conflict":0,"stock_conflict":0}, source=valid
+PASS: Migration inventory identifies linked and orphaned legacy offers.
+PASS: Migration inventory is read-only for operational inventory.
+PASS: Migration inventory rejects an inactive or unknown fallback branch.
+PASS: Administrator creates audited brand and yard reference records.
+PASS: Duplicate brand keys are rejected.
+PASS: Locations require an active parent branch.
+PASS: Upgrade adds payment table while preserving existing branch records.
+PASS: Brand and location in active inventory cannot be disabled.
+PASS: Authorized same-branch location move updates inventory and movement history.
+PASS: A vehicle cannot move to a physical location in another branch.
+PASS: Elevated user corrects VIN before sale workflow with a documented reason.
+PASS: Sales user cannot change vehicle VIN.
+PASS: VIN becomes immutable after the vehicle reaches available state.
+PASS: Failed inspection automatically opens maintenance and removes the vehicle from availability.
+PASS: Open maintenance cannot bypass resolution and reinspection.
+PASS: Resolving maintenance returns the vehicle to inspection.
+PASS: Vehicle becomes available only after maintenance resolution and a new passed inspection.
+PASS: Sales may use their assigned customer in their branch.
+PASS: Another salesperson customer is denied.
+PASS: Other-branch customer is denied even with a same-branch vehicle.
+PASS: Quote service rejects foreign customer IDs.
+PASS: Quote service rejects another owner customer.
+PASS: Quote creation succeeds for an accessible customer.
+PASS: Reservation service rejects foreign customer IDs.
+PASS: Authorized reservation commits.
+PASS: Identical retry returns the same response without another reservation.
+PASS: Reusing a key with another deposit is rejected.
+PASS: A second key cannot reserve the same vehicle.
+PASS: A different employee cannot replay another employee reservation key.
+PASS: Reassignment revokes reservation replay access.
+PASS: Reassignment revokes discount requests on old-branch quotes.
+PASS: Quote stores the configured VAT rate and integer total.
+PASS: Quote creation captures immutable version one.
+PASS: Quote-history failure rejects a discount request.
+PASS: Failed history capture rolls back quote and discount rows.
+PASS: Discount request creates quote version two.
+PASS: Discount approval uses the original 15 percent VAT snapshot after settings change.
+PASS: Created, pending and approved quote revisions are preserved.
+PASS: Quote revision freezes minimal customer, vehicle and originating-branch identity.
+PASS: Later customer and vehicle edits do not rewrite an existing quote snapshot.
+PASS: Printable quote escapes snapshot text and exposes the browser PDF action.
+PASS: Legacy backfill preserves the current known quote revision.
+PASS: Backfill does not invent prior versions or an unknown historic VAT rate.
+PASS: Repeated legacy backfill is idempotent.
+PASS: Audit failure rejects branch creation.
+PASS: Failed branch audit leaves no branch row.
+PASS: Audit failure rolls back vehicle location and movement history.
+PASS: Audit failure rolls back VIN correction.
+PASS: Audit failure rejects dealership setting changes.
+PASS: Failed settings audit restores every prior option value.
+PASS: Audit failure rejects staff branch reassignment.
+PASS: Failed assignment audit restores the prior staff branch and absence-compatible branch list.
+PASS: Administrator can grant two active branches while retaining a primary branch.
+PASS: Multi-branch assignments produce a prepared bounded SQL predicate.
+PASS: Primary branch must be included in the allowed branch list.
+PASS: Single-branch compatibility API replaces the allowed list deterministically.
+PASS: Audit failure rejects vehicle creation.
+PASS: Failed vehicle audit leaves no inventory row.
+PASS: Audit failure rejects public lead creation.
+PASS: Failed lead audit rolls back both customer and lead.
+PASS: Legacy context failure rejects the imported lead.
+PASS: Failed legacy context insert rolls back customer and lead for safe retry.
+PASS: Audit failure rejects lead stage change.
+PASS: Failed stage audit rolls back lead and activity changes.
+PASS: Audit failure rejects CRM activity creation.
+PASS: Failed activity audit leaves no activity row.
+PASS: Audit failure rejects lead reassignment.
+PASS: Failed assignment audit preserves the prior owner.
+PASS: Audit failure rejects inventory hold creation.
+PASS: Failed transition audit rolls back vehicle status and movement.
+PASS: Audit failure rejects reservation creation.
+PASS: Failed reservation rolls back inventory and reservation rows.
+PASS: Audit failure rejects quote creation.
+PASS: Failed quote leaves no quote row.
+PASS: Audit failure rejects sale creation.
+PASS: Failed sale rolls back reservation conversion and sale row.
+PASS: Branch manager may use customers owned by their branch sales staff.
+PASS: Audit failure rejects cancellation.
+PASS: Failed cancellation preserves confirmed reservation.
+PASS: Authorized cancellation commits.
+PASS: Audit recovery allows the same failed request to succeed.
+PASS: Audit failure rolls back expiration.
+PASS: Failed expiration preserves reserved inventory.
+PASS: Expiration commits once and repeated execution is idempotent.
+PASS: Expiration records the inventory movement.
+PASS: REST rejects anonymous quote creation.
+PASS: REST quote creation enforces customer scope.
+PASS: REST lead list returns only owned same-branch customer.
+PASS: Quote owner can read ordered immutable versions through REST.
+PASS: Vehicle relocation does not revoke the owner from the originating quote branch.
+PASS: Vehicle relocation does not expose historical quote documents to the destination branch.
+PASS: Another salesperson cannot read quote history outside ownership scope.
+PASS: Concurrent retries with the same key return one reservation.
+PASS: Same-key concurrency persists exactly one reservation.
+PASS: Competing reservation keys allow exactly one winner.
+PASS: Competing-key concurrency persists exactly one reservation.
+PASS: Audit failure rejects transfer request.
+PASS: Failed transfer-request audit restores available inventory and removes the request.
+PASS: Authorized transfer request commits with audit.
+PASS: Audit failure rejects transfer approval.
+PASS: Failed approval audit preserves requested transfer state.
+PASS: Destination inventory staff approves the transfer.
+PASS: Audit failure rejects transfer dispatch.
+PASS: Failed dispatch audit preserves approved transfer and held inventory.
+PASS: Source requester dispatches the transfer.
+PASS: Audit failure rejects transfer receipt.
+PASS: Failed receipt audit preserves source ownership and dispatched state.
+PASS: Separate destination inventory staff receives the transfer.
+PASS: Received transfer makes inventory available only in the destination branch.
+PASS: Matching authorized quote and reservation become a sale.
+PASS: Committed quote prices cannot change after sale creation.
+PASS: Sales staff cannot record payment confirmations.
+PASS: Finance request can be approved by a separate employee.
+PASS: Manager approves sale with invoice reference.
+PASS: Approved finance request alone cannot unlock delivery.
+PASS: Receipt REST schema rejects negative amounts.
+PASS: Receipt REST endpoint rejects sales-role access.
+PASS: Audit failure rejects receipt recording.
+PASS: Failed receipt leaves no payment row.
+PASS: Receipt REST endpoint accepts authorized financial staff.
+PASS: Receipt remains pending until independently verified.
+PASS: Identical receipt submission is idempotent.
+PASS: Receipt reference cannot be reused with another amount.
+PASS: Recorder cannot approve their own receipt.
+PASS: Foreign-branch finance user cannot approve or list receipts.
+PASS: Pending receipts cannot unlock delivery.
+PASS: Audit failure rejects payment verification.
+PASS: Uncommitted verification does not count toward settlement.
+PASS: Separate financial reviewer verifies the receipt.
+PASS: Partial settlement cannot unlock delivery.
+PASS: Verification cannot exceed the outstanding sale amount.
+PASS: Invalid receipt may be rejected with a reason.
+PASS: Verified receipts cover the full sale amount.
+PASS: Audit failure rolls back delivery preparation.
+PASS: Failed preparation keeps the vehicle sold.
+PASS: Settled sale creates a delivery with a valid identifier.
+PASS: Mismatched VIN cannot be confirmed.
+PASS: Inventory employee confirms the vehicle VIN.
+PASS: VIN confirmer cannot approve delivery even with both capabilities.
+PASS: Audit failure rejects delivery approval.
+PASS: Separate authorized manager approves delivery.
+PASS: Release rechecks settlement rather than trusting earlier preparation.
+PASS: Audit failure rolls back vehicle release.
+PASS: Failed release preserves vehicle readiness.
+PASS: Vehicle releases after full verified settlement, sale, VIN and delivery approvals.
+PASS: Delivered vehicle cannot be released twice.
+PASS: Inventory staff cannot authorize a delivered vehicle return.
+PASS: Delivered inventory cannot bypass the documented return workflow.
+PASS: A returned vehicle cannot be received into another branch location.
+PASS: Audit failure rejects vehicle return receipt.
+PASS: Failed return preserves delivery, sale and inventory state.
+PASS: Authorized return records the pending refund obligation and returned inventory.
+PASS: A completed delivery return cannot be received twice.
+PASS: Return manager cannot record a financial refund.
+PASS: Audit failure rejects a refund request.
+PASS: Failed refund request leaves no financial row.
+PASS: Identical refund retry returns the original pending request.
+PASS: Refund references cannot change and requesters cannot self-approve.
+PASS: Foreign-branch finance staff cannot review or list refunds.
+PASS: Audit failure rejects refund verification.
+PASS: Independent reviewer verifies a partial refund.
+PASS: Refund request cannot exceed the verified unrefunded balance.
+PASS: Verified refunds close the full returned-sale obligation.
+PASS: A pre-sale inspection cannot make a returned vehicle available.
+PASS: Returned inventory becomes available only after a new passed inspection.
+PASS: Audit failure rolls sale cancellation back across delivery, sale and inventory.
+PASS: Paid cancelled delivery places inventory on documented hold with a refund obligation.
+PASS: A sale cannot be cancelled twice.
+PASS: Cancellation hold cannot be released before the verified refund.
+PASS: Independent refund verification settles the cancelled sale obligation.
+PASS: Settled cancellation hold returns inventory to inspection.
+PASS: Cancelled-sale inventory becomes available after hold resolution and inspection.
+PASS: Unpaid pending sale cancellation releases inventory, closes its reservation and cancels pending receipt evidence.
+PASS: 1.9 to 1.10 additive schema upgrade preserves existing inventory and installs all specification columns.
+PASS: Specification upgrade preserves existing vehicle prices.
+PASS: Sales role cannot edit vehicle specifications.
+PASS: Another branch cannot edit specifications by direct ID.
+PASS: Inventory staff save all eleven specifications in their branch.
+PASS: Scoped vehicle reads include specifications without private purchase cost.
+PASS: Identical specification retry creates no duplicate audit event.
+PASS: Invalid or private specification payload is rejected.
+PASS: Invalid or private specification payload is rejected.
+PASS: Invalid or private specification payload is rejected.
+PASS: Invalid or private specification payload is rejected.
+PASS: Invalid or private specification payload is rejected.
+PASS: Invalid or private specification payload is rejected.
+PASS: Invalid or private specification payload is rejected.
+PASS: Invalid or private specification payload is rejected.
+PASS: Invalid or private specification payload is rejected.
+PASS: Invalid or private specification payload is rejected.
+PASS: Specification changes require a nonblank reason.
+PASS: SQL fault injection reached its intended statement.
+PASS: Failed specification audit rolls back the value and leaves history unchanged.
+PASS: Optional specification clearing preserves omitted fields.
+PASS: Specifications are locked in state reserved.
+PASS: Specifications are locked in state sold.
+PASS: Specifications are locked in state ready_for_delivery.
+PASS: Specifications are locked in state delivered.
+PASS: Specifications are locked in state transferred.
+PASS: Specifications are locked in state cancelled.
+PASS: Decimal SAR converts exactly: 0.01.
+PASS: Decimal SAR converts exactly: 12.3.
+PASS: Decimal SAR converts exactly: 0012.34.
+PASS: Decimal SAR converts exactly: 125000.99.
+PASS: Malformed or overflowing migration price is rejected.
+PASS: Malformed or overflowing migration price is rejected.
+PASS: Malformed or overflowing migration price is rejected.
+PASS: Malformed or overflowing migration price is rejected.
+PASS: Malformed or overflowing migration price is rejected.
+PASS: Malformed or overflowing migration price is rejected.
+PASS: Malformed or overflowing migration price is rejected.
+PASS: Mapper preserves primary keys, zero mileage, decimal price and certified condition.
+PASS: Mapper uses legacy aliases only when preferred metadata is empty.
+PASS: Migration dry run refuses unsupported status: .
+PASS: Migration dry run refuses unsupported status: mystery.
+PASS: Migration dry run refuses unsupported status: reserved.
+PASS: Migration dry run refuses unsupported status: sold.
+PASS: Valid migration dry run writes no inventory.
+PASS: SQL fault injection reached its intended statement.
+PASS: Migration audit failure rolls back the inserted vehicle.
+PASS: SQL fault injection reached its intended statement.
+PASS: Migration movement failure rolls back the inserted vehicle.
+PASS: Actual vehicle migration imports the valid mapped source.
+PASS: Imported inventory retains the exact source price and specifications.
+PASS: Migration retry preserves one vehicle and one initial movement.
+PASS: Reconciliation agrees with the actual migrated fields.
+PASS: Specification drift is reported without overwriting target inventory.
+PASS: Migration dry run detects a VIN or stock collision before writes.
+PASS: Out-of-range source specifications block migration.
+PASS: Serialized array status is reported as blocked instead of crashing the importer.
+PASS: Serialized identity metadata is rejected without converting it to text.
+PASS: Concurrent migration workers produce one import and one idempotent skip.
+PASS: Concurrent import leaves exactly one vehicle, movement and import audit.
+PASS: Cancellation fault fixture has verified funds and finance under review.
+PASS: Even with cancellation capability, sale owner cannot cancel their own sale.
+PASS: SQL fault injection reached its intended statement.
+PASS: Cancellation SQL failure preserves inventory, receipt, finance and cancellation records.
+PASS: SQL fault injection reached its intended statement.
+PASS: Cancellation SQL failure preserves inventory, receipt, finance and cancellation records.
+PASS: SQL fault injection reached its intended statement.
+PASS: Cancellation SQL failure preserves inventory, receipt, finance and cancellation records.
+PASS: SQL fault injection reached its intended statement.
+PASS: Cancellation SQL failure preserves inventory, receipt, finance and cancellation records.
+PASS: Successful cancellation closes finance under review.
+PASS: SQL fault injection reached its intended statement.
+PASS: Refund request fails closed when a balance aggregate cannot be read.
+PASS: SQL fault injection reached its intended statement.
+PASS: Refund request fails closed when a balance aggregate cannot be read.
+PASS: SQL fault injection reached its intended statement.
+PASS: Refund verification fails closed and preserves pending state after an aggregate error.
+PASS: SQL fault injection reached its intended statement.
+PASS: Refund verification fails closed and preserves pending state after an aggregate error.
+PASS: Refund verification succeeds after the database fault is removed.
+PASS: Refund verification audit identifies the cancellation obligation.
+PASS: Completed cancellation refund retries return the original verified record.
+PASS: Completed return refund retries return the original verified record.
+PASS: Operational list methods deny roles lacking their financial or cancellation capability.
+PASS: Verified cancellation obligation allows hold resolution.
+PASS: An inspection passed before hold resolution cannot release inventory.
+PASS: A fresh passed inspection after hold resolution permits availability.
+PASS: Policy settings reject invalid percentages and reversed approval ceilings without writes.
+PASS: Quote applies the configured fee, promotion and VAT in a deterministic order.
+PASS: Quotation stores immutable seller and promotion identity snapshots.
+PASS: Discount request freezes its approval tier and before/after purchase-cost margins.
+PASS: Discount approval recalculates from the frozen quote policy despite later settings changes.
+PASS: Discount above the branch-manager ceiling is routed to the general-manager tier.
+PASS: Branch manager cannot approve a frozen general-manager discount request.
+PASS: General manager can approve a request assigned to the high-discount tier.
+PASS: Margin-based discount is blocked when vehicle purchase cost is unavailable.
+PASS: Reservation freezes the required deposit while keeping declared money unverified.
+PASS: Sale creation is blocked until the frozen reservation deposit is independently verified.
+PASS: Identical deposit evidence retry is idempotent.
+PASS: Deposit recorder cannot verify their own evidence.
+PASS: Foreign-branch finance user cannot verify deposit evidence.
+PASS: Independent same-branch reviewer verifies reservation deposit evidence.
+PASS: Verified reservation deposit satisfies the sale conversion gate.
+PASS: Reservation cancellation is blocked while deposit evidence is pending.
+PASS: Paid reservation cancellation places the vehicle on hold and opens a refund obligation.
+PASS: Reservation-deposit refund request is bounded and idempotent.
+PASS: Refund requester cannot verify their own reservation refund.
+PASS: Verified full deposit refund releases held inventory and closes the obligation.
+PASS: Delivery checklist exposes each configured missing document.
+PASS: Delivery approval is blocked while required documents are incomplete.
+PASS: Foreign-branch inventory cannot record delivery documents.
+PASS: Recording every required reference completes the delivery checklist.
+PASS: Complete documents allow separated delivery approval and final release.
+PASS: Catalog readiness detects an unmapped published vehicle post.
+PASS: Authoritative activation is blocked until published mappings are reconciled.
+PASS: Catalog readiness separates mapped inventory from currently eligible public inventory.
+PASS: Reconciled catalog can be enabled through the audited configuration service.
+PASS: Theme catalog normalization converts SAR to halalas and bounds aliases, sort and search input.
+PASS: REST catalog normalization keeps documented minor-unit price filters unchanged.
+PASS: Public catalog returns only eligible rows in allowlisted ascending-price order.
+PASS: Public catalog omits identity, cost, price-floor and internal reference fields.
+PASS: Every documented operational filter composes into one bounded catalog result.
+PASS: Catalog search matches public identity fields without searching private VIN data.
+PASS: Mapped theme read model returns cast public inventory and active branch presentation fields.
+PASS: Authoritative WordPress car queries hide unmapped and unavailable posts.
+PASS: Compatibility mode retains unmapped legacy posts while suppressing mapped unavailable inventory.
+PASS: Duplicate post mappings fail readiness and are withheld from public catalog results.
+PASS: Representative catalog load returns the bounded first page and exact total in stable order.
+PASS: Representative catalog pagination returns a distinct second page.
+PASS: Cold catalog page, total and filter options stay within local budgets (11 queries, 0.032 seconds; {"test_adc_vehicles":8,"test_options":1,"test_posts":1,"test_postmeta":1}).
+PASS: Catalog activation rejects an empty published catalog even when no mapping conflicts exist.
+PASS: Cutover report identifies unmapped posts, unmapped inventory and invalid post types.
+PASS: Cutover report produces a stable review fingerprint, complete issue totals and setup prerequisites.
+PASS: Non-administrator cannot change the catalog mapping.
+PASS: Catalog mapping accepts only vehicle posts.
+PASS: Administrator can remove an invalid legacy target before cutover.
+PASS: Administrator creates an audited vehicle-to-post catalog mapping.
+PASS: Audit failure rolls the catalog mapping back.
+PASS: A post cannot be assigned to two operational vehicles.
+PASS: Identical catalog mapping retry is idempotent.
+PASS: Completed published mappings satisfy the cutover gate and change the reconciliation fingerprint.
+PASS: Authoritative activation rejects mappings that would produce an empty public catalog.
+PASS: Catalog cutover screen renders labelled protected mapping controls and escapes post titles.
+PASS: Audited unmapping immediately closes the authoritative activation gate.
+PASS: Outbox upgrade adds delivery state and indexes without replacing a legacy row.
+PASS: Outbox rejects an invalid event key.
+PASS: Outbox rejects personal fields outside the minimized payload contract.
+PASS: Outbox rejects nested payload data.
+PASS: Outbox requires an idempotency key.
+PASS: Outbox creates one row for identical retries and rejects a conflicting replay.
+PASS: Outbox persists hashed idempotency and only minimized references.
+PASS: Outbox does not claim an event before its available time.
+PASS: Successful delivery completes exactly once and releases its lease.
+PASS: Bounded backoff moves repeated delivery failure to an operator-visible terminal state.
+PASS: Outbox stores a safe failure code without the remote error message.
+PASS: Malformed stored payload fails terminally without reaching an adapter.
+PASS: Payload hash mismatch is detected before adapter dispatch.
+PASS: A worker safely reclaims and completes an expired lease.
+PASS: Sales staff cannot inspect or retry the integration queue.
+PASS: Auditor can inspect safe queue metadata but cannot retry events.
+PASS: General manager restarts a terminal event through an atomic audited action.
+PASS: Audit persistence failure rolls an operator retry back.
+PASS: Operations monitor exposes protected controls and job health without rendering payload content.
+PASS: Concurrent workers claim and deliver one due event exactly once.
+PASS: Outbox worker is wired to the five-minute operational schedule.
+PASS: Sales staff cannot read branch aggregate reports.
+PASS: Operational reporting rejects invalid or overlong date ranges.
+PASS: Branch manager report includes every catalogue section and only the assigned active branch.
+PASS: Operational quotation counts and monetary totals match the scoped source rows.
+PASS: Operational exceptions identify overdue follow-up and pending reservation refunds without exposing record identity.
+PASS: Auditor receives read-only aggregate metadata within their assigned branch.
+PASS: Global administrator report includes operational aggregates from another branch.
+PASS: Operational CSV is aggregate-only, UTF-8 and neutralizes spreadsheet formulas.
+PASS: Operational CSV export appends a minimized audit event.
+PASS: Branch-scoped operational CSV excludes aggregates from foreign branches.
+PASS: Operational CSV is withheld when its audit event cannot be persisted.
+PASS: Operational report fails closed instead of returning partial aggregates after a query error.
+PASS: Operational report screen renders protected aggregate export controls and escapes branch content without customer identity.
+PASS: Integration registry rejects events outside the approved domain catalogue.
+PASS: Domain publisher rejects unknown events and invalid state contracts.
+PASS: Approved domain events remain disabled by default and create no queue data.
+PASS: Explicit activation fails closed when no adapter owns the event route.
+PASS: A valid adapter owns its declared event route at runtime.
+PASS: A domain event cannot be claimed by two adapters.
+PASS: Enabled publication is durable and idempotent for the same domain version.
+PASS: Domain event payload contains minimized identifiers and state without identity or financial values.
+PASS: Registered adapter receives the minimized event through the existing outbox worker.
+PASS: Reservation service commits its enabled domain event in the owning business transaction.
+PASS: Enabled outbox persistence failure rolls the business mutation and audit back together.
+PASS: The additive acknowledgement-ledger upgrade preserves existing outbox events.
+PASS: Provider results reject unsafe opaque references before persistence.
+PASS: The readiness gate identifies every missing provider control without exposing configuration values.
+PASS: Ordinary sales staff cannot activate integration routes.
+PASS: A registered but incomplete adapter cannot be activated.
+PASS: The runtime publisher blocks a directly tampered activation option when readiness is incomplete.
+PASS: A complete adapter reports a safe ready state and reconciliation support.
+PASS: An authorized manager activates a ready route with an audit record.
+PASS: Activation audit failure restores the exact prior route policy.
+PASS: A second ready route can be enabled independently.
+PASS: Structured delivery creates one durable pending provider receipt before the outbox event completes.
+PASS: Sales staff cannot inspect or request provider reconciliation.
+PASS: Operator reconciliation is queued, polled asynchronously and records the accepted acknowledgement.
+PASS: A verified acknowledgement that arrives before delivery is retained as an unmatched operational exception.
+PASS: Later delivery links the early acknowledgement without downgrading its accepted state.
+PASS: Duplicate acknowledgements are idempotent while contradictory final acknowledgements become visible mismatches.
+PASS: Operator queries expose a reference fingerprint and never the full provider reference.
+PASS: The restricted integration workspace shows readiness and reconciliation metadata without secrets or full references.
+PASS: Each route can be disabled independently through the audited central gate.
+PASS: The additive request-limit upgrade preserves existing outbox and provider receipt records.
+PASS: Forwarded client headers are ignored unless the immediate proxy is explicitly trusted.
+PASS: A trusted proxy chain resolves the first untrusted client from right to left.
+PASS: A malformed forwarded chain safely falls back to the direct peer.
+PASS: Request protection persists an HMAC bucket and never a raw client address.
+PASS: The intake policy permits eight attempts and returns a retry-aware 429 on the ninth.
+PASS: Authenticated and anonymous callers use distinct privacy-preserving request buckets.
+PASS: SQL fault injection reached its intended statement.
+PASS: Public request protection fails closed when its atomic storage write fails.
+PASS: Bounded cleanup removes expired request buckets and records non-sensitive health metadata.
+PASS: The complete REST inventory exposes exactly the three declared anonymous method-route pairs.
+PASS: The restricted security page shows the public inventory and all configured aggregate policies without addresses or bucket fingerprints.
+PASS: The bounded request-limit cleanup handler is registered for scheduled execution.
+PASS: Twelve simultaneous independent requests atomically allow eight, reject four and retain all attempts.
+PASS: Purchasing, inventory and delivery roles have distinct 1.28 capabilities.
+PASS: Business-model tables and indexes satisfy schema 1.17.0.
+PASS: Supplier creation persists a global reference with restricted contact details.
+PASS: Supplier code uniqueness rejects duplicates.
+PASS: Inventory can identify suppliers without reading commercial contacts.
+PASS: Inventory cannot change supplier status.
+PASS: Purchasing can read restricted supplier fields.
+PASS: Delivery cannot read or create supplier records.
+PASS: Restricted acquisition reads and writes enforce branch scope.
+PASS: Acquisition changes require an audit reason.
+PASS: Acquisition document IDs must identify readable PDF or image attachments.
+PASS: Purchasing saves audited integer-halala acquisition values.
+PASS: General inventory reads never reveal restricted costs or supplier details.
+PASS: Supplier deactivation preserves history while blocking new assignments.
+PASS: Inactive suppliers cannot be assigned in a new acquisition change.
+PASS: Delivered vehicles reject acquisition edits.
+PASS: Finance fixture has a valid pending sale and customer context.
+PASS: First finance provider attempt records consent and commercial terms.
+PASS: An open finance attempt blocks a second provider.
+PASS: Requester cannot decide their own finance attempt.
+PASS: Finance history and decisions enforce branch scope.
+PASS: A separate finance user may reject the first attempt.
+PASS: Retry retains immutable attempt order and predecessor lineage.
+PASS: Parallel finance fixture has a valid pending sale.
+PASS: Independent concurrent providers can persist exactly one open finance attempt.
+PASS: Repeated 1.17.0 installation preserves supplier and finance-attempt rows.
+PASS: v2 success responses preserve a valid request ID in header and envelope.
+PASS: v1 supplier responses retain their compatibility shape.
+PASS: Authenticated OpenAPI 3.1 is generated from current registered v2 routes.
+PASS: v2 authorization failures use the documented error envelope.
+PASS: Anonymous callers cannot download the administrative OpenAPI document.
+PASS: Failed-login audit is rate-bounded and stores a hash instead of identity text.
+PASS: WordPress role changes are audited through the security hooks.
+PASS: SAR API fields convert once without changing duration.
+PASS: Mixed API units fail closed.
+PASS: API excess precision fails closed.
+PASS: Nested acquisition fields use SAR conversion.
+PASS: Endpoint preserves old fields, adds SAR output and applies optional defaults.
+PASS: Missing required API amount remains rejected.
+PASS: SAR input respects original positive bounds.
+PASS: Legacy minor-unit API remains compatible.
+PASS: Output preserves IDs, signed margins, unknown costs and nested records.
+PASS: Partial cost forms preserve unknowns and omitted fields.
+PASS: CSV exports exact SAR values with explicit units and formula protection.
+PASS: CRM additive upgrade restores identity and idempotency columns/indexes without losing existing customers or leads.
+PASS: CRM public intake rejects malformed input.
+PASS: CRM public intake rejects malformed input.
+PASS: CRM public intake rejects malformed input.
+PASS: CRM public intake rejects malformed input.
+PASS: CRM public intake rejects malformed input.
+PASS: CRM public intake rejects malformed input.
+PASS: CRM public intake rejects malformed input.
+PASS: CRM public intake rejects malformed input.
+PASS: Invalid intake leaves all six CRM/audit tables unchanged.
+PASS: Arabic, Persian and international mobile input normalizes consistently.
+PASS: Arabic, Persian and international mobile input normalizes consistently.
+PASS: Arabic, Persian and international mobile input normalizes consistently.
+PASS: Arabic, Persian and international mobile input normalizes consistently.
+PASS: Arabic, Persian and international mobile input normalizes consistently.
+PASS: Theme-compatible intake atomically creates a linked message.
+PASS: One message creates exactly one customer, lead, activity and audit.
+PASS: Identical public retry returns original IDs without duplicate rows.
+PASS: Reusing the key with changed content returns conflict without writes.
+PASS: SQL fault injection reached its intended statement.
+PASS: Intake failure rolls back all rows when insertion fails in test_adc_customers.
+PASS: SQL fault injection reached its intended statement.
+PASS: Intake failure rolls back all rows when insertion fails in test_adc_leads.
+PASS: SQL fault injection reached its intended statement.
+PASS: Intake failure rolls back all rows when insertion fails in test_car_dealer_messages.
+PASS: SQL fault injection reached its intended statement.
+PASS: Intake failure rolls back all rows when insertion fails in test_adc_activities.
+PASS: SQL fault injection reached its intended statement.
+PASS: Intake failure rolls back all rows when insertion fails in test_adc_audit_events.
+PASS: Intake refuses a nontransactional compatibility table before writing.
+PASS: Rate boundary allows eight submissions and rejects the ninth, including retries.
+PASS: Authenticated theme enquiry creates an account-linked customer.
+PASS: Account linkage uses the authenticated WordPress user ID.
+PASS: Further authenticated enquiries reuse the customer without silently withdrawing consent.
+PASS: Account linking rejects identity that differs from the locked WordPress account.
+PASS: Generic REST-style intake never claims an account even with matching contact data.
+PASS: Foreign branch cannot read request or activity history by ID.
+PASS: Assigned salesperson can read and edit a linked request.
+PASS: Staff update requires the current request revision.
+PASS: SQL fault injection reached its intended statement.
+PASS: Failed request audit restores status, reply and activity history.
+PASS: Assigned salesperson saves customer-visible reply and status.
+PASS: A stale staff form cannot overwrite the newer reply.
+PASS: Unchanged request update creates no new history.
+PASS: Customer reply text is kept out of permanent audit JSON.
+PASS: Completed message cannot be reopened.
+PASS: Account booking reuses its authenticated customer identity.
+PASS: Invalid/past calendar dates cannot create test-drive bookings.
+PASS: Pending booking cannot skip confirmation and jump to completed.
+PASS: Staff cannot reschedule a booking into the past.
+PASS: Unavailable vehicle blocks booking confirmation.
+PASS: Available future booking can be confirmed.
+PASS: Customer cancellation checks recorded user ownership, even for a staff actor.
+PASS: Account owner cancels booking once; an identical cancellation is harmless.
+PASS: Customer cannot preview or consolidate CRM identities.
+PASS: Administrator previews same-contact, same-scope duplicate profiles.
+PASS: Consolidation requires explicit independent identity review.
+PASS: Stale consolidation preview is rejected.
+PASS: SQL fault injection reached its intended statement.
+PASS: Failed merge history/audit restores source identity and all lead references.
+PASS: SQL fault injection reached its intended statement.
+PASS: Failed merge history/audit restores source identity and all lead references.
+PASS: Different salesperson ownership blocks consolidation.
+PASS: Consolidation cannot transfer another account-owned request to an unlinked customer.
+PASS: Successful reviewed consolidation moves leads and anonymizes the source tombstone.
+PASS: Merged source cannot acquire new operational references; destination remains usable.
+PASS: Repeated consolidation cannot move or audit the source twice.
+PASS: A source with a quotation and immutable revision cannot be consolidated.
+PASS: Merge retains marketing permission only if both records explicitly consented.
+PASS: Concurrent guest retries persist exactly one complete enquiry without orphan rows.
+PASS: Concurrent first enquiries for one authenticated account create one shared customer.
+PASS: Concurrent request edits allow one winner and reject the stale writer.
+PASS: Concurrent consolidation commits once and rejects the already merged source.
+PASS: Privacy export follows account linkage after immediate profile email sync and includes enquiry text.
+PASS: SQL fault injection reached its intended statement.
+PASS: Legacy erasure failure rolls back canonical identity anonymization.
+PASS: Erasure clears account linkage and old-email compatibility copies together.
+PASS: Erasure also clears the enquiry payload fingerprint.
+PASS: SQL fault injection reached its intended statement.
+PASS: Failed retention audit restores canonical identity and completed compatibility message.
+PASS: Retention anonymizes an old closed lead and its completed compatibility request together.
+PASS: Active compatibility requests and merged tombstones are excluded from retention.
+PASS: Mixed quote/merge race preserves operational references for worker order 0.
+PASS: Exactly one conflicting quote/merge operation is rejected.
+PASS: Mixed quote/merge race preserves operational references for worker order 1.
+PASS: Exactly one conflicting quote/merge operation is rejected.
+PASS: Concurrent account intake and privacy erasure complete under worker order 0: {"erasure_done":true,"erasure_error":"","intake_has_id":true,"intake_error":""}
+PASS: Concurrent fresh enquiry never restores erased identity or old compatibility content.
+PASS: Mixed erasure/intake retains at most one current account-linked customer.
+PASS: Concurrent account intake and privacy erasure complete under worker order 1: {"erasure_done":true,"erasure_error":"","intake_has_id":true,"intake_error":""}
+PASS: Concurrent fresh enquiry never restores erased identity or old compatibility content.
+PASS: Mixed erasure/intake retains at most one current account-linked customer.
+PASS: Date-only rescheduling preserves the prior time.
+PASS: Time-only rescheduling preserves the prior date.
+PASS: Vehicle mapped to another branch blocks appointment confirmation.
+PASS: Customer pagination returns ten owned rows, a next-page indicator, and two distinct rows on page two.
+PASS: Matching branch staff do not inherit customer-account request ownership.
+PASS: SQL fault injection reached its intended statement.
+PASS: Reconciliation lookup failure leaves the cursor unchanged for a safe retry.
+PASS: Legacy reconciliation advances over core-owned account requests without duplicate profiles.
+PASS: Legacy request count and page rows respect assigned ownership in the same branch.
+PASS: Plugin-owned scoped staff renderer paginates twenty recent rows, exposes the next page and excludes unassigned account messages.
+PASS: Anonymous callers cannot read account communication preferences.
+PASS: A new account starts opted out and exposes no unrelated customer identity.
+PASS: An explicit pre-enquiry opt-out is stored on the WordPress account.
+PASS: Stored account opt-out overrides a later enquiry checkbox while creating the canonical customer.
+PASS: Canonical account linkage retires its legacy CRM profile and removes actionable follow-up fields.
+PASS: Non-administrator staff cannot read or edit a retired legacy CRM profile.
+PASS: Administrator can read a retired legacy CRM profile while write access remains blocked.
+PASS: Explicit opt-in updates account metadata and the linked canonical customer together.
+PASS: Audit failure rolls an account preference change back in user metadata and canonical CRM.
+PASS: Explicit opt-out clears marketing consent in both stores atomically.
+PASS: A later authenticated enquiry cannot silently reverse the account opt-out.
+PASS: Audit failure rolls an immediate account profile refresh back without partial CRM identity changes.
+PASS: Explicit account profile refresh updates every changed canonical identity field.
+PASS: WordPress profile and phone hooks synchronize the linked customer immediately without another enquiry.
+PASS: Immediate profile refreshes create append-only customer audit events.
+PASS: Privacy export includes account preference, legacy CRM identity and legacy activity history.
+PASS: SQL fault injection reached its intended statement.
+PASS: Legacy privacy write failure rolls back Core, WordPress account and CRM post changes together.
+PASS: SQL fault injection reached its intended statement.
+PASS: Privacy erasure rolls back identity changes when its minimized audit event fails.
+PASS: Successful privacy erasure anonymizes and retires the legacy CRM profile and activity.
+PASS: Successful privacy erasure removes account preference metadata and anonymizes the canonical customer.
+PASS: Privacy erasure audit records counts without retaining the erased email address.
+PASS: Payment admin screen renders scoped receipts and decision states.
+PASS: Payment admin screen excludes foreign-branch receipt references.
+PASS: Financial CSV is branch-aware, minimized and neutralizes spreadsheet formulas.
+PASS: Financial export rejects ranges longer than 366 days.
+PASS: Financial export is withheld when its audit record fails.
+PASS: Retention anonymizes an inactive customer only after the configured period.
+PASS: Retention preserves a customer with active operational records.
+PASS: Retention rolls identity changes back when audit persistence fails.
+PASS: Privacy export includes stored quotation identity snapshots and financial revisions.
+PASS: Privacy erasure anonymizes customer identity in quote snapshots while retaining financial history.
+PASS: Deactivating an assigned branch immediately revokes service and list scope.
+PASS: Inactive-branch staff cannot retrieve an existing quote by direct REST identifier.
+PASS: Global administrator retains inactive-branch remediation access.
+PASS: Account preference REST read rejects anonymous callers.
+PASS: Authenticated preference REST read returns only the current account state.
+PASS: Account preference REST write requires a valid WordPress nonce.
+PASS: Account preference REST schema requires an explicit boolean choice.
+PASS: Authenticated preference REST write updates the account-owned canonical customer.
+PASS: Preference REST reads cannot select or disclose another account customer.
+PASS: Authenticated REST opt-out immediately clears canonical marketing permission.
+PASS: Real HTTP REST request rejects an anonymous visitor (received 401: {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}).
+PASS: HTTP server issues an administrator session cookie and REST nonce.
+PASS: Real HTTP REST request rejects an invalid WordPress nonce.
+PASS: Real HTTP REST request accepts an administrator cookie and nonce (received 200: [{"id":"4","quotation_id":"2","quote_number":"Q-20261009-IHMDNPQT","customer_id":"1","vehicle_id":"3","branch_id":"1","owner_user_id":"2","customer_name":"\u063).
+PASS: HTTP server issues a branch-user session cookie and REST nonce.
+PASS: Real HTTP REST request hides a quote from another branch.
+PASS: HTTP server issues a disabled-branch staff session without restoring branch access.
+PASS: Real HTTP REST request denies staff assigned to a disabled branch.
+PASS: HTTP quote creation without a REST nonce is rejected without mutation.
+PASS: HTTP quote schema rejects a missing required field without mutation.
+PASS: Foreign-branch HTTP discount request is rejected without changing quote history.
+PASS: Disabled-branch staff cannot create a reservation through HTTP.
+PASS: HTTP reservation rejects a customer identifier from another branch without mutation.
+PASS: HTTP payment route rejects a sales role before service mutation.
+PASS: Foreign-branch finance staff cannot record a receipt against another branch sale.
+PASS: Foreign-branch HTTP delivery action is rejected without changing delivery state.
+PASS: Public HTTP branch list includes active branches and excludes the disabled branch.
+PASS: Non-administrator cannot create a branch through HTTP.
+PASS: Public HTTP lead intake creates a validated new lead in an active branch.
+PASS: Anonymous visitor cannot list CRM leads through HTTP.
+PASS: Foreign inactive-branch manager cannot assign an active-branch lead through HTTP.
+PASS: Same-branch manager can assign an unowned lead through HTTP.
+PASS: Foreign inactive-branch sales user cannot change lead stage through HTTP.
+PASS: Assigned salesperson can advance their lead stage through HTTP.
+PASS: Foreign inactive-branch user cannot add a CRM activity through HTTP.
+PASS: Assigned salesperson can add a CRM activity through HTTP.
+PASS: Salesperson HTTP lead list includes their newly assigned lead.
+PASS: Inactive foreign-branch manager cannot decide a discount through HTTP.
+PASS: Correct branch manager can approve a pending discount through HTTP.
+PASS: Foreign-branch finance reviewer cannot decide a financing request through HTTP.
+PASS: Separate same-branch finance reviewer can approve financing through HTTP.
+PASS: Foreign-branch manager cannot approve a sale through HTTP.
+PASS: Correct branch manager can approve an eligible sale through HTTP.
+PASS: Foreign-branch finance reviewer cannot verify a receipt through HTTP.
+PASS: Separate same-branch finance reviewer can verify a receipt through HTTP.
+PASS: Foreign inactive-branch finance user cannot record the delivery balance through HTTP.
+PASS: Same-branch finance recorder can submit the remaining sale balance through HTTP.
+PASS: Separate finance reviewer verifies the remaining balance through HTTP.
+PASS: Foreign inactive-branch manager cannot prepare a funded sale for delivery through HTTP.
+PASS: Same-branch manager prepares a fully settled sale for delivery through HTTP.
+PASS: Foreign inactive-branch inventory user cannot confirm delivery VIN through HTTP.
+PASS: Same-branch inventory user confirms the exact delivery VIN through HTTP.
+PASS: Foreign inactive-branch manager cannot approve delivery through HTTP.
+PASS: Separate same-branch manager approves VIN-confirmed delivery through HTTP.
+PASS: Foreign inactive-branch manager cannot release an approved delivery through HTTP.
+PASS: Eligible manager releases the fully verified vehicle through HTTP.
+PASS: HTTP creation rejects malformed specifications before inserting inventory.
+PASS: Sales role cannot create inventory through HTTP.
+PASS: Inactive foreign-branch inventory user cannot create a branch-B vehicle through HTTP.
+PASS: HTTP vehicle creation persists and returns supplied specifications.
+PASS: HTTP specification changes reject anonymous callers.
+PASS: HTTP specification changes reject an invalid cookie-session nonce.
+PASS: HTTP specification changes reject the sales role.
+PASS: HTTP specification changes reject an inactive foreign branch.
+PASS: HTTP specifications cannot change a private pricing field.
+PASS: HTTP specifications reject nested malformed numeric input.
+PASS: Authorized HTTP PATCH persists the public specifications.
+PASS: Identical HTTP specification retry reports no change.
+PASS: Same-branch inventory user can receive a vehicle through HTTP.
+PASS: Foreign inactive-branch inventory user cannot change vehicle state through HTTP.
+PASS: HTTP inventory cannot enter inspection without a receipt record.
+PASS: Same-branch inventory records HTTP receiving evidence.
+PASS: Same-branch inventory user can move a received vehicle to inspection through HTTP.
+PASS: HTTP inventory cannot become available without a passed checklist.
+PASS: Same-branch inventory completes the mandatory HTTP inspection checklist.
+PASS: Same-branch inventory user can make an inspected vehicle available through HTTP.
+PASS: Public HTTP catalog exposes the mapped available vehicle without VIN or purchase cost.
+PASS: Public HTTP catalog includes updated specifications without the private price floor.
+PASS: Public HTTP catalog composes every documented filter and returns normalized pagination metadata.
+PASS: Filtered HTTP catalog response keeps private and internal inventory fields out of the public contract.
+PASS: Public HTTP catalog does not search private VIN data.
+PASS: Public HTTP catalog rejects unsupported sorting and pagination outside the documented bound.
+PASS: Unrelated inactive-branch inventory user cannot decide a transfer through HTTP.
+PASS: Destination inventory user can approve a transfer through HTTP.
+PASS: Destination inventory user cannot dispatch the source transfer through HTTP.
+PASS: Source requester can dispatch an approved transfer through HTTP.
+PASS: Source requester cannot receive their own transfer through HTTP.
+PASS: Destination inventory user can receive a dispatched transfer through HTTP.
+PASS: Printable quote action rejects an invalid form nonce over HTTP.
+PASS: Authenticated administrator obtains a nonce for the print action.
+PASS: Printable quote action accepts a valid user cookie and action nonce over HTTP.
+PASS: Plugin AJAX rejects a bad form nonce without creating CRM records (HTTP 403: -1).
+PASS: Plugin contact handler accepts an authenticated nonce-protected theme form.
+PASS: Plugin AJAX replaces forged contact fields with the authenticated profile.
+PASS: Repeated plugin AJAX intake does not duplicate the message or customer.
+PASS: HTTP request details reject anonymous, customer and foreign-branch staff access.
+PASS: HTTP administrator reads the linked request revision.
+PASS: HTTP request PATCH requires a valid REST nonce.
+PASS: HTTP request PATCH persists once and rejects the stale revision.
+PASS: HTTP activity history includes the reply only within authorized scope.
+PASS: Admin request form rejects an invalid action nonce.
+PASS: Admin request form saves and redirects with the correct action nonce.
+PASS: Plugin booking handler returns the compatibility booking ID to the theme form.
+PASS: HTTP booking cancellation rejects anonymous and nonowner actors.
+PASS: HTTP owner cancellation succeeds once and is safely repeatable.
+PASS: HTTP identity preview is restricted to administrators.
+PASS: HTTP administrator receives a reviewable consolidation preview.
+PASS: HTTP consolidation requires explicit confirmation of independent identity review.
+PASS: HTTP consolidation rejects invalid nonce and staff privilege escalation.
+PASS: Reviewed HTTP consolidation commits once; a repeated merge conflicts.
+PASS: Identity admin preview escapes customer content and includes revision, nonce and review controls.
+PASS: Request admin form renders the current reply and protected revision controls.
+Completed 701 isolated database checks.
+Disposable test database removed. Source database was not contacted.

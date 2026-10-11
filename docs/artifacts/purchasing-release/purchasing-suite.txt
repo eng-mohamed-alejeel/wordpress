@@ -1,0 +1,54 @@
+PASS Create isolated purchase reference data
+PASS Purchaser creates draft without approved policy
+PASS Duplicate submission returns same purchase order
+PASS Duplicate active order for vehicle rejected
+PASS Unapproved purchase policy blocks submission
+PASS Explicit policy stores approved limits and cost basis
+PASS Requester submits order with immutable policy snapshot
+PASS Stale revision cannot cancel order
+PASS Requester cannot approve own order even with approval capabilities
+PASS Independent high-tier approver approves order
+PASS Policy changes apply to future submissions
+PASS Requester cannot receive own order
+PASS Approved-order cancellation enforces the frozen high-tier policy
+PASS Audit failure rejects commercial receipt
+PASS Failed receipt rolls back order and vehicle acquisition together
+PASS Independent receiver records commercial receipt
+PASS Submitted gross policy remains frozen and commercial receipt preserves inspection workflow
+PASS Received order cannot be cancelled
+PASS Unassigned branch user cannot read purchase order
+PASS Create isolated quotation for archive
+PASS Failed archive audit leaves no issued number
+PASS Archive immutable quotation revision
+PASS Repeated archive issuance preserves number and record
+PASS Archive checksum matches stored source revision
+PASS Checksum detects financial source alteration
+PASS Customer privacy export includes archived document references
+PASS Privacy erasure redacts customer name while preserving archived financial integrity
+PASS Archive source permissions enforced
+PASS Purchase admin page renders scoped order and receipt evidence
+PASS Purchase workspace includes English labels
+PASS Release evidence is submitted pending review
+PASS Submitter cannot approve own release evidence
+PASS Independent administrator reviews evidence
+PASS Current environment and release recognize approved evidence
+PASS Evidence cannot satisfy another environment or release
+PASS Expired evidence returns to manual verification
+PASS Policy audit failure preserves previous approved configuration
+PASS Operational staff cannot create release sign-off
+PASS Concurrent purchase worker finishes successfully
+PASS Concurrent purchase worker finishes successfully
+PASS Concurrent identical submissions produce one order and stable replay
+PASS Actual purchase form calculates exact SAR and percentage tax
+PASS Repeated actual purchase form creates no duplicate order
+PASS Authenticated HTTP purchase page renders English order details
+PASS HTTP order detail rejects branchless staff
+PASS Purchase form rejects invalid action nonce
+PASS Purchase staff cannot access release evidence page
+PASS Administrator accesses release evidence form
+PASS Archived document rejects invalid nonce
+PASS Authenticated archive download returns numbered document attachment
+PASS Archive nonce is bound to authorized user
+PASS HTTP purchase screen renders Arabic workflow labels
+RESULT 52 purchasing/archive/release checks passed
+Disposable test database removed. Source database was not contacted.

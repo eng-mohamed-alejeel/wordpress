@@ -125,7 +125,7 @@ final class ContentRegistry {
 			'show_in_rest'    => true,
 			'capability_type' => array( 'car', 'cars' ),
 			'map_meta_cap'    => true,
-			'supports'        => array( 'title', 'editor', 'thumbnail', 'excerpt', 'custom-fields' ),
+			'supports'        => array( 'title', 'thumbnail', 'excerpt' ),
 		) );
 		self::$registered['car'] = true;
 	}

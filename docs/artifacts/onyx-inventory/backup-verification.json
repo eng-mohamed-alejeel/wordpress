@@ -1,0 +1,8 @@
+{
+    "verified": true,
+    "artifact_sha256": "01c14ed99ea6fcebfe4702cf1db9afa25cd62fcfc33938f1be042251c7d315cb",
+    "tables": 51,
+    "rows": 931,
+    "isolated_port": 3311,
+    "offsite_verified": false
+}

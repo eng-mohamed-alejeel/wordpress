@@ -70,6 +70,18 @@ final class QuoteHistory {
 		return $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
 	}
 
+	/** Admin search and paging retain the same visibility predicate as document reads. */
+	public static function admin_list(): array {
+		if ( ! self::can_read() ) { return array( 'rows'=>array(), 'total'=>0, 'pages'=>1, 'page'=>1, 'search'=>'' ); }
+		list( $scope, $args ) = self::scope();
+		$status = sanitize_key( $_GET['status'] ?? '' );
+		if ( in_array( $status, array( 'approved', 'pending_discount' ), true ) ) { $scope .= ' AND q.status=%s'; $args[] = $status; }
+		$validity = sanitize_key( $_GET['validity'] ?? '' );
+		if ( in_array( $validity, array( 'valid', 'expired' ), true ) ) { $scope .= ' AND q.valid_until' . ( 'valid' === $validity ? '>=' : '<' ) . '%s'; $args[] = gmdate( 'Y-m-d' ); }
+		$sql = 'SELECT q.id,q.quote_number,q.customer_id,q.vehicle_id,q.version,q.status,q.final_amount,q.valid_until,v.brand,v.model,c.full_name FROM ' . Schema::table( 'quotations' ) . ' q INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=q.vehicle_id INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=q.customer_id WHERE ' . $scope . ' ORDER BY q.id DESC LIMIT 100';
+		return \AutoDealership\Admin\QueueTable::fetch( $sql, $args, array( 'q.quote_number', 'c.full_name', 'v.stock_number', 'v.brand', 'v.model', 'q.status' ) );
+	}
+
 	public static function versions( int $quote_id, int $page = 1 ) {
 		global $wpdb;
 		if ( ! self::can_read() ) { return new \WP_Error( 'adc_quote_forbidden', __( 'لا تملك صلاحية عرض عروض الأسعار.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }

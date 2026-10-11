@@ -1,4 +1,33 @@
 document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('[data-customer-filters]').forEach(function (form) {
+    var rows = JSON.parse(form.querySelector('[data-catalog-choices]').textContent);
+    var brand = form.elements.brand, model = form.elements.model;
+    function choices(name) {
+      var select = form.elements[name], field = select.dataset.catalogChoice, current = select.value;
+      var values = new Map();
+      rows.filter(function (row) {
+        return (!brand.value || row.brand === brand.value) && (name === 'model' || !model.value || row.model === model.value);
+      }).forEach(function (row) { if (row[field]) values.set(row[field], row[field + '_label'] || row[field]); });
+      while (select.options.length > 1) select.remove(1);
+      values.forEach(function (label, value) { select.add(new Option(label, value)); });
+      select.value = values.has(current) ? current : '';
+    }
+    brand.addEventListener('change', function () { model.value = ''; form.elements.trim.value = ''; choices('model'); choices('trim'); choices('exterior_color'); });
+    model.addEventListener('change', function () { form.elements.trim.value = ''; choices('trim'); choices('exterior_color'); });
+    form.addEventListener('submit', function (event) {
+      var valid = true;
+      [['min_year','max_year'],['min_price','max_price']].forEach(function (pair) {
+        var from = form.elements[pair[0]], to = form.elements[pair[1]];
+        to.setCustomValidity('');
+        if (from.value && to.value && Number(from.value) > Number(to.value)) {
+          to.setCustomValidity(document.documentElement.lang.startsWith('en') ? 'The maximum must be at least the minimum.' : 'يجب أن يكون الحد الأعلى أكبر من الحد الأدنى أو مساويًا له.');
+          form.querySelector('details').open = true; to.reportValidity(); valid = false;
+        }
+      });
+      if (!valid) event.preventDefault();
+    });
+    form.addEventListener('input', function () { form.elements.max_year.setCustomValidity(''); form.elements.max_price.setCustomValidity(''); });
+  });
   var auth = document.querySelector('[data-auth-switch]');
   if (auth) {
     var authLinks = auth.querySelectorAll('.cd-auth-tabs a');
@@ -38,10 +67,11 @@ document.addEventListener('DOMContentLoaded', function () {
       showAuthView(new URL(location.href).searchParams.get('cd_account'));
     });
   }
-  document.querySelectorAll('[data-vehicle-row]').forEach(function (row) {
-    var track = row.querySelector('.latest-row-track');
+  document.querySelectorAll('[data-vehicle-row], [data-horizontal-row]').forEach(function (row) {
+    var track = row.querySelector('.latest-row-track, [data-horizontal-track]');
     var left = row.querySelector('[data-scroll-direction="left"]');
     var right = row.querySelector('[data-scroll-direction="right"]');
+    if (!track || !left || !right) return;
     function updateControls() {
       var limit = Math.max(0, track.scrollWidth - track.clientWidth);
       var rtl = getComputedStyle(track).direction === 'rtl';

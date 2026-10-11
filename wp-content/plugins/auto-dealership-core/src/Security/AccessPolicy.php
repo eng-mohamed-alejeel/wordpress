@@ -145,7 +145,7 @@ final class AccessPolicy {
 		if ( $user->has_cap( 'adc_view_workspace' ) && ! BranchScope::is_global( $user->ID ) && ! array_filter( BranchScope::assigned_branches( $user->ID ), array( BranchScope::class, 'is_active' ) ) ) { $flags[] = 'No active branch assigned'; }
 		if ( array_intersect( Capabilities::assignable_capabilities(), array_keys( $user->caps ) ) ) { $flags[] = 'Individual permission overrides'; }
 		if ( self::temporary( $user->ID ) ) { $flags[] = 'Temporary permissions'; }
-		foreach ( array( 'adc_approve_high_discounts', 'adc_change_vehicle_vin', 'adc_manage_integrations' ) as $cap ) { if ( $user->has_cap( $cap ) ) { $flags[] = 'Sensitive permissions'; break; } }
+		foreach ( array( 'adc_approve_high_discounts', 'adc_approve_high_purchase_orders', 'adc_change_vehicle_vin', 'adc_manage_integrations' ) as $cap ) { if ( $user->has_cap( $cap ) ) { $flags[] = 'Sensitive permissions'; break; } }
 		return $flags;
 	}
 }

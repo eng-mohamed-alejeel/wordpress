@@ -51,6 +51,20 @@ final class PublicStructuredData {
 		if ( ! self::visible_car( $post_id ) ) {
 			return array();
 		}
+		if ( \AutoDealership\Inventory\GroupedModelCatalog::is_mapped( $post_id ) ) {
+			$view = \AutoDealership\Inventory\GroupedModelCatalog::view( $post_id );
+			if ( ! $view ) { return array(); }
+			$data = array( '@context'=>'https://schema.org', '@type'=>'Vehicle', 'name'=>get_the_title( $post_id ), 'url'=>get_permalink( $post_id ), 'brand'=>array( '@type'=>'Brand', 'name'=>$view['brand_name'] ), 'model'=>$view['model'], 'color'=>$view['catalog_model']['colors'] );
+			$offers = array();
+			foreach ( $view['catalog_model']['options'] as $option ) {
+				if ( (int)$option['listed_price'] < 1 ) { continue; }
+				$offers[] = array( '@type'=>'Offer', 'name'=>implode( ' ', array( $option['brand'], $option['model'], $option['trim_name'], $option['exterior_color'], $option['model_year'] ) ), 'price'=>\AutoDealership\Pricing\Money::decimal( (string)$option['public_price'] ), 'priceCurrency'=>'SAR', 'availability'=>'https://schema.org/InStock', 'url'=>get_permalink( $post_id ) );
+			}
+			if ( $offers ) { $data['offers'] = $offers; }
+			$image = get_the_post_thumbnail_url( $post_id, 'full' );
+			if ( $image ) { $data['image'] = $image; }
+			return $data;
+		}
 		$record = PublicCatalog::vehicle_for_post( $post_id );
 		$url = CatalogPresentation::localized_url( (string) get_permalink( $post_id ) );
 		$data = array(
@@ -59,7 +73,8 @@ final class PublicStructuredData {
 			'name' => get_the_title( $post_id ),
 			'url' => $url,
 		);
-		$price = $record ? ( (int) ( $record['retail_price'] ?? 0 ) / 100 ) : self::positive_price( get_post_meta( $post_id, '_car_price', true ) );
+		$view = PublicVehicleView::for_post($post_id);
+		$price = (float)($view['price'] ?? 0);
 		if ( $price > 0 ) {
 			$data['offers'] = self::offer_value( $price, $record['currency'] ?? 'SAR', $url );
 		}
@@ -118,6 +133,7 @@ final class PublicStructuredData {
 		if ( ! PublicCatalog::is_post_publicly_eligible( $post_id ) ) {
 			return false;
 		}
+		if ( \AutoDealership\Inventory\GroupedModelCatalog::is_mapped( $post_id ) ) { return true; }
 		$record = PublicCatalog::vehicle_for_post( $post_id );
 		return $record || in_array( get_post_meta( $post_id, '_car_inventory_status', true ), array( '', 'available' ), true );
 	}

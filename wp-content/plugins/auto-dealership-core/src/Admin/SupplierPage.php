@@ -23,7 +23,7 @@ final class SupplierPage {
 		$rows = SupplierService::all();
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><h1><?php esc_html_e( 'Supplier directory', 'auto-dealership-core' ); ?></h1>
-		<p><?php esc_html_e( 'This directory prepares verified supplier references. Purchase-order states and approval limits remain disabled until the business policy is approved.', 'auto-dealership-core' ); ?></p>
+		<p><?php esc_html_e( 'Supplier records and purchase orders are available; submitting an order requires an approved purchase policy and limits.', 'auto-dealership-core' ); ?></p>
 		<?php if ( isset( $_GET['saved'] ) ) : ?><div class="notice notice-success"><p><?php esc_html_e( 'Supplier change saved and audited.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>
 		<?php if ( isset( $_GET['error'] ) ) : ?><div class="notice notice-error"><p><?php esc_html_e( 'Supplier change could not be saved.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>
 		<?php if ( current_user_can( 'adc_manage_suppliers' ) ) : ?>

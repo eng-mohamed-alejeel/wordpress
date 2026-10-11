@@ -1354,7 +1354,7 @@ VIN الجديد	New VIN
 المشتريات	Purchasing
 اقتناء المركبات وتكاليفها	Vehicle acquisition and costs
 اعتماد الخصومات والمبيعات	Discount and sale approvals
-المالية	Finance
+المالية	Financial operations
 محتوى الموقع	Website content
 العروض الترويجية	Promotional offers
 ماركات السيارات المنشورة	Published vehicle brands
@@ -1453,7 +1453,7 @@ VIN الجديد	New VIN
 اعتماد التسليم	Approve delivery
 معالجة المرتجعات	Process returns
 إدارة التسعير	Manage pricing
-المالية	Finance
+المالية	Financial operations
 عرض المالية	View finance
 إدارة المالية	Manage finance
 تسجيل المدفوعات	Record payments
@@ -1611,3 +1611,97 @@ VIN الجديد	New VIN
 ممنوعة بتخصيص فردي لصلاحيات المستخدم.	Denied by an individual permission override.
 غير ممنوحة من الأدوار أو الصلاحيات الفردية.	Not granted by roles or individual permissions.
 ممنوعة بواسطة ووردبريس أو سياسة وصول مفعّلة.	Blocked by WordPress or an active access policy.
+
+إنشاء عروض أسعار	Create quotations
+طلب خصم على عرض السعر	Request quotation discounts
+بدء البيع من العرض والحجز	Start sales from quotations and reservations
+دورة المبيعات	Sales journey
+ملف العميل	Customer workspace
+المتابعات والتنبيهات	Follow-ups and alerts
+المتابعة (UTC)	Follow-up (UTC)
+تعذر تحميل القائمة. أعد المحاولة.	Unable to load this list. Please retry.
+تغيّر السعر. أعد معاينة العرض قبل الحفظ.	Pricing changed. Preview the quotation again before saving.
+معرّف المستخدم	User ID
+الحدث	Event
+نوع السجل	Record type
+معرّف السجل	Record ID
+من (UTC)	From (UTC)
+إلى (UTC)	To (UTC)
+
+صلاحية العرض	Validity
+ساري	Valid
+الكل	All
+أوامر الشراء	Purchase orders
+عرض أوامر الشراء	View purchase orders
+إنشاء أوامر الشراء	Create purchase orders
+اعتماد أوامر الشراء	Approve purchase orders
+اعتماد أوامر الشراء ذات القيمة العالية	Approve high-value purchase orders
+استلام أوامر الشراء	Receive purchase orders
+إلغاء أوامر الشراء	Cancel purchase orders
+أدلة الإطلاق	Release evidence
+مخزون أونكس	Onyx inventory
+تعذر التحقق من هوية المخزون. أعد المحاولة قبل إنشاء السيارة.	Inventory identity lookup is unavailable. Retry before creating the vehicle.
+أكد سجل مخزون أونكس النشط المطابق وسنة الموديل قبل إنشاء هذه السيارة.	Confirm the matching active Onyx stock record and model year before creating this vehicle.
+تم ربط سجل أونكس بالفعل. حدّث شاشة المخزون.	The Onyx record was already linked. Refresh the inventory.
+يجب أن يطابق رقم الهيكل المصحح رمز أونكس المرتبط.	The corrected VIN must still match the linked Onyx identifier.
+انشر طرازًا مجمعًا متاحًا قبل تفعيل كتالوجه.	Publish an available grouped model before enabling its catalog.
+مستند عرض السعر المؤرشف	Archived quotation document
+سجل الموردين وأوامر الشراء متاحان؛ يتطلب تقديم الطلب اعتماد سياسة الشراء وحدودها أولًا.	Supplier records and purchase orders are available; submitting an order requires an approved purchase policy and limits.
+
+
+نسبة الضريبة (%)	VAT rate (%)
+أدخل النسبة مباشرة، مثل 15 لضريبة 15%. تضاف تلقائيًا إلى أسعار السيارات المنشورة.	Enter the percentage directly, such as 15 for 15% VAT. It is added automatically to published vehicle prices.
+أدخل نسبة ضريبة بين 0 و100، وبحد أقصى منزلتين عشريتين.	Enter a VAT percentage between 0 and 100, with at most two decimal places.
+أعد تحميل نموذج الإعدادات قبل إدخال نسبة الضريبة.	Reload the settings form before entering the VAT percentage.
+شامل ضريبة القيمة المضافة (%s%%)	Includes VAT (%s%%)
+شامل رسوم اللوحات: %s	Includes plate fees: %s
+رسوم اللوحات المضافة إلى السعر المنشور	Plate fees added to the published price
+لوحات نقل خصوصي — 900 ريال	Private transport plates — SAR 900
+لوحات نقل تجاري — 1,200 ريال	Commercial transport plates — SAR 1,200
+اختر نوعًا واحدًا فقط. تضاف رسوم اللوحات بعد ضريبة السيارة؛ اترك الخيارين دون تحديد لاستبعادها.	Select one type only. Plate fees are added after vehicle VAT; leave both unchecked to exclude them.
+اختر نوع لوحات واحدًا صالحًا فقط.	Select only one valid plate type.
+
+لا تملك صلاحية تعديل صفحة السيارة.	You cannot edit this vehicle page.
+حقول نشر السيارة غير صالحة.	Invalid vehicle publishing fields.
+لا تملك صلاحية نشر صفحات السيارات.	You cannot publish vehicle pages.
+اختر صورًا صالحة للسيارة من مكتبة الوسائط.	Select valid vehicle images from the media library.
+أضف صورة رئيسية ووصف السيارة قبل النشر.	Add a main image and vehicle description before publishing.
+لا تملك صلاحية تصنيف السيارات.	You cannot assign vehicle classifications.
+تخزين بيانات النشر غير متاح.	Publishing storage is unavailable.
+تغيرت هذه الصفحة. أعد تحميلها قبل الحفظ.	This page changed. Reload it before saving.
+اختر طراز أونكس الذي لم تنشأ له صفحة سيارة بعد.	Select an Onyx model that does not already have a vehicle page.
+لا يوجد مخزون متاح من أونكس لهذا الطراز.	No available Onyx stock exists for this model.
+تعذر حفظ التغيير؛ أعد تحميل الصفحة وحاول مجددًا.	The change could not be saved; reload and try again.
+لا تملك صلاحية تغيير صفحة السيارة.	You cannot change this vehicle page.
+لا تملك صلاحية إدارة تصنيفات السيارات.	You cannot manage vehicle classifications.
+حقول التصنيف غير صالحة.	Invalid classification fields.
+تغير هذا التصنيف. أعد تحميله قبل الحفظ.	This classification changed. Reload it before saving.
+
+يوجد أكثر من سجل مورد يطابق اسم أونكس هذا. عالج سجلات الموردين المكررة قبل الاستيراد.	More than one existing supplier matches this Onyx name. Resolve the duplicate supplier records before importing.
+
+إدارة السيارات	Vehicle management
+مخزون أونكس واستكمال بيانات السيارات وحالاتها حسب الفرع.	Onyx inventory, vehicle completion and operational states by branch.
+السلة معطلة. فعّل الاحتفاظ بالمحذوفات قبل نقل صفحة السيارة للسلة.	Trash is disabled. Enable trash retention before moving this vehicle page.
+
+لا يمكنك تعديل هذا العرض.	You cannot edit this offer.
+حقول العرض غير صالحة.	Invalid offer fields.
+أدخل الأسعار بالريال الصحيح ومعرّفات سجلات صالحة.	Enter whole SAR amounts and valid record identifiers.
+اسم العرض أو حالته أو السيارة المرتبطة غير صالح.	Offer title, status or vehicle is invalid.
+لا تملك صلاحية نشر العروض.	You cannot publish offers.
+أدخل تاريخ انتهاء صالحًا.	Enter a valid expiry date.
+يجب أن يكون السعر السابق أعلى من سعر العرض.	The previous price must exceed the offer price.
+اختر صورة متاحة لحسابك.	Select an accessible image.
+تعذر الوصول إلى تخزين العروض.	Offer storage is unavailable.
+تغير العرض. أعد تحميل الصفحة قبل الحفظ.	This offer changed. Reload before saving.
+استعد العرض من السلة قبل تعديله.	Restore this offer before editing.
+حالة العرض غير صالحة.	Invalid offer status.
+يلزم للنشر سيارة منشورة ومتوفرة وسعر موجب وعرض غير منتهٍ.	Publishing requires an available published vehicle, a positive price and an unexpired offer.
+تعذر حفظ بيانات العرض.	Unable to save offer details.
+تعذر تسجيل العرض في سجل التدقيق.	Unable to audit the offer.
+لا يمكنك تغيير حالة هذا العرض.	You cannot change this offer.
+السلة معطلة.	Trash is disabled.
+تعذر تغيير حالة العرض.	Unable to change the offer.
+
+طلب العرض غير صالح.	Invalid offer request.
+طلب العرض لا يطابق الحفظ الأصلي.	Offer request does not match the original submission.
+لم يعد طلب العرض الأصلي متاحًا.	Offer request is no longer available.

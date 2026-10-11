@@ -33,6 +33,8 @@ final class SupplierService {
 		$data = self::validate( $input );
 		if ( is_wp_error( $data ) ) { return $data; }
 		if ( ! Transaction::begin() ) { return self::error( 'adc_transaction_failed', 500 ); }
+		$identity=SupplierNameDirectory::claim($data['display_name']);
+		if(is_wp_error($identity)||$identity['id']){$wpdb->query('ROLLBACK');return self::error('adc_supplier_conflict',409);}
 		$now = current_time( 'mysql', true );
 		$data['active'] = 1;
 		$data['created_by'] = get_current_user_id();
@@ -40,7 +42,7 @@ final class SupplierService {
 		$data['updated_at'] = $now;
 		$inserted = $wpdb->insert( Schema::table( 'suppliers' ), $data );
 		$id = (int) $wpdb->insert_id;
-		if ( 1 !== $inserted || ! Transaction::commit( static fn() => AuditLog::record( 'supplier.created', 'supplier', $id, '', null, array( 'supplier_code'=>$data['supplier_code'], 'display_name'=>$data['display_name'], 'country'=>$data['country'], 'active'=>true ) ) ) ) {
+		if ( 1 !== $inserted || ! SupplierNameDirectory::attach($identity['key'],$id) || ! Transaction::commit( static fn() => AuditLog::record( 'supplier.created', 'supplier', $id, '', null, array( 'supplier_code'=>$data['supplier_code'], 'display_name'=>$data['display_name'], 'country'=>$data['country'], 'active'=>true ) ) ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return self::error( false === $inserted ? 'adc_supplier_conflict' : 'adc_supplier_failed', false === $inserted ? 409 : 500 );
 		}

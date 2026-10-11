@@ -1,0 +1,9 @@
+{
+  "verified": true,
+  "artifact_sha256": "4663043baf9c2953d03aceb343377d60fec463fd4508fa769688549c3f87d5dc",
+  "tables": 45,
+  "rows": 930,
+  "isolated_port": 3311,
+  "offsite_verified": false,
+  "scope": "Pre-upgrade local database restored on a disposable server on the same host; per-table row counts matched; restore database removed."
+}

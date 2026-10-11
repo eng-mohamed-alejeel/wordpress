@@ -1,0 +1,185 @@
+{
+    "generated_at_utc": "2026-10-09T22:38:59+00:00",
+    "wordpress_version": "7.1.3",
+    "database_server": "10.11.19-MariaDB",
+    "checks": [
+        {
+            "id": "release_pair",
+            "status": "pass",
+            "summary": "Expected plugin and theme must be active, readable and on the same release version.",
+            "metrics": {
+                "plugin_version": "1.31.0",
+                "theme_version": "1.31.0"
+            }
+        },
+        {
+            "id": "schema_marker",
+            "status": "pass",
+            "summary": "Installed schema marker must match the release contract.",
+            "metrics": {
+                "expected": "1.19.0",
+                "installed": "1.19.0"
+            }
+        },
+        {
+            "id": "schema_verification",
+            "status": "pass",
+            "summary": "All declared tables, columns, indexes and InnoDB engines must match the plugin contract.",
+            "metrics": {
+                "issue_count": 0,
+                "issues": []
+            }
+        },
+        {
+            "id": "public_origin",
+            "status": "fail",
+            "summary": "Public home and WordPress URLs must use the intended HTTPS origin.",
+            "metrics": {
+                "home_origin": "http://localhost",
+                "site_origin": "http://localhost"
+            }
+        },
+        {
+            "id": "legal_pages",
+            "status": "pass",
+            "summary": "Privacy and terms pages must be published with substantive, non-placeholder text.",
+            "metrics": {
+                "privacy_published": true,
+                "terms_published": true,
+                "privacy_text_complete": true,
+                "terms_text_complete": true
+            }
+        },
+        {
+            "id": "legal_approval",
+            "status": "manual",
+            "summary": "Record the business/legal approval and effective date of both published texts.",
+            "metrics": []
+        },
+        {
+            "id": "editorial_placeholders",
+            "status": "pass",
+            "summary": "Published pages must not link to local or example-only destinations.",
+            "metrics": {
+                "affected_page_count": 0
+            }
+        },
+        {
+            "id": "development_data",
+            "status": "pass",
+            "summary": "Development fixtures must be retired or explicitly excluded from the public release.",
+            "metrics": {
+                "demo_marker_present": false,
+                "demo_vehicles": 0,
+                "demo_sales": 0,
+                "demo_customers": 0,
+                "demo_suppliers": 0,
+                "demo_posts": 0,
+                "demo_staff": 0
+            }
+        },
+        {
+            "id": "business_data_approval",
+            "status": "manual",
+            "summary": "Record approved branches, inventory, offers, prices, vehicle-image matching/rights and alt text, contacts, consent, retention, roles and first-release policy decisions; no synthetic record counts as approval.",
+            "metrics": []
+        },
+        {
+            "id": "catalog_reconciliation",
+            "status": "fail",
+            "summary": "Published vehicle mappings and eligible public rows must reconcile.",
+            "metrics": {
+                "vehicles": 0,
+                "mapped": 0,
+                "unmapped_published_posts": 1,
+                "duplicate_mappings": 0,
+                "invalid_mappings": 0,
+                "eligible_rows": 0
+            }
+        },
+        {
+            "id": "catalog_cutover",
+            "status": "fail",
+            "summary": "The reviewed real inventory must be the active public catalog authority.",
+            "metrics": {
+                "mode": "compatibility"
+            }
+        },
+        {
+            "id": "provider_safety",
+            "status": "pass",
+            "summary": "Provider routes must remain disabled until their contracts and staging evidence are approved.",
+            "metrics": {
+                "enabled_event_count": 0
+            }
+        },
+        {
+            "id": "provider_acceptance",
+            "status": "manual",
+            "summary": "Decide which providers belong to this release; attach approved contracts and staging reconciliation before enabling any route.",
+            "metrics": []
+        },
+        {
+            "id": "media_references",
+            "status": "pass",
+            "summary": "Referenced local media must exist under uploads.",
+            "metrics": {
+                "referenced": 3,
+                "present": 3,
+                "missing": 0,
+                "unsafe": 0
+            }
+        },
+        {
+            "id": "config_version_control",
+            "status": "pass",
+            "summary": "The release commit and index must exclude the live configuration and secrets.",
+            "metrics": {
+                "index_tracked": false,
+                "head_tracked": false
+            }
+        },
+        {
+            "id": "historical_secret_review",
+            "status": "manual",
+            "summary": "Review and rotate any live credentials or salts previously committed to repository history.",
+            "metrics": []
+        },
+        {
+            "id": "external_scheduler",
+            "status": "manual",
+            "summary": "Verify a real scheduler, mail delivery, queue health and alert routing on staging.",
+            "metrics": []
+        },
+        {
+            "id": "security_review",
+            "status": "manual",
+            "summary": "Attach proxy/WAF, security-header, dependency, upload, access-control and manual security review evidence.",
+            "metrics": []
+        },
+        {
+            "id": "accessibility_performance",
+            "status": "manual",
+            "summary": "Attach human Arabic/English accessibility review and production-like browser/load/cache measurements.",
+            "metrics": []
+        },
+        {
+            "id": "recovery_offsite",
+            "status": "manual",
+            "summary": "Attach encrypted off-site backup, separate-host restore and recovery-time/data-loss evidence.",
+            "metrics": []
+        },
+        {
+            "id": "deployment_approval",
+            "status": "manual",
+            "summary": "Record release artifact, maintenance window, rollback trigger, operators and technical/business sign-off.",
+            "metrics": []
+        }
+    ],
+    "totals": {
+        "pass": 9,
+        "fail": 3,
+        "manual": 9
+    },
+    "release_ready": false
+}

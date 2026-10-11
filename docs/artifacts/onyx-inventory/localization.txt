@@ -1,0 +1,23 @@
+PASS Customer review page and menu titles use Arabic admin locale
+PASS English source labels translate in Arabic admin
+PASS Stored workflow keys have Arabic display labels
+PASS Literal option keys have Arabic display labels
+PASS Transfer status has Arabic display copy
+PASS Customer review page and menu titles use English admin locale
+PASS Admin follows user locale independently of public query language
+PASS Workflow labels have readable English copy
+PASS English options do not expose lowercase internal keys
+PASS Financial status has readable English display copy
+PASS Theme settings follow English admin locale
+PASS Other translation domains are untouched
+PASS Public Arabic default is independent of administrator locale
+PASS Known vehicle brands localize for Arabic display
+PASS Internal specification keys localize in Arabic
+PASS Arabic specification values localize in English
+PASS Known Arabic brands localize in English
+PASS Dynamic Arabic specification labels translate
+PASS Public calculator messages localize
+PASS Unknown customer or editorial content is preserved
+PASS AJAX response follows request language rather than admin locale
+PASS Non-scalar language input falls back safely
+Localization regression passed.

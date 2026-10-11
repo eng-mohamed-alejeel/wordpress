@@ -1,6 +1,12 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 return array(
+	'adc_view_purchase_orders' => array( 'Inventory and purchasing', 'View purchase orders' ),
+	'adc_create_purchase_orders' => array( 'Inventory and purchasing', 'Create purchase orders' ),
+	'adc_approve_purchase_orders' => array( 'Inventory and purchasing', 'Approve purchase orders' ),
+	'adc_approve_high_purchase_orders' => array( 'Inventory and purchasing', 'Approve high-value purchase orders' ),
+	'adc_receive_purchase_orders' => array( 'Inventory and purchasing', 'Receive purchase orders' ),
+	'adc_cancel_purchase_orders' => array( 'Inventory and purchasing', 'Cancel purchase orders' ),
 	'adc_view_workspace' => array( 'Workspace', 'Access workspace' ),
 	'adc_view_own_leads' => array( 'Leads and sales', 'View own leads' ),
 	'adc_manage_own_leads' => array( 'Leads and sales', 'Manage own leads' ),
@@ -16,6 +22,9 @@ return array(
 	'adc_view_vehicle_costs' => array( 'Inventory and purchasing', 'View vehicle costs' ),
 	'adc_manage_vehicle_costs' => array( 'Inventory and purchasing', 'Manage vehicle costs' ),
 	'adc_create_reservations' => array( 'Leads and sales', 'Create reservations' ),
+	'adc_create_quotes' => array( 'Leads and sales', 'Create quotations' ),
+	'adc_request_discounts' => array( 'Leads and sales', 'Request quotation discounts' ),
+	'adc_start_sales' => array( 'Leads and sales', 'Start sales from quotations and reservations' ),
 	'adc_manage_reservations' => array( 'Leads and sales', 'Manage reservations' ),
 	'adc_review_discounts' => array( 'Leads and sales', 'Review discounts' ),
 	'adc_approve_high_discounts' => array( 'Leads and sales', 'Approve high discounts' ),

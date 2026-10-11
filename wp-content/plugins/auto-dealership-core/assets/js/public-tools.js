@@ -25,6 +25,11 @@
                 item.classList.toggle('is-active', !!result.data.active);
                 item.textContent = result.data.active ? (item.dataset.removeLabel || window.adcPublicTools.removeLabel) : (item.dataset.addLabel || window.adcPublicTools.addLabel);
             });
+            document.querySelectorAll('[data-comparison-bar]').forEach(function (bar) {
+                bar.hidden = !result.data.count;
+                bar.querySelector('[data-comparison-count]').textContent = result.data.count;
+            });
+            if (document.querySelector('[data-comparison-page]')) window.location.reload();
         }).catch(function (error) {
             button.textContent = error.message || window.adcPublicTools.comparisonError;
         }).finally(function () { button.disabled = false; });

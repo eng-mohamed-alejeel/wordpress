@@ -5,6 +5,49 @@ defined( 'ABSPATH' ) || exit;
 
 /** Registers scoped dealership roles and capabilities. */
 final class Capabilities {
+	private const PURCHASE_CAPABILITIES = array( 'adc_view_purchase_orders', 'adc_create_purchase_orders', 'adc_approve_purchase_orders', 'adc_approve_high_purchase_orders', 'adc_receive_purchase_orders', 'adc_cancel_purchase_orders' );
+	private const PURCHASE_ROLES = array(
+		'dealership_purchasing'=>array( 'adc_view_purchase_orders', 'adc_create_purchase_orders', 'adc_receive_purchase_orders', 'adc_cancel_purchase_orders' ),
+		'dealership_sales_manager'=>array( 'adc_view_purchase_orders', 'adc_approve_purchase_orders' ),
+		'dealership_general_manager'=>array( 'adc_view_purchase_orders', 'adc_approve_purchase_orders', 'adc_approve_high_purchase_orders', 'adc_cancel_purchase_orders' ),
+		'dealership_finance'=>array( 'adc_view_purchase_orders' ),
+	);
+	public static function migrate_purchase_permissions(): void {
+		if ( '1' === get_option( 'adc_purchase_permissions_version' ) ) { return; }
+		// Existing administrator-managed role definitions remain authoritative.
+		$definitions = get_option( 'adc_role_definitions', array() );
+		foreach ( self::PURCHASE_ROLES as $slug=>$caps ) {
+			$role = get_role( $slug ); if ( ! $role || isset( $definitions[$slug] ) ) { continue; }
+			foreach ( $caps as $cap ) { if ( ! array_key_exists( $cap, $role->capabilities ) ) { $role->add_cap( $cap ); } }
+		}
+		update_option( 'adc_purchase_permissions_version', '1', false );
+	}
+	private const SALES_CAPABILITIES = array( 'adc_create_quotes', 'adc_request_discounts', 'adc_start_sales' );
+
+	/** One-time additive split preserves legacy grants, including custom roles and direct grants. */
+	public static function migrate_sales_permissions(): void {
+		if ( get_option( 'adc_sales_permissions_version' ) === '1' ) { return; }
+		$definitions = get_option( 'adc_role_definitions', array() );
+		foreach ( wp_roles()->roles as $slug => $definition ) {
+			if ( empty( $definition['capabilities']['adc_create_reservations'] ) && empty( $definition['capabilities']['adc_manage_branch_leads'] ) && empty( $definition['capabilities']['manage_options'] ) ) { continue; }
+			$role = get_role( $slug );
+			foreach ( self::SALES_CAPABILITIES as $cap ) {
+				if ( array_key_exists( $cap, $definition['capabilities'] ) && ! $definition['capabilities'][$cap] ) { continue; }
+				if ( ! array_key_exists( $cap, $definition['capabilities'] ) ) { $role->add_cap( $cap ); }
+				if ( isset( $definitions[$slug]['caps'] ) && ! in_array( $cap, $definitions[$slug]['caps'], true ) ) { $definitions[$slug]['caps'][] = $cap; }
+			}
+		}
+		global $wpdb;
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key=%s AND (meta_value LIKE %s OR meta_value LIKE %s)", $wpdb->get_blog_prefix() . 'capabilities', '%adc_create_reservations%', '%adc_manage_branch_leads%' ) );
+		if ( $wpdb->last_error ) { return; }
+		foreach ( $ids as $id ) {
+			$user = new \WP_User( (int) $id );
+			if ( empty( $user->caps['adc_create_reservations'] ) && empty( $user->caps['adc_manage_branch_leads'] ) ) { continue; }
+			foreach ( self::SALES_CAPABILITIES as $cap ) { if ( ! array_key_exists( $cap, $user->caps ) ) { $user->add_cap( $cap ); } }
+		}
+		update_option( 'adc_role_definitions', $definitions, false );
+		update_option( 'adc_sales_permissions_version', '1', false );
+	}
 	private const CONTENT_CAPABILITIES = array(
 		'edit_car', 'read_car', 'delete_car', 'edit_cars', 'edit_others_cars', 'publish_cars',
 		'read_private_cars', 'delete_cars', 'delete_private_cars', 'delete_published_cars',
@@ -31,7 +74,7 @@ final class Capabilities {
 
 	public static function activate(): void {
 		$definitions = get_option( 'adc_role_definitions', array() );
-		foreach ( self::ROLE_CAPABILITIES as $slug => $capabilities ) {
+		foreach ( self::role_matrix() as $slug => $capabilities ) {
 			if ( isset( $definitions[$slug]['caps'] ) ) { $capabilities = array_merge( array( 'read' ), $definitions[$slug]['caps'] ); }
 			$role = get_role( $slug );
 			if ( ! $role ) {
@@ -39,7 +82,7 @@ final class Capabilities {
 			}
 			if ( $role ) {
 				foreach ( $capabilities as $capability ) {
-					$role->add_cap( $capability );
+					if ( ! array_key_exists( $capability, $role->capabilities ) || $role->capabilities[$capability] ) { $role->add_cap( $capability ); }
 				}
 			}
 		}
@@ -99,11 +142,15 @@ final class Capabilities {
 
 	/** Factory defaults; registered roles may have administrator-managed overrides. */
 	public static function role_matrix(): array {
-		return self::ROLE_CAPABILITIES;
+		$matrix = self::ROLE_CAPABILITIES;
+		foreach ( $matrix as &$caps ) { if ( in_array( 'adc_create_reservations', $caps, true ) || in_array( 'adc_manage_branch_leads', $caps, true ) ) { $caps = array_merge( $caps, self::SALES_CAPABILITIES ); } }
+		unset( $caps );
+		foreach ( self::PURCHASE_ROLES as $role=>$caps ) { $matrix[$role] = array_merge( $matrix[$role], $caps ); }
+		return $matrix;
 	}
 
 	public static function all_capabilities(): array {
-		$caps = self::CONTENT_CAPABILITIES;
+		$caps = array_merge( self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES );
 		foreach ( self::ROLE_CAPABILITIES as $role_caps ) {
 			$caps = array_merge( $caps, $role_caps );
 		}

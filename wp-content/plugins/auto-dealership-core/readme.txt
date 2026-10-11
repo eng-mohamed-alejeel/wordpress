@@ -1,11 +1,15 @@
 === Auto Dealership Core ===
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 1.29.13
+Stable tag: 1.37.0
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The Car Dealer theme is a presentation adapter for this plugin.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
+
+Version 1.37.0 adds dedicated vehicle/brand/category publishing screens, gross public VAT and plate fees, automatic Onyx brand/model/trim/year names, and audited supplier directory reconciliation with normalized name uniqueness. Schema 1.20.0 links source supplier names to supplier records. Existing public URLs, original net prices, editorial content and publication status are preserved. See docs/ONYX-INVENTORY-2026-10-10-AR.md and docs/CATALOG-PUBLISHING-2026-10-10-AR.md.
+
+Version 1.30.0 adds the staff sales journey, scoped customer and follow-up workspaces, quotation search and paging, independent sales permissions, purchase drafts/approval/receipt under an explicitly approved cost policy, numbered quotation archives and independently reviewed release evidence. Schema 1.18.0 adds purchase orders, document archive references and release evidence. No approved business data or external provider is generated or enabled. Production acceptance remains dependent on real deployment, inventory, business policies and operational evidence.
 
 Version 1.29.13 gives the theme read-only vehicle, offer preview, home-page selection, catalog filter and account workspace models. The theme no longer loads legacy business handlers or registers dealership shortcodes. Former dormant theme sources and admin assets are preserved outside the deployable theme in docs/archive/car-dealer. Public contact information appears only when configured. The source update creates no business data or sample content; runtime and theme-switch acceptance are pending.
 

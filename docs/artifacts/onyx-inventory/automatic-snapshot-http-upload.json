@@ -1,0 +1,7 @@
+{
+  "http_status": 200,
+  "batch": 6,
+  "automatic_completion": true,
+  "manual_approval": false,
+  "mode_selection": false
+}

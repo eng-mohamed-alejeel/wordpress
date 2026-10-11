@@ -19,7 +19,7 @@
 	}
 	$offer_cards = trim( ob_get_clean() );
 	if ( '' !== $offer_cards ) : ?>
-		<div class="offer-grid"><?php echo $offer_cards; ?></div>
+		<?php car_dealer_offer_rail( $offer_cards ); ?>
 	<?php else : ?>
 		<div class="empty-state"><?php esc_html_e( 'لا توجد عروض منشورة حالياً.', 'car-dealer' ); ?></div>
 	<?php endif; ?>

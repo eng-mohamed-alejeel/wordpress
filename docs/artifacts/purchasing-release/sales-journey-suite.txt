@@ -1,0 +1,60 @@
+PASS Create isolated journey branches
+PASS Create isolated journey inventory
+PASS Factory sales role receives independent operation capabilities
+PASS Save quotation with signed pricing preview
+PASS Repeated save returns the same quotation
+PASS Request key cannot be reused with different validity
+PASS Pricing changes require another preview before saving
+PASS Concurrent same-key submissions persist one quotation
+PASS Quotation paging reaches records after the first fifty
+PASS Quotation search and count share the scoped predicate
+PASS Expired quotation filter excludes current valid quotes
+PASS Quotation status filter applies to both list and count
+PASS Actual quote screen provides discount and reservation forms
+PASS Salesperson submits discount request
+PASS Salesperson cannot approve own discount
+PASS Separate manager rejects discount with reason
+PASS Actual quote screen shows recorded decision reason
+PASS Create matching commercial reservation
+PASS Eligible matching reservation enables start sale form
+PASS Start sale through existing transactional service
+PASS Repeated sale submission cannot create another sale
+PASS Customer workspace renders authorized linked records
+PASS Sales follow-up queue includes own overdue lead
+PASS Commercial reservation queue renders converted status
+PASS Reservation details link to matching authorized quotations
+PASS Actual quote list supports search
+PASS Revoking discount capability denies service despite reservation grant
+PASS Revoking start sale capability denies service despite reservation grant
+PASS Revoking quote capability denies service despite reservation grant
+PASS Other branch cannot read quote details
+PASS Other branch customer list excludes customer
+PASS Other branch backlog excludes lead
+PASS Finance customer workspace loads payment query without SQL errors
+PASS Finance reservation detail loads receipt and refund histories
+PASS Finance customer directory excludes prospects without quotations
+PASS Audit filters isolate matching decision
+PASS All staff workflow renderers finish without SQL errors
+PASS Permission migration preserves custom legacy role access
+PASS Permission migration preserves explicit user denial
+PASS Permission migration is repeatable
+PASS English public policy uses operational duration and refund target
+PASS Arabic public policy follows changed settings without another content edit
+PASS Authenticated English staff screen renders creation form
+PASS Quotation preview rejects invalid action nonce
+PASS Finance role cannot preview a new sales quotation
+PASS Another branch cannot preview customer and vehicle
+PASS Actual preview shows exact SAR tax and total before save
+PASS Actual save form creates quote and redirects to its details
+PASS Repeated HTTP save redirects to the same quote
+PASS Actual quote detail exposes the next reservation action
+PASS Actual reservation form creates commercial reservation
+PASS Repeated reservation form preserves one reservation
+PASS Actual start sale form creates pending approval sale
+PASS Repeated HTTP start sale creates no duplicate
+PASS Actual customer workspace loads linked records
+PASS Direct customer URL rejects foreign branch
+PASS Actual money form rejects amounts beyond two decimal places
+PASS Actual Arabic staff screen renders localized creation form
+Completed 58 sales journey checks.
+Disposable test database removed. Source database was not contacted.

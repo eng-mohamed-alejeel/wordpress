@@ -36,6 +36,7 @@ define( 'WP_ENVIRONMENT_TYPE', 'local' );
 define( 'WP_HTTP_BLOCK_EXTERNAL', true );
 define( 'DISABLE_WP_CRON', true );
 define( 'WP_DEBUG', false );
+if ( str_starts_with( (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ), '/wp-admin/' ) ) { define( 'WP_ADMIN', true ); }
 define( 'WP_CONTENT_DIR', __DIR__ . '/isolated-content' );
 define( 'WP_CONTENT_URL', $theme_test ? 'http://127.0.0.1:' . (int) $_SERVER['SERVER_PORT'] . '/wp-content' : 'http://adc-verification.invalid/content' );
 define( 'WP_PLUGIN_DIR', dirname( __DIR__, 2 ) );
@@ -142,6 +143,14 @@ if ( '/wp-admin/admin-post.php' === $request_path ) {
 	do_action( ( is_user_logged_in() ? 'admin_post_' : 'admin_post_nopriv_' ) . $action );
 	http_response_code( 400 );
 	exit;
+}
+if ( '/wp-admin/admin.php' === $request_path ) {
+	if ( ! is_user_logged_in() ) { http_response_code( 401 ); exit; }
+	require_once ABSPATH . 'wp-admin/includes/admin.php';
+	$renderers = array( 'adc-sales-journey'=>\AutoDealership\Admin\SalesJourneyPage::class, 'adc-customer-workspace'=>\AutoDealership\Admin\CustomerWorkspacePage::class, 'adc-follow-ups'=>\AutoDealership\Admin\FollowUpPage::class, 'adc-purchase-orders'=>\AutoDealership\Admin\PurchaseOrderPage::class, 'adc-release-evidence'=>\AutoDealership\Admin\ReleaseEvidencePage::class );
+	$page = sanitize_key( $_GET['page'] ?? '' );
+	if ( ! isset( $renderers[$page] ) ) { http_response_code( 404 ); exit; }
+	$renderers[$page]::render(); exit;
 }
 if ( '/wp-admin/admin-ajax.php' === $request_path ) {
 	$action = sanitize_key( $_REQUEST['action'] ?? '' );

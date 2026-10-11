@@ -20,6 +20,10 @@ final class PublicVehicleView {
 			return null;
 		}
 
+		if ( $preview || \AutoDealership\Inventory\GroupedModelCatalog::enabled() || \AutoDealership\Inventory\GroupedModelCatalog::is_mapped( $post_id ) ) {
+			$grouped = get_option( 'adc_db_version' ) === \AutoDealership\Database\Schema::VERSION ? \AutoDealership\Inventory\GroupedModelCatalog::view( $post_id ) : null;
+			if ( $grouped || \AutoDealership\Inventory\GroupedModelCatalog::enabled() || \AutoDealership\Inventory\GroupedModelCatalog::is_mapped( $post_id ) ) { return $grouped; }
+		}
 		$vehicle = PublicCatalog::vehicle_for_post( $post_id );
 		$legacy = static function ( string $key ) use ( $post_id ) {
 			$value = get_post_meta( $post_id, $key, true );
@@ -40,10 +44,14 @@ final class PublicVehicleView {
 			$features = is_array( $raw_features ) ? $raw_features : explode( "\n", (string) $raw_features );
 		}
 		$features = array_values( array_unique( array_filter( array_map( 'trim', array_map( 'strval', array_filter( $features, 'is_scalar' ) ) ) ) ) );
+		$net = $vehicle ? (int)$vehicle['retail_price'] : (\AutoDealership\Pricing\Money::from_sar((string)$legacy('_car_price')) ?? 0);
+		$amounts = \AutoDealership\Pricing\PublicVehiclePrice::calculate($net, $post_id);
 		return array(
+			'price_breakdown' => \AutoDealership\Pricing\PublicVehiclePrice::public_breakdown($amounts),
+			'price_label' => \AutoDealership\Pricing\PublicVehiclePrice::label($post_id),
 			'post_id'      => $post_id,
 			'vehicle'      => $vehicle,
-			'price'        => $vehicle ? ( (int) $vehicle['retail_price'] / 100 ) : $legacy( '_car_price' ),
+			'price'        => $net > 0 ? \AutoDealership\Pricing\Money::decimal($amounts['final_amount']) : '',
 			'monthly'      => $legacy( '_car_monthly_payment' ),
 			'year'         => $vehicle ? $vehicle['model_year'] : $legacy( '_car_year' ),
 			'model'        => $vehicle ? $vehicle['model'] : $legacy( '_car_model' ),
