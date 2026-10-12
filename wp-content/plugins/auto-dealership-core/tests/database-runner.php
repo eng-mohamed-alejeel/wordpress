@@ -100,6 +100,8 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( 0 );
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
+	require __DIR__.'/onyx-document-fixture.php';
+	if('1'===getenv('ADC_LAUNCH_ONLY')){require __DIR__.'/launch-readiness-scenarios.php';exit;}
 	if ( '1' === getenv( 'ADC_DASHBOARD_ONLY' ) ) { require __DIR__ . '/dashboard-queue-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_SALES_JOURNEY_ONLY' ) ) { require __DIR__ . '/sales-journey-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_PURCHASING_ONLY' ) ) { require __DIR__ . '/purchasing-scenarios.php'; exit; }
@@ -116,6 +118,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	require __DIR__ . '/onyx-names-suppliers-scenarios.php';
 	require __DIR__ . '/onyx-snapshot-scenarios.php'; require __DIR__ . '/inventory-workspace-scenarios.php'; require __DIR__ . '/offer-publishing-scenarios.php';
 	require __DIR__ . '/profit-margin-scenarios.php';
+	require __DIR__ . '/launch-readiness-scenarios.php';
 	exit;
 }
 

@@ -46,7 +46,7 @@ final class SchemaInspector {
 					}
 					continue;
 				}
-				if ( ! preg_match( '/\A([a-z_]+)\s+((?:bigint|smallint|tinyint|int|varchar|char|datetime|date|longtext|text)(?:\(\d+\))?(?: unsigned)?)\s+(.*)\z/i', $line, $column ) ) {
+				if ( ! preg_match( '/\A([a-z_]+)\s+((?:bigint|smallint|tinyint|int|varchar|char|datetime|date|longblob|longtext|text)(?:\(\d+\))?(?: unsigned)?)\s+(.*)\z/i', $line, $column ) ) {
 					if ( '' !== $line && ! str_starts_with( $line, 'CREATE TABLE ' ) && ! str_starts_with( $line, ')' ) ) {
 						$issues[] = $table . ':unsupported_definition';
 					}

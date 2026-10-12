@@ -40,11 +40,17 @@ final class CustomerWorkspacePage {
 			foreach ( $page['rows'] as $c ) { echo '<p><a href="' . esc_url( add_query_arg( array( 'page'=>'adc-customer-workspace', 'customer_id'=>$c['id'] ), admin_url( 'admin.php' ) ) ) . '">' . esc_html( $c['full_name'] ) . '</a></p>'; }
 			QueueTable::footer( $page, 'adc-customer-workspace' ); echo '</div>'; return;
 		}
-		$results = array(); $visible = false;
+		$results = array(); $visible = false; $pagination = array();
 		foreach ( $sections as $key => $section ) {
 			if ( 'leads' === $key && ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { continue; }
 			list( $scope, $args ) = self::scope( $section[1], $section[2] );
-			$results[$key] = $wpdb->get_results( $wpdb->prepare( $section[3] . ' AND ' . $scope . ' ORDER BY ' . $section[4] . '.id DESC LIMIT 100', array_merge( array( $id ), $args ) ), ARRAY_A ) ?: array();
+			$base_sql = $section[3] . ' AND ' . $scope;
+			$total = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM (' . $base_sql . ') customer_section',array_merge(array($id),$args)));
+			if($wpdb->last_error){wp_die('Unable to load customer records','',array('response'=>500));}
+			$pages = max(1,(int)ceil($total/50));
+			$page = min($pages,max(1,absint($_GET[$key.'_paged']??1)));
+			$pagination[$key] = array('page'=>$page,'pages'=>$pages,'total'=>$total);
+			$results[$key] = $wpdb->get_results( $wpdb->prepare( $base_sql . ' ORDER BY ' . $section[4] . '.id DESC LIMIT 50 OFFSET %d', array_merge( array( $id ), $args, array(($page-1)*50) ) ), ARRAY_A ) ?: array();
 			if ( $wpdb->last_error ) { wp_die( 'Unable to load customer records', '', array( 'response'=>500 ) ); }
 			$visible = $visible || (bool) $results[$key];
 		}
@@ -52,7 +58,7 @@ final class CustomerWorkspacePage {
 		$name = $wpdb->get_var( $wpdb->prepare( 'SELECT full_name FROM ' . Schema::table( 'customers' ) . ' WHERE id=%d', $id ) );
 		echo '<h2>' . esc_html( $name ) . '</h2>';
 		foreach ( $results as $key => $rows ) {
-			echo '<h2>' . esc_html( $sections[$key][0] ) . '</h2><p>' . esc_html( self::text( 'أحدث 100 سجل ضمن صلاحياتك.', 'Most recent 100 records within your permissions.' ) ) . '</p><table class="widefat striped">';
+			echo '<h2 id="section-'.esc_attr($key).'">' . esc_html( $sections[$key][0] ) . '</h2><p>' . esc_html( sprintf(self::text('السجلات ضمن صلاحياتك: %d','Records within your permissions: %d'),$pagination[$key]['total']) ) . '</p><table class="widefat striped">';
 			$labels = array( 'id'=>array( 'الرقم', 'ID' ), 'stage'=>array( 'المرحلة', 'Stage' ), 'status'=>array( 'الحالة', 'Status' ), 'quote_number'=>array( 'رقم العرض', 'Quote number' ), 'quotation_id'=>array( 'العرض', 'Quotation' ), 'next_action_at'=>array( 'المتابعة UTC', 'Follow-up UTC' ), 'created_at'=>array( 'الإنشاء UTC', 'Created UTC' ), 'valid_until'=>array( 'الصلاحية UTC', 'Validity UTC' ), 'expires_at'=>array( 'الانتهاء UTC', 'Expiry UTC' ), 'final_amount'=>array( 'الإجمالي', 'Total' ), 'deposit_required_amount'=>array( 'العربون المطلوب', 'Required deposit' ), 'deposit_amount'=>array( 'العربون المثبت', 'Verified deposit' ), 'deposit_refund_status'=>array( 'الاسترداد', 'Refund' ), 'amount'=>array( 'المبلغ', 'Amount' ), 'reference'=>array( 'المرجع', 'Reference' ), 'delivered_at'=>array( 'التسليم UTC', 'Delivered UTC' ) );
 			if ( $rows ) { echo '<thead><tr>'; foreach ( array_keys( $rows[0] ) as $field ) { $label = $labels[$field] ?? array( $field, $field ); echo '<th>' . esc_html( self::text( $label[0], $label[1] ) ) . '</th>'; } echo '</tr></thead>'; } echo '<tbody>';
 			foreach ( $rows as $row ) {
@@ -60,12 +66,18 @@ final class CustomerWorkspacePage {
 				foreach ( $row as $field => $value ) {
 					if ( 'id' === $field && 'quotations' === $key ) { echo '<td><a href="' . esc_url( add_query_arg( array( 'page'=>'adc-sales-journey', 'quote_id'=>$value ), admin_url( 'admin.php' ) ) ) . '">#' . absint( $value ) . '</a></td>'; }
 					elseif ( 'id' === $field && 'leads' === $key ) { echo '<td><a href="' . esc_url( add_query_arg( array( 'page'=>'adc-crm', 'lead_id'=>$value ), admin_url( 'admin.php' ) ) ) . '">#' . absint( $value ) . '</a></td>'; }
+					elseif ('quotation_id' === $field) { echo '<td><a href="'.esc_url(add_query_arg(array('page'=>'adc-sales-journey','quote_id'=>$value),admin_url('admin.php'))).'">#'.absint($value).'</a></td>'; }
+					elseif ('id' === $field && 'reservations' === $key) { echo '<td><a href="'.esc_url(add_query_arg(array('page'=>'adc-sales-journey','section'=>'reservations','reservation_id'=>$value),admin_url('admin.php'))).'">#'.absint($value).'</a></td>'; }
+					elseif('id'===$field&&'sales'===$key){$target=current_user_can('adc_view_finance')||current_user_can('adc_approve_sales')||current_user_can('manage_options')?array('page'=>'adc-onyx-documents','sale_id'=>$value):array('page'=>'adc-sales-journey','quote_id'=>$row['quotation_id']);echo '<td><a href="'.esc_url(add_query_arg($target,admin_url('admin.php'))).'">#'.absint($value).'</a></td>';}
+					elseif('id'===$field&&'deliveries'===$key&&(current_user_can('adc_approve_delivery')||current_user_can('adc_confirm_vehicle_vin'))){echo '<td><a href="'.esc_url(add_query_arg(array('page'=>'adc-delivery','delivery_id'=>$value),admin_url('admin.php'))).'">#'.absint($value).'</a></td>';}
+					elseif('id'===$field&&'payments'===$key){echo '<td><a href="'.esc_url(add_query_arg(array('page'=>'adc-payments','payment_id'=>$value),admin_url('admin.php'))).'">#'.absint($value).'</a></td>';}
 					else { echo '<td>' . esc_html( str_ends_with( $field, 'amount' ) ? Money::display( $value ) : ( 'status' === $field ? \AutoDealership\Core\Localization::label( (string) $value ) : (string) $value ) ) . '</td>'; }
 				}
 				echo '</tr>';
 			}
 			if ( ! $rows ) { echo '<tr><td>' . esc_html( self::text( 'لا توجد سجلات ضمن نطاقك.', 'No records within your scope.' ) ) . '</td></tr>'; }
 			echo '</tbody></table>';
+			if($pagination[$key]['pages']>1){echo '<nav>'.wp_kses_post(paginate_links(array('base'=>str_replace('99999999','%#%',add_query_arg($key.'_paged',99999999)).'#section-'.$key,'format'=>'','current'=>$pagination[$key]['page'],'total'=>$pagination[$key]['pages']))).'</nav>';}
 		}
 		echo '</div>';
 	}

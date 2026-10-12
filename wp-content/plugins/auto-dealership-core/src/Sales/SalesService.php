@@ -43,12 +43,12 @@ final class SalesService {
 		$tax_rate = Money::parse( get_option( 'adc_vat_rate_bps', 0 ) );
 		try {
 			if ( null === $base || null === $tax_rate ) { throw new \InvalidArgumentException(); }
-			$amounts = PricingPolicy::quote( $base, 0, $tax_rate, $promotion_code );
+			$amounts = PricingPolicy::vehicle_quote( $vehicle_id, $base, $promotion_code );
 		} catch ( \InvalidArgumentException | \OverflowException $error ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_invalid_price', __( 'السعر أو نسبة الضريبة غير صالحين للحساب.', 'auto-dealership-core' ), array( 'status' => 400 ) );
 		}
-		if ( null !== $vehicle['minimum_price'] && $base - (int) $amounts['promotion_amount'] < (int) $vehicle['minimum_price'] ) {
+		if ( null !== $vehicle['minimum_price'] && (int)$amounts['base_amount'] - (int) $amounts['promotion_amount'] < (int) $vehicle['minimum_price'] ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_price_floor', __( 'The promotion would place the quotation below the approved minimum price.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
@@ -267,7 +267,12 @@ final class SalesService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_forbidden_branch', __( 'لا تملك صلاحية لهذا الفرع.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
-		$sale_update = $wpdb->update( $sales, array( 'status' => 'approved', 'invoice_reference' => $invoice_reference, 'approved_by' => get_current_user_id(), 'updated_at' => $now ), array( 'id' => $sale_id ), array( '%s', '%s', '%d', '%s' ), array( '%d' ) );
+		$quote_amounts=$wpdb->get_row($wpdb->prepare('SELECT final_amount,tax_amount FROM '.Schema::table('quotations').' WHERE id=%d FOR UPDATE',(int)$sale['quotation_id']),ARRAY_A);
+		if(!$quote_amounts||!OnyxDocuments::invoice_matches($sale_id,$invoice_reference,(int)$quote_amounts['final_amount'],(int)$quote_amounts['tax_amount'])){
+			$wpdb->query('ROLLBACK');
+			return new \WP_Error('adc_onyx_invoice_required',\AutoDealership\Core\Localization::language()==='en'?'Archive and verify the matching Onyx invoice PDF before approving this sale.':'أرشف نسخة PDF من فاتورة أونكس وطابق المرجع والمبالغ قبل اعتماد البيع.',array('status'=>409));
+		}
+		$sale_update = $wpdb->update( $sales, array( 'status' => 'approved', 'invoice_reference' => strtoupper(trim($invoice_reference)), 'approved_by' => get_current_user_id(), 'updated_at' => $now ), array( 'id' => $sale_id ), array( '%s', '%s', '%d', '%s' ), array( '%d' ) );
 		$vehicle_update = $wpdb->update( Schema::table( 'vehicles' ), array( 'status' => 'sold', 'updated_at' => $now ), array( 'id' => (int) $sale['vehicle_id'], 'branch_id' => $branch_id, 'status' => 'reserved' ), array( '%s', '%s' ), array( '%d', '%d', '%s' ) );
 		$movement = 1 === $vehicle_update ? $wpdb->insert( Schema::table( 'vehicle_movements' ), array( 'vehicle_id' => (int) $sale['vehicle_id'], 'from_branch_id' => $branch_id, 'to_branch_id' => $branch_id, 'from_status' => 'reserved', 'to_status' => 'sold', 'actor_user_id' => get_current_user_id(), 'reason' => 'Sale #' . $sale_id . ' approved', 'created_at' => $now ), array( '%d', '%d', '%d', '%s', '%s', '%d', '%s', '%s' ) ) : false;
 		if ( false === $sale_update || 1 !== $vehicle_update || false === $movement ) {

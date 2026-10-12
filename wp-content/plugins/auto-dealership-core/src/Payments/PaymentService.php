@@ -106,10 +106,11 @@ final class PaymentService {
 		return null !== $total && (int) $total > 0 && null !== $paid && $paid >= (int) $total;
 	}
 
-	public static function list_for_current_user(): array {
+	public static function list_for_current_user(int $payment_id=0): array {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_view_finance' ) ) { return array(); }
 		list( $scope, $args ) = BranchScope::predicate( 'v.branch_id' );
+		if($payment_id>0){$scope.=' AND p.id=%d';$args[]=$payment_id;}
 		$sql = 'SELECT p.* FROM ' . Schema::table( 'payment_confirmations' ) . ' p INNER JOIN ' . Schema::table( 'sales' ) . ' s ON s.id=p.sale_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id WHERE ' . $scope . ' ORDER BY p.id DESC LIMIT 100';
 		return $wpdb->get_results( $args ? $wpdb->prepare( $sql, $args ) : $sql, ARRAY_A ) ?: array();
 	}

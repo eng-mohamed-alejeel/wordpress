@@ -27,6 +27,7 @@ final class QuoteDocument {
 <tr><th><?php echo $e( __( 'Subtotal before tax', 'auto-dealership-core' ) ); ?></th><td><?php echo $money( $quote['subtotal_amount'] ?? ( (int) $quote['base_amount'] - (int) $quote['discount_amount'] ) ); ?></td></tr>
 <tr><th><?php echo $e( __( 'Tax rate', 'auto-dealership-core' ) ); ?></th><td><?php echo $e( $rate ); ?></td></tr>
 <tr><th><?php echo $e( __( 'Tax amount', 'auto-dealership-core' ) ); ?></th><td><?php echo $money( $quote['tax_amount'] ); ?></td></tr>
+<?php if (!empty($quote['plate_amount'])) : ?><tr><th><?php echo $e('en' === $language ? 'Plate fees' : 'رسوم اللوحات'); ?></th><td><?php echo $money($quote['plate_amount']); ?></td></tr><?php endif; ?>
 <tr class="total"><th><?php echo $e( __( 'Total', 'auto-dealership-core' ) ); ?></th><td><?php echo $money( $quote['final_amount'] ); ?></td></tr>
 </tbody></table>
 <p class="muted"><?php echo $e( __( 'This document is an immutable financial revision of the quotation. Validity and vehicle availability remain subject to the recorded system state.', 'auto-dealership-core' ) ); ?></p>

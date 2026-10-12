@@ -17,16 +17,30 @@ final class PublicVehiclePrice {
 		$p=ProfitMargin::policy();$margin=0;$taxable=$net;
 		if($net>0&&$p['stage']==='before_tax'){$margin=ProfitMargin::amount($net,$p);if($net>PHP_INT_MAX-$margin){throw new \OverflowException('Public price exceeds the amount limit.');}$taxable=$net+$margin;}
 		$amounts = $net > 0 ? Money::calculate( $taxable, 0, self::rate() ) : array( 'tax_amount'=>0, 'final_amount'=>0 );
-		if($net>0&&$p['stage']==='after_tax'){$margin=ProfitMargin::amount($amounts['final_amount'],$p);if($amounts['final_amount']>PHP_INT_MAX-$margin){throw new \OverflowException('Public price exceeds the amount limit.');}$amounts['final_amount']+=$margin;}
+		if($net>0&&$p['stage']==='after_tax'){
+			$margin=ProfitMargin::amount($amounts['final_amount'],$p);
+			// After-tax margin is VAT-inclusive. Extract its net component before taxing.
+			$denominator=10000+self::rate();
+			$net_margin=intdiv($margin,$denominator)*10000+intdiv(($margin%$denominator)*10000+intdiv($denominator,2),$denominator);
+			if($net>PHP_INT_MAX-$net_margin){throw new \OverflowException('Public price exceeds the amount limit.');}
+			$taxable=$net+$net_margin;
+			$amounts=Money::calculate($taxable,0,self::rate());
+		}
+		$fee=$net>0?Money::parse(get_option('adc_pricing_fee_amount',0)):0;
+		if(null===$fee){throw new \InvalidArgumentException('Invalid pricing fee.');}
+		if($taxable>PHP_INT_MAX-$fee){throw new \OverflowException('Public price exceeds the amount limit.');}
+		$amounts=$net>0?Money::calculate($taxable+$fee,0,self::rate()):array('tax_amount'=>0,'final_amount'=>0);
 		$plates = $net > 0 ? self::plates( $post_id ) : 0;
 		if ( $amounts['final_amount'] > PHP_INT_MAX - $plates ) { throw new \OverflowException( 'Public price exceeds the amount limit.' ); }
-		return array( 'base_amount'=>$net, 'taxable_amount'=>$taxable, 'margin_amount'=>$margin, 'margin_stage'=>$p['stage'], 'tax_amount'=>$amounts['tax_amount'], 'tax_rate_bps'=>self::rate(), 'plate_amount'=>$plates, 'final_amount'=>$amounts['final_amount'] + $plates );
+		return array( 'base_amount'=>$net, 'taxable_amount'=>$taxable+$fee, 'fee_amount'=>$fee, 'margin_amount'=>$margin, 'margin_stage'=>$p['stage'], 'tax_amount'=>$amounts['tax_amount'], 'tax_rate_bps'=>self::rate(), 'plate_amount'=>$plates, 'final_amount'=>$amounts['final_amount'] + $plates );
 	}
 
 	public static function label( int $post_id ): string {
 		$parts = array();
 		if ( self::rate() > 0 ) { $parts[] = sprintf( __( 'Includes VAT (%s%%)', 'auto-dealership-core' ), rtrim( rtrim( Money::decimal( self::rate() ), '0' ), '.' ) ); }
 		if ( self::plates( $post_id ) > 0 ) { $parts[] = sprintf( __( 'Includes plate fees: %s', 'auto-dealership-core' ), Money::display( self::plates( $post_id ) ) ); }
+		$fee=Money::parse(get_option('adc_pricing_fee_amount',0));
+		if($fee>0){$parts[]=(\AutoDealership\Core\Localization::language()==='en'?'Includes fees: ':'يشمل الرسوم: ').Money::display($fee);}
 		return implode( ' · ', $parts );
 	}
 
@@ -42,7 +56,15 @@ final class PublicVehiclePrice {
 		$p=ProfitMargin::policy();$margin=static fn($base)=>$p['type']==='fixed'?(string)$p['value']:($p['type']==='percentage'?'FLOOR((CAST(('.$base.') AS DECIMAL(30,0))*'.$p['value'].'+5000)/10000)':'0');
 		$base=$p['stage']==='before_tax'?'('.$net.'+'.$margin($net).')':$net;
 		$gross='('.$base.'+FLOOR((CAST(('.$base.') AS DECIMAL(30,0))*'.self::rate().'+5000)/10000))';
-		if($p['stage']==='after_tax'){$gross='('.$gross.'+'.$margin($gross).')';}
+		if($p['stage']==='after_tax'){
+			$denominator=10000+self::rate();
+			$base='('.$net.'+FLOOR((CAST(('.$margin($gross).') AS DECIMAL(30,0))*10000+'.intdiv($denominator,2).')/'.$denominator.'))';
+			$gross='('.$base.'+FLOOR((CAST(('.$base.') AS DECIMAL(30,0))*'.self::rate().'+5000)/10000))';
+		}
+		$fee=Money::parse(get_option('adc_pricing_fee_amount',0));
+		if(null===$fee){throw new \InvalidArgumentException('Invalid pricing fee.');}
+		$base='('.$base.'+'.$fee.')';
+		$gross='('.$base.'+FLOOR((CAST(('.$base.') AS DECIMAL(30,0))*'.self::rate().'+5000)/10000))';
 		return '(CASE WHEN '.$net.'>0 THEN '.$gross.'+'.$plates.' ELSE 0 END)';
 	}
 }

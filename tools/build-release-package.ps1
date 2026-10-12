@@ -24,6 +24,7 @@ $runtimePaths = @(
     'wp-content/themes/car-dealer/index.php',
     'wp-content/themes/car-dealer/page-about.php',
     'wp-content/themes/car-dealer/page-contact.php',
+    'wp-content/themes/car-dealer/page-comparison.php',
     'wp-content/themes/car-dealer/page-legal.php',
     'wp-content/themes/car-dealer/page-privacy.php',
     'wp-content/themes/car-dealer/page-terms.php',
@@ -104,6 +105,10 @@ $required = @(
     'wp-content/plugins/auto-dealership-core/src/Database/ExtensionSchema.php',
     'wp-content/plugins/auto-dealership-core/src/Admin/PurchaseOrderPage.php',
     'wp-content/plugins/auto-dealership-core/src/Pricing/ArchivedQuotationTemplate.php',
+    'wp-content/plugins/auto-dealership-core/src/Pricing/ArchivedQuotationTemplateV2.php',
+    'wp-content/plugins/auto-dealership-core/src/Sales/OnyxDocuments.php',
+    'wp-content/plugins/auto-dealership-core/src/Operations/FollowUpNotifications.php',
+    'wp-content/themes/car-dealer/page-comparison.php',
     'wp-content/themes/car-dealer/languages/ui.php',
     'wp-content/mu-plugins/autobrands-typography.php',
     'wp-content/themes/car-dealer/style.css'

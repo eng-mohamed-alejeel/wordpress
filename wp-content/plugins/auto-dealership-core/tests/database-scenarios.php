@@ -436,6 +436,7 @@ $finance_request = SalesService::create_finance_request( $sale['id'], 'Synthetic
 wp_set_current_user( $finance_verifier );
 adc_check( is_array( SalesService::update_finance_status( $finance_request['id'], 'approved', 'SYNTHETIC-FINANCE' ) ), 'Finance request can be approved by a separate employee.' );
 wp_set_current_user( $manager_a );
+adc_fixture_onyx_invoice($sale['id'],'SYNTHETIC-INVOICE');
 adc_check( is_array( SalesService::approve_sale( $sale['id'], 'SYNTHETIC-INVOICE' ) ), 'Manager approves sale with invoice reference.' );
 $unpaid = DeliveryService::prepare( $sale['id'] );
 adc_check( is_wp_error( $unpaid ) && 'adc_payment_unverified' === $unpaid->get_error_code(), 'Approved finance request alone cannot unlock delivery.' );
@@ -549,7 +550,7 @@ adc_check( is_array( VehicleIntakeService::inspect( $vehicle, array( 'checklist'
 
 $cancel_vehicle=$make_vehicle('31');wp_set_current_user($sales_a);$cancel_quote=SalesService::create_quote($customer_a,$cancel_vehicle,$date);$cancel_reservation=ReservationService::create(array('vehicle_id'=>$cancel_vehicle,'customer_id'=>$customer_a,'idempotency_key'=>wp_generate_uuid4()));$cancel_sale=SalesService::create_sale($cancel_quote['id'],$cancel_reservation['id']);
 wp_set_current_user($finance_recorder);$cancel_payment=PaymentService::record($cancel_sale['id'],$cancel_quote['final_amount'],'bank_transfer','CANCEL-PAYMENT-1');wp_set_current_user($finance_verifier);PaymentService::decide($cancel_payment['id'],true,'Matched cancellation fixture');
-wp_set_current_user($manager_a);SalesService::approve_sale($cancel_sale['id'],'CANCEL-INVOICE-1');$cancel_delivery=DeliveryService::prepare($cancel_sale['id']);
+wp_set_current_user($manager_a);adc_fixture_onyx_invoice($cancel_sale['id'],'CANCEL-INVOICE-1');SalesService::approve_sale($cancel_sale['id'],'CANCEL-INVOICE-1');$cancel_delivery=DeliveryService::prepare($cancel_sale['id']);
 add_filter('query',$break_audit);$failed_cancellation=SaleCancellationService::cancel($cancel_sale['id'],'Audit rollback cancellation');remove_filter('query',$break_audit);
 adc_check(is_wp_error($failed_cancellation)&&'ready_for_delivery'===$wpdb->get_var($wpdb->prepare('SELECT status FROM '.Schema::table('sales').' WHERE id=%d',$cancel_sale['id']))&&'ready_for_delivery'===$wpdb->get_var($wpdb->prepare("SELECT status FROM $vehicles WHERE id=%d",$cancel_vehicle)),'Audit failure rolls sale cancellation back across delivery, sale and inventory.');
 $cancellation=SaleCancellationService::cancel($cancel_sale['id'],'Customer cancelled before delivery');
@@ -826,6 +827,7 @@ try {
 	$sale_approval_path = $rest_path( '/auto-dealership/v1/sales/' . $http_sale['id'] . '/approval' );
 	$sales_table = Schema::table( 'sales' );
 	adc_check( 403 === $http_request( $sale_approval_path, $manager_a_http, 'POST', array( 'invoice_reference' => 'FOREIGN-INVOICE' ) )[0] && 'pending_approval' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $sales_table WHERE id = %d", $http_sale['id'] ) ), 'Foreign-branch manager cannot approve a sale through HTTP.' );
+	wp_set_current_user($manager_b);adc_fixture_onyx_invoice($http_sale['id'],'HTTP-INVOICE-APPROVED');
 	adc_check( 200 === $http_request( $sale_approval_path, $manager_b_http, 'POST', array( 'invoice_reference' => 'HTTP-INVOICE-APPROVED' ) )[0] && 'approved' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $sales_table WHERE id = %d", $http_sale['id'] ) ), 'Correct branch manager can approve an eligible sale through HTTP.' );
 
 	$payment_decision_path = $rest_path( '/auto-dealership/v1/payments/' . $http_payment['id'] . '/decision' );

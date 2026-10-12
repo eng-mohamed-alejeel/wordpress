@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.37.0
+ * Version: 1.38.0
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.37.0' );
+define( 'ADC_VERSION', '1.38.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -48,6 +48,8 @@ require_once ADC_PATH . 'src/Database/Schema.php';
 require_once ADC_PATH . 'src/Database/Transaction.php';
 require_once ADC_PATH . 'src/Database/SchemaGuard.php';
 require_once ADC_PATH . 'src/Operations/OutboxService.php';
+require_once ADC_PATH . 'src/Operations/FollowUpNotifications.php';
+require_once ADC_PATH . 'src/Sales/OnyxDocuments.php';
 require_once ADC_PATH . 'src/Integrations/AdapterContract.php';
 require_once ADC_PATH . 'src/Integrations/AdapterReadinessContract.php';
 require_once ADC_PATH . 'src/Integrations/ReconciliationContract.php';
@@ -114,6 +116,7 @@ require_once ADC_PATH . 'src/Pricing/QuoteHistory.php';
 require_once ADC_PATH . 'src/Pricing/QuoteDocument.php';
 require_once ADC_PATH . 'src/Pricing/DocumentArchive.php';
 require_once ADC_PATH . 'src/Pricing/ArchivedQuotationTemplate.php';
+require_once ADC_PATH . 'src/Pricing/ArchivedQuotationTemplateV2.php';
 require_once ADC_PATH . 'src/Tools/FinanceConfiguration.php';
 require_once ADC_PATH . 'src/Tools/LoanCalculator.php';
 require_once ADC_PATH . 'src/Admin/FinanceCalculatorPage.php';
@@ -409,6 +412,8 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\QuotePages', 'boot'
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SalesJourneyPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\CustomerWorkspacePage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FollowUpPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Operations\\FollowUpNotifications', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Sales\\OnyxDocuments', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Content\\ReservationPolicyView', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FinancialExportPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OperationalReportPage', 'boot' ) );
@@ -444,6 +449,9 @@ add_action( 'init', static function (): void {
 	if ( ! wp_next_scheduled( 'adc_process_outbox' ) ) {
 		wp_schedule_event( time() + 5 * MINUTE_IN_SECONDS, 'adc_five_minutes', 'adc_process_outbox' );
 	}
+	if ( ! wp_next_scheduled( 'adc_scan_followups' ) ) {
+		wp_schedule_event( time() + 5 * MINUTE_IN_SECONDS, 'adc_five_minutes', 'adc_scan_followups' );
+	}
 	if ( ! wp_next_scheduled( 'adc_prune_request_limits' ) ) {
 		wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', 'adc_prune_request_limits' );
 	}
@@ -456,6 +464,7 @@ register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_expire_reservations' );
 	wp_clear_scheduled_hook( 'adc_privacy_retention' );
 	wp_clear_scheduled_hook( 'adc_process_outbox' );
+	wp_clear_scheduled_hook( 'adc_scan_followups' );
 	wp_clear_scheduled_hook( 'adc_prune_request_limits' );
 } );
 

@@ -115,7 +115,7 @@ try {
 	$document_sale = AutoDealership\Sales\SalesService::create_sale( $document_quote['id'], $document_reservation['id'] );
 	wp_set_current_user( $finance_recorder ); $document_payment = AutoDealership\Payments\PaymentService::record( $document_sale['id'], $document_quote['final_amount'], 'bank_transfer', 'DELIVERY-119-PAID' );
 	wp_set_current_user( $finance_verifier ); AutoDealership\Payments\PaymentService::decide( $document_payment['id'], true, 'Matched in full' );
-	wp_set_current_user( $manager_a ); AutoDealership\Sales\SalesService::approve_sale( $document_sale['id'], 'INVOICE-119' ); $document_delivery = AutoDealership\Delivery\DeliveryService::prepare( $document_sale['id'] );
+	wp_set_current_user( $manager_a ); adc_fixture_onyx_invoice($document_sale['id'],'INVOICE-119'); AutoDealership\Sales\SalesService::approve_sale( $document_sale['id'], 'INVOICE-119' ); $document_delivery = AutoDealership\Delivery\DeliveryService::prepare( $document_sale['id'] );
 	wp_set_current_user( $inventory ); $document_vin = $wpdb->get_var( $wpdb->prepare( "SELECT vin FROM $vehicles WHERE id=%d", $document_vehicle ) ); AutoDealership\Delivery\DeliveryService::confirm_vin( $document_delivery['id'], $document_vin );
 	$document_checklist = AutoDealership\Delivery\DeliveryService::checklist( $document_delivery['id'] );
 	adc_check( is_array( $document_checklist ) && ! $document_checklist['complete'] && 2 === count( $document_checklist['items'] ), 'Delivery checklist exposes each configured missing document.' );

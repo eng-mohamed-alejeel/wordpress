@@ -25,7 +25,7 @@ final class PaymentPages {
 		list( $scope, $args ) = BranchScope::predicate( 'v.branch_id' );
 		$sql = 'SELECT s.id,q.final_amount,v.id translation_vehicle_id,v.brand,v.model FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=s.quotation_id INNER JOIN ' . Schema::table( 'vehicles' ) . " v ON v.id=s.vehicle_id WHERE s.status IN ('pending_approval','approved') AND " . $scope . ' ORDER BY s.id DESC LIMIT 100';
 		$sales = $wpdb->get_results( $args ? $wpdb->prepare( $sql, $args ) : $sql, ARRAY_A ) ?: array();
-		$payments = PaymentService::list_for_current_user();
+		$payments = PaymentService::list_for_current_user(absint($_GET['payment_id']??0));
 		$deposit_sql = 'SELECT r.id,r.deposit_required_amount,v.stock_number,v.id translation_vehicle_id,v.brand,v.model FROM ' . Schema::table( 'reservations' ) . ' r INNER JOIN ' . Schema::table( 'vehicles' ) . " v ON v.id=r.vehicle_id WHERE r.status='confirmed' AND r.expires_at>%s AND r.deposit_required_amount>0 AND r.deposit_amount=0 AND NOT EXISTS (SELECT d.id FROM " . Schema::table( 'reservation_deposits' ) . " d WHERE d.reservation_id=r.id AND d.status IN ('pending','verified')) AND " . $scope . ' ORDER BY r.id DESC LIMIT 100';
 		$deposit_args = array_merge( array( current_time( 'mysql', true ) ), $args );
 		$deposit_reservations = current_user_can( 'adc_record_payments' ) ? ( $wpdb->get_results( $wpdb->prepare( $deposit_sql, $deposit_args ), ARRAY_A ) ?: array() ) : array();

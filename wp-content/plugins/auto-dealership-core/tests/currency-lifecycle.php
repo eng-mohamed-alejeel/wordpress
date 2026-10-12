@@ -91,7 +91,7 @@ try {
 	adc_check( ! is_wp_error( $currency_payment_verification ) && PaymentService::is_settled( $currency_sale['id'] ),'Deposit plus verified payment settles the immutable quote total.' );
 	$currency_finance_id = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'finance_requests' ) . ' WHERE sale_id=%d',$currency_sale['id'] ) );
 	adc_check( ! is_wp_error( SalesService::update_finance_status( $currency_finance_id,'approved','SAR-FINANCE','Synthetic independent finance decision' ) ),'Finance request receives an independent decision before sale approval.' );
-	wp_set_current_user( $currency_actors['manager'] ); $currency_approval = SalesService::approve_sale( $currency_sale['id'],'SAR-INVOICE' );
+	wp_set_current_user( $currency_actors['manager'] ); adc_fixture_onyx_invoice($currency_sale['id'],'SAR-INVOICE'); $currency_approval = SalesService::approve_sale( $currency_sale['id'],'SAR-INVOICE' );
 	adc_check( ! is_wp_error( $currency_approval ),'Fully funded sale receives independent approval.' );
 	wp_set_current_user( $currency_admin );
 	$currency_export = AutoDealership\Reports\FinancialExport::create( gmdate( 'Y-m-d' ),gmdate( 'Y-m-d' ) );

@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Append-only financial revisions; callers own the transaction and quote row lock. */
 final class QuoteHistory {
-	private const FIELDS = 'quote_number,customer_id,vehicle_id,branch_id,owner_user_id,version,base_amount,fee_amount,promotion_code,promotion_amount,discount_amount,subtotal_amount,tax_rate_bps,tax_amount,final_amount,seller_name,seller_tax_number,seller_address,seller_phone,valid_until,status';
+	private const FIELDS = 'quote_number,customer_id,vehicle_id,branch_id,owner_user_id,version,base_amount,source_base_amount,margin_amount,margin_stage,margin_revision,plate_amount,fee_amount,promotion_code,promotion_amount,discount_amount,subtotal_amount,tax_rate_bps,tax_amount,final_amount,seller_name,seller_tax_number,seller_address,seller_phone,valid_until,status';
 
 	private static function insert_sql(): string {
 		$columns = implode( ',', array_map( static fn( $field ) => 'q.' . $field, explode( ',', self::FIELDS ) ) );

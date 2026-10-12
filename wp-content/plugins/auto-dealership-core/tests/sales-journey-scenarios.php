@@ -39,7 +39,7 @@ update_option('adc_vat_rate_bps',1500);update_option('adc_reservation_deposit_ty
 wp_set_current_user($sales);
 $check(current_user_can('adc_create_quotes')&&current_user_can('adc_request_discounts')&&current_user_can('adc_start_sales'),'Factory sales role receives independent operation capabilities');
 $key=wp_generate_uuid4();$valid=gmdate('Y-m-d',time()+7*DAY_IN_SECONDS);
-$amounts=PricingPolicy::quote(10000000,0,1500);
+$amounts=PricingPolicy::vehicle_quote($v['id'],10000000);
 $signature=hash_hmac('sha256',wp_json_encode($amounts),wp_salt('nonce'));
 $q=SalesService::create_quote($customer,$v['id'],$valid,'',$key,$signature);
 $check(is_array($q),'Save quotation with signed pricing preview');
@@ -69,7 +69,7 @@ $reservation=ReservationService::create(array('customer_id'=>$customer,'vehicle_
 $html=$render(SalesJourneyPage::class,array('quote_id'=>$q['id']));$check(str_contains($html,'value="sale"'),'Eligible matching reservation enables start sale form');
 $sale=SalesService::create_sale($q['id'],$reservation['id']);$check(is_array($sale),'Start sale through existing transactional service');
 $check(is_wp_error(SalesService::create_sale($q['id'],$reservation['id'])),'Repeated sale submission cannot create another sale');
-$html=$render(CustomerWorkspacePage::class,array('customer_id'=>$customer));$check(str_contains($html,'Journey customer')&&str_contains($html,$q['quote_number'])&&!str_contains($html,'Receipt reference'),'Customer workspace renders authorized linked records');
+$html=$render(CustomerWorkspacePage::class,array('customer_id'=>$customer,'quotations_paged'=>2));$check(str_contains($html,'Journey customer')&&str_contains($html,$q['quote_number'])&&!str_contains($html,'Receipt reference'),'Customer workspace renders authorized linked records');
 $html=$render(FollowUpPage::class,array());$check(str_contains($html,'Journey customer'),'Sales follow-up queue includes own overdue lead');
 $html=$render(SalesJourneyPage::class,array('section'=>'reservations'));$check(str_contains($html,\AutoDealership\Core\Localization::label('converted_to_sale')),'Commercial reservation queue renders converted status');
 $html=$render(SalesJourneyPage::class,array('section'=>'reservations','reservation_id'=>$reservation['id']));$check(str_contains($html,'quote_id='),'Reservation details link to matching authorized quotations');

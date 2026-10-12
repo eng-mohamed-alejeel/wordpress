@@ -93,6 +93,22 @@ $has_demo = null !== $demo_marker || $demo_vehicle_count > 0 || $demo_customer_c
 $add( 'development_data', ! $has_demo && $vehicle_count >= 0 ? 'pass' : 'fail', 'Development fixtures must be retired or explicitly excluded from the public release.', array( 'demo_marker_present' => null !== $demo_marker, 'demo_vehicles' => $demo_vehicle_count, 'demo_sales' => $demo_sales, 'demo_customers' => $demo_customer_count, 'demo_suppliers' => $demo_supplier_count, 'demo_posts' => $demo_posts, 'demo_staff' => $demo_staff ) );
 $add( 'business_data_approval', 'manual', 'Record approved branches, inventory, offers, prices, vehicle-image matching/rights and alt text, contacts, consent, retention, roles and first-release policy decisions; no synthetic record counts as approval.' );
 
+$stock=$wpdb->prefix.'adc_onyx_stock';
+$operational=$count("SELECT COUNT(*) FROM $stock os INNER JOIN $vehicles v ON v.id=os.vehicle_id INNER JOIN $branches b ON b.id=v.branch_id AND b.active=1 WHERE os.present=1 AND v.status='available' AND v.vin REGEXP '^[A-HJ-NPR-Z0-9]{17}$'");
+$unlinked=$count("SELECT COUNT(*) FROM $stock WHERE present=1 AND vehicle_id IS NULL");
+$mapping=$stored_array($option('adc_onyx_warehouse_branches'));
+$add('sales_inventory',$operational>0?'pass':'fail','Sales launch requires real available Onyx vehicles with full VINs and active branches. Catalogue availability alone is insufficient.',array('operational_available'=>$operational,'source_needs_completion'=>$unlinked));
+$warehouses=$wpdb->get_col("SELECT DISTINCT warehouse_name FROM $stock WHERE present=1")?:array();
+$unmapped=array_filter($warehouses,static fn($name)=>empty($mapping[$name]));
+$add('warehouse_branches',!$unmapped&&$mapping?'pass':'fail','Map active Onyx warehouses to approved branches before completing source stock.',array('unmapped_warehouse_count'=>count($unmapped)));
+$tax_number=$option('adc_seller_tax_number')??'';
+$seller_ready=trim($option('adc_seller_name')??'')!==''&&trim($option('adc_seller_address')??'')!==''&&preg_match('/\A3[0-9]{13}3\z/',$tax_number);
+$add('seller_identity',$seller_ready?'pass':'fail','Approved seller name, address and Saudi VAT registration number must be recorded; format validation is not business approval.');
+$purchase=$stored_array($option('adc_purchase_policy'));
+$add('purchase_policy',!empty($purchase)?'pass':'fail','An approved purchasing policy must be saved before purchase operations.');
+$retention=(int)($option('adc_privacy_retention_days')??0);
+$add('retention_policy',$retention>=30&&$retention<=3650?'pass':'fail','Scheduled identity retention requires an approved duration from 30 to 3650 days. Financial source PDFs require their separate approved retention policy.',array('retention_days'=>$retention));
+
 $mode = $option( 'adc_public_catalog_mode' ) ?: 'compatibility';
 $mapped = $count( "SELECT COUNT(*) FROM $vehicles WHERE public_post_id>0" );
 $unmapped_posts = $count( "SELECT COUNT(*) FROM {$wpdb->posts} p WHERE p.post_type='car' AND p.post_status='publish' AND NOT EXISTS (SELECT 1 FROM $vehicles v WHERE v.public_post_id=p.ID)" );

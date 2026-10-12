@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.21.0';
+	public const VERSION = '1.22.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -17,6 +17,46 @@ final class Schema {
 		global $wpdb;
 		$collate = $wpdb->get_charset_collate();
 		$tables  = array(
+			"CREATE TABLE " . self::table('onyx_documents') . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				sale_id bigint(20) unsigned NOT NULL,
+				branch_id bigint(20) unsigned NOT NULL,
+				document_kind varchar(24) NOT NULL,
+				reference varchar(100) NOT NULL,
+				reference_key char(64) NOT NULL,
+				document_date date NOT NULL,
+				total_amount bigint(20) unsigned NOT NULL,
+				tax_amount bigint(20) unsigned NOT NULL,
+				parent_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				checksum char(64) NOT NULL,
+				file_bytes longblob NOT NULL,
+				verified_by bigint(20) unsigned NOT NULL,
+				created_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY reference_key (reference_key),
+				KEY sale_documents (sale_id,document_kind),
+				KEY parent_id (parent_id)
+			) $collate ENGINE=InnoDB",
+			"CREATE TABLE " . self::table('followup_notifications') . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				notification_key char(64) NOT NULL,
+				source_type varchar(24) NOT NULL,
+				source_id bigint(20) unsigned NOT NULL,
+				branch_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				owner_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				recipient_id bigint(20) unsigned NOT NULL,
+				level tinyint(1) unsigned NOT NULL DEFAULT 0,
+				due_at datetime NOT NULL,
+				delivered_at datetime NULL,
+				delivery_channel varchar(16) NOT NULL DEFAULT '',
+				acknowledged_at datetime NULL,
+				resolved_at datetime NULL,
+				created_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY notification_key (notification_key),
+				KEY recipient_inbox (recipient_id,acknowledged_at,resolved_at,id),
+				KEY source_work (source_type,source_id)
+			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'brands' ) . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				brand_key varchar(64) NOT NULL,
@@ -315,6 +355,11 @@ final class Schema {
 				branch_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				owner_user_id bigint(20) unsigned NOT NULL,
 				base_amount bigint(20) unsigned NOT NULL,
+				source_base_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				margin_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				margin_stage varchar(16) NOT NULL DEFAULT '',
+				margin_revision bigint(20) unsigned NOT NULL DEFAULT 0,
+				plate_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				fee_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				promotion_code varchar(64) NOT NULL DEFAULT '',
 				promotion_amount bigint(20) unsigned NOT NULL DEFAULT 0,
@@ -350,6 +395,11 @@ final class Schema {
 				vehicle_description varchar(255) NOT NULL DEFAULT '',
 				version int(10) unsigned NOT NULL,
 				base_amount bigint(20) unsigned NOT NULL,
+				source_base_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				margin_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				margin_stage varchar(16) NOT NULL DEFAULT '',
+				margin_revision bigint(20) unsigned NOT NULL DEFAULT 0,
+				plate_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				fee_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				promotion_code varchar(64) NOT NULL DEFAULT '',
 				promotion_amount bigint(20) unsigned NOT NULL DEFAULT 0,
