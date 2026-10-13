@@ -5,8 +5,6 @@
 .ab-appearance-control select { min-height: 40px; max-width: 105px; padding: .35rem .5rem; border: 1px solid var(--ab-control-border); border-radius: 6px; background: var(--ab-surface); color: var(--ab-text); font: inherit; }
 :is(.site, .adc-admin-shell, .login) :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid var(--ab-focus); outline-offset: 3px; }
 :is(.site, .adc-admin-shell, .login) :is(input, select, textarea) { accent-color: var(--ab-action); }
-.site :is(input:not([type="submit"]):not([type="button"]):not([type="hidden"]), select, textarea) { border-color: var(--ab-control-border); }
-.site :is(input, textarea)::placeholder { color: var(--ab-muted); opacity: 1; }
 .site a:not(.btn):hover { text-decoration-thickness: 2px; text-underline-offset: .2em; }
 .site .entry-content p a { text-decoration: underline; }
 .site .btn { background: var(--ab-action); border-color: var(--ab-action); color: var(--ab-on-action); }
@@ -96,7 +94,6 @@
 :is(.adc-admin, .adc-admin-native) .widefat :is(td, th) { color: var(--ab-text); border-color: var(--ab-border); }
 :is(.adc-admin, .adc-admin-native) .widefat :is(p, ol, ul) { color: inherit; }
 :is(.adc-admin, .adc-admin-native) .striped > tbody > :nth-child(odd) { background: var(--ab-bg); }
-:is(.adc-admin, .adc-admin-native) .wrap :is(input:not([type="submit"]):not([type="button"]), select, textarea):not(.wp-editor-area):not(.wp-color-picker) { background-color: var(--ab-surface); color: var(--ab-text); border-color: var(--ab-control-border); }
 :is(.adc-admin, .adc-admin-native) .wrap :is(.description, .form-table p.description) { color: var(--ab-muted); }
 .adc-admin-shell #adminmenuwrap, .adc-admin-shell #adminmenuback, .adc-admin-shell #adminmenu, .adc-admin-shell #wpadminbar { background: var(--ab-brand-navy); }
 .adc-admin-shell #adminmenu :is(.wp-has-current-submenu > a, li.current > a) { background: var(--ab-brand-blue); color: #FFFFFF; }
@@ -115,7 +112,6 @@
 .login { background: var(--ab-bg); color: var(--ab-text); }
 .login #loginform, .login #registerform, .login #lostpasswordform, .login .message, .login #login_error { background: var(--ab-surface); color: var(--ab-text); border-color: var(--ab-border); border-radius: 12px; box-shadow: var(--ab-shadow); }
 .login :is(h1 a, #nav a, #backtoblog a, .privacy-policy-link, .language-switcher label) { color: var(--ab-link); }
-.login form .input, .login .language-switcher select { background: var(--ab-bg); color: var(--ab-text); border-color: var(--ab-control-border); }
 .login .button-primary { background: var(--ab-action); border-color: var(--ab-action); color: var(--ab-on-action); }
 .login .button-primary:hover { background: var(--ab-action-hover); color: var(--ab-on-action); }
 .login .language-switcher .button { background: var(--ab-surface); color: var(--ab-link); border-color: var(--ab-control-border); }

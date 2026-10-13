@@ -45,6 +45,12 @@
 5. تحمل الملفات الجديدة نسخة مشتقة من وقت تعديل الملف، وارتفع إصدار القالب والإضافة إلى 1.39.1 لتجديد الملفات التي تستخدم رقم الإصدار.
 6. افحص الحالات العادية والتحويم والتركيز والتعطيل والطباعة والمظهرين عند تعديل المكونات.
 
+## حقول النماذج
+
+مصدر شكل الحقول وحالاتها هو `wp-content/plugins/auto-dealership-core/assets/css/brand-fields.css`، وتوجد قيمه في `brand-tokens.css`. لا تعرّف ملفات الصفحات لون الحقل أو حده أو حلقة تركيزه؛ تقتصر على التخطيط والعرض. يجب أن يملك كل حقل اسمًا ميسرًا، وأن ترتبط المساعدة والأخطاء به عبر `aria-describedby`. تستخدم أخطاء الخادم `aria-invalid="true"` أو `.is-invalid`، وتتكفل `brand-fields.js` بأخطاء التحقق الأصلية ورسائلها المرتبطة.
+
+راجع [تقرير تنفيذ نظام الحقول](html-fields-css-implementation-results-2026-10-13-ar.md) للأنواع المغطاة، الاستثناءات، أوامر الاختبار، ونتائج القبول.
+
 معيار التباين المستهدف هو 4.5:1 للنص العادي و3:1 للنص الكبير، وفق [تفسير W3C لتباين النص](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html). تراجع الحدود ومؤشرات التركيز وفق [تباين المكونات](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html). أُضيف قياس بكسلات الخلفيات المرسومة للصور والتدرجات والطبقات الشفافة، واختبارات وصول بنيوية وتفاعلية؛ راجع [تقرير تدقيق الوصول](auto-brands-accessibility-audit.md) للمنهجية والتغطية الفعلية.
 
 ## الاختبارات
@@ -55,6 +61,7 @@ C:/xampp/php/php.exe wp-content/plugins/auto-dealership-core/tests/dashboard-bro
 node wp-content/plugins/auto-dealership-core/tests/browser-brand-identity.cjs
 C:/xampp/php/php.exe wp-content/plugins/auto-dealership-core/tests/dashboard-browser-session.php --cleanup
 node wp-content/plugins/auto-dealership-core/tests/browser-finance-calculator.cjs
+node wp-content/plugins/auto-dealership-core/tests/browser-form-controls.cjs
 ```
 
 تستخدم اختبارات المتصفح ملف تعريف مؤقتًا وتحجب الطلبات الخارجية ولا ترسل نماذج المعاملات. الجلسة الإدارية مؤقتة ويلزم تنظيفها بعد الاختبار. تحفظ التقارير والصور تحت `.tmp/brand-acceptance`؛ لا تضمّن ملفات جلسات المصادقة في التسليم.

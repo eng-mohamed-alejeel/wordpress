@@ -758,23 +758,11 @@ h6 { font-size: var(--cd-font-size-md); }
 .cd-ajax-form textarea,
 .cd-ajax-form select {
   width: 100%;
-  min-height: 42px;
-  border: 1px solid var(--cd-color-line);
-  border-radius: var(--cd-radius-sm);
-  padding: 0.6rem 0.7rem;
-  box-sizing: border-box;
-  background: var(--cd-color-surface);
 }
 
 .cd-ajax-form textarea {
   min-height: 120px;
   resize: vertical;
-}
-
-.cd-ajax-form input[readonly] {
-  background: var(--ab-bg);
-  color: var(--ab-muted);
-  border-color: var(--ab-border);
 }
 
 .cd-form-grid {
@@ -820,11 +808,6 @@ h6 { font-size: var(--cd-font-size-md); }
 .cd-settings-grid input,
 .cd-settings-grid textarea {
   width: 100%;
-  min-height: 40px;
-  border: 1px solid var(--ab-control-border);
-  border-radius: var(--cd-radius-sm);
-  padding: 0.5rem;
-  box-sizing: border-box;
 }
 
 .cd-settings-grid .cd-wide {
@@ -1761,23 +1744,7 @@ svg {
 
 .footer-newsletter input[type="email"] {
   flex: 1;
-  padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--cd-radius-md);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--ab-inverse);
-  font-size: var(--cd-font-size-sm);
-  outline: none;
-  transition: border-color var(--cd-transition-base);
   min-width: 0;
-}
-
-.footer-newsletter input[type="email"]:focus {
-  border-color: var(--cd-color-accent);
-}
-
-.footer-newsletter input[type="email"]::placeholder {
-  color: rgba(255, 255, 255, 0.3);
 }
 
 .footer-newsletter button {

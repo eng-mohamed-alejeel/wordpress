@@ -1,0 +1,299 @@
+/* AUTO BRANDS form controls. Structural layout remains owned by each surface. */
+
+:where(.site, .adc-admin, .adc-admin-native, .login) {
+  --ab-local-field-height: var(--ab-field-height);
+}
+
+:where(.adc-admin, .adc-admin-native) {
+  --ab-local-field-height: var(--adc-control-height, var(--ab-field-height-compact));
+}
+
+/* Text-like controls. Deliberately excludes buttons, binary controls and WordPress composite widgets. */
+.site :is(input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="tel"], input[type="url"], input[type="password"], input[type="number"], input[type="date"], input[type="time"], input[type="datetime-local"], select, textarea),
+:is(.adc-admin, .adc-admin-native) .wrap :is(input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="tel"], input[type="url"], input[type="password"], input[type="number"], input[type="date"], input[type="time"], input[type="datetime-local"], select, textarea):not(.wp-editor-area):not(.wp-color-picker),
+.login :is(input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="password"], input[type="number"], select, textarea) {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-inline-size: 0;
+  min-height: var(--ab-local-field-height);
+  margin: 0;
+  padding-block: var(--ab-field-padding-block);
+  padding-inline: var(--ab-field-padding-inline);
+  border: 1px solid var(--ab-field-border);
+  border-radius: var(--ab-field-radius);
+  background-color: var(--ab-field-bg);
+  color: var(--ab-field-text);
+  font: inherit;
+  line-height: 1.5;
+  caret-color: var(--ab-action);
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+/* Keep single-choice selects readable without allowing long values to stretch layouts indefinitely. */
+.site form select:not([multiple]):not([size]),
+:is(.adc-admin, .adc-admin-native) .wrap form select:not([multiple]):not([size]),
+.login form select:not([multiple]):not([size]) {
+  inline-size: clamp(var(--ab-select-min-inline-size), 100%, var(--ab-select-max-inline-size));
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:is(.adc-admin, .adc-admin-native) .wrap form > label:has(> select[data-ab-long-options]) {
+  flex-basis: var(--ab-select-max-inline-size);
+}
+
+:is(.adc-admin, .adc-admin-native) .wrap form > select:not([multiple]):not([size]),
+:is(.adc-admin, .adc-admin-native) .wrap form > p > select:not([multiple]):not([size]) {
+  flex-basis: var(--ab-select-min-inline-size);
+}
+
+:is(.adc-admin, .adc-admin-native) .wrap form > select[data-ab-long-options],
+:is(.adc-admin, .adc-admin-native) .wrap form > p > select[data-ab-long-options] {
+  flex-basis: var(--ab-select-max-inline-size);
+}
+
+.site :is(textarea, select[multiple]),
+:is(.adc-admin, .adc-admin-native) .wrap :is(textarea, select[multiple]):not(.wp-editor-area),
+.login textarea {
+  height: auto;
+  min-height: 7.5rem;
+}
+
+.site textarea,
+:is(.adc-admin, .adc-admin-native) .wrap textarea:not(.wp-editor-area),
+.login textarea {
+  resize: vertical;
+}
+
+.site :is(input, textarea)::placeholder,
+:is(.adc-admin, .adc-admin-native) .wrap :is(input, textarea)::placeholder,
+.login :is(input, textarea)::placeholder {
+  color: var(--ab-field-placeholder);
+  opacity: 1;
+}
+
+.site :is(input, select, textarea):hover:not(:disabled):not([readonly]):not([aria-invalid="true"]),
+:is(.adc-admin, .adc-admin-native) .wrap :is(input, select, textarea):hover:not(:disabled):not([readonly]):not([aria-invalid="true"]),
+.login :is(input, select, textarea):hover:not(:disabled):not([readonly]):not([aria-invalid="true"]) {
+  border-color: var(--ab-field-hover-border);
+}
+
+.site :is(input, select, textarea):focus-visible,
+:is(.adc-admin, .adc-admin-native) .wrap :is(input, select, textarea):focus-visible,
+.login :is(input, select, textarea):focus-visible {
+  border-color: var(--ab-field-focus);
+  outline: 3px solid var(--ab-field-focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--ab-field-bg);
+}
+
+.site :is(input, select, textarea):is(:disabled, [aria-disabled="true"]),
+:is(.adc-admin, .adc-admin-native) .wrap :is(input, select, textarea):is(:disabled, [aria-disabled="true"]),
+.login :is(input, select, textarea):is(:disabled, [aria-disabled="true"]) {
+  border-color: var(--ab-border);
+  background-color: var(--ab-field-disabled-bg);
+  color: var(--ab-field-disabled-text);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.site :is(input, textarea):read-only:not([type="checkbox"]):not([type="radio"]),
+:is(.adc-admin, .adc-admin-native) .wrap :is(input, textarea):read-only:not(.wp-editor-area),
+.login :is(input, textarea):read-only {
+  border-color: var(--ab-field-border);
+  background-color: var(--ab-field-readonly-bg);
+  color: var(--ab-muted);
+}
+
+.site :is(input, select, textarea):is([aria-invalid="true"], .is-invalid, :user-invalid),
+:is(.adc-admin, .adc-admin-native) .wrap :is(input, select, textarea):is([aria-invalid="true"], .is-invalid, :user-invalid),
+.login :is(input, select, textarea):is([aria-invalid="true"], .is-invalid, :user-invalid) {
+  border-color: var(--ab-field-invalid);
+  box-shadow: 0 0 0 1px var(--ab-field-invalid);
+}
+
+.site :is(input, select, textarea):is([aria-invalid="true"], .is-invalid, :user-invalid):focus-visible,
+:is(.adc-admin, .adc-admin-native) .wrap :is(input, select, textarea):is([aria-invalid="true"], .is-invalid, :user-invalid):focus-visible,
+.login :is(input, select, textarea):is([aria-invalid="true"], .is-invalid, :user-invalid):focus-visible {
+  outline-color: var(--ab-field-invalid);
+}
+
+.site :is(input, select, textarea):is([data-valid="true"], .is-valid):not([aria-invalid="true"]),
+:is(.adc-admin, .adc-admin-native) .wrap :is(input, select, textarea):is([data-valid="true"], .is-valid):not([aria-invalid="true"]),
+.login :is(input, select, textarea):is([data-valid="true"], .is-valid):not([aria-invalid="true"]) {
+  border-color: var(--ab-field-valid);
+}
+
+:where(.site, .adc-admin, .adc-admin-native, .login) form[aria-busy="true"] :is(input, select, textarea, button) {
+  cursor: progress;
+}
+
+.site :is(input, textarea):-webkit-autofill,
+:is(.adc-admin, .adc-admin-native) .wrap :is(input, textarea):-webkit-autofill,
+.login :is(input, textarea):-webkit-autofill {
+  -webkit-text-fill-color: var(--ab-field-text);
+  caret-color: var(--ab-field-text);
+  box-shadow: 0 0 0 1000px var(--ab-field-bg) inset;
+  transition: background-color 9999s ease-out;
+}
+
+/* Native choice controls stay recognizable and retain operating-system behavior. */
+.site :is(input[type="checkbox"], input[type="radio"]),
+:is(.adc-admin, .adc-admin-native) .wrap :is(input[type="checkbox"], input[type="radio"]),
+.login :is(input[type="checkbox"], input[type="radio"]) {
+  box-sizing: border-box;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  min-inline-size: 1.25rem;
+  margin: 0.15rem 0 0;
+  accent-color: var(--ab-action);
+  cursor: pointer;
+}
+
+/* WordPress removes native appearance and supplies a white SVG tick. Give it a solid brand surface. */
+.site input[type="checkbox"]:checked,
+:is(.adc-admin, .adc-admin-native) .wrap input[type="checkbox"]:checked,
+.login input[type="checkbox"]:checked {
+  border-color: var(--ab-action);
+  background-color: var(--ab-action);
+}
+
+.site label:has(> :is(input[type="checkbox"], input[type="radio"])),
+:is(.adc-admin, .adc-admin-native) .wrap label:has(> :is(input[type="checkbox"], input[type="radio"])),
+.login label:has(> :is(input[type="checkbox"], input[type="radio"])) {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+}
+
+.site :is(input[type="checkbox"], input[type="radio"]):disabled,
+:is(.adc-admin, .adc-admin-native) .wrap :is(input[type="checkbox"], input[type="radio"]):disabled,
+.login :is(input[type="checkbox"], input[type="radio"]):disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* File, range and color controls need type-specific sizing. */
+.site input[type="file"],
+:is(.adc-admin, .adc-admin-native) .wrap input[type="file"],
+.login input[type="file"] {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-width: 100%;
+  min-inline-size: 0;
+  min-height: var(--ab-local-field-height);
+  padding: 0.25rem;
+  border: 1px solid var(--ab-field-border);
+  border-radius: var(--ab-field-radius);
+  background: var(--ab-field-bg);
+  color: var(--ab-field-text);
+  font: inherit;
+}
+
+.site input[type="file"]::file-selector-button,
+:is(.adc-admin, .adc-admin-native) .wrap input[type="file"]::file-selector-button,
+.login input[type="file"]::file-selector-button {
+  min-height: calc(var(--ab-local-field-height) - 0.5rem);
+  margin-block: 0;
+  margin-inline: 0 0.75rem;
+  padding-inline: 0.85rem;
+  border: 0;
+  border-radius: calc(var(--ab-field-radius) - 2px);
+  background: var(--ab-soft);
+  color: var(--ab-link);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+[dir="rtl"] :is(.site, .adc-admin, .adc-admin-native, .login) input[type="file"]::file-selector-button {
+  margin-inline: 0 0.75rem;
+}
+
+.site input[type="range"],
+:is(.adc-admin, .adc-admin-native) .wrap input[type="range"],
+.login input[type="range"] {
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-height: var(--ab-field-height);
+  margin: 0;
+  padding: 0;
+  accent-color: var(--ab-action);
+  cursor: pointer;
+}
+
+.site input[type="color"],
+:is(.adc-admin, .adc-admin-native) .wrap input[type="color"]:not(.wp-color-picker),
+.login input[type="color"] {
+  inline-size: 3.25rem;
+  block-size: var(--ab-local-field-height);
+  min-height: var(--ab-local-field-height);
+  padding: 0.2rem;
+  border: 1px solid var(--ab-field-border);
+  border-radius: var(--ab-field-radius);
+  background: var(--ab-field-bg);
+  cursor: pointer;
+}
+
+/* Field grouping and feedback. */
+:where(.site, .adc-admin, .adc-admin-native, .login) :is(fieldset) {
+  min-inline-size: 0;
+  border-color: var(--ab-border);
+}
+
+:where(.site, .adc-admin, .adc-admin-native, .login) label:has(> :is(input, select, textarea)) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+:where(.site, .adc-admin, .adc-admin-native, .login) legend {
+  max-inline-size: 100%;
+  color: var(--ab-heading);
+}
+
+:where(.site, .adc-admin, .adc-admin-native, .login) :is(.ab-field-help, .description, .cd-profile-form-note) {
+  color: var(--ab-muted);
+}
+
+:where(.site, .adc-admin, .adc-admin-native, .login) :is(.ab-field-error, .field-error, [data-field-error]) {
+  color: var(--ab-error);
+  font-weight: 600;
+}
+
+:where(.site, .adc-admin, .adc-admin-native, .login) :is(.ab-field-success, .field-success) {
+  color: var(--ab-success);
+}
+
+@media (max-width: 782px) {
+  :where(.site, .adc-admin, .adc-admin-native, .login) { --ab-local-field-height: var(--ab-field-height); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.site, .adc-admin, .adc-admin-native, .login) :is(input, select, textarea) { transition: none; }
+}
+
+@media (forced-colors: active) {
+  :where(.site, .adc-admin, .adc-admin-native, .login) :is(input, select, textarea):focus-visible {
+    outline-color: Highlight;
+  }
+  :where(.site, .adc-admin, .adc-admin-native, .login) :is(input, select, textarea):is([aria-invalid="true"], .is-invalid, :user-invalid) {
+    border-color: Mark;
+  }
+  :where(.site, .adc-admin, .adc-admin-native, .login) input[type="checkbox"]:checked {
+    border-color: Highlight;
+    background-color: Highlight;
+  }
+}
+
+@media print {
+  :where(.site, .adc-admin, .adc-admin-native, .login) :is(input, select, textarea) {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+  }
+}

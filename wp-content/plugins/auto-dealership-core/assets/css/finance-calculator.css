@@ -3,11 +3,10 @@
 @container (min-width:540px) { .adc-finance-calculator.cd-loan-calculator .adc-finance-inputs { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .adc-finance-calculator.cd-loan-calculator .adc-finance-inputs > label { display:grid; grid-template-rows:1fr auto; gap:.5rem; min-width:0; margin:0; line-height:1.5; }
 .adc-finance-calculator.cd-loan-calculator .adc-finance-inputs > label > input,
-.adc-finance-calculator.cd-loan-calculator .adc-finance-inputs > label > select { box-sizing:border-box; width:100%; min-width:0; height:3rem; min-height:3rem; max-height:3rem; margin:0; padding:.65rem .8rem; border:1px solid var(--ab-control-border); border-radius:.4rem; background-color:var(--ab-surface); color:var(--ab-heading); font-family:inherit; font-size:1rem; font-weight:400; line-height:1.5; }
+.adc-finance-calculator.cd-loan-calculator .adc-finance-inputs > label > select { box-sizing:border-box; width:100%; min-width:0; height:var(--ab-field-height); min-height:var(--ab-field-height); max-height:var(--ab-field-height); margin:0; font-size:1rem; font-weight:400; line-height:1.5; }
 .adc-finance-calculator label { display:grid; gap:.4rem; font-weight:600; min-width:0; }
-.adc-finance-calculator input,.adc-finance-calculator select { box-sizing:border-box; width:100%; min-width:0; padding:.7rem; border:1px solid var(--ab-control-border); border-radius:.4rem; background:var(--ab-surface); color:var(--ab-heading); font:inherit; }
+.adc-finance-calculator input,.adc-finance-calculator select { width:100%; min-width:0; }
 .adc-finance-calculator select { text-overflow:ellipsis; }
-.adc-finance-calculator input:focus-visible,.adc-finance-calculator select:focus-visible { outline:3px solid var(--ab-action); outline-offset:2px; }
 .adc-finance-calculator .adc-finance-notice { padding:1rem; background:var(--ab-warning-bg); color:var(--ab-warning); border-inline-start:4px solid var(--ab-warning); }
 .adc-finance-calculator .adc-finance-note { font-size:.9rem; line-height:1.7; }
 .adc-finance-calculator details { margin-block:1rem; padding:1rem; border:1px solid var(--ab-border); border-radius:.6rem; }

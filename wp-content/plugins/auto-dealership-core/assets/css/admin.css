@@ -44,30 +44,11 @@
 .adc-admin .wrap :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea) {
 	box-sizing: border-box;
 	max-width: 100%;
-	min-height: var(--adc-control-height);
 	margin: 0;
-	padding: 6px 12px;
-	border: 1px solid var(--ab-control-border);
-	border-radius: var(--adc-control-radius);
-	background-color: var(--adc-surface);
-	color: var(--adc-ink);
 	font-size: 14px;
-	line-height: 1.6;
 }
-.adc-admin .wrap select { height: var(--adc-control-height); padding-inline-end: 30px; }
-.adc-admin .wrap input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]) { height: var(--adc-control-height); }
+.adc-admin .wrap select { padding-inline-end: 30px; }
 .adc-admin .wrap textarea { min-height: 96px; resize: vertical; }
-.adc-admin .wrap input::placeholder,
-.adc-admin .wrap textarea::placeholder { color: var(--ab-muted); opacity: 1; }
-.adc-admin .wrap :is(input, select, textarea):focus {
-	border-color: var(--adc-accent);
-	outline: 2px solid var(--adc-accent);
-	outline-offset: 2px;
-	box-shadow: none;
-}
-.adc-admin .wrap :is(input, select, textarea):disabled { background-color: var(--ab-bg); color: var(--adc-muted); }
-.adc-admin .wrap input[readonly],
-.adc-admin .wrap textarea[readonly] { background-color: var(--adc-soft); }
 .adc-admin .wrap .button {
 	display: inline-flex;
 	align-items: center;
@@ -137,7 +118,7 @@
 	font-weight: 500;
 }
 .adc-admin .wrap form label:has(input[type="checkbox"], input[type="radio"]) { line-height: 1.8; }
-.adc-admin .wrap input:is([type="checkbox"], [type="radio"]) { flex-shrink: 0; accent-color: var(--adc-accent); }
+.adc-admin .wrap input:is([type="checkbox"], [type="radio"]) { flex-shrink: 0; }
 .adc-admin .wrap form > p > :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]), select, label:not(:has(input[type="checkbox"], input[type="radio"]))) { flex: 1 1 200px; min-width: 0; }
 .adc-admin .wrap form > p > textarea { flex: 1 1 100%; width: 100%; }
 .adc-admin .wrap form > .adc-field { flex: 1 1 220px; }
@@ -159,6 +140,10 @@
 .adc-admin .wrap table.widefat td form > textarea { flex-basis: 100%; }
 .adc-admin .wrap table.widefat td form > .button { flex: 0 1 auto; margin: 0; }
 .adc-admin .wrap table.widefat td form > br { display: none; }
+.adc-admin .wrap .adc-acquisition-table { min-width: 1100px; table-layout: fixed; }
+.adc-admin .wrap .adc-acquisition-table :is(th, td):first-child { width: 14rem; }
+.adc-admin .wrap .adc-acquisition-table :is(th, td):nth-child(2) { width: 20rem; }
+.adc-admin .wrap table.adc-acquisition-table td form > label.adc-field--long-choice { flex: 1 1 100%; }
 .adc-admin .adc-table-scroll > table.widefat:not(:has(tr > :nth-child(3))) { min-width: 600px; }
 .adc-admin .wrap .form-table th { vertical-align: top; text-align: start; }
 .adc-admin .wrap .form-table td > label:has(input[type="checkbox"]) { display: block; margin-block: 8px; }

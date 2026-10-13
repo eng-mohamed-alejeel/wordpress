@@ -5,7 +5,7 @@
 .adc-admin-native .wrap :is(p, .description) { font-size: 14px; line-height: 1.7; }
 .adc-admin-native .wrap .description { color: var(--adc-muted); }
 .adc-admin-native .wrap .button { box-sizing: border-box; min-height: var(--adc-control-height); padding: 8px 16px; font-size: 14px; line-height: 24px; }
-.adc-admin-native .wrap :is(input[type="text"], input[type="search"], input[type="number"], input[type="url"], input[type="date"], input[type="email"], select):not(.wp-editor-wrap *) { box-sizing: border-box; min-height: var(--adc-control-height); max-width: 100%; padding: 8px 12px; font-size: 14px; }
+.adc-admin-native .wrap :is(input[type="text"], input[type="search"], input[type="number"], input[type="url"], input[type="date"], input[type="email"], select):not(.wp-editor-wrap *) { box-sizing: border-box; min-height: var(--adc-control-height); max-width: 100%; padding-block: var(--ab-field-padding-block); padding-inline: var(--ab-field-padding-inline); font-size: 14px; }
 .adc-admin-native .wrap select { padding-inline-end: 30px; }
 .adc-admin-native .wrap textarea:not(.wp-editor-area) { box-sizing: border-box; min-height: 100px; max-width: 100%; padding: 10px 12px; font-size: 14px; line-height: 1.7; }
 .adc-admin-native .wrap :is(input, select, textarea):focus { border-color: var(--adc-accent); }
@@ -48,7 +48,7 @@
 .adc-admin-native .wrap .button { border-radius: 7px; }
 .adc-admin-native .wrap .button-primary { background: var(--adc-accent); border-color: var(--adc-accent); }
 .adc-admin-native .wrap .button-primary:hover { background: var(--ab-action-hover); border-color: var(--ab-action-hover); }
-.adc-admin-native .wrap :is(input[type="text"], input[type="search"], input[type="number"], input[type="url"], select, textarea) { border-radius: 7px; border-color: var(--ab-control-border); }
+.adc-admin-native .wrap :is(input[type="text"], input[type="search"], input[type="number"], input[type="url"], select, textarea) { border-radius: var(--ab-field-radius); border-color: var(--ab-field-border); }
 .adc-admin-native .wrap .tablenav .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .adc-admin-native .wrap .tablenav .actions :is(select, .button) { margin: 0; }
 .adc-admin-native .wrap .tablenav { height: auto; min-height: var(--adc-control-height); }

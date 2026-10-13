@@ -3,9 +3,9 @@
 #customize-controls .customize-info, #customize-controls .accordion-section-title { background: var(--ab-surface); border-color: var(--ab-border); }
 #customize-controls .accordion-section-title:hover, #customize-controls .accordion-section-title:focus { background: var(--ab-soft); color: var(--ab-link); border-inline-start-color: var(--ab-action); }
 #customize-controls .customize-control { margin-bottom: 20px; }
-#customize-controls .customize-control :is(input[type="text"], input[type="url"], input[type="number"], input[type="email"], select, textarea) { box-sizing: border-box; border-color: var(--ab-control-border); border-radius: 7px; min-height: 40px; }
+#customize-controls .customize-control :is(input[type="text"], input[type="url"], input[type="number"], input[type="email"], select, textarea) { box-sizing: border-box; border-color: var(--ab-field-border); border-radius: var(--ab-field-radius); min-height: var(--ab-field-height-compact); }
 #customize-controls .customize-control textarea { min-height: 96px; }
 #customize-controls .customize-control-title { color: var(--ab-heading); }
 #customize-controls .customize-control-description { color: var(--ab-muted); }
-#customize-controls .button { border-radius: 7px; }
+#customize-controls .button { border-radius: var(--ab-field-radius); }
 #customize-controls .button-primary { border-color: var(--ab-action); background: var(--ab-action); }

@@ -28,7 +28,7 @@ body #customize-controls .iris-picker { background: var(--ab-surface); border-co
 #customize-controls .wp-full-overlay-sidebar-content { bottom: 88px; }
 #ab-customizer-appearance { padding: 6px 12px; border-bottom: 1px solid var(--ab-border); }
 #ab-customizer-appearance .ab-appearance-control { display: flex; justify-content: space-between; gap: 8px; }
-#ab-customizer-appearance select { min-height: 30px; max-width: 160px; }
+#ab-customizer-appearance select { min-height: var(--ab-field-height-compact); max-width: 160px; }
 #customize-controls .devices { background: var(--ab-surface); box-shadow: none; }
 #customize-controls .devices button.active { color: var(--ab-link); border-bottom-color: var(--ab-link); }
 @media (max-width: 600px) {
@@ -54,10 +54,25 @@ body .media-frame :is(.attachment .check, .attachment .check:hover) { background
 body :is(.media-modal, .media-frame) :is(.media-modal-close, .media-modal-close .media-modal-icon::before, .left, .right, .close, .view-switch a::before) { color: var(--ab-muted); }
 body .media-frame .media-modal-close:hover, body .media-frame .edit-media-header button:hover { background: var(--ab-soft); color: var(--ab-link); }
 
-body :is(#customize-controls, .media-modal, .media-frame) :is(input:not([type="button"]):not([type="submit"]):not([type="range"]):not([type="color"]), textarea, select) {
-  background-color: var(--ab-bg); color: var(--ab-text); border-color: var(--ab-control-border);
+body :is(#customize-controls, .media-modal, .media-frame) :is(input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]), textarea, select) {
+  box-sizing: border-box;
+  min-height: var(--ab-field-height-compact);
+  padding-block: var(--ab-field-padding-block);
+  padding-inline: var(--ab-field-padding-inline);
+  border: 1px solid var(--ab-field-border);
+  border-radius: var(--ab-field-radius);
+  background-color: var(--ab-field-bg);
+  color: var(--ab-field-text);
 }
 body :is(#customize-controls, .media-modal, .media-frame) ::placeholder { color: var(--ab-muted); opacity: 1; }
+body :is(#customize-controls, .media-modal, .media-frame) :is(input, textarea, select):hover:not(:disabled):not([readonly]):not([aria-invalid="true"]) { border-color: var(--ab-field-hover-border); }
+body :is(#customize-controls, .media-modal, .media-frame) :is(input, textarea, select):is([aria-invalid="true"], .is-invalid, :user-invalid) { border-color: var(--ab-field-invalid); box-shadow: 0 0 0 1px var(--ab-field-invalid); }
+body :is(#customize-controls, .media-modal, .media-frame) :is(input, textarea):read-only:not(.wp-editor-area) { background-color: var(--ab-field-readonly-bg); color: var(--ab-muted); }
+body :is(#customize-controls, .media-modal, .media-frame) :is(input, textarea):-webkit-autofill { -webkit-text-fill-color: var(--ab-field-text); caret-color: var(--ab-field-text); box-shadow: 0 0 0 1000px var(--ab-field-bg) inset; }
+body :is(#customize-controls, .media-modal, .media-frame) :is(input[type="checkbox"], input[type="radio"], input[type="range"]) { accent-color: var(--ab-action); }
+body :is(#customize-controls, .media-modal, .media-frame) input[type="checkbox"]:checked { border-color: var(--ab-action); background-color: var(--ab-action); }
+body :is(#customize-controls, .media-modal, .media-frame) input[type="file"] { box-sizing: border-box; max-width: 100%; min-height: var(--ab-field-height); padding: .25rem; border: 1px solid var(--ab-field-border); border-radius: var(--ab-field-radius); background: var(--ab-field-bg); color: var(--ab-field-text); }
+body :is(#customize-controls, .media-modal, .media-frame) input[type="file"]::file-selector-button { min-height: calc(var(--ab-field-height) - .5rem); margin-inline-end: .75rem; padding-inline: .85rem; border: 0; border-radius: calc(var(--ab-field-radius) - 2px); background: var(--ab-soft); color: var(--ab-link); font: inherit; font-weight: 700; cursor: pointer; }
 body :is(#customize-controls, .media-modal, .media-frame) :is(.button, .button-secondary) {
   background: var(--ab-surface); color: var(--ab-link); border-color: var(--ab-control-border); text-shadow: none;
 }
@@ -69,7 +84,7 @@ body :is(#customize-controls, .media-modal, .media-frame) :is(button, .button):d
   background: var(--ab-soft) !important; color: var(--ab-muted) !important; border-color: var(--ab-border) !important; cursor: not-allowed; text-shadow: none !important;
 }
 body :is(#customize-controls, .media-modal, .media-frame) :is(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--ab-focus); outline-offset: 2px; box-shadow: none;
+  outline: 3px solid var(--ab-focus); outline-offset: 2px;
 }
 body :is(#customize-controls, .media-modal, .media-frame) :is(.notice, .notification-message) { background: var(--ab-surface); color: var(--ab-text); }
 @media (forced-colors: active) {

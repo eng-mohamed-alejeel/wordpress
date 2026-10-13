@@ -181,9 +181,9 @@ const { spawn } = require('node:child_process');
         for(const group of groups) {
           await admin('admin.php?page=adc-area-'+group);
           check(await evaluate('document.querySelectorAll(".adc-workspace-section").length===1 && document.querySelectorAll(".adc-workspace-card").length>0'),'Group landing: '+group);
-          if (group==='inventory') check(await evaluate('document.querySelectorAll(".adc-workspace-section h3").length===2 && [...document.querySelectorAll(".adc-workspace-grid")].map(grid=>grid.querySelectorAll(".adc-workspace-card").length).join(",")==="8,3"'),'Inventory separates operations and website catalog');
+          if (group==='inventory') check(await evaluate('(()=>{const grids=[...document.querySelectorAll(".adc-workspace-grid")];const links=grid=>[...grid.querySelectorAll(".adc-workspace-card")].map(a=>a.href);return document.querySelectorAll(".adc-workspace-section > h2").length===2&&grids.length===2&&links(grids[0]).every(href=>!href.includes("post_type=car"))&&links(grids[1]).every(href=>href.includes("post_type=car"));})()'),'Inventory separates operations and website catalog');
         }
-        const fields={pricing:['vat_rate_bps','pricing_fee_amount','promotion_code','seller_name'],reservations:['reservation_hours','reservation_deposit_type'],branches:['default_branch_id','code'],delivery:['delivery_required_documents[]'],privacy:['privacy_retention_days'],catalog:['public_catalog_mode']};
+        const fields={pricing:['vat_percent','pricing_fee_amount','promotion_code','seller_name'],reservations:['reservation_hours','reservation_deposit_type'],branches:['default_branch_id','code'],delivery:['delivery_required_documents[]'],privacy:['privacy_retention_days'],catalog:['public_catalog_mode']};
         for(const [section,expected] of Object.entries(fields)) {
           await admin('admin.php?page=adc-settings&section='+section);
           const names=await evaluate('[...document.querySelectorAll("#wpbody-content .wrap input,#wpbody-content .wrap select,#wpbody-content .wrap textarea")].map(e=>e.name)');

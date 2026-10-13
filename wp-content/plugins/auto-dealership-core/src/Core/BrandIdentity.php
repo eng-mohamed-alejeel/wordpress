@@ -33,8 +33,12 @@ final class BrandIdentity {
 
     public static function enqueue(): void {
         self::tokens();
+        $fields = ADC_PATH . 'assets/css/brand-fields.css';
+        wp_enqueue_style( 'autobrands-fields', plugins_url( 'assets/css/brand-fields.css', ADC_FILE ), array( 'autobrands-tokens' ), (string) filemtime( $fields ) );
         $file = ADC_PATH . 'assets/css/brand-ui.css';
-        wp_enqueue_style( 'autobrands-ui', plugins_url( 'assets/css/brand-ui.css', ADC_FILE ), array( 'autobrands-tokens' ), (string) filemtime( $file ) );
+        wp_enqueue_style( 'autobrands-ui', plugins_url( 'assets/css/brand-ui.css', ADC_FILE ), array( 'autobrands-fields' ), (string) filemtime( $file ) );
+        $field_script = ADC_PATH . 'assets/js/brand-fields.js';
+        wp_enqueue_script( 'autobrands-fields', plugins_url( 'assets/js/brand-fields.js', ADC_FILE ), array(), (string) filemtime( $field_script ), true );
         if ( is_admin() ) {
             $file = ADC_PATH . 'assets/css/brand-wordpress.css';
             wp_enqueue_style( 'autobrands-wordpress', plugins_url( 'assets/css/brand-wordpress.css', ADC_FILE ), array( 'autobrands-ui' ), (string) filemtime( $file ) );

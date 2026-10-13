@@ -235,23 +235,7 @@
 
 .footer-newsletter input[type="email"] {
   flex: 1;
-  padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--cd-radius-md);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--ab-inverse);
-  font-size: var(--cd-font-size-sm);
-  outline: none;
-  transition: border-color var(--cd-transition-base);
   min-width: 0;
-}
-
-.footer-newsletter input[type="email"]:focus {
-  border-color: var(--cd-color-accent);
-}
-
-.footer-newsletter input[type="email"]::placeholder {
-  color: rgba(255, 255, 255, 0.3);
 }
 
 .footer-newsletter button {

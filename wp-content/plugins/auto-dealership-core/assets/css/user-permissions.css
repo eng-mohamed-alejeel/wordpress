@@ -16,5 +16,5 @@
 @media (max-width: 480px) { .adc-permission-grid { grid-template-columns: 1fr; } }
 .adc-permission-grid > label[hidden], .adc-permission-group[hidden], .adc-permission-report tr[hidden] { display: none; }
 .adc-permission-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-block: 16px; }
-.adc-access-operation { padding: 18px; margin-block: 20px; border: 1px solid var(--ab-control-border); border-radius: 8px; background: white; max-width: 850px; }
+.adc-access-operation { padding: 18px; margin-block: 20px; border: 1px solid var(--ab-control-border); border-radius: 8px; background: var(--ab-surface); max-width: 850px; }
 .adc-access-operation select { max-width: 100%; }
