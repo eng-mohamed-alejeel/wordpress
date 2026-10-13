@@ -15,8 +15,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(226, 29, 47, 0.18), transparent),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(6, 105, 217, 0.22), transparent);
+    radial-gradient(ellipse 80% 60% at 20% 80%, color-mix(in srgb, var(--ab-action) 18%, transparent), transparent),
+    radial-gradient(ellipse 60% 50% at 80% 20%, color-mix(in srgb, var(--ab-action) 22%, transparent), transparent);
   z-index: 0;
   pointer-events: none;
 }
@@ -40,9 +40,9 @@
 }
 
 .ab-hero-particles span:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; width: 4px; height: 4px; }
-.ab-hero-particles span:nth-child(2) { top: 25%; left: 75%; animation-delay: 1.5s; width: 8px; height: 8px; background: rgba(208, 43, 43, 0.25); }
+.ab-hero-particles span:nth-child(2) { top: 25%; left: 75%; animation-delay: 1.5s; width: 8px; height: 8px; background: color-mix(in srgb, var(--ab-action) 25%, transparent); }
 .ab-hero-particles span:nth-child(3) { top: 60%; left: 20%; animation-delay: 3s; width: 5px; height: 5px; }
-.ab-hero-particles span:nth-child(4) { top: 70%; left: 85%; animation-delay: 4.5s; width: 7px; height: 7px; background: rgba(208, 43, 43, 0.2); }
+.ab-hero-particles span:nth-child(4) { top: 70%; left: 85%; animation-delay: 4.5s; width: 7px; height: 7px; background: color-mix(in srgb, var(--ab-action) 20%, transparent); }
 .ab-hero-particles span:nth-child(5) { top: 40%; left: 50%; animation-delay: 6s; width: 3px; height: 3px; }
 
 @keyframes ab-float {
@@ -57,9 +57,9 @@
   gap: 0.5rem;
   padding: 0.4rem 1rem;
   border-radius: var(--cd-radius-full);
-  background: rgba(6, 105, 217, 0.15);
-  border: 1px solid rgba(6, 105, 217, 0.3);
-  color: #67b7ff;
+  background: color-mix(in srgb, var(--ab-action) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ab-action) 30%, transparent);
+  color: var(--ab-on-dark-link);
   font-size: var(--cd-font-size-sm);
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -89,14 +89,14 @@
 .ab-hero-v2-panel span,
 .ab-hero-v2-panel small {
   display: block;
-  color: #d8dde6;
+  color: var(--ab-on-dark-muted);
 }
 
 .ab-hero-v2-panel strong {
   display: block;
   font-size: 4rem;
   line-height: 1;
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
 }
 
 /* Hero V2 Actions */

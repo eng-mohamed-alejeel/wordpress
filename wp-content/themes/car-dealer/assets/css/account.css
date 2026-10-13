@@ -21,34 +21,34 @@
 }
 
 .main-navigation .cd-account-link a {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   border: 1px solid var(--cd-color-line);
   background: var(--cd-color-surface);
   white-space: nowrap;
 }
 
 .main-navigation .cd-account-link a:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   border-color: var(--cd-color-accent);
-  background: rgba(208, 43, 43, 0.05);
+  background: color-mix(in srgb, var(--ab-action) 5%, transparent);
 }
 
 .main-navigation .cd-logout-link a {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   border: 1px solid var(--cd-color-line);
   background: var(--cd-color-surface);
 }
 
 .main-navigation .cd-logout-link a:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   border-color: var(--cd-color-accent);
-  background: rgba(208, 43, 43, 0.05);
+  background: color-mix(in srgb, var(--ab-action) 5%, transparent);
 }
 
 /* ─── تنسيقات إضافية للحساب ─── */
 .main-navigation .cd-account-link a {
   white-space: nowrap;
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .cd-account {
@@ -100,7 +100,7 @@
 
 .cd-auth-intro {
   background: var(--cd-color-primary);
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   padding: clamp(24px, 5vw, 60px);
   display: flex;
   flex-direction: column;
@@ -109,7 +109,7 @@
 
 .cd-auth-intro h1,
 .cd-auth-intro a {
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
 }
 
 .cd-auth-intro p {
@@ -162,7 +162,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   font-size: 14px;
   font-weight: 700;
 }
@@ -173,26 +173,26 @@
 }
 
 .cd-auth-consent span a {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .cd-auth-consent span a:first-child {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
 }
 
 .cd-auth-consent span a:last-child {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .cd-auth-consent span a:hover {
-  color: #b32222;
+  color: var(--ab-action-hover);
 }
 
 .cd-auth-consent span a:last-child:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
 }
 
 /* ─── تذييل نموذج تسجيل الدخول ─── */
@@ -207,7 +207,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   font-size: var(--cd-font-size-sm);
   font-weight: 600;
   text-decoration: none;
@@ -223,8 +223,8 @@
 }
 
 .cd-auth-forgot:hover {
-  color: #b32222;
-  background: rgba(208, 43, 43, 0.08);
+  color: var(--ab-action-hover);
+  background: color-mix(in srgb, var(--ab-action) 8%, transparent);
   text-decoration: underline;
 }
 
@@ -237,7 +237,7 @@
 
 .cd-auth-tabs a {
   padding: 12px 0;
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .cd-auth-tabs [aria-current] {
@@ -261,7 +261,7 @@
   border-radius: var(--cd-radius-md);
   background: var(--cd-color-surface);
   font: inherit;
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .cd-account input:focus {
@@ -292,13 +292,13 @@
   margin: 0 auto 20px;
   padding: 16px;
   border-radius: var(--cd-radius-md);
-  background: #ecfdf5;
-  color: #065f46;
+  background: var(--ab-success-bg);
+  color: var(--ab-success);
 }
 
 .cd-account-notice.is-error {
-  background: #fff1f2;
-  color: #9f1239;
+  background: var(--ab-error-bg);
+  color: var(--ab-error);
 }
 
 .cd-account-welcome {
@@ -329,7 +329,7 @@
   padding: 24px 20px;
   border: 1px solid var(--cd-color-line);
   border-radius: var(--cd-radius-lg);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   font-weight: 600;
   text-decoration: none;
   transition: all var(--cd-transition-base);
@@ -339,7 +339,7 @@
 
 .cd-account-tools a strong {
   font-size: var(--cd-font-size-base);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .cd-account-tools a span {
@@ -351,17 +351,17 @@
 
 .cd-account-tools a:hover {
   border-color: var(--cd-color-accent);
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .cd-account-tools a:hover strong {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
 }
 
 .cd-account-tools a:hover span {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   opacity: 0.8;
 }
 

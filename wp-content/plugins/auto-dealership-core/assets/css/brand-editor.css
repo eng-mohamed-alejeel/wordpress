@@ -1,0 +1,14 @@
+/* Content canvas and palette previews; toolbar layout is owned by WordPress. */
+.editor-styles-wrapper { background: var(--ab-bg); color: var(--ab-text); }
+.editor-styles-wrapper :is(h1,h2,h3,h4,h5,h6) { color: var(--ab-heading); }
+.editor-styles-wrapper a { color: var(--ab-link); }
+.has-autobrands-navy-color { color: var(--ab-brand-navy); }
+.has-autobrands-blue-color { color: var(--ab-brand-blue); }
+.has-autobrands-text-color { color: #1A1D20; }
+.has-autobrands-background-color { color: #F8FAFC; }
+.has-autobrands-white-color { color: #FFFFFF; }
+.has-autobrands-navy-background-color { background-color: var(--ab-brand-navy); }
+.has-autobrands-blue-background-color { background-color: var(--ab-brand-blue); }
+.has-autobrands-text-background-color { background-color: #1A1D20; }
+.has-autobrands-background-background-color { background-color: #F8FAFC; }
+.has-autobrands-white-background-color { background-color: #FFFFFF; }

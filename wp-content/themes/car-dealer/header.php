@@ -31,7 +31,8 @@ $cd_search_value = isset( $_GET['search'] ) && is_scalar( $_GET['search'] ) ? sa
 				<?php wp_nav_menu( array( 'theme_location' => 'primary', 'menu_id' => 'primary-menu', 'container' => false, 'fallback_cb' => 'car_dealer_account_menu_fallback' ) ); ?>
 			</nav>
 			<div class="header-actions">
-				<form class="header-search" role="search" method="get" action="<?php echo esc_url( $cd_catalog_search_url ?: home_url( '/' ) ); ?>">
+				<?php if ( class_exists( '\AutoDealership\Core\BrandIdentity' ) ) { \AutoDealership\Core\BrandIdentity::control(); } ?>
+				<form class="header-search" role="search" aria-label="<?php echo esc_attr( car_dealer_text( 'البحث عن السيارات', 'Vehicle search' ) ); ?>" method="get" action="<?php echo esc_url( $cd_catalog_search_url ?: home_url( '/' ) ); ?>">
 					<?php if ( $cd_catalog_search_url && ! get_option( 'permalink_structure' ) ) : ?><input type="hidden" name="post_type" value="car"><?php endif; ?>
 					<label class="screen-reader-text" for="site-search"><?php echo esc_html( car_dealer_text( 'ابحث', 'Search' ) ); ?></label>
 					<input id="site-search" type="search" name="<?php echo esc_attr( $cd_catalog_search_url ? 'search' : 's' ); ?>" value="<?php echo esc_attr( $cd_search_value ); ?>" placeholder="<?php echo esc_attr( car_dealer_text( 'ابحث عن سيارة', 'Search cars' ) ); ?>">
@@ -42,4 +43,4 @@ $cd_search_value = isset( $_GET['search'] ) && is_scalar( $_GET['search'] ) ? sa
 			</div>
 		</div>
 	</header>
-	<main id="primary" class="site-main">
+	<main id="primary" class="site-main" tabindex="-1">

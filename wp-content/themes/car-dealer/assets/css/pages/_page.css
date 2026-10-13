@@ -39,11 +39,6 @@
   padding: 0;
 }
 
-.page-template-about .entry-header,
-.page-template-contact .entry-header {
-  display: none;
-}
-
 .page-template-about .entry-content,
 .page-template-contact .entry-content {
   max-width: 100%;
@@ -56,9 +51,11 @@
   border-bottom: 1px solid var(--cd-color-line);
 }
 
+.page-template-about, .page-template-contact { padding-block: var(--cd-spacing-xl); }
+
 .entry-title {
   font-size: var(--cd-font-size-3xl);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   margin: 0;
 }
 
@@ -131,12 +128,12 @@
   align-items: center;
   gap: 0.35rem;
   margin-top: var(--cd-spacing-md);
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   font-size: var(--cd-font-size-sm);
 }
 
 .edit-link:hover {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .page-links {
@@ -164,13 +161,13 @@
 
 .page-links a:hover {
   border-color: var(--cd-color-accent);
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
 }
 
 .page-links .current {
   background: var(--cd-color-accent);
   border-color: var(--cd-color-accent);
-  color: var(--cd-color-surface);
+  color: var(--ab-on-action);
 }
 
 .custom-page-content {
@@ -199,12 +196,12 @@
   background: linear-gradient(135deg, var(--cd-color-primary), var(--cd-color-secondary));
   border-radius: var(--cd-radius-xl);
   margin-bottom: var(--cd-spacing-3xl);
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
 }
 
 .page-privacy .entry-title,
 .page-terms .entry-title {
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   font-size: var(--cd-font-size-3xl);
 }
 
@@ -226,7 +223,7 @@
 
 .page-privacy .entry-content h3,
 .page-terms .entry-content h3 {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   font-size: var(--cd-font-size-xl);
   margin-top: var(--cd-spacing-2xl);
   margin-bottom: var(--cd-spacing-md);
@@ -256,14 +253,14 @@
 
 .page-privacy .entry-content a,
 .page-terms .entry-content a {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   font-weight: 600;
   text-decoration: underline;
 }
 
 .page-privacy .entry-content a:hover,
 .page-terms .entry-content a:hover {
-  color: #b32222;
+  color: var(--ab-action-hover);
 }
 
 .page-privacy .entry-content em,

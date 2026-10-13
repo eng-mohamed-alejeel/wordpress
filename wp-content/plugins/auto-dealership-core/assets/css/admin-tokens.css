@@ -1,2 +1,2 @@
-.adc-admin-shell { --adc-ink: #182b42; --adc-muted: #52657a; --adc-accent: #2459a9; --adc-border: #dce4ee; --adc-surface: #fff; --adc-soft: #f3f6fb; --adc-control-height: 42px; --adc-control-radius: 7px; --adc-gap: 16px; }
+.adc-admin-shell { --adc-ink: var(--ab-text); --adc-muted: var(--ab-muted); --adc-accent: var(--ab-action); --adc-border: var(--ab-border); --adc-surface: var(--ab-surface); --adc-soft: var(--ab-bg); --adc-control-height: 42px; --adc-control-radius: 7px; --adc-gap: 16px; }
 @media (max-width: 782px) { .adc-admin-shell { --adc-control-height: 44px; } }

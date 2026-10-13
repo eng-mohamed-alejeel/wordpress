@@ -5,28 +5,28 @@
 
 :root {
   /* ── الألوان الأساسية (cd-color-) ── */
-  --cd-color-primary: #1A365D;      /* أزرق داكن */
-  --cd-color-accent: #D02B2B;       /* أحمر تفاعلي */
-  --cd-color-secondary: #2B4C7E;    /* كحلي باهت */
-  --cd-color-bg: #F3F4F6;           /* خلفية رمادية فاتحة */
-  --cd-color-surface: #FFFFFF;       /* سطح أبيض */
-  --cd-color-muted: #627D98;        /* نص ثانوي */
-  --cd-color-line: #D9E2EC;          /* حدود */
-  --cd-color-text: #1E293B;          /* نص أساسي */
+  --cd-color-primary: var(--ab-primary);      /* أزرق داكن */
+  --cd-color-accent: var(--ab-action);       /* أزرق تفاعلي */
+  --cd-color-secondary: var(--ab-brand-blue);    /* كحلي باهت */
+  --cd-color-bg: var(--ab-bg);           /* خلفية رمادية فاتحة */
+  --cd-color-surface: var(--ab-surface);       /* سطح أبيض */
+  --cd-color-muted: var(--ab-muted);        /* نص ثانوي */
+  --cd-color-line: var(--ab-border);          /* حدود */
+  --cd-color-text: var(--ab-text);          /* نص أساسي */
 
   /* ── ألوان AUTO BRANDS (ab-color-) ── */
-  --ab-color-blue: #0669D9;
-  --ab-color-red: #E21D2F;
-  --ab-color-black: #05070B;
-  --ab-color-ink: #111827;
-  --ab-color-metal: #D8DDE6;
+  --ab-color-blue: var(--ab-action);
+  --ab-color-red: var(--ab-action);
+  --ab-color-black: var(--ab-hero);
+  --ab-color-ink: var(--ab-text);
+  --ab-color-metal: var(--ab-on-dark-muted);
   --ab-color-chrome: linear-gradient(135deg, #ffffff 0%, #b9c3d0 34%, #f7f9fc 52%, #7d8794 100%);
 
   /* ── الألوان الدلالية ── */
-  --cd-color-success: #2F855A;
-  --cd-color-warning: #D69E2E;
-  --cd-color-error: #E53E3E;
-  --cd-color-info: #3182CE;
+  --cd-color-success: var(--ab-success);
+  --cd-color-warning: var(--ab-warning);
+  --cd-color-error: var(--ab-error);
+  --cd-color-info: var(--ab-action);
 
   /* ── الخطوط ── */
   --cd-font-family: 'Tajawal', sans-serif;
@@ -75,7 +75,7 @@
 
   /* ── الترويسة ── */
   --cd-header-height: 76px;
-  --cd-header-bg: rgba(255, 255, 255, 0.96);
+  --cd-header-bg: var(--ab-brand-navy);
   --cd-header-border: 1px solid var(--cd-color-line);
 
   /* ── الحاوية ── */

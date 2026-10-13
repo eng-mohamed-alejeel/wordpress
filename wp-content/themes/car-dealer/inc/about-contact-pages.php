@@ -214,25 +214,25 @@ function car_dealer_shortcode_ab_team() {
 			'name' => 'الاستاذ/ ناصر مطر المطيري',
 			'role' => 'الرئيس المؤسس ',
 			'experience' => 'خبرة 30 سنة في تجارة السيارات',
-			'bg' => 'linear-gradient(135deg, #D69E2E, #ECC94B)',
+			'bg' => 'var(--ab-brand-gradient)',
 		),
 		array(
 			'name' => 'الاستاذ/ محمد مطر المطيري',
 			'role' => 'المدير التنفيذي',
 			'experience' => 'خبرة 25 سنة في معارض السيارات',
-			'bg' => 'linear-gradient(135deg, #0669D9, #2B4C7E)',
+			'bg' => 'var(--ab-brand-gradient)',
 		),
 		array(
 			'name' => 'الاستاذ/ عاطف يوسف الشافعي',
 			'role' => 'المدير العام',
 			'experience' => 'خبرة 40 سنة في مجال السيارات',
-			'bg' => 'linear-gradient(135deg, #E21D2F, #D02B2B)',
+			'bg' => 'var(--ab-brand-gradient)',
 		),
 		array(
 			'name' => 'الاستاذة/ نجلاء ناصر المطيري',
 			'role' => 'مدير الموارد البشرية',
 			'experience' => 'خبرة 6 سنوات في مجال السيارات',
-			'bg' => 'linear-gradient(135deg, #2F855A, #38A169)',
+			'bg' => 'var(--ab-brand-gradient)',
 		),
 	);
 

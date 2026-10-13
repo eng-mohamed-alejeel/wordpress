@@ -1,17 +1,17 @@
-.adc-publishing{max-width:1440px;margin:24px auto;padding:0 20px;color:#1d2939}
+.adc-publishing{max-width:1440px;margin:24px auto;padding:0 20px;color:var(--ab-text)}
 .adc-publishing-header{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:24px}
 .adc-publishing h1{font-size:27px;font-weight:700;line-height:1.5;padding:0}
-.adc-eyebrow{color:#667085;margin:0 0 4px}.adc-publishing h2{font-size:18px;margin:0 0 20px}.adc-publishing h3{font-size:14px}
+.adc-eyebrow{color:var(--ab-muted);margin:0 0 4px}.adc-publishing h2{font-size:18px;margin:0 0 20px}.adc-publishing h3{font-size:14px}
 .adc-editor-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px}.adc-terms-grid{display:grid;grid-template-columns:350px minmax(0,1fr);gap:24px}
 .adc-editor-grid>*,.adc-terms-grid>*{min-width:0}.adc-publishing .wp-editor-wrap{max-width:100%}.adc-publishing .mce-flow-layout{white-space:normal}
-.adc-panel{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 5px #10182806}
+.adc-panel{background:var(--ab-surface);border:1px solid var(--ab-border);border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 5px #10182806}
 .adc-field{display:block;font-weight:600;margin:18px 0}.adc-field input,.adc-field textarea,.adc-field select{display:block;width:100%;max-width:100%;margin-top:8px;font-weight:400}
 .adc-field textarea{resize:vertical}.adc-publishing-filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:18px 0}.adc-publishing-filters label{display:grid;gap:6px}
-.adc-media{padding:12px 0;border-bottom:1px solid #eef0f3}.adc-media-preview{display:flex;gap:12px;flex-wrap:wrap}.adc-media-preview figure{position:relative;margin:0 0 12px}.adc-media-preview img{width:110px;height:85px;object-fit:cover;border-radius:6px}
-.adc-media-preview button{position:absolute;inset-inline-end:3px;top:3px;border:0;border-radius:50%;width:25px;height:25px;cursor:pointer;background:#fff;color:#b42318;font-size:20px}
-.adc-term-options{max-height:200px;overflow:auto;margin:16px 0;border-bottom:1px solid #eef0f3;padding-bottom:12px}.adc-term-options legend{font-weight:600}.adc-term-options label{display:block;margin:8px 0}
+.adc-media{padding:12px 0;border-bottom:1px solid var(--ab-bg)}.adc-media-preview{display:flex;gap:12px;flex-wrap:wrap}.adc-media-preview figure{position:relative;margin:0 0 12px}.adc-media-preview img{width:110px;height:85px;object-fit:cover;border-radius:6px}
+.adc-media-preview button{position:absolute;inset-inline-end:3px;top:3px;border:0;border-radius:50%;width:25px;height:25px;cursor:pointer;background:var(--ab-surface);color:var(--ab-error);font-size:20px}
+.adc-term-options{max-height:200px;overflow:auto;margin:16px 0;border-bottom:1px solid var(--ab-bg);padding-bottom:12px}.adc-term-options legend{font-weight:600}.adc-term-options label{display:block;margin:8px 0}
 .adc-table-scroll{overflow:auto;border-radius:8px}.adc-table-scroll th,.adc-table-scroll td{padding:16px 12px;vertical-align:middle}.adc-car-row{display:flex;align-items:center;gap:12px;min-width:200px}.adc-car-row img{object-fit:cover;border-radius:6px}
-.adc-status{display:inline-block;padding:5px 10px;background:#eef4ff;border-radius:20px;color:#344054;white-space:nowrap}.adc-inline{display:inline-block;margin:5px}.adc-pagination{display:flex;gap:8px;margin:20px 0}.adc-pagination a,.adc-pagination span{padding:7px 12px;background:#fff;border:1px solid #d0d5dd;border-radius:6px}
+.adc-status{display:inline-block;padding:5px 10px;background:var(--ab-soft);border-radius:20px;color:var(--ab-muted);white-space:nowrap}.adc-inline{display:inline-block;margin:5px}.adc-pagination{display:flex;gap:8px;margin:20px 0}.adc-pagination a,.adc-pagination span{padding:7px 12px;background:var(--ab-surface);border:1px solid var(--ab-border);border-radius:6px}
 .adc-publishing .onyx-variants{margin:0}.adc-publishing .button-primary{min-height:36px;padding:3px 16px}
 @media(max-width:1050px){.adc-editor-grid,.adc-terms-grid{grid-template-columns:1fr}.adc-editor-grid aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}}
 @media(max-width:650px){.adc-publishing{padding:0 8px}.adc-panel{padding:16px}.adc-editor-grid aside{display:block}.adc-publishing-header nav{display:flex;flex-wrap:wrap;gap:8px}}

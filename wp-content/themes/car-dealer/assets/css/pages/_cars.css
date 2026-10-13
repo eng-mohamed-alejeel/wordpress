@@ -22,7 +22,7 @@
 
 .offer-card {
   overflow: hidden;
-  border: 1px solid #dfe5ef;
+  border: 1px solid var(--ab-border);
   border-radius: var(--cd-radius-lg);
   background: var(--cd-color-surface);
   box-shadow: var(--cd-shadow-lg);
@@ -50,12 +50,12 @@
 
 .offer-old {
   text-decoration: line-through;
-  color: #7d8794;
+  color: var(--ab-muted);
   font-weight: 700;
 }
 
 .car-monthly {
-  color: var(--ab-color-blue);
+  color: var(--ab-link);
   font-weight: 800;
   margin-top: -0.35rem;
 }

@@ -4,8 +4,8 @@
 
 /* ─── الخلفية الأساسية ─── */
 .site-footer {
-  background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 50%, #0d1b2a 100%);
-  color: var(--cd-color-surface);
+  background: linear-gradient(160deg, var(--ab-footer) 0%, var(--ab-footer) 50%, var(--ab-footer) 100%);
+  color: var(--ab-inverse);
   padding: var(--cd-spacing-3xl) 0 var(--cd-spacing-xl);
   margin-top: var(--cd-spacing-3xl);
   position: relative;
@@ -31,7 +31,7 @@
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(208, 43, 43, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--ab-action) 8%, transparent) 0%, transparent 70%);
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -62,7 +62,7 @@
 .footer-title {
   font-size: var(--cd-font-size-base);
   font-weight: 800;
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   margin: 0;
   padding-bottom: var(--cd-spacing-sm);
   border-bottom: 2px solid var(--cd-color-accent);
@@ -76,7 +76,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   font-size: var(--cd-font-size-xl);
   font-weight: 800;
   text-decoration: none;
@@ -149,7 +149,7 @@
 }
 
 .footer-links a:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   padding-left: 4px;
 }
 
@@ -176,7 +176,7 @@
 }
 
 .footer-legal-links a:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
 }
 
 /* ─── وسائل التواصل الاجتماعي ─── */
@@ -202,7 +202,7 @@
   border-radius: var(--cd-radius-full);
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.05);
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   font-size: var(--cd-font-size-sm);
   text-decoration: none;
   transition: all var(--cd-transition-base);
@@ -212,7 +212,7 @@
   background: var(--cd-color-accent);
   border-color: var(--cd-color-accent);
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(208, 43, 43, 0.3);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--ab-action) 30%, transparent);
 }
 
 /* ─── نشرة الأخبار ─── */
@@ -239,7 +239,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--cd-radius-md);
   background: rgba(255, 255, 255, 0.05);
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   font-size: var(--cd-font-size-sm);
   outline: none;
   transition: border-color var(--cd-transition-base);
@@ -259,7 +259,7 @@
   border: none;
   border-radius: var(--cd-radius-md);
   background: var(--cd-color-accent);
-  color: var(--cd-color-surface);
+  color: var(--ab-on-action);
   font-weight: 700;
   font-size: var(--cd-font-size-sm);
   cursor: pointer;
@@ -268,7 +268,7 @@
 }
 
 .footer-newsletter button:hover {
-  background: #b32222;
+  background: var(--ab-action-hover);
   transform: translateY(-2px);
 }
 

@@ -1,8 +1,8 @@
-.onyx-variants{margin-block:2rem;padding:1.5rem;border:1px solid #ddd;border-radius:12px;background:#fff;color:#20232a}
+.onyx-variants{margin-block:2rem;padding:1.5rem;border:1px solid var(--ab-border);border-radius:12px;background:var(--ab-surface);color:var(--ab-text)}
 .onyx-variant-filters{display:flex;flex-wrap:wrap;align-items:end;gap:1rem;margin-block:1rem}
 .onyx-variant-filters label{display:grid;gap:.4rem;min-width:140px;flex:1}
-.onyx-variant-filters select,.onyx-variant-filters button{font:inherit;padding:.65rem;border:1px solid #aaa;border-radius:6px;background:#fff;color:inherit}
-.onyx-variant-filters button{cursor:pointer}.onyx-variant-filters :focus-visible{outline:3px solid #1762b5;outline-offset:3px}
+.onyx-variant-filters select,.onyx-variant-filters button{font:inherit;padding:.65rem;border:1px solid var(--ab-control-border);border-radius:6px;background:var(--ab-surface);color:inherit}
+.onyx-variant-filters button{cursor:pointer}.onyx-variant-filters :focus-visible{outline:3px solid var(--ab-action);outline-offset:3px}
 .onyx-variant-scroll{overflow-x:auto}.onyx-variant-table{width:100%;border-collapse:collapse;text-align:start}
-.onyx-variant-table th,.onyx-variant-table td{padding:.8rem;border-bottom:1px solid #ddd;white-space:nowrap;text-align:start}
-.onyx-variant-table thead{background:#f3f5f7}.onyx-variant-table tr[hidden]{display:none}.car-model-colors{font-size:.9rem;color:#555}
+.onyx-variant-table th,.onyx-variant-table td{padding:.8rem;border-bottom:1px solid var(--ab-border);white-space:nowrap;text-align:start}
+.onyx-variant-table thead{background:var(--ab-bg)}.onyx-variant-table tr[hidden]{display:none}.car-model-colors{font-size:.9rem;color:var(--ab-muted)}

@@ -5,13 +5,13 @@
 .hero,
 .archive-hero {
   padding: var(--cd-spacing-4xl) 0;
-  color: var(--cd-color-surface);
-  background: linear-gradient(120deg, #102a43, #1b4c73);
+  color: var(--ab-inverse);
+  background: linear-gradient(120deg, var(--ab-primary), var(--ab-primary));
 }
 
 .hero h1,
 .archive-hero h1 {
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   max-width: 760px;
   font-size: clamp(2.25rem, 5vw, var(--cd-font-size-5xl));
   margin: 0.35rem 0 var(--cd-spacing-md);
@@ -112,7 +112,7 @@
   border: 1px solid var(--cd-color-line);
   border-radius: var(--cd-radius-full);
   background: var(--cd-color-surface);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   font-size: var(--cd-font-size-sm);
 }
 

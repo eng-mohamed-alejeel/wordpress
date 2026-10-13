@@ -9,8 +9,8 @@
   min-height: 500px;
   display: grid;
   align-items: center;
-  color: var(--cd-color-surface);
-  background: linear-gradient(135deg, rgba(5, 7, 11, 0.95), rgba(26, 54, 93, 0.9), rgba(6, 105, 217, 0.8));
+  color: var(--ab-inverse);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ab-brand-navy) 95%, transparent), color-mix(in srgb, var(--ab-brand-navy) 90%, transparent), color-mix(in srgb, var(--ab-action) 80%, transparent));
   padding: var(--cd-spacing-4xl) 0;
 }
 
@@ -18,8 +18,8 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(226, 29, 47, 0.15), transparent 50%),
-              radial-gradient(circle at 20% 80%, rgba(6, 105, 217, 0.1), transparent 50%);
+  background: radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--ab-action) 15%, transparent), transparent 50%),
+              radial-gradient(circle at 20% 80%, color-mix(in srgb, var(--ab-action) 10%, transparent), transparent 50%);
   pointer-events: none;
 }
 
@@ -40,7 +40,7 @@
 }
 
 .ab-about-hero h1 {
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 1.15;
   margin: 0 0 var(--cd-spacing-lg);
@@ -82,7 +82,7 @@
   font-weight: 800;
   line-height: 1;
   margin: var(--cd-spacing-xs) 0;
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -152,7 +152,7 @@
 .ab-mission-icon svg {
   width: 32px;
   height: 32px;
-  stroke: var(--cd-color-accent);
+  stroke: var(--ab-link);
   stroke-width: 2;
   fill: none;
   stroke-linecap: round;
@@ -160,15 +160,15 @@
 }
 
 .ab-mission-mission .ab-mission-icon {
-  background: rgba(208, 43, 43, 0.08);
+  background: color-mix(in srgb, var(--ab-action) 8%, transparent);
 }
 
 .ab-mission-mission .ab-mission-icon svg {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
 }
 
 .ab-mission-vision .ab-mission-icon {
-  background: rgba(6, 105, 217, 0.08);
+  background: color-mix(in srgb, var(--ab-action) 8%, transparent);
 }
 
 .ab-mission-vision .ab-mission-icon svg {
@@ -178,7 +178,7 @@
 .ab-mission-card h3 {
   font-size: var(--cd-font-size-xl);
   margin: 0 0 var(--cd-spacing-md);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .ab-mission-card p {
@@ -192,7 +192,7 @@
 .ab-stats-section {
   padding: var(--cd-spacing-4xl) 0;
   background: var(--ab-color-black);
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
 }
 
 .ab-stats-grid {
@@ -211,7 +211,7 @@
   display: block;
   font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 800;
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   line-height: 1.1;
   margin-bottom: var(--cd-spacing-sm);
 }
@@ -275,7 +275,7 @@
 .ab-team-avatar svg {
   width: 36px;
   height: 36px;
-  stroke: var(--cd-color-surface);
+  stroke: var(--ab-inverse);
   stroke-width: 2;
   fill: none;
   stroke-linecap: round;
@@ -285,11 +285,11 @@
 .ab-team-card h3 {
   font-size: var(--cd-font-size-lg);
   margin: 0 0 0.25rem;
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .ab-team-role {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   font-weight: 700;
   font-size: var(--cd-font-size-sm);
   margin: 0 0 0.5rem;
@@ -332,7 +332,7 @@
 .ab-team-social a:hover {
   background: var(--cd-color-accent);
   border-color: var(--cd-color-accent);
-  color: var(--cd-color-surface);
+  color: var(--ab-on-action);
 }
 
 /* ── آراء العملاء ── */
@@ -360,7 +360,7 @@
 .star-icon {
   display: inline-flex;
   gap: 0.2rem;
-  color: #ffb703;
+  color: var(--ab-warning);
 }
 
 .star-icon svg {
@@ -393,7 +393,7 @@
 }
 
 .cd-testimonial-author strong {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   font-size: var(--cd-font-size-md);
 }
 

@@ -67,14 +67,14 @@ final class WorkspacePage {
 		}
 		?>
 		<div class="wrap adc-workspace" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
-			<header class="adc-workspace-hero">
+			<div class="adc-workspace-hero">
 				<div>
 					<span><?php esc_html_e( 'إدارة المعرض', 'auto-dealership-core' ); ?></span>
 					<h1><?php echo esc_html( $area_allowed ? $groups[0]['title'] : sprintf( __( 'مرحبًا، %s', 'auto-dealership-core' ), $user->display_name ) ); ?></h1>
 					<p><?php esc_html_e( 'تظهر الوحدات المتاحة وفق صلاحيات دورك ونطاق عملك الحالي.', 'auto-dealership-core' ); ?></p>
 				</div>
 				<?php if ( $logo ) : ?><div class="adc-workspace-brand"><?php echo $logo; // WordPress attachment markup or escaped site icon. ?></div><?php endif; ?>
-			</header>
+			</div>
 
 			<?php foreach ( $groups as $group ) : ?>
 				<?php $items = array_values( array_filter( $group['items'], static fn( array $item ): bool => self::allowed( $item ) ) ); ?>
@@ -92,7 +92,10 @@ final class WorkspacePage {
 					foreach ( $sections as $section_title => $section_items ) :
 						if ( ! $section_items ) { continue; }
 					?>
-					<?php if ( $section_title ) : ?><h3><?php echo esc_html__( $section_title, 'auto-dealership-core' ); ?></h3><?php endif; ?>
+					<?php if ( $section_title ) : ?>
+						<?php if ( $area_allowed ) : ?><h2><?php echo esc_html__( $section_title, 'auto-dealership-core' ); ?></h2>
+						<?php else : ?><h3><?php echo esc_html__( $section_title, 'auto-dealership-core' ); ?></h3><?php endif; ?>
+					<?php endif; ?>
 					<div class="adc-workspace-grid">
 						<?php foreach ( $section_items as $item ) : ?>
 							<a class="adc-workspace-card" href="<?php echo esc_url( self::url( $item['path'] ) ); ?>">

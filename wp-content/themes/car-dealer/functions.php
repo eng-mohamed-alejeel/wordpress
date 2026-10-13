@@ -48,12 +48,17 @@ require_once get_template_directory() . '/inc/page-cache-integration.php';
 
 function car_dealer_assets() {
 	$version = wp_get_theme()->get( 'Version' ); $uri = get_template_directory_uri();
+	if ( class_exists( '\AutoDealership\Core\BrandIdentity' ) ) {
+		\AutoDealership\Core\BrandIdentity::tokens();
+	} elseif ( is_readable( WP_PLUGIN_DIR . '/auto-dealership-core/assets/css/brand-tokens.css' ) ) {
+		wp_enqueue_style( 'autobrands-tokens', plugins_url( 'auto-dealership-core/assets/css/brand-tokens.css' ), array(), $version );
+	}
 	if ( class_exists( '\AutoDealership\Core\Typography' ) ) {
 		\AutoDealership\Core\Typography::enqueue();
 	} elseif ( is_readable( WP_PLUGIN_DIR . '/auto-dealership-core/assets/css/typography.css' ) ) {
 		wp_enqueue_style( 'autobrands-tajawal', plugins_url( 'auto-dealership-core/assets/css/typography.css' ), array(), $version );
 	}
-	wp_enqueue_style( 'car-dealer-style', get_stylesheet_uri(), array(), $version );
+	wp_enqueue_style( 'car-dealer-style', get_stylesheet_uri(), wp_style_is( 'autobrands-tokens', 'registered' ) ? array( 'autobrands-tokens' ) : array(), $version );
 	wp_enqueue_style( 'car-dealer-main', $uri . '/assets/css/main.css', array( 'car-dealer-style' ), filemtime( get_template_directory() . '/assets/css/main.css' ) );
 	wp_enqueue_style( 'car-dealer-home-v2', $uri . '/assets/css/home-v2.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_style( 'car-dealer-floating', $uri . '/assets/css/floating-buttons.css', array( 'car-dealer-main' ), $version );
@@ -211,7 +216,7 @@ function car_dealer_offer_card( $post_id = null ) {
 	?>
 	<article class="offer-card">
 		<?php if ( $image ) : ?>
-			<a class="offer-image" href="<?php echo esc_url( $url ); ?>">
+			<a class="offer-image" href="<?php echo esc_url( $url ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
 				<?php echo $image; ?>
 			</a>
 		<?php endif; ?>

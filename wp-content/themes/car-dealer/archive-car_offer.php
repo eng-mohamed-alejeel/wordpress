@@ -7,6 +7,7 @@
 	</div>
 </section>
 <div class="container archive-content">
+	<h2 class="screen-reader-text"><?php echo esc_html( car_dealer_text( 'العروض المتاحة', 'Available offers' ) ); ?></h2>
 	<?php if ( ! function_exists( 'adc_public_offer_view' ) ) : ?>
 		<p class="empty-state" role="status"><?php esc_html_e( 'العروض غير متاحة حاليًا. يرجى المحاولة لاحقًا.', 'car-dealer' ); ?></p>
 	<?php else : ?>

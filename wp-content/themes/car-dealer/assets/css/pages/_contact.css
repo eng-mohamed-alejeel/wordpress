@@ -9,8 +9,8 @@
   min-height: 350px;
   display: grid;
   align-items: center;
-  color: var(--cd-color-surface);
-  background: linear-gradient(135deg, rgba(5, 7, 11, 0.95), rgba(26, 54, 93, 0.85));
+  color: var(--ab-inverse);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ab-brand-navy) 95%, transparent), color-mix(in srgb, var(--ab-brand-navy) 85%, transparent));
   padding: var(--cd-spacing-3xl) 0;
 }
 
@@ -18,7 +18,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 70% 30%, rgba(6, 105, 217, 0.2), transparent 50%);
+  background: radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--ab-action) 20%, transparent), transparent 50%);
   pointer-events: none;
 }
 
@@ -35,7 +35,7 @@
 }
 
 .ab-contact-hero h1 {
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   font-size: clamp(2rem, 4vw, 3.2rem);
   margin: 0 0 var(--cd-spacing-md);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
@@ -102,11 +102,11 @@
   display: grid;
   place-items: center;
   border-radius: var(--cd-radius-xl);
-  background: linear-gradient(135deg, rgba(6, 105, 217, 0.1), rgba(226, 29, 47, 0.1));
-  color: var(--cd-color-accent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ab-action) 10%, transparent), color-mix(in srgb, var(--ab-action) 10%, transparent));
+  color: var(--ab-link);
   margin: 0 auto var(--cd-spacing-md);
   transition: all var(--cd-transition-base);
-  border: 1px solid rgba(6, 105, 217, 0.15);
+  border: 1px solid color-mix(in srgb, var(--ab-action) 15%, transparent);
 }
 
 .ab-contact-info-icon svg {
@@ -120,14 +120,14 @@
 }
 
 .ab-contact-info-card:hover .ab-contact-info-icon {
-  background: linear-gradient(135deg, rgba(226, 29, 47, 0.15), rgba(6, 105, 217, 0.15));
-  border-color: rgba(226, 29, 47, 0.3);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ab-action) 15%, transparent), color-mix(in srgb, var(--ab-action) 15%, transparent));
+  border-color: color-mix(in srgb, var(--ab-action) 30%, transparent);
 }
 
 .ab-contact-info-card h3 {
   font-size: var(--cd-font-size-lg);
   margin: 0 0 var(--cd-spacing-sm);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .ab-contact-info-card p {
@@ -143,7 +143,7 @@
 }
 
 .ab-contact-link {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   font-weight: 700;
   transition: color var(--cd-transition-fast);
 }
@@ -204,7 +204,7 @@
   place-items: center;
   border-radius: var(--cd-radius-full);
   background: var(--cd-color-accent);
-  color: var(--cd-color-surface);
+  color: var(--ab-on-action);
   flex-shrink: 0;
 }
 
@@ -217,7 +217,7 @@
 .ab-contact-map-info h3 {
   font-size: var(--cd-font-size-md);
   margin: 0 0 0.25rem;
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .ab-contact-map-info p {
@@ -279,7 +279,7 @@
   font-family: var(--cd-font-family);
   font-size: var(--cd-font-size-md);
   font-weight: 700;
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   text-align: right;
   transition: all var(--cd-transition-fast);
 }
@@ -289,8 +289,8 @@
 }
 
 .ab-faq-question.is-open {
-  color: var(--cd-color-accent);
-  background: rgba(208, 43, 43, 0.03);
+  color: var(--ab-link);
+  background: color-mix(in srgb, var(--ab-action) 3%, transparent);
 }
 
 .ab-faq-question span {
@@ -331,7 +331,7 @@
 .ab-social-section {
   padding: var(--cd-spacing-4xl) 0;
   background: var(--ab-color-black);
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
 }
 
 .ab-social-inner {
@@ -339,7 +339,7 @@
 }
 
 .ab-social-content h2 {
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   font-size: var(--cd-font-size-2xl);
   margin-bottom: var(--cd-spacing-sm);
 }
@@ -365,7 +365,7 @@
   border-radius: var(--cd-radius-full);
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.08);
-  color: var(--cd-color-surface);
+  color: var(--ab-inverse);
   font-weight: 700;
   font-size: var(--cd-font-size-md);
   text-decoration: none;

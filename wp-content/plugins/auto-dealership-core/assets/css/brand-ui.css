@@ -1,0 +1,130 @@
+/* Shared interaction states. Scope layout-facing rules to dealership surfaces. */
+.site, .adc-admin, .adc-admin-native, .login { color-scheme: light; }
+:root[data-ab-theme="dark"] :is(.site, .adc-admin, .adc-admin-native, .login) { color-scheme: dark; }
+.ab-appearance-control { display: inline-flex; align-items: center; gap: .4rem; font: inherit; font-size: .85rem; white-space: nowrap; }
+.ab-appearance-control select { min-height: 40px; max-width: 105px; padding: .35rem .5rem; border: 1px solid var(--ab-control-border); border-radius: 6px; background: var(--ab-surface); color: var(--ab-text); font: inherit; }
+:is(.site, .adc-admin-shell, .login) :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid var(--ab-focus); outline-offset: 3px; }
+:is(.site, .adc-admin-shell, .login) :is(input, select, textarea) { accent-color: var(--ab-action); }
+.site :is(input:not([type="submit"]):not([type="button"]):not([type="hidden"]), select, textarea) { border-color: var(--ab-control-border); }
+.site :is(input, textarea)::placeholder { color: var(--ab-muted); opacity: 1; }
+.site a:not(.btn):hover { text-decoration-thickness: 2px; text-underline-offset: .2em; }
+.site .entry-content p a { text-decoration: underline; }
+.site .btn { background: var(--ab-action); border-color: var(--ab-action); color: var(--ab-on-action); }
+.site .btn:hover { background: var(--ab-action-hover); border-color: var(--ab-action-hover); color: var(--ab-on-action); }
+.site .btn-primary { background: var(--ab-primary); border-color: var(--ab-primary); color: var(--ab-inverse); }
+.site .btn-primary:hover { background: var(--ab-primary-hover); border-color: var(--ab-primary-hover); color: var(--ab-inverse); }
+:root[data-ab-theme="dark"] .site .btn-primary { border-color: var(--ab-control-border); }
+.site .btn-outline { background: transparent; color: var(--ab-link); border-color: var(--ab-link); }
+.site .btn-outline:hover, .site .btn-outline.is-active { background: var(--ab-action); color: var(--ab-on-action); border-color: var(--ab-action); }
+.site .btn-ghost { background: transparent; color: var(--ab-inverse); border-color: var(--ab-on-dark-muted); }
+.site .btn-ghost:hover { background: rgb(255 255 255 / 12%); color: var(--ab-inverse); }
+.site .btn-chrome, .site .btn-chrome:hover { background: var(--ab-color-chrome); color: var(--ab-brand-navy); border-color: transparent; }
+.site :is(.btn:disabled, .btn[aria-disabled="true"]) { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
+.site .btn[aria-busy="true"] { cursor: progress; }
+.site :is(.ab-hero, .archive-hero, .ab-car-hero, .ab-finance-v2, .site-footer) .btn-outline { color: var(--ab-inverse); border-color: var(--ab-on-dark-muted); }
+.site :is(.ab-hero, .archive-hero, .ab-car-hero, .ab-finance-v2, .site-footer) .btn-outline:hover { color: var(--ab-on-action); border-color: var(--ab-action); }
+.site-header { background: var(--ab-brand-navy); color: var(--ab-inverse); border-bottom-color: rgb(255 255 255 / 18%); }
+.site-header .site-title, .site-header .main-navigation > ul > li > a, .site-header .ab-appearance-control { color: var(--ab-inverse); }
+.site-header .main-navigation > ul > li > a:hover, .site-header .main-navigation > ul > li.current-menu-item > a { color: var(--ab-on-dark-link); }
+.site-header .custom-logo-link { background: #FFFFFF; padding: 5px 8px; border-radius: 8px; }
+.site-header .header-search { background: var(--ab-surface); }
+.site-header .header-search input { color: var(--ab-text); }
+.site-header .header-search button { color: var(--ab-heading); }
+.site-header .menu-toggle { background: transparent; border-color: var(--ab-on-dark-muted); }
+.site-header .menu-toggle > span:not(.screen-reader-text) { background: var(--ab-inverse); }
+.site-header .site-language-switch a { color: var(--ab-inverse); border-color: var(--ab-on-dark-muted); }
+.site-header .main-navigation ul ul a { color: var(--ab-heading); }
+.site-header .ab-appearance-control > span { display: none; }
+@media (min-width: 1121px) {
+  .site-header .header-search { width: clamp(160px, 14vw, 240px); }
+}
+.site-header .main-navigation > ul > .cd-account-link > a { color: var(--ab-heading); background: var(--ab-surface); border-color: var(--ab-control-border); }
+.site .language-dropdown { color: var(--ab-heading); }
+.site-header .site-language-switch .language-options a { color: var(--ab-heading); }
+.site .eyebrow { color: var(--ab-link); }
+.site .ab-hero-scroll-hint { color: var(--ab-on-dark-muted); opacity: 1; }
+.site .ab-feature-num { color: var(--ab-link); opacity: 1; }
+.site .ab-inventory-cta .btn-outline { color: var(--ab-inverse); border-color: var(--ab-on-dark-muted); }
+.site .ab-hero-eyebrow { background: var(--ab-brand-navy); }
+.site .ab-hero-desc { color: var(--ab-inverse); }
+.adc-admin-shell .adc-workspace-hero { background: linear-gradient(120deg, var(--ab-brand-navy), var(--ab-brand-blue)); }
+.adc-admin-shell.adc-admin .wrap .adc-workspace-hero :is(h1, p, span) { color: var(--ab-inverse); }
+.adc-admin-native .welcome-panel .welcome-panel-close { color: var(--ab-on-dark-link); }
+/* Decorative motion finishes within five seconds; essential loading indicators remain. */
+.site :is(.ab-hero-particles span, .ab-hero-scroll-hint, .ab-hero-scroll-hint svg, .ab-float-wa-pulse, .ab-cta-icon, .ab-feature-icon) { animation-duration: 2s; animation-delay: 0s; animation-iteration-count: 1; }
+.adc-admin-shell :is(p, td) a:not(.button):not(.adc-workspace-card) { text-decoration: underline; text-underline-offset: .15em; }
+.site p a:not(.btn) { text-decoration: underline; text-underline-offset: .15em; }
+.cd-cookie-settings { max-height: calc(100dvh - 32px); overflow-y: auto; }
+.site :is(.site-header, .ab-hero, .archive-hero, .ab-car-hero, .site-footer, .ab-inventory-cta) :focus-visible { outline-color: var(--ab-on-dark-link); }
+.site :is(a, button, input, textarea, select, summary, [tabindex]) { scroll-margin-block: 140px 100px; }
+@media (forced-colors: active) {
+  :is(.site, .adc-admin-shell, .login) :focus-visible { outline-color: Highlight; }
+}
+.site :is(.ab-hero, .archive-hero, .ab-car-hero, .ab-about-hero, .ab-contact-hero, .ab-finance-v2) .eyebrow { color: var(--ab-on-dark-link); }
+.site-footer { background: var(--ab-footer); }
+.site :is(.ab-car-card, .car-card, .ab-feature-card) { box-shadow: var(--ab-shadow); }
+.site :is(.ab-hero-eyebrow, .ab-hero-stats, .ab-hero-v2-panel) { --ab-link: var(--ab-on-dark-link); }
+@media (max-width: 1120px) {
+  .site-header .main-navigation > ul > li > a { color: var(--ab-heading); }
+  .site-header .main-navigation > ul > li > a:hover { color: var(--ab-link); }
+  .site-header .main-navigation > ul > li.current-menu-item > a { color: var(--ab-link); }
+  .site-header .ab-appearance-control > span { display: none; }
+}
+@media (max-width: 600px) {
+  .site-header .header-actions { flex-wrap: wrap; }
+  .site-header .header-search { flex: 1 1 150px; }
+  .ab-appearance-control select { min-height: 44px; }
+}
+/* Native controls inside owned administration screens. External plugin content is untouched. */
+:is(.adc-admin, .adc-admin-native) { background: var(--ab-bg); color: var(--ab-text); }
+:is(.adc-admin, .adc-admin-native) #wpbody-content { color: var(--ab-text); }
+:is(.adc-admin, .adc-admin-native) .wrap :is(h1, h2, h3, h4, th, label) { color: var(--ab-heading); }
+:is(.adc-admin, .adc-admin-native) .wrap a:where(:not(.button):not(.page-title-action):not(.nav-tab-active)) { color: var(--ab-link); }
+:is(.adc-admin, .adc-admin-native) :is(.subsubsub, .subsubsub .count) { color: var(--ab-muted); }
+:is(.adc-admin, .adc-admin-native) .wrap .subsubsub a.current { color: var(--ab-link); }
+:is(.adc-admin, .adc-admin-native) .wrap .subsubsub a.current .count { color: var(--ab-muted); }
+:is(.adc-admin, .adc-admin-native) .wrap > p { color: var(--ab-text); }
+:is(.adc-admin, .adc-admin-native) .wrap :is(.button, .page-title-action) { background: var(--ab-surface); color: var(--ab-link); border-color: var(--ab-control-border); }
+:is(.adc-admin, .adc-admin-native) .wrap :is(.button-primary, .page-title-action) { background: var(--ab-action); border-color: var(--ab-action); color: var(--ab-on-action); }
+:is(.adc-admin, .adc-admin-native) .wrap .button-primary:hover { background: var(--ab-action-hover); border-color: var(--ab-action-hover); color: var(--ab-on-action); }
+:is(.adc-admin, .adc-admin-native) .wrap :is(.button:disabled, .button[aria-disabled="true"]) { opacity: .6; cursor: not-allowed; }
+:is(.adc-admin, .adc-admin-native) :is(.widefat, .postbox, .stuffbox, .notice, .card, .welcome-panel) { background: var(--ab-surface); color: var(--ab-text); border-color: var(--ab-border); }
+.adc-admin-shell .notice.notice-error { border-inline-start-color: var(--ab-error); }
+.adc-admin-shell .notice.notice-success { border-inline-start-color: var(--ab-success); }
+.adc-admin-shell .notice.notice-warning { border-inline-start-color: var(--ab-warning); }
+.adc-admin-shell .notice.notice-info { border-inline-start-color: var(--ab-info); }
+:is(.adc-admin, .adc-admin-native) .widefat :is(td, th) { color: var(--ab-text); border-color: var(--ab-border); }
+:is(.adc-admin, .adc-admin-native) .widefat :is(p, ol, ul) { color: inherit; }
+:is(.adc-admin, .adc-admin-native) .striped > tbody > :nth-child(odd) { background: var(--ab-bg); }
+:is(.adc-admin, .adc-admin-native) .wrap :is(input:not([type="submit"]):not([type="button"]), select, textarea):not(.wp-editor-area):not(.wp-color-picker) { background-color: var(--ab-surface); color: var(--ab-text); border-color: var(--ab-control-border); }
+:is(.adc-admin, .adc-admin-native) .wrap :is(.description, .form-table p.description) { color: var(--ab-muted); }
+.adc-admin-shell #adminmenuwrap, .adc-admin-shell #adminmenuback, .adc-admin-shell #adminmenu, .adc-admin-shell #wpadminbar { background: var(--ab-brand-navy); }
+.adc-admin-shell #adminmenu :is(.wp-has-current-submenu > a, li.current > a) { background: var(--ab-brand-blue); color: #FFFFFF; }
+.adc-admin-shell #wpadminbar #wp-admin-bar-ab-appearance { display: block; }
+.adc-admin-shell #wpadminbar #wp-admin-bar-ab-appearance .ab-item { white-space: nowrap; }
+.adc-admin-shell #screen-meta-links .show-settings { background: var(--ab-surface); color: var(--ab-muted); }
+.adc-admin-shell #wpfooter a { color: var(--ab-link); }
+.adc-admin-native .welcome-panel-header { background: var(--ab-brand-navy); }
+.adc-admin-native .wrap .welcome-panel-header h2 { color: var(--ab-inverse); }
+.adc-admin-native .wrap .welcome-panel-header a { color: var(--ab-on-dark-link); }
+.adc-admin-native .welcome-panel-content { background: var(--ab-surface); }
+.adc-admin-native .welcome-panel .welcome-panel-column-container { background: var(--ab-surface); border-color: var(--ab-border); }
+.adc-admin-native .welcome-panel-header-wrap { background: var(--ab-brand-navy); }
+.adc-admin-native .welcome-panel-content p { color: var(--ab-text); }
+.adc-admin-native :is(#dashboard_activity .no-activity p, .community-events-footer, .activity-block .subsubsub) { color: var(--ab-muted); }
+.login { background: var(--ab-bg); color: var(--ab-text); }
+.login #loginform, .login #registerform, .login #lostpasswordform, .login .message, .login #login_error { background: var(--ab-surface); color: var(--ab-text); border-color: var(--ab-border); border-radius: 12px; box-shadow: var(--ab-shadow); }
+.login :is(h1 a, #nav a, #backtoblog a, .privacy-policy-link, .language-switcher label) { color: var(--ab-link); }
+.login form .input, .login .language-switcher select { background: var(--ab-bg); color: var(--ab-text); border-color: var(--ab-control-border); }
+.login .button-primary { background: var(--ab-action); border-color: var(--ab-action); color: var(--ab-on-action); }
+.login .button-primary:hover { background: var(--ab-action-hover); color: var(--ab-on-action); }
+.login .language-switcher .button { background: var(--ab-surface); color: var(--ab-link); border-color: var(--ab-control-border); }
+.login .ab-appearance-control { display: flex; justify-content: center; margin: 1.5rem auto; }
+@media (prefers-reduced-motion: reduce) {
+  .site { scroll-behavior: auto; }
+  .site *, .site *::before, .site *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+@media print {
+  :root, :root[data-ab-theme] { --ab-bg: #FFFFFF; --ab-surface: #FFFFFF; --ab-soft: #F8FAFC; --ab-text: #1A1D20; --ab-heading: #0E2A4A; --ab-muted: #475569; --ab-link: #0E2A4A; --ab-border: #CBD5E1; }
+  .ab-appearance-control, #wp-admin-bar-ab-appearance { display: none !important; }
+}

@@ -71,6 +71,8 @@
         var banner = document.createElement('div');
         banner.className = 'cd-cookie-banner';
         banner.id = 'cd-cookie-banner';
+        banner.setAttribute('role', 'region');
+        banner.setAttribute('aria-labelledby', 'cd-cookie-title');
 		banner.dir = LANGUAGE === 'en' ? 'ltr' : 'rtl';
 		banner.lang = LANGUAGE;
         banner.innerHTML = getBannerHTML();
@@ -98,8 +100,8 @@
     function getBannerHTML() {
         return '<div class="cd-cookie-container">' +
             '<div class="cd-cookie-content">' +
-                '<div class="cd-cookie-icon">🍪</div>' +
-                '<h3>' + text('نستخدم ملفات الكوكيز', 'We use cookies') + '</h3>' +
+                '<div class="cd-cookie-icon" aria-hidden="true">🍪</div>' +
+                '<h2 id="cd-cookie-title">' + text('نستخدم ملفات الكوكيز', 'We use cookies') + '</h2>' +
                 '<p>' + text('نستخدم ملفات الكوكيز لتحسين تجربتك، وتحليل حركة المرور، وتخصيص المحتوى. يمكنك اختيار تفضيلاتك أدناه.', 'We use cookies to improve your experience, analyze traffic and personalize content. Choose your preferences below.') + '</p>' +
                 '<div class="cd-cookie-actions">' +
                     '<button class="cd-cookie-btn cd-cookie-btn-primary" id="cd-cookie-accept-all">' + text('قبول الكل', 'Accept all') + '</button>' +
@@ -144,13 +146,28 @@
 
     // Show settings modal
     function showSettings(banner, overlay) {
+        if (document.getElementById('cd-cookie-settings')) return;
         var settings = document.createElement('div');
         settings.className = 'cd-cookie-settings';
         settings.id = 'cd-cookie-settings';
+        settings.setAttribute('role', 'dialog');
+        settings.setAttribute('aria-modal', 'true');
+        settings.setAttribute('aria-labelledby', 'cd-cookie-settings-title');
+        settings.returnFocus = document.activeElement;
 		settings.dir = LANGUAGE === 'en' ? 'ltr' : 'rtl';
 		settings.lang = LANGUAGE;
         settings.innerHTML = getSettingsHTML();
         document.body.appendChild(settings);
+        settings.inertSiblings = Array.from(document.body.children).filter(function(node) { return node !== settings && node !== overlay && !node.inert; });
+        settings.inertSiblings.forEach(function(node) { node.inert = true; });
+        settings.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') { event.preventDefault(); hideSettings(settings, banner); }
+            if (event.key !== 'Tab') return;
+            var controls = Array.from(settings.querySelectorAll('button:not(:disabled), input:not(:disabled), [tabindex="0"]'));
+            var first = controls[0], last = controls[controls.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
 
         // Show overlay
         overlay.classList.add('cd-overlay-visible');
@@ -159,11 +176,11 @@
         settings.querySelector('.cd-cookie-settings-close').addEventListener('click', function() {
             hideSettings(settings, banner);
         });
+        settings.querySelector('#cd-cookie-settings-cancel').addEventListener('click', function() { hideSettings(settings, banner); });
 
         // Add overlay click handler
-        overlay.addEventListener('click', function() {
-            hideSettings(settings, banner);
-        });
+        settings.closeOverlay = function() { hideSettings(settings, banner); };
+        overlay.addEventListener('click', settings.closeOverlay);
 
         // Add save button handler
         var saveBtn = settings.querySelector('.cd-cookie-save-btn');
@@ -171,13 +188,14 @@
             saveBtn.addEventListener('click', function() {
                 var prefs = collectSettings(settings);
                 hideSettings(settings, banner);
-                saveConsent(prefs);
+                hideBanner(banner, overlay, prefs);
             });
         }
 
         // Animate in
         setTimeout(function() {
             settings.classList.add('cd-settings-visible');
+            settings.querySelector('.cd-cookie-settings-close').focus();
         }, 50);
     }
 
@@ -188,18 +206,18 @@
             var cat = COOKIE_CATEGORIES[key];
             items += '<div class="cd-cookie-setting-item">' +
                 '<div>' +
-                    '<label>' + cat.name + '</label>' +
-                    '<p>' + cat.description + '</p>' +
+                    '<label for="cd-cookie-category-' + key + '">' + cat.name + '</label>' +
+                    '<p id="cd-cookie-description-' + key + '">' + cat.description + '</p>' +
                 '</div>' +
                 '<label class="cd-cookie-toggle">' +
-                    '<input type="checkbox" data-category="' + key + '"' + (cat.default ? ' checked' : '') + '>' +
+                    '<input id="cd-cookie-category-' + key + '" aria-describedby="cd-cookie-description-' + key + '" type="checkbox" data-category="' + key + '"' + (cat.default ? ' checked' : '') + (key === 'essential' ? ' disabled' : '') + '>' +
                     '<span class="cd-cookie-toggle-slider"></span>' +
                 '</label>' +
             '</div>';
         });
 
         return '<div class="cd-cookie-settings-header">' +
-            '<h3>⚙ ' + text('تفضيلات الكوكيز', 'Cookie preferences') + '</h3>' +
+            '<h2 id="cd-cookie-settings-title">' + text('تفضيلات الكوكيز', 'Cookie preferences') + '</h2>' +
             '<button class="cd-cookie-settings-close" id="cd-cookie-settings-close" aria-label="' + text('إغلاق', 'Close') + '">&times;</button>' +
         '</div>' +
         items +
@@ -221,6 +239,12 @@
 
     // Hide settings and banner
     function hideSettings(settings, banner) {
+        if (!settings.isConnected || settings.closing) return;
+        settings.closing = true;
+        settings.inertSiblings.forEach(function(node) { node.inert = false; });
+        document.getElementById('cd-cookie-overlay').removeEventListener('click', settings.closeOverlay);
+        if (settings.returnFocus && settings.returnFocus.isConnected) settings.returnFocus.focus();
+        settings.inert = true;
         settings.classList.remove('cd-settings-visible');
         document.getElementById('cd-cookie-overlay').classList.remove('cd-overlay-visible');
         setTimeout(function() {

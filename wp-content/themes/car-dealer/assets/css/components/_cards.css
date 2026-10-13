@@ -21,7 +21,7 @@
 .car-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--cd-shadow-lg);
-  border-color: rgba(208, 43, 43, 0.3);
+  border-color: color-mix(in srgb, var(--ab-action) 30%, transparent);
 }
 
 .car-image {
@@ -50,11 +50,11 @@
   align-content: center;
   gap: 0.6rem;
   font-size: 3rem;
-  background: linear-gradient(135deg, #e8f4fd, #d0e8f9);
+  background: linear-gradient(135deg, var(--ab-soft), var(--ab-soft));
 }
 
 .car-image-placeholder-label {
-  color: #1a365d;
+  color: var(--ab-heading);
   font-size: 0.875rem;
   font-weight: 700;
   text-align: center;
@@ -67,8 +67,8 @@
   inset-inline-start: 12px;
   padding: 0.25rem 0.65rem;
   border-radius: var(--cd-radius-full);
-  background: #ffb703;
-  color: #102a43;
+  background: var(--ab-soft);
+  color: var(--ab-link);
   font-size: var(--cd-font-size-xs);
   font-weight: 800;
   box-shadow: var(--cd-shadow-sm);
@@ -89,16 +89,16 @@
 }
 
 .car-title a {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   transition: color var(--cd-transition-fast);
 }
 
 .car-title a:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
 }
 
 .car-price {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   font-size: var(--cd-font-size-lg);
   font-weight: 800;
 }
@@ -188,7 +188,7 @@
 }
 
 .car-single-price {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   font-size: 1.7rem;
   font-weight: 800;
 }
@@ -202,7 +202,7 @@
 }
 
 .car-single-monthly {
-  color: var(--ab-color-blue);
+  color: var(--ab-link);
   font-weight: 800;
   font-size: var(--cd-font-size-md);
   margin-top: -0.35rem;
@@ -254,7 +254,7 @@
 /* ── عرض بطاقة العرض ── */
 .offer-card {
   overflow: hidden;
-  border: 1px solid #dfe5ef;
+  border: 1px solid var(--ab-border);
   border-radius: var(--cd-radius-lg);
   background: var(--cd-color-surface);
   box-shadow: var(--cd-shadow-md);
@@ -296,12 +296,12 @@
 
 .offer-old {
   text-decoration: line-through;
-  color: #7d8794;
+  color: var(--ab-muted);
   font-weight: 700;
 }
 
 .car-monthly {
-  color: var(--ab-color-blue);
+  color: var(--ab-link);
   font-weight: 800;
   margin-top: -0.35rem;
 }

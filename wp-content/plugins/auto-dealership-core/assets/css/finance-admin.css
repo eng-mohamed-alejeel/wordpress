@@ -9,6 +9,6 @@
 .adc-finance-admin .adc-fa-checks { display:flex; flex-wrap:wrap; gap:1rem; margin-block:1rem; }
 .adc-finance-admin .adc-fa-rule { padding:1rem; border:1px solid var(--adc-border); border-inline-start:4px solid var(--adc-accent); border-radius:7px; margin-block:1rem; background:var(--adc-soft); }
 .adc-finance-admin summary { font-weight:700; cursor:pointer; }
-.adc-finance-admin .adc-fa-delete { color:#a01b25; }
+.adc-finance-admin .adc-fa-delete { color:var(--ab-error); }
 .adc-finance-admin table { table-layout:fixed; overflow-wrap:anywhere; }
 @media(max-width:600px){.adc-finance-admin .adc-fa-card{padding:1rem}.adc-finance-admin table{table-layout:auto}}

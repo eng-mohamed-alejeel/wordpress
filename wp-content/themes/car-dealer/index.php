@@ -124,7 +124,7 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 
 <!-- ═══════════════ LATEST CARS (DARK) ═══════════════ -->
 <?php if ( $latest_ids ) : ?>
-<section class="ab-section ab-section-dark ab-latest-section">
+<section class="ab-section ab-inventory-section ab-latest-section">
 	<div class="container">
 		<div class="section-heading section-heading-v2">
 			<div>
@@ -132,7 +132,7 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 				<h2><?php esc_html_e( 'أحدث السيارات', 'car-dealer' ); ?></h2>
 				<p class="section-subtitle"><?php esc_html_e( 'آخر الإضافات لمخزوننا المتجدد باستمرار', 'car-dealer' ); ?></p>
 			</div>
-			<?php if ( $catalog_url ) : ?><a class="section-link section-link-light" href="<?php echo esc_url( $catalog_url ); ?>">
+			<?php if ( $catalog_url ) : ?><a class="section-link" href="<?php echo esc_url( $catalog_url ); ?>">
 				<?php esc_html_e( 'تصفح المخزون', 'car-dealer' ); ?>
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l7-7-7-7"/></svg>
 			</a><?php endif; ?>

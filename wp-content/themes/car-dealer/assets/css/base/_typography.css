@@ -10,7 +10,7 @@ h5 { font-size: var(--cd-font-size-lg); }
 h6 { font-size: var(--cd-font-size-md); }
 
 .eyebrow {
-  color: #54c2ff;
+  color: var(--ab-on-dark-link);
   font-weight: 800;
   letter-spacing: 0.04em;
   margin: 0;

@@ -1,0 +1,77 @@
+/* Native WordPress surfaces. Keep image pixels and color-picker swatches untouched. */
+:root[data-ab-theme="dark"] :is(.wp-customizer, .media-modal, .media-frame, .upload-php) { color-scheme: dark; }
+#customize-controls,
+#customize-controls :is(.wp-full-overlay-header, .wp-full-overlay-footer, .wp-full-overlay-sidebar-content, .customize-pane-parent, .customize-pane-child, .customize-section-title, .customize-info, .customize-control-notifications-container, .customize-section-description, .customize-panel-back, .customize-section-back) {
+  background: var(--ab-bg); color: var(--ab-text); border-color: var(--ab-border);
+}
+#customize-controls :is(.accordion-section-title, .customize-info .accordion-section-title, .customize-section-title h3, .customize-panel-description, .customize-control .attachment-media-view, .customize-control .thumbnail, .customize-control .placeholder) {
+  background: var(--ab-surface); color: var(--ab-heading); border-color: var(--ab-border);
+}
+#customize-controls :is(h2, h3, .customize-control-title, .panel-title) { color: var(--ab-heading); }
+#customize-controls :is(.description, .customize-action, .preview-notice, .customize-control-description, .customize-control-notifications-container li) { color: var(--ab-muted); }
+#customize-controls .customize-info .preview-notice { color: var(--ab-muted); }
+body .media-frame .attachment-info .delete-attachment { color: var(--ab-error); }
+body .media-frame .media-router :is(button, a) { background: var(--ab-surface); color: var(--ab-link); border-color: var(--ab-border); }
+body .media-frame .media-router :is(button, a).active { background: var(--ab-soft); color: var(--ab-link); }
+body .media-frame .attachment .thumbnail .filename div { background: var(--ab-surface); color: var(--ab-text); }
+body #customize-controls .wp-color-result-text { background: var(--ab-surface); color: var(--ab-text); border-color: var(--ab-control-border); }
+body #customize-controls .iris-picker { background: var(--ab-surface); border-color: var(--ab-border); }
+.adc-admin-native .button-link { color: var(--ab-link); }
+#customize-controls a { color: var(--ab-link); }
+#customize-controls :is(.accordion-section-title:hover, .accordion-section-title:focus, .customize-panel-back:hover, .customize-panel-back:focus, .customize-section-back:hover, .customize-section-back:focus, .customize-controls-close:hover, .customize-controls-close:focus) {
+  background: var(--ab-soft); color: var(--ab-link); border-color: var(--ab-control-border);
+}
+#customize-controls :is(.accordion-section-title, .customize-panel-back, .customize-section-back)::after,
+#customize-controls :is(.customize-controls-close, .customize-help-toggle, .collapse-sidebar, .devices button) { color: var(--ab-muted); }
+#customize-controls .customize-controls-close { background: var(--ab-surface); border-color: var(--ab-border); }
+#customize-controls .wp-full-overlay-footer { height: 88px; }
+#customize-controls .wp-full-overlay-sidebar-content { bottom: 88px; }
+#ab-customizer-appearance { padding: 6px 12px; border-bottom: 1px solid var(--ab-border); }
+#ab-customizer-appearance .ab-appearance-control { display: flex; justify-content: space-between; gap: 8px; }
+#ab-customizer-appearance select { min-height: 30px; max-width: 160px; }
+#customize-controls .devices { background: var(--ab-surface); box-shadow: none; }
+#customize-controls .devices button.active { color: var(--ab-link); border-bottom-color: var(--ab-link); }
+@media (max-width: 600px) {
+  #customize-controls .wp-full-overlay-footer { display: block; height: 48px; }
+  #customize-controls .wp-full-overlay-sidebar-content { bottom: 48px; }
+  #customize-controls .wp-full-overlay-footer :is(.devices, .collapse-sidebar) { display: none; }
+}
+
+/* Library, picker, attachment details, upload panel, image editing toolbar. */
+body :is(.media-modal, .media-frame) { color: var(--ab-text); }
+body :is(.media-modal-content, .media-frame-content, .media-frame-router, .media-frame-title, .media-frame-menu, .media-menu, .media-sidebar, .media-toolbar, .media-toolbar-primary, .media-toolbar-secondary, .attachment-details, .attachment-info, .attachments-browser, .uploader-inline, .uploader-window, .media-frame .edit-attachment-frame, .media-frame .attachment-media-view) {
+  background: var(--ab-surface); color: var(--ab-text); border-color: var(--ab-border);
+}
+body .media-frame :is(.media-frame-content, .media-frame-toolbar .media-toolbar, .media-menu, .media-sidebar, .attachment-info, .attachment-details, .media-router, .attachment-details .settings-save-status) { border-color: var(--ab-border); }
+body :is(.media-modal, .media-frame) :is(h1, h2, h3, h4, label, .filename, .setting span, .name, .media-menu-item, .media-router .media-menu-item, .attachment-info .details, .instructions) { color: var(--ab-text); }
+body :is(.media-modal, .media-frame) :is(p, .description, .upload-instructions, .upload-ui, .max-upload-size, .setting .description, .attachment-details .details, .media-selection .count, .media-selection .selection-info) { color: var(--ab-muted); }
+body :is(.media-modal, .media-frame) a { color: var(--ab-link); }
+body .media-frame :is(.media-menu-item:hover, .media-menu-item:focus, .media-menu-item.active, .media-router .active) { background: var(--ab-soft); color: var(--ab-link); border-color: var(--ab-border); }
+body .media-frame :is(.attachment .thumbnail, .attachment-preview, .attachment-media-view .thumbnail, .attachment-info .thumbnail) { background-color: var(--ab-bg); }
+body .media-frame .attachment .filename { background: var(--ab-surface); color: var(--ab-text); }
+body .media-frame .attachment.selected .attachment-preview { box-shadow: 0 0 0 3px var(--ab-surface), 0 0 0 5px var(--ab-focus); }
+body .media-frame :is(.attachment .check, .attachment .check:hover) { background: var(--ab-action); color: var(--ab-on-action); border-color: var(--ab-control-border); }
+body :is(.media-modal, .media-frame) :is(.media-modal-close, .media-modal-close .media-modal-icon::before, .left, .right, .close, .view-switch a::before) { color: var(--ab-muted); }
+body .media-frame .media-modal-close:hover, body .media-frame .edit-media-header button:hover { background: var(--ab-soft); color: var(--ab-link); }
+
+body :is(#customize-controls, .media-modal, .media-frame) :is(input:not([type="button"]):not([type="submit"]):not([type="range"]):not([type="color"]), textarea, select) {
+  background-color: var(--ab-bg); color: var(--ab-text); border-color: var(--ab-control-border);
+}
+body :is(#customize-controls, .media-modal, .media-frame) ::placeholder { color: var(--ab-muted); opacity: 1; }
+body :is(#customize-controls, .media-modal, .media-frame) :is(.button, .button-secondary) {
+  background: var(--ab-surface); color: var(--ab-link); border-color: var(--ab-control-border); text-shadow: none;
+}
+body :is(#customize-controls, .media-modal, .media-frame) .button-primary {
+  background: var(--ab-action); color: var(--ab-on-action); border-color: var(--ab-action);
+}
+body :is(#customize-controls, .media-modal, .media-frame) .button-primary:hover { background: var(--ab-action-hover); color: var(--ab-on-action); }
+body :is(#customize-controls, .media-modal, .media-frame) :is(button, .button):disabled {
+  background: var(--ab-soft) !important; color: var(--ab-muted) !important; border-color: var(--ab-border) !important; cursor: not-allowed; text-shadow: none !important;
+}
+body :is(#customize-controls, .media-modal, .media-frame) :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ab-focus); outline-offset: 2px; box-shadow: none;
+}
+body :is(#customize-controls, .media-modal, .media-frame) :is(.notice, .notification-message) { background: var(--ab-surface); color: var(--ab-text); }
+@media (forced-colors: active) {
+  body :is(#customize-controls, .media-modal, .media-frame) :focus-visible { outline-color: Highlight; }
+}

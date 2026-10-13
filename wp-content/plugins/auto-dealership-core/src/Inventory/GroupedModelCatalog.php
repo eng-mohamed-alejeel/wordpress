@@ -90,7 +90,7 @@ final class GroupedModelCatalog {
 			}
 			echo '</select></label>';
 		}
-		echo '<button type="button" data-variant-reset>'.esc_html($ar?'إعادة ضبط':'Reset').'</button></div><p data-variant-result role="status" aria-live="polite"></p><div class="onyx-variant-scroll"><table class="onyx-variant-table"><thead><tr>';
+		echo '<button type="button" data-variant-reset>'.esc_html($ar?'إعادة ضبط':'Reset').'</button></div><p data-variant-result role="status" aria-live="polite"></p><div class="onyx-variant-scroll" tabindex="0" role="region" aria-label="'.esc_attr($ar?'فئات وألوان السيارة':'Vehicle variants and colors').'"><table class="onyx-variant-table"><thead><tr>';
 		$columns = array('brand'=>$ar?'الماركة':'Brand', 'model'=>$ar?'الطراز':'Model', 'trim_name'=>$ar?'الفئة':'Trim', 'exterior_color'=>$ar?'اللون':'Color', 'model_year'=>$ar?'الموديل':'Model year', 'listed_price'=>$ar?'سعر البيع':'Sale price');
 		foreach ($columns as $label) { echo '<th scope="col">'.esc_html($label).'</th>'; }
 		echo '</tr></thead><tbody>';

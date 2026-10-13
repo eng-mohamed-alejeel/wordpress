@@ -11,13 +11,14 @@ get_header(); ?>
 
 <div class="page-template-about">
 <div class="container">
-	<div id="primary" class="content-area">
+	<div class="content-area">
 		<div id="main" class="site-main">
 			<?php
 			while ( have_posts() ) :
 				the_post();
 				?>
 				<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+					<header class="entry-header"><?php the_title( '<h1 class="entry-title">', '</h1>' ); ?></header>
 					<?php if ( has_post_thumbnail() ) : ?>
 						<div class="entry-image">
 							<?php the_post_thumbnail( 'large' ); ?>
@@ -35,7 +36,6 @@ get_header(); ?>
 
 <style>
 .page-template-about .content-area { max-width: 100%; padding: 0; }
-.page-template-about .entry-header { display: none; }
 .page-template-about .entry-content { max-width: 100%; }
 </style>
 

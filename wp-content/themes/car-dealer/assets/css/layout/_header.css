@@ -23,7 +23,7 @@
 }
 
 .main-navigation ul li a {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   font-weight: 700;
   font-size: var(--cd-font-size-base);
   padding: 0.35rem 0;
@@ -44,7 +44,7 @@
 }
 
 .main-navigation ul li a:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
 }
 
 .main-navigation ul li a:hover::after {
@@ -67,27 +67,27 @@
 }
 
 .main-navigation .cd-account-link a {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   border: 1px solid var(--cd-color-line);
   background: var(--cd-color-surface);
 }
 
 .main-navigation .cd-account-link a:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   border-color: var(--cd-color-accent);
-  background: rgba(208, 43, 43, 0.05);
+  background: color-mix(in srgb, var(--ab-action) 5%, transparent);
 }
 
 .main-navigation .cd-logout-link a {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   border: 1px solid var(--cd-color-line);
   background: var(--cd-color-surface);
 }
 
 .main-navigation .cd-logout-link a:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   border-color: var(--cd-color-accent);
-  background: rgba(208, 43, 43, 0.05);
+  background: color-mix(in srgb, var(--ab-action) 5%, transparent);
 }
 
 /* ── رابط الرئيسية في القائمة ── */
@@ -97,7 +97,7 @@
 
 .main-navigation ul li.menu-item-home a {
   font-weight: 800;
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .main-navigation ul li.menu-item-home a::before {
@@ -135,7 +135,7 @@
 }
 
 .site-title {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   font-size: var(--cd-font-size-lg);
   font-weight: 800;
 }
@@ -152,7 +152,7 @@
 }
 
 .main-navigation a {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   font-weight: 700;
 }
 
@@ -176,7 +176,7 @@
   padding: 0 0.75rem;
   cursor: pointer;
   background: transparent;
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .menu-toggle {
@@ -236,7 +236,7 @@
   }
 
   .main-navigation ul li a:hover {
-    color: var(--cd-color-accent);
+    color: var(--ab-link);
   }
 
   .header-search {

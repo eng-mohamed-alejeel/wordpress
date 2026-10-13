@@ -1,0 +1,81 @@
+/* AUTO BRANDS: shared identity. Component styles must consume semantic tokens. */
+:root {
+  --ab-brand-navy: #0E2A4A;
+  --ab-brand-blue: #2563EB;
+  --ab-primary: var(--ab-brand-navy);
+  --ab-primary-hover: #163D68;
+  --ab-action: var(--ab-brand-blue);
+  --ab-action-hover: #1D4ED8;
+  --ab-on-action: #FFFFFF;
+  --ab-bg: #F8FAFC;
+  --ab-surface: #FFFFFF;
+  --ab-soft: #EFF6FF;
+  --ab-text: #1A1D20;
+  --ab-heading: var(--ab-brand-navy);
+  --ab-muted: #475569;
+  --ab-link: var(--ab-brand-blue);
+  --ab-border: #CBD5E1;
+  --ab-control-border: #64748B;
+  --ab-focus: #2563EB;
+  --ab-inverse: #FFFFFF;
+  --ab-on-dark-muted: #CBD5E1;
+  --ab-on-dark-link: #93C5FD;
+  --ab-footer: #1A1D20;
+  --ab-hero: #0E2A4A;
+  --ab-success: #166534;
+  --ab-success-bg: #DCFCE7;
+  --ab-warning: #854D0E;
+  --ab-warning-bg: #FEF3C7;
+  --ab-error: #B91C1C;
+  --ab-error-bg: #FEE2E2;
+  --ab-info: #1D4ED8;
+  --ab-info-bg: #EFF6FF;
+  --ab-shadow: 0 4px 18px #00000010;
+  --ab-brand-gradient: linear-gradient(135deg, var(--ab-brand-navy), var(--ab-brand-blue));
+}
+:root[data-ab-theme="dark"] {
+  --ab-bg: #0B1320;
+  --ab-surface: #152238;
+  --ab-soft: #1B304C;
+  --ab-text: #F1F5F9;
+  --ab-heading: #F1F5F9;
+  --ab-muted: #B8C7DA;
+  --ab-link: #93C5FD;
+  --ab-border: #405570;
+  --ab-control-border: #8294AD;
+  --ab-focus: #93C5FD;
+  --ab-action: #3B82F6;
+  --ab-action-hover: #60A5FA;
+  --ab-on-action: #0B1320;
+  --ab-success: #86EFAC;
+  --ab-success-bg: #143829;
+  --ab-warning: #FDE68A;
+  --ab-warning-bg: #3B2B14;
+  --ab-error: #FCA5A5;
+  --ab-error-bg: #421F2B;
+  --ab-info: #93C5FD;
+  --ab-info-bg: #1B304C;
+  --ab-shadow: 0 4px 18px #00000030;
+}
+/* Re-evaluate aliases on the root whenever the appearance changes. */
+:root {
+  --cd-color-primary: var(--ab-primary);
+  --cd-color-accent: var(--ab-action);
+  --cd-color-secondary: var(--ab-brand-blue);
+  --cd-color-bg: var(--ab-bg);
+  --cd-color-surface: var(--ab-surface);
+  --cd-color-muted: var(--ab-muted);
+  --cd-color-line: var(--ab-border);
+  --cd-color-text: var(--ab-text);
+  --cd-color-success: var(--ab-success);
+  --cd-color-warning: var(--ab-warning);
+  --cd-color-error: var(--ab-error);
+  --cd-color-info: var(--ab-info);
+  --ab-color-blue: var(--ab-action);
+  --ab-color-red: var(--ab-action); /* Compatibility alias for legacy decorative accents. */
+  --ab-color-black: var(--ab-hero);
+  --ab-color-ink: var(--ab-text);
+  --ab-color-metal: var(--ab-on-dark-muted);
+  --cd-navy: var(--ab-primary);
+  --cd-blue: var(--ab-action);
+}

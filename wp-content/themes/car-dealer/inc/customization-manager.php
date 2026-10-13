@@ -76,8 +76,8 @@ function car_dealer_sanitize_theme_settings( $input ) {
 	$input = is_array( $input ) ? $input : array();
 	return array(
 		'description_en' => sanitize_textarea_field( $input['description_en'] ?? car_dealer_theme_options()['description_en'] ),
-		'primary_color' => sanitize_hex_color( $input['primary_color'] ?? '' ) ?: '#102a43',
-		'accent_color' => sanitize_hex_color( $input['accent_color'] ?? '' ) ?: '#1677c8',
+		'primary_color' => sanitize_hex_color( $input['primary_color'] ?? '' ) ?: '#0E2A4A',
+		'accent_color' => sanitize_hex_color( $input['accent_color'] ?? '' ) ?: '#2563EB',
 		'phone' => sanitize_text_field( $input['phone'] ?? '' ),
 		'email' => sanitize_email( $input['email'] ?? '' ),
 		'address' => sanitize_textarea_field( $input['address'] ?? '' ),
@@ -88,7 +88,7 @@ function car_dealer_sanitize_theme_settings( $input ) {
 }
 
 function car_dealer_theme_options() {
-	$defaults = array( 'primary_color' => '#102a43', 'accent_color' => '#1677c8', 'phone' => '', 'email' => '', 'address' => '', 'facebook' => '', 'instagram' => '', 'whatsapp' => '' );
+	$defaults = array( 'primary_color' => '#0E2A4A', 'accent_color' => '#2563EB', 'phone' => '', 'email' => '', 'address' => '', 'facebook' => '', 'instagram' => '', 'whatsapp' => '' );
 	$defaults['description_en'] = 'Explore available vehicles and contact our team.';
 	return wp_parse_args( get_option( 'car_dealer_theme_settings', array() ), $defaults );
 }
@@ -113,6 +113,6 @@ add_action( 'admin_init', 'car_dealer_redirect_legacy_settings' );
 
 function car_dealer_dynamic_theme_styles() {
 	$options = car_dealer_theme_options();
-	printf( '<style id="car-dealer-dynamic-theme">:root{--cd-color-primary:%1$s;--cd-color-accent:%2$s;--cd-navy:%1$s;--cd-blue:%2$s;}</style>', esc_html( sanitize_hex_color( $options['primary_color'] ) ?: '#102a43' ), esc_html( sanitize_hex_color( $options['accent_color'] ) ?: '#1677c8' ) );
+	printf( '<style id="car-dealer-dynamic-theme">:root{--ab-brand-navy:%1$s;--ab-brand-blue:%2$s;}</style>', esc_html( sanitize_hex_color( $options['primary_color'] ) ?: '#0E2A4A' ), esc_html( sanitize_hex_color( $options['accent_color'] ) ?: '#2563EB' ) );
 }
 add_action( 'wp_head', 'car_dealer_dynamic_theme_styles', 20 );

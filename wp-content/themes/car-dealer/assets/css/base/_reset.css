@@ -30,13 +30,13 @@ img {
 }
 
 a {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   text-decoration: none;
   transition: color var(--cd-transition-base), background-color var(--cd-transition-base), border-color var(--cd-transition-base);
 }
 
 a:hover {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 button,
@@ -60,7 +60,7 @@ ul, ol {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   font-family: var(--cd-font-family);
   font-weight: 700;
   line-height: 1.3;
@@ -109,7 +109,7 @@ hr {
   clip-path: none;
   overflow: visible;
   border-radius: 0.3rem;
-  background: #fff;
-  color: #1a365d;
+  background: var(--ab-surface);
+  color: var(--ab-heading);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }

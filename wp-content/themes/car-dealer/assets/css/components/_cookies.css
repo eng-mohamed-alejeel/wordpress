@@ -49,15 +49,15 @@
   height: 48px;
   border-radius: 50%;
   background: var(--cd-color-accent);
-  color: var(--cd-color-surface);
+  color: var(--ab-on-action);
   font-size: 24px;
   margin-bottom: var(--cd-spacing-sm);
 }
 
-.cd-cookie-content h3 {
+.cd-cookie-content h2 {
   margin: 0 0 var(--cd-spacing-sm);
   font-size: var(--cd-font-size-lg);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .cd-cookie-content p {
@@ -91,24 +91,24 @@
 
 .cd-cookie-btn-primary {
   background: var(--cd-color-accent);
-  color: var(--cd-color-surface);
+  color: var(--ab-on-action);
 }
 
 .cd-cookie-btn-primary:hover {
-  background: #b32222;
+  background: var(--ab-action-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(208, 43, 43, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ab-action) 30%, transparent);
 }
 
 .cd-cookie-btn-secondary {
   background: transparent;
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
   border: 2px solid var(--cd-color-line);
 }
 
 .cd-cookie-btn-secondary:hover {
   border-color: var(--cd-color-accent);
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
 }
 
 .cd-cookie-btn-settings {
@@ -119,7 +119,7 @@
 }
 
 .cd-cookie-btn-settings:hover {
-  color: var(--cd-color-accent);
+  color: var(--ab-link);
   border-color: var(--cd-color-accent);
 }
 
@@ -165,10 +165,10 @@
   margin-bottom: var(--cd-spacing-lg);
 }
 
-.cd-cookie-settings-header h3 {
+.cd-cookie-settings-header h2 {
   margin: 0;
   font-size: var(--cd-font-size-lg);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .cd-cookie-settings-close {
@@ -182,7 +182,7 @@
 }
 
 .cd-cookie-settings-close:hover {
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .cd-cookie-setting-item {
@@ -242,7 +242,7 @@
   width: 20px;
   left: 3px;
   bottom: 3px;
-  background-color: var(--cd-color-surface);
+  background-color: var(--ab-inverse);
   border-radius: 50%;
   transition: var(--cd-transition-base);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -333,29 +333,6 @@
 }
 
 /* ─── وضع الظلام ─── */
-@media (prefers-color-scheme: dark) {
-  .cd-cookie-banner {
-    background: var(--cd-color-primary);
-    border-top-color: var(--cd-color-accent);
-  }
-  .cd-cookie-content h3 {
-    color: var(--cd-color-surface);
-  }
-  .cd-cookie-content p {
-    color: rgba(255, 255, 255, 0.7);
-  }
-  .cd-cookie-btn-secondary {
-    color: rgba(255, 255, 255, 0.8);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-  .cd-cookie-btn-settings {
-    color: rgba(255, 255, 255, 0.6);
-  }
-  .cd-cookie-toggle-slider {
-    background-color: rgba(255, 255, 255, 0.2);
-  }
-  .cd-cookie-settings {
-    background: var(--cd-color-primary);
-    color: var(--cd-color-surface);
-  }
-}
+/* Both modes inherit semantic tokens; an explicit choice overrides the device. */
+.cd-cookie-toggle-slider { border: 1px solid var(--ab-control-border); }
+.cd-cookie-toggle input:focus-visible + .cd-cookie-toggle-slider { outline: 3px solid var(--ab-focus); outline-offset: 3px; }

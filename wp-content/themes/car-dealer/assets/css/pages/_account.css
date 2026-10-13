@@ -33,7 +33,7 @@
 .account-nav a:hover,
 .account-nav a.is-active {
   background: var(--cd-color-bg);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .account-content {
@@ -93,7 +93,7 @@
 .account-stat strong {
   display: block;
   font-size: var(--cd-font-size-2xl);
-  color: var(--cd-color-primary);
+  color: var(--ab-heading);
 }
 
 .account-stat span {

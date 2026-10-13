@@ -13,7 +13,7 @@
   place-items: center;
   border-radius: 50%;
   background: #25d366;
-  color: #fff;
+  color: var(--ab-inverse);
   box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
   transition: transform var(--cd-transition-base), box-shadow var(--cd-transition-base);
   text-decoration: none;
@@ -22,7 +22,7 @@
 .ab-float-wa:hover {
   transform: scale(1.1);
   box-shadow: 0 12px 32px rgba(37, 211, 102, 0.5);
-  color: #fff;
+  color: var(--ab-inverse);
 }
 
 .ab-float-wa svg {
@@ -37,7 +37,7 @@
   padding: 0.4rem 0.8rem;
   border-radius: var(--cd-radius-md);
   background: var(--ab-color-black);
-  color: #fff;
+  color: var(--ab-inverse);
   font-size: var(--cd-font-size-sm);
   white-space: nowrap;
   opacity: 0;
@@ -74,7 +74,7 @@
   place-items: center;
   border-radius: 50%;
   background: var(--cd-color-primary);
-  color: #fff;
+  color: var(--ab-inverse);
   box-shadow: var(--cd-shadow-md);
   opacity: 0;
   pointer-events: none;
@@ -89,7 +89,7 @@
 
 .ab-back-top:hover {
   transform: translateY(-4px);
-  color: #fff;
+  color: var(--ab-inverse);
 }
 
 .ab-back-top svg {
