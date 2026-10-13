@@ -12,6 +12,7 @@ $hero_image = $featured_ids ? get_the_post_thumbnail_url( $featured_ids[0], 'ful
 $whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً AUTO BRANDS، أريد الاستفسار عن السيارات المتاحة.', 'Hello AUTO BRANDS, I would like to ask about the available vehicles.' ) );
 $catalog_url = car_dealer_archive_url( 'car' );
 $offers_url = car_dealer_archive_url( 'car_offer' );
+$home_scroll_target = $featured_ids ? 'featured-vehicles' : 'why-auto-brands';
 ?>
 
 <?php if ( ! function_exists( 'adc_home_page_view' ) ) : ?>
@@ -49,15 +50,15 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 			</div>
 		</div><?php endif; ?>
 	</div>
-	<div class="ab-hero-scroll-hint" aria-hidden="true">
+	<a class="ab-hero-scroll-hint" href="#<?php echo esc_attr( $home_scroll_target ); ?>">
 		<span><?php esc_html_e( 'اكتشف المزيد', 'car-dealer' ); ?></span>
-		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-	</div>
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+	</a>
 </section>
 
 <!-- ═══════════════ FEATURED CARS ═══════════════ -->
 <?php if ( $featured_ids ) : ?>
-<section class="ab-section ab-featured-section">
+<section id="featured-vehicles" class="ab-section ab-featured-section">
 	<div class="container">
 		<div class="section-heading section-heading-v2">
 			<div>
@@ -76,7 +77,7 @@ $offers_url = car_dealer_archive_url( 'car_offer' );
 <?php endif; ?>
 
 <!-- ═══════════════ WHY CHOOSE US ═══════════════ -->
-<section class="ab-section ab-why ab-why-v2">
+<section id="why-auto-brands" class="ab-section ab-why ab-why-v2">
 	<div class="container">
 		<div class="section-heading section-heading-v2 section-heading-center">
 			<div>

@@ -60,7 +60,7 @@ function car_dealer_assets() {
 	}
 	wp_enqueue_style( 'car-dealer-style', get_stylesheet_uri(), wp_style_is( 'autobrands-tokens', 'registered' ) ? array( 'autobrands-tokens' ) : array(), $version );
 	wp_enqueue_style( 'car-dealer-main', $uri . '/assets/css/main.css', array( 'car-dealer-style' ), filemtime( get_template_directory() . '/assets/css/main.css' ) );
-	wp_enqueue_style( 'car-dealer-home-v2', $uri . '/assets/css/home-v2.css', array( 'car-dealer-main' ), $version );
+	wp_enqueue_style( 'car-dealer-home-v2', $uri . '/assets/css/home-v2.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/home-v2.css' ) );
 	wp_enqueue_style( 'car-dealer-floating', $uri . '/assets/css/floating-buttons.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_style( 'car-dealer-site-shell', $uri . '/assets/css/site-shell.css', array( 'car-dealer-floating' ), filemtime( get_template_directory() . '/assets/css/site-shell.css' ) );
 	wp_enqueue_style( 'car-dealer-about', $uri . '/assets/css/pages/_about.css', array( 'car-dealer-main' ), $version );
