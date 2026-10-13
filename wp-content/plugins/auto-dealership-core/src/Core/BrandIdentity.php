@@ -75,11 +75,32 @@ final class BrandIdentity {
     public static function control(): void {
         $english = ( isset( $_GET['lang'] ) && 'en' === $_GET['lang'] ) || str_starts_with( determine_locale(), 'en' );
         if ( function_exists( 'car_dealer_catalog_language' ) && ! is_admin() ) { $english = 'en' === car_dealer_catalog_language(); }
-        echo '<label class="ab-appearance-control"><span>' . esc_html( $english ? 'Appearance' : 'المظهر' ) . '</span><select data-ab-appearance aria-label="' . esc_attr( $english ? 'Appearance' : 'المظهر' ) . '">';
-        foreach ( array( 'system' => $english ? 'System' : 'الجهاز', 'light' => $english ? 'Light' : 'فاتح', 'dark' => $english ? 'Dark' : 'داكن' ) as $value => $label ) {
-            echo '<option value="' . esc_attr( $value ) . '">' . esc_html( $label ) . '</option>';
+        $group_label = $english ? 'Appearance' : 'المظهر';
+        $modes = array(
+            'light' => array(
+                'label' => $english ? 'Light' : 'فاتح',
+                'icon'  => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>',
+            ),
+            'system' => array(
+                'label' => $english ? 'Auto' : 'تلقائي',
+                'icon'  => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M12 7a3.5 3.5 0 1 0 0 7V7Z"/></svg>',
+            ),
+            'dark' => array(
+                'label' => $english ? 'Dark' : 'داكن',
+                'icon'  => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg>',
+            ),
+        );
+
+        echo '<div class="ab-appearance-control" data-ab-appearance-control role="radiogroup" aria-label="' . esc_attr( $group_label ) . '">';
+        echo '<span class="ab-appearance-label" aria-hidden="true">' . esc_html( $group_label ) . '</span>';
+        echo '<span class="ab-appearance-options">';
+        foreach ( $modes as $value => $mode ) {
+            $selected = 'system' === $value;
+            echo '<button type="button" class="ab-appearance-option' . ( $selected ? ' is-active' : '' ) . '" data-ab-appearance-option="' . esc_attr( $value ) . '" role="radio" aria-checked="' . ( $selected ? 'true' : 'false' ) . '" tabindex="' . ( $selected ? '0' : '-1' ) . '" aria-label="' . esc_attr( $mode['label'] ) . '" title="' . esc_attr( $mode['label'] ) . '">';
+            echo $mode['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixed, local SVG markup.
+            echo '<span class="ab-appearance-option-text" aria-hidden="true">' . esc_html( $mode['label'] ) . '</span></button>';
         }
-        echo '</select></label>';
+        echo '</span></div>';
     }
 
     public static function admin_control( $bar ): void {

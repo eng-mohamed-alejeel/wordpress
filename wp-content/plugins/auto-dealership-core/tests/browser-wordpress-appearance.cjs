@@ -34,6 +34,12 @@ async function scan(target) {
     assert.ok(fields.every(field => !field.overflow), `Native fields fit their viewport: ${JSON.stringify(fields.filter(field => field.overflow))}`);
     return { ...result, fields };
 }
+async function chooseAppearance(page, appearance) {
+    const option = page.locator(`#ab-customizer-appearance [data-ab-appearance-option="${appearance}"]`);
+    await option.click();
+    await page.waitForFunction(value => document.documentElement.dataset.abPreference === value, appearance);
+    assert.equal(await option.getAttribute('aria-checked'), 'true', `Customizer marks ${appearance} as selected`);
+}
 (async () => {
     const { browser, page } = await launch(true);
     const report = [];
@@ -41,7 +47,8 @@ async function scan(target) {
         for (const route of ['/wp-admin/customize.php', '/wp-admin/upload.php?mode=grid']) {
             await page.goto('http://localhost/wordpress' + route, { waitUntil: 'networkidle', timeout: 60000 });
             const customizer = route.includes('customize');
-            await page.waitForSelector(customizer ? '#ab-customizer-appearance select' : '.attachments-browser');
+            await page.waitForSelector(customizer ? '#ab-customizer-appearance [data-ab-appearance-option]' : '.attachments-browser');
+            if (customizer) assert.equal(await page.locator('#ab-customizer-appearance [data-ab-appearance-option]').count(), 3, 'Customizer exposes three appearance choices');
             for (const appearance of ['light', 'dark']) {
                 await mode(page, appearance);
                 if (customizer) {
@@ -60,7 +67,7 @@ async function scan(target) {
                     await page.evaluate(id => wp.customize.section(id).expand(), section);
                     await page.waitForTimeout(500);
                     for (const appearance of ['light', 'dark']) {
-                        await page.locator('#ab-customizer-appearance select').selectOption(appearance);
+                        await chooseAppearance(page, appearance);
                         await page.waitForTimeout(800);
                         report.push({ route: 'customizer/' + section, mode: appearance, ...await scan(page) });
                         await page.screenshot({ path: path.join(output, section + '-' + appearance + '.png') });
@@ -113,8 +120,8 @@ async function scan(target) {
                 await mode(page, appearance);
                 report.push({ route: route + '/mobile', mode: appearance, ...await scan(page) });
                 if (customizer) {
-                    assert.ok(await page.locator('#ab-customizer-appearance select').isVisible(), 'Mobile Customizer has a visible appearance selector');
-                    await page.locator('#ab-customizer-appearance select').selectOption(appearance);
+                    assert.ok(await page.locator('#ab-customizer-appearance [data-ab-appearance-option="system"]').isVisible(), 'Mobile Customizer has a visible appearance switch');
+                    await chooseAppearance(page, appearance);
                 }
                 assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), 'Native screen reflows on mobile');
                 await page.screenshot({ path: path.join(output, (customizer ? 'customizer-mobile-' : 'media-mobile-') + appearance + '.png') });

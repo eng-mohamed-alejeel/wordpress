@@ -26,9 +26,11 @@ body #customize-controls .iris-picker { background: var(--ab-surface); border-co
 #customize-controls .customize-controls-close { background: var(--ab-surface); border-color: var(--ab-border); }
 #customize-controls .wp-full-overlay-footer { height: 88px; }
 #customize-controls .wp-full-overlay-sidebar-content { bottom: 88px; }
-#ab-customizer-appearance { padding: 6px 12px; border-bottom: 1px solid var(--ab-border); }
-#ab-customizer-appearance .ab-appearance-control { display: flex; justify-content: space-between; gap: 8px; }
-#ab-customizer-appearance select { min-height: var(--ab-field-height-compact); max-width: 160px; }
+#ab-customizer-appearance { padding: 7px 12px; border-bottom: 1px solid var(--ab-border); background: var(--ab-surface); }
+#ab-customizer-appearance .ab-appearance-control { display: flex; justify-content: space-between; gap: 10px; width: 100%; }
+#ab-customizer-appearance .ab-appearance-options { flex: 0 0 auto; }
+#ab-customizer-appearance .ab-appearance-option { min-width: 38px; min-height: 36px; padding: .4rem .5rem; }
+#ab-customizer-appearance .ab-appearance-option-text { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 #customize-controls .devices { background: var(--ab-surface); box-shadow: none; }
 #customize-controls .devices button.active { color: var(--ab-link); border-bottom-color: var(--ab-link); }
 @media (max-width: 600px) {
