@@ -173,6 +173,43 @@ const { spawn } = require('node:child_process');
         }
         await visit('/?cd_account=register&lang=en');
         check((await state()).body.includes('Create account') && await evaluate("document.querySelector('.cd-auth-form form')?.action.includes('lang=en')"), 'English registration form preserves language');
+        check(await evaluate(`(() => {
+            const control = document.querySelector('[data-auth-view="register"] [name="privacy_consent"]');
+            control.checked = false;
+            const valid = control.reportValidity();
+            const localized = control.validationMessage === 'You must agree to the Privacy Policy and Terms of Use to create an account.';
+            const error = document.getElementById(control.id + '-validation');
+            const label = control.closest('label');
+            const gap = error.getBoundingClientRect().top - label.getBoundingClientRect().bottom;
+            const inline = error?.textContent === control.validationMessage && getComputedStyle(error).display === 'block' && gap >= 0 && gap <= 8;
+            control.checked = true;
+            control.dispatchEvent(new Event('change', {bubbles:true}));
+            return !valid && localized && inline && control.validationMessage === '' && !document.getElementById(control.id + '-validation');
+        })()`), 'English required consent uses localized browser and inline validation, then clears after correction');
+        check(await evaluate(`(() => {
+            const control = document.querySelector('[data-auth-view="register"] [name="email"]');
+            control.value = 'invalid-address';
+            control.dispatchEvent(new Event('input', {bubbles:true}));
+            const valid = control.reportValidity();
+            const localized = control.validationMessage === 'Please enter a valid email address.';
+            control.value = 'reader@example.com';
+            control.dispatchEvent(new Event('input', {bubbles:true}));
+            return !valid && localized && control.validationMessage === '';
+        })()`), 'English email validation is localized and does not remain stale');
+        await visit('/?cd_account=register');
+        check(await evaluate(`(() => {
+            const control = document.querySelector('[data-auth-view="register"] [name="privacy_consent"]');
+            control.checked = false;
+            const valid = control.reportValidity();
+            const localized = control.validationMessage === 'يجب الموافقة على سياسة الخصوصية وشروط الاستخدام لإنشاء الحساب.';
+            const error = document.getElementById(control.id + '-validation');
+            const label = control.closest('label');
+            const gap = error.getBoundingClientRect().top - label.getBoundingClientRect().bottom;
+            const inline = error?.textContent === control.validationMessage && getComputedStyle(error).display === 'block' && gap >= 0 && gap <= 8;
+            control.checked = true;
+            control.dispatchEvent(new Event('change', {bubbles:true}));
+            return !valid && localized && inline && control.validationMessage === '' && !document.getElementById(control.id + '-validation');
+        })()`), 'Arabic required consent uses localized browser and inline validation, then clears after correction');
         for (const [route, expected] of [['/about/', 'من نحن'], ['/contact/', 'تواصل معنا'], ['/finance/', 'حاسبة التمويل'], ['/faq/', 'الأسئلة الشائعة'], ['/buying-guide/', 'دليلك لاختيار السيارة'], ['/cars/', 'استعرض سيارات أوتو براندز'], ['/offers/', 'اكتشف عروض أوتو براندز'], ['/?cd_account=login', 'أهلاً بك في أوتو براندز']]) {
             await visit(route);
             page = await state();
