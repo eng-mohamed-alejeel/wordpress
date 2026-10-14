@@ -13,6 +13,7 @@ const files = [
   'components/_buttons.css',
   'components/_cards.css',
   'components/_forms.css',
+  'components/_password-toggle.css',
   'components/_icons.css',
   'components/_floating.css',
   'layout/_header.css',

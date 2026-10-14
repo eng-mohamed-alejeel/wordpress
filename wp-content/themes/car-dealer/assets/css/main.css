@@ -920,6 +920,107 @@ h6 { font-size: var(--cd-font-size-md); }
   }
 }
 
+/* Source: components/_password-toggle.css */
+/* Password visibility control shared by the public site, WordPress login and admin. */
+.cd-password-field {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.cd-password-field > input[type="password"],
+.cd-password-field > input[type="text"][data-password-visible="true"],
+.cd-password-field-core > input {
+  padding-inline-end: 3.5rem !important;
+}
+
+.cd-password-toggle,
+.cd-password-field-core > .wp-hide-pw {
+  position: absolute !important;
+  z-index: 2;
+  inset-block-start: 50%;
+  inset-inline-end: 0.15rem;
+  display: inline-grid !important;
+  place-items: center;
+  width: 2.75rem !important;
+  min-width: 2.75rem !important;
+  height: 2.75rem !important;
+  min-height: 2.75rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: translateY(-50%);
+  border: 1px solid transparent !important;
+  border-radius: 0.7rem !important;
+  background: transparent !important;
+  color: var(--ab-muted, #526275) !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.cd-password-toggle:hover,
+.cd-password-field-core > .wp-hide-pw:hover {
+  border-color: color-mix(in srgb, var(--ab-action, #2563eb) 24%, transparent) !important;
+  background: color-mix(in srgb, var(--ab-action, #2563eb) 10%, transparent) !important;
+  color: var(--ab-action, #2563eb) !important;
+}
+
+.cd-password-toggle:active,
+.cd-password-field-core > .wp-hide-pw:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.cd-password-toggle:focus-visible,
+.cd-password-field-core > .wp-hide-pw:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--ab-action, #2563eb) 38%, transparent) !important;
+  outline-offset: 1px;
+  color: var(--ab-action, #2563eb) !important;
+}
+
+.cd-password-eye {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.cd-password-eye-hide,
+.cd-password-toggle[aria-pressed="true"] .cd-password-eye-show {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.75);
+}
+
+.cd-password-toggle[aria-pressed="true"] .cd-password-eye-hide {
+  position: static;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.cd-password-field-core > .wp-hide-pw .dashicons {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.25rem;
+}
+
+[data-ab-theme="dark"] .cd-password-toggle,
+[data-ab-theme="dark"] .cd-password-field-core > .wp-hide-pw {
+  color: var(--ab-muted, #a9b7c8) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd-password-toggle,
+  .cd-password-eye,
+  .cd-password-field-core > .wp-hide-pw {
+    transition: none !important;
+  }
+}
+
 /* Source: components/_icons.css */
 /* ═══════════════════════════════════════════════════════
    Car Dealer — أيقونات احترافية (Professional Icons)

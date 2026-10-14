@@ -74,6 +74,22 @@ function car_dealer_assets() {
 	
 }
 add_action( 'wp_enqueue_scripts', 'car_dealer_assets' );
+
+/** Add a consistent accessible password visibility control across public and WordPress screens. */
+function car_dealer_password_toggle_script() {
+	$path = get_template_directory() . '/assets/js/password-toggle.js';
+	wp_enqueue_script( 'car-dealer-password-toggle', get_template_directory_uri() . '/assets/js/password-toggle.js', array(), filemtime( $path ), true );
+}
+add_action( 'wp_enqueue_scripts', 'car_dealer_password_toggle_script', 20 );
+
+function car_dealer_password_toggle_wordpress_assets() {
+	$style_path = get_template_directory() . '/assets/css/components/_password-toggle.css';
+	wp_enqueue_style( 'car-dealer-password-toggle', get_template_directory_uri() . '/assets/css/components/_password-toggle.css', array(), filemtime( $style_path ) );
+	car_dealer_password_toggle_script();
+}
+add_action( 'login_enqueue_scripts', 'car_dealer_password_toggle_wordpress_assets', 20 );
+add_action( 'admin_enqueue_scripts', 'car_dealer_password_toggle_wordpress_assets', 20 );
+
 add_filter( 'wp_nav_menu_args', function ( $args ) {
   if ( isset( $args['theme_location'] ) && 'primary' === $args['theme_location'] ) {
     $args['show_home'] = true;
