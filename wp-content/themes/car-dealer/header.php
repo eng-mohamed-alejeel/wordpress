@@ -21,7 +21,7 @@ $cd_search_value = isset( $_GET['search'] ) && is_scalar( $_GET['search'] ) ? sa
 				<?php if ( has_custom_logo() ) : ?>
 					<?php the_custom_logo(); ?>
 				<?php else : ?>
-					<a class="site-title" href="<?php echo esc_url( car_dealer_site_url() ); ?>"><?php bloginfo( 'name' ); ?></a>
+					<a class="site-title" href="<?php echo esc_url( car_dealer_site_url() ); ?>"><?php echo esc_html( car_dealer_brand_name() ); ?></a>
 				<?php endif; ?>
 			</div>
 			<button class="menu-toggle" type="button" aria-controls="primary-menu" aria-expanded="false" aria-label="<?php echo esc_attr( car_dealer_text( 'فتح القائمة', 'Open menu' ) ); ?>">

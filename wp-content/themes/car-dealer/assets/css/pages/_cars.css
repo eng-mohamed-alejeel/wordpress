@@ -18,50 +18,17 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--cd-spacing-lg);
-}
-
-.offer-card {
-  overflow: hidden;
-  border: 1px solid var(--ab-border);
-  border-radius: var(--cd-radius-lg);
-  background: var(--cd-color-surface);
-  box-shadow: var(--cd-shadow-lg);
-}
-
-.offer-image {
-  display: block;
-  min-height: 220px;
-  background: var(--ab-color-ink);
-}
-
-.offer-image img {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-}
-
-.offer-content {
-  padding: var(--cd-spacing-lg);
-}
-
-.offer-price {
-  color: var(--ab-color-red);
-}
-
-.offer-old {
-  text-decoration: line-through;
-  color: var(--ab-muted);
-  font-weight: 700;
-}
-
-.car-monthly {
-  color: var(--ab-link);
-  font-weight: 800;
-  margin-top: -0.35rem;
+  align-items: stretch;
 }
 
 @media (max-width: 900px) {
   .offer-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .offer-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

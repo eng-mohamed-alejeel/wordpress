@@ -20,7 +20,7 @@ while ( have_posts() ) :
 	$brand_name   = $view['brand_name'];
 	$catalog_language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
 	$catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl';
-	$wa_message   = 'en' === $catalog_language ? sprintf( 'Hello AUTO BRANDS, I would like to ask about %s', get_the_title() ) : sprintf( 'مرحباً AUTO BRANDS، أريد الاستفسار عن %s', get_the_title() );
+	$wa_message   = 'en' === $catalog_language ? sprintf( 'Hello AUTO BRANDS, I would like to ask about %s', get_the_title() ) : sprintf( 'مرحباً أوتو براندز، أريد الاستفسار عن %s', get_the_title() );
 	?>
 	<section class="ab-car-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div class="container ab-car-hero-grid">
@@ -35,7 +35,7 @@ while ( have_posts() ) :
 				<?php endif; ?>
 			</div>
 			<div class="car-single-content">
-				<p class="eyebrow"><?php echo $brand_name ? esc_html( car_dealer_catalog_value_label( (string) $brand_name ) ) : esc_html__( 'AUTO BRANDS', 'car-dealer' ); ?></p>
+				<p class="eyebrow"><?php echo $brand_name ? esc_html( car_dealer_catalog_value_label( (string) $brand_name ) ) : esc_html( car_dealer_brand_name() ); ?></p>
 				<h1><?php the_title(); ?></h1>
 				<?php if ( $price ) : ?><p class="car-single-price"><?php if ( ! empty( $view['price_from'] ) ) { echo esc_html( car_dealer_text( 'يبدأ من ', 'From ' ) ); } echo esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ); ?></p><?php endif; ?>
 				<?php if ( $price && ! empty( $view['price_label'] ) ) : ?><p class="public-price-inclusions"><?php echo esc_html( $view['price_label'] ); ?></p><?php endif; ?>

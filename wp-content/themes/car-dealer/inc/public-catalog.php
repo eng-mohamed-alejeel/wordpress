@@ -21,10 +21,47 @@ function car_dealer_text( string $arabic, string $english ): string {
 	return 'en' === car_dealer_catalog_language() ? $english : $arabic;
 }
 
+/** Keep the public brand name consistent with the selected site language. */
+function car_dealer_brand_name(): string {
+	return car_dealer_text( 'أوتو براندز', 'AUTO BRANDS' );
+}
+
+add_filter( 'option_blogname', static function ( $name ) {
+	if ( ! is_admin() && 'ar' === car_dealer_catalog_language() && is_string( $name ) ) {
+		return (string) preg_replace( '/AUTO\s+BRANDS/i', 'أوتو براندز', $name );
+	}
+	return $name;
+}, 20 );
+
+add_filter( 'document_title_parts', static function ( array $parts ): array {
+	if ( 'ar' === car_dealer_catalog_language() ) {
+		foreach ( $parts as $key => $value ) {
+			if ( is_string( $value ) ) {
+				$parts[ $key ] = (string) preg_replace( '/AUTO\s+BRANDS/i', 'أوتو براندز', $value );
+			}
+		}
+	} elseif ( isset( $parts['site'] ) ) {
+		$parts['site'] = car_dealer_brand_name();
+	}
+	return $parts;
+}, 20 );
+
+add_filter( 'wp_get_attachment_image_attributes', static function ( array $attr, WP_Post $attachment ): array {
+	if ( is_admin() ) {
+		return $attr;
+	}
+	if ( (int) get_theme_mod( 'custom_logo' ) === (int) $attachment->ID ) {
+		$attr['alt'] = car_dealer_brand_name();
+	} elseif ( 'ar' === car_dealer_catalog_language() && isset( $attr['alt'] ) ) {
+		$attr['alt'] = (string) preg_replace( '/AUTO\s+BRANDS/i', 'أوتو براندز', (string) $attr['alt'] );
+	}
+	return $attr;
+}, 20, 2 );
+
 /** Text from the theme's editorial shortcode sections, translated after rendering. */
 function car_dealer_editorial_english_copy(): array {
 	return array(
-		'من نحن' => 'About us', 'AUTO BRANDS للسيارات' => 'AUTO BRANDS Automotive',
+		'من نحن' => 'About us', 'أوتو براندز للسيارات' => 'AUTO BRANDS Automotive',
 		'إحدى شركات ناصر مطر المطيري للسيارات' => 'A Nasser Matar Al-Mutairi Automotive company',
 		'نقدّم معلومات السيارات المنشورة ووسائل التواصل مع فريق المعرض. تتحدد أي خدمات إضافية وشروطها بحسب الاتفاق المتاح لكل سيارة.' => 'We provide published vehicle information and ways to reach our dealership team. Additional services and terms depend on the agreement available for each vehicle.',
 		'استكشف سياراتنا' => 'Explore our vehicles', 'تواصل معنا' => 'Contact us',
@@ -129,7 +166,7 @@ function car_dealer_catalog_english_copy(): array {
 		return $copy;
 	}
 	$copy = array(
-		'استعرض سيارات AUTO BRANDS' => 'Browse AUTO BRANDS Vehicles',
+		'استعرض سيارات أوتو براندز' => 'Browse AUTO BRANDS Vehicles',
 		'فلترة دقيقة حسب الماركة، الموديل، السنة، السعر، نوع السيارة، الوقود وناقل الحركة.' => 'Filter by brand, model, year, price, body type, fuel and transmission.',
 		'السابق' => 'Previous', 'التالي' => 'Next', 'لا توجد سيارات مطابقة للبحث.' => 'No vehicles match your search.',
 		'بحث' => 'Search', 'الماركة أو الموديل' => 'Brand or model', 'الماركة أو الموديل أو الرقم المرجعي' => 'Brand, model or reference number',
@@ -171,7 +208,7 @@ function car_dealer_catalog_english_copy(): array {
 		'استعرض السيارات' => 'Browse vehicles', 'سيارة منشورة' => 'Published vehicles', 'تصفح الآن' => 'Browse now', 'اكتشف المزيد' => 'Discover more',
 		'مختارة بعناية' => 'Selected for you', 'السيارات المميزة' => 'Featured vehicles',
 		'أفضل السيارات التي نرشحها لك بعناية فائقة' => 'Explore vehicles selected for this section.', 'عرض الكل' => 'View all',
-		'ثقة وخبرة' => 'Clear information', 'لماذا AUTO BRANDS؟' => 'Why AUTO BRANDS?',
+		'ثقة وخبرة' => 'Clear information', 'لماذا أوتو براندز؟' => 'Why AUTO BRANDS?',
 		'نقدم لك تجربة شراء لا مثيل لها' => 'Explore vehicles and contact our team with confidence.',
 		'اختيار متنوع' => 'Vehicle selection',
 		'استعرض السيارات المنشورة وقارن بين مواصفاتها لاختيار ما يناسب احتياجك.' => 'Compare published vehicle specifications to find the right fit.',
@@ -196,12 +233,12 @@ function car_dealer_catalog_english_copy(): array {
 		'لا توجد طلبات في هذه الصفحة حاليًا.' => 'There are no requests on this page.',
 		'مرّر الجدول أفقيًا لعرض بقية التفاصيل.' => 'Scroll the table horizontally to see all details.',
 		'الموقع' => 'Location', 'عرض الموقع على الخريطة' => 'View on map',
-		'عروض AUTO BRANDS' => 'AUTO BRANDS Offers',
+		'عروض أوتو براندز' => 'AUTO BRANDS Offers',
 		'عروض مختارة، أقساط مرنة، وفرص محدودة على سيارات تناسب رحلتك القادمة.' => 'Explore currently published offers and review the terms for each vehicle.',
 		'العروض غير متاحة حاليًا. يرجى المحاولة لاحقًا.' => 'Offers are temporarily unavailable. Please try again later.',
 		'لا توجد عروض منشورة حالياً.' => 'There are no published offers at the moment.',
 		'بيانات العرض غير متاحة حاليًا.' => 'Offer details are temporarily unavailable.',
-		'عرض AUTO BRANDS' => 'AUTO BRANDS Offer', 'احصل على العرض' => 'Ask about this offer',
+		'عرض أوتو براندز' => 'AUTO BRANDS Offer', 'احصل على العرض' => 'Ask about this offer',
 	);
 	return $copy;
 }

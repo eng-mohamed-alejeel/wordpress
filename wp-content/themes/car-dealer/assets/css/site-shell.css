@@ -470,6 +470,10 @@ body.post-type-archive-car .archive-hero { min-height: 0; padding-block: 2.5rem;
 body.post-type-archive-car .archive-hero h1 { font-size: clamp(1.65rem, 3vw, 2.6rem); line-height: 1.45; text-shadow: none; }
 body.post-type-archive-car .archive-hero p { font-size: .95rem; }
 body.post-type-archive-car .archive-content { padding-block: 2rem; }
+body.post-type-archive-car_offer .archive-hero { min-height: 0; padding-block: 2.5rem; }
+body.post-type-archive-car_offer .archive-hero h1 { font-size: clamp(1.65rem, 3vw, 2.6rem); line-height: 1.45; text-shadow: none; }
+body.post-type-archive-car_offer .archive-hero p { font-size: .95rem; }
+body.post-type-archive-car_offer .archive-content { padding-block: 2rem; }
 .cd-filter-primary, .cd-filter-secondary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end; gap: 1rem; }
 .cd-customer-filters label { display: grid; grid-template-rows: 1.5rem 46px; gap: .4rem; min-width: 0; font-size: .875rem; font-weight: 500; color: var(--ab-muted); }
 .cd-customer-filters label > span { line-height: 1.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

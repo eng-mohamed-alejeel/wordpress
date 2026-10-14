@@ -115,6 +115,14 @@ const { spawn } = require('node:child_process');
         await visit('/');
         let page = await state();
         check(page.language === 'ar' && page.direction === 'rtl', 'Arabic home declares RTL');
+        const arabicBrandIsLocalized = `(() => {
+            const pattern = /AUTO\\s+BRANDS/i;
+            if (pattern.test(document.title) || pattern.test(document.body.innerText)) return false;
+            if ([...document.querySelectorAll('[alt],[title],[aria-label],[placeholder]')].some(node => ['alt','title','aria-label','placeholder'].some(name => pattern.test(node.getAttribute(name) || '')))) return false;
+            if ([...document.querySelectorAll('script[type="application/ld+json"]')].some(node => pattern.test(node.textContent || ''))) return false;
+            return [...document.querySelectorAll('a[href*="wa.me"]')].every(link => { try { return !pattern.test(new URL(link.href).searchParams.get('text') || ''); } catch { return true; } });
+        })()`;
+        check(await evaluate(arabicBrandIsLocalized), 'Arabic home localizes the brand name in visible and accessible copy');
         await call('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
         await call('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
         check(await evaluate("document.activeElement?.classList.contains('skip-link') && getComputedStyle(document.activeElement).clip === 'auto'"), 'Keyboard entry focuses the visible skip-to-content link');
@@ -165,10 +173,11 @@ const { spawn } = require('node:child_process');
         }
         await visit('/?cd_account=register&lang=en');
         check((await state()).body.includes('Create account') && await evaluate("document.querySelector('.cd-auth-form form')?.action.includes('lang=en')"), 'English registration form preserves language');
-        for (const [route, expected] of [['/about/', 'من نحن'], ['/contact/', 'تواصل معنا'], ['/finance/', 'حاسبة التمويل'], ['/faq/', 'الأسئلة الشائعة'], ['/buying-guide/', 'دليلك لاختيار السيارة']]) {
+        for (const [route, expected] of [['/about/', 'من نحن'], ['/contact/', 'تواصل معنا'], ['/finance/', 'حاسبة التمويل'], ['/faq/', 'الأسئلة الشائعة'], ['/buying-guide/', 'دليلك لاختيار السيارة'], ['/cars/', 'استعرض سيارات أوتو براندز'], ['/offers/', 'اكتشف عروض أوتو براندز'], ['/?cd_account=login', 'أهلاً بك في أوتو براندز']]) {
             await visit(route);
             page = await state();
             check(page.language === 'ar' && page.direction === 'rtl' && page.body.includes(expected), `${route} renders Arabic`);
+            check(await evaluate(arabicBrandIsLocalized), `${route} localizes the brand name throughout the Arabic page`);
         }
         await visit('/finance/');
         check(await evaluate("document.querySelector('.entry-content').innerText.includes('النتيجة إرشادية وغير ملزمة') && !document.querySelector('.entry-content').innerText.includes('Explore how the down payment')"), 'Finance page shows only Arabic editorial content');

@@ -41,7 +41,7 @@ final class PublicStructuredData {
 		return array(
 			'@context' => 'https://schema.org',
 			'@type' => 'Organization',
-			'name' => get_bloginfo( 'name' ),
+			'name' => function_exists( 'adc_catalog_language' ) && 'ar' === adc_catalog_language() ? 'أوتو براندز' : get_bloginfo( 'name' ),
 			'url' => home_url( '/' ),
 		);
 	}

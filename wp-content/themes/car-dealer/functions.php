@@ -208,6 +208,8 @@ function car_dealer_offer_card( $post_id = null ) {
 	$monthly = $offer['monthly_payment'];
 	$new_price = $offer['price'];
 	$old_price = $offer['old_price'];
+	$expires = isset( $offer['expires'] ) && is_string( $offer['expires'] ) ? $offer['expires'] : '';
+	$discount_percent = $old_price > $new_price && $new_price > 0 ? (int) round( ( ( $old_price - $new_price ) / $old_price ) * 100 ) : 0;
 	$url = car_dealer_catalog_localized_url( $offer['url'] );
 	$title = $offer['title'];
 	$image = get_the_post_thumbnail( $post_id, 'medium_large' );
@@ -216,15 +218,20 @@ function car_dealer_offer_card( $post_id = null ) {
 	?>
 	<article class="offer-card">
 		<?php if ( $image ) : ?>
-			<a class="offer-image" href="<?php echo esc_url( $url ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
+			<a class="offer-image" href="<?php echo esc_url( $url ); ?>" aria-label="<?php echo esc_attr( car_dealer_text( 'عرض تفاصيل ', 'View details for ' ) . $title ); ?>">
 				<?php echo $image; ?>
 			</a>
 		<?php endif; ?>
+		<?php if ( $discount_percent > 0 ) : ?><span class="offer-discount-badge"><?php echo esc_html( car_dealer_text( 'وفّر ', 'Save ' ) . $discount_percent . '%' ); ?></span><?php endif; ?>
 		<div class="offer-content">
+			<p class="offer-kicker"><?php echo esc_html( car_dealer_text( 'عرض مميز', 'Featured offer' ) ); ?></p>
 			<h3><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $title ); ?></a></h3>
-			<?php if ( $old_price ) : ?><p class="offer-old"><?php echo esc_html( car_dealer_format_price( $old_price ) ); ?></p><?php endif; ?>
-			<?php if ( $new_price ) : ?><p class="offer-price"><?php echo esc_html( car_dealer_format_price( $new_price ) ); ?></p><?php endif; ?>
+			<div class="offer-pricing">
+				<?php if ( $old_price ) : ?><p class="offer-old"><span><?php echo esc_html( car_dealer_text( 'السعر السابق', 'Previous price' ) ); ?></span><del><?php echo esc_html( car_dealer_format_price( $old_price ) ); ?></del></p><?php endif; ?>
+				<?php if ( $new_price ) : ?><p class="offer-price"><span><?php echo esc_html( car_dealer_text( 'سعر العرض', 'Offer price' ) ); ?></span><strong><?php echo esc_html( car_dealer_format_price( $new_price ) ); ?></strong></p><?php endif; ?>
+			</div>
 			<?php if ( $monthly ) : ?><p class="car-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
+			<?php if ( '' !== $expires ) : ?><p class="offer-validity"><?php echo esc_html( car_dealer_text( 'ساري حتى ', 'Valid until ' ) . $expires ); ?></p><?php endif; ?>
 			<div class="offer-card-actions">
 				<a class="btn btn-primary" href="<?php echo esc_url( $url . '#offer-lead' ); ?>"><?php esc_html_e( 'احصل على العرض', 'car-dealer' ); ?></a>
 				<a class="btn btn-outline" href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( car_dealer_text( 'تفاصيل العرض', 'Offer details' ) ); ?></a>

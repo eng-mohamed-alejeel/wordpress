@@ -9,7 +9,7 @@ $total_cars = (int) ( $home['available_car_count'] ?? 0 );
 $catalog_car_count = (int) ( $home['published_car_count'] ?? 0 );
 $car_count_step = $total_cars > 50 ? (int) ( floor( ( $total_cars - 1 ) / 50 ) * 50 ) : $total_cars;
 $hero_image = $featured_ids ? get_the_post_thumbnail_url( $featured_ids[0], 'full' ) : '';
-$whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً AUTO BRANDS، أريد الاستفسار عن السيارات المتاحة.', 'Hello AUTO BRANDS, I would like to ask about the available vehicles.' ) );
+$whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً أوتو براندز، أريد الاستفسار عن السيارات المتاحة.', 'Hello AUTO BRANDS, I would like to ask about the available vehicles.' ) );
 $catalog_url = car_dealer_archive_url( 'car' );
 $offers_url = car_dealer_archive_url( 'car_offer' );
 $home_scroll_target = $featured_ids ? 'featured-vehicles' : 'why-auto-brands';
@@ -26,7 +26,7 @@ $home_scroll_target = $featured_ids ? 'featured-vehicles' : 'why-auto-brands';
 	</div>
 	<div class="container ab-hero-grid">
 		<div class="ab-hero-copy">
-			<p class="eyebrow ab-hero-eyebrow"><?php esc_html_e( 'AUTO BRANDS', 'car-dealer' ); ?></p>
+			<p class="eyebrow ab-hero-eyebrow"><?php echo esc_html( car_dealer_brand_name() ); ?></p>
 			<h1><?php echo esc_html( car_dealer_text( 'سيارتك الجديدة تبدأ من أوتو براندز', 'Your new vehicle starts with Auto Brands' ) ); ?></h1>
 			<p class="ab-hero-desc"><?php echo esc_html( car_dealer_text( 'مبيعات السيارات الجديدة في جدة، حي الجوهرة، وخدمات ما بعد البيع والتلميع والتظليل. استعرض الخيارات وتواصل مع فريقنا.', 'New vehicle sales in Al Jawharah, Jeddah, with after-sales services, polishing and window tinting. Explore your options and contact our team.' ) ); ?></p>
 			<div class="ab-actions">
@@ -82,7 +82,7 @@ $home_scroll_target = $featured_ids ? 'featured-vehicles' : 'why-auto-brands';
 		<div class="section-heading section-heading-v2 section-heading-center">
 			<div>
 				<p class="eyebrow"><?php esc_html_e( 'ثقة وخبرة', 'car-dealer' ); ?></p>
-				<h2><?php esc_html_e( 'لماذا AUTO BRANDS؟', 'car-dealer' ); ?></h2>
+				<h2><?php echo esc_html( car_dealer_text( 'لماذا أوتو براندز؟', 'Why AUTO BRANDS?' ) ); ?></h2>
 				<p class="section-subtitle"><?php esc_html_e( 'نقدم لك تجربة شراء لا مثيل لها', 'car-dealer' ); ?></p>
 			</div>
 		</div>

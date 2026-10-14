@@ -63,7 +63,7 @@ add_action( 'template_redirect', function () {
  status_header( 200 );
  include get_template_directory() . '/templates/account.php'; exit;
 } );
-add_filter( 'pre_get_document_title', function ( $title ) { return car_dealer_account_view() ? __( 'حسابي — ', 'car-dealer' ) . get_bloginfo( 'name' ) : $title; } );
+add_filter( 'pre_get_document_title', function ( $title ) { return car_dealer_account_view() ? __( 'حسابي — ', 'car-dealer' ) . car_dealer_brand_name() : $title; } );
 
 function car_dealer_account_request_table( string $type ): void { car_dealer_account_request_table_core( $type ); }
 

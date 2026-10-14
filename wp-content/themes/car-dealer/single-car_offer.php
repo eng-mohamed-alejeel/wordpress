@@ -11,7 +11,7 @@ $car_id = $offer['car_id'];
 	<div class="container ab-car-hero-grid">
 		<div class="car-single-media"><?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large' ); } else { echo get_the_post_thumbnail( $car_id, 'large' ); } ?></div>
 		<div class="car-single-content">
-			<p class="eyebrow"><?php esc_html_e( 'عرض AUTO BRANDS', 'car-dealer' ); ?></p>
+			<p class="eyebrow"><?php echo esc_html( car_dealer_text( 'عرض أوتو براندز', 'AUTO BRANDS Offer' ) ); ?></p>
 			<h1><?php the_title(); ?></h1>
 			<?php if ( $old ) : ?><p class="offer-old"><?php echo esc_html( car_dealer_format_price( $old ) ); ?></p><?php endif; ?>
 			<?php if ( $new ) : ?><p class="car-single-price"><?php echo esc_html( car_dealer_format_price( $new ) ); ?></p><?php endif; ?>
