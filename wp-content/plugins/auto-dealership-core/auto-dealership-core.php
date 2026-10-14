@@ -16,6 +16,8 @@ define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
 require_once ADC_PATH . 'src/Core/Capabilities.php';
 require_once ADC_PATH . 'src/Core/Localization.php';
+require_once ADC_PATH . 'src/Core/SuccessNotices.php';
+\AutoDealership\Core\SuccessNotices::boot();
 \AutoDealership\Core\Localization::boot();
 require_once ADC_PATH . 'src/Core/Typography.php';
 \AutoDealership\Core\Typography::boot();
@@ -23,6 +25,9 @@ require_once ADC_PATH . 'src/Core/BrandIdentity.php';
 \AutoDealership\Core\BrandIdentity::boot();
 require_once ADC_PATH . 'src/Core/ConfigurationService.php';
 require_once ADC_PATH . 'src/Accounts/CustomerAccount.php';
+require_once ADC_PATH . 'src/Accounts/BrandedMail.php';
+require_once ADC_PATH . 'src/Leads/NewsletterService.php';
+require_once ADC_PATH . 'src/Admin/NewsletterPage.php';
 require_once ADC_PATH . 'src/Accounts/CustomerRequestView.php';
 require_once ADC_PATH . 'src/Content/ContentRegistry.php';
 require_once ADC_PATH . 'src/Content/EditorialPageSetup.php';
@@ -362,6 +367,7 @@ add_action( 'plugins_loaded', static function (): void {
 	\AutoDealership\Core\Capabilities::sync_administrator();
 	\AutoDealership\Core\Capabilities::migrate_sales_permissions();
 	\AutoDealership\Core\Capabilities::migrate_purchase_permissions();
+	\AutoDealership\Core\Capabilities::migrate_newsletter_permissions();
 	if ( get_option( 'adc_roles_version' ) !== ADC_VERSION ) {
 		\AutoDealership\Core\Capabilities::activate();
 		update_option( 'adc_roles_version', ADC_VERSION, false );
@@ -386,6 +392,9 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\LegacyCrmBridge', '
 add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\LegacyEngagementStore', 'boot' ), 5 );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\PublicIntake', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\MarketingSubscription', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Leads\\NewsletterService', 'boot' ), 15 );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\NewsletterPage', 'boot' ) );
+add_action( 'adc_mail_wake', array( 'AutoDealership\\Leads\\NewsletterService', 'run_mail' ) );
 add_action( 'wp_enqueue_scripts', array( 'AutoDealership\\Leads\\PublicIntake', 'enqueue' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Tools\\PublicTools', 'boot' ) );
 add_action( 'wp_enqueue_scripts', array( 'AutoDealership\\Tools\\PublicTools', 'enqueue' ) );
@@ -466,6 +475,7 @@ register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_expire_reservations' );
 	wp_clear_scheduled_hook( 'adc_privacy_retention' );
 	wp_clear_scheduled_hook( 'adc_process_outbox' );
+	wp_clear_scheduled_hook( 'adc_mail_wake' );
 	wp_clear_scheduled_hook( 'adc_scan_followups' );
 	wp_clear_scheduled_hook( 'adc_prune_request_limits' );
 } );

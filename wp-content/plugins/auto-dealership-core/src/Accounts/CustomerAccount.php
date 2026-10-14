@@ -132,7 +132,9 @@ final class CustomerAccount {
 			if ( ! in_array( $value, array( '0', '1' ), true ) ) {
 				return __( 'تعذر حفظ التفضيلات. اختر أحد الخيارين وحاول مجددًا.', 'auto-dealership-core' );
 			}
-			$result = CustomerIdentity::update_preferences( '1' === $value );
+			$language = self::field( 'newsletter_language' );
+			if ( '' !== $language && ! in_array( $language, array( 'ar', 'en' ), true ) ) { return __( 'تعذر حفظ التفضيلات. اختر أحد الخيارين وحاول مجددًا.', 'auto-dealership-core' ); }
+			$result = CustomerIdentity::update_preferences( '1' === $value, $language );
 			if ( is_wp_error( $result ) ) { return $result->get_error_message(); }
 			wp_safe_redirect( add_query_arg( 'preferences_saved', 1, self::account_url() ) );
 			exit;
@@ -208,8 +210,21 @@ final class CustomerAccount {
 			clean_user_cache( $user_id );
 			return self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) );
 		}
+		$language = \AutoDealership\Core\Localization::language();
+		update_user_meta( $user_id, 'adc_preferred_language', $language );
+		if ( get_user_meta( $user_id, 'adc_preferred_language', true ) !== $language ) { $wpdb->query( 'ROLLBACK' ); clean_user_cache( $user_id ); return self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) ); }
+		$mail_payload = array( 'subject_type' => 'user', 'subject_id' => (int) $user_id, 'locale' => 'en' === $language ? 'en_US' : 'ar' );
+		$mail_event = \AutoDealership\Operations\OutboxService::enqueue( 'customer.welcome', $mail_payload, 'customer-welcome:' . $user_id );
+		if ( is_wp_error( $mail_event ) ) {
+			$wpdb->query( 'ROLLBACK' ); clean_user_cache( $user_id );
+			return self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) );
+		}
 		$committed = Transaction::commit( static fn() => AuditLog::record( 'customer.account_registered', 'user', $user_id, '', null, array( 'role'=>'car_dealer_customer', 'privacy_consent'=>true ) ) );
 		clean_user_cache( $user_id );
+		if ( $committed ) {
+			\AutoDealership\Leads\NewsletterService::welcome( $mail_payload );
+			\AutoDealership\Leads\NewsletterService::wake();
+		}
 		return $committed ? (int) $user_id : self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) );
 	}
 

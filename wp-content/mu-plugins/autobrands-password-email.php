@@ -6,10 +6,12 @@
 defined( 'ABSPATH' ) || exit;
 
 add_filter( 'retrieve_password_notification_email', static function ( array $email, string $key, string $login, $user ): array {
-	$ar = str_starts_with( get_locale(), 'ar' );
+	$preference = get_user_meta( (int) $user->ID, 'adc_preferred_language', true );
+	$locale = in_array( $preference, array( 'ar', 'en' ), true ) ? ( 'en' === $preference ? 'en_US' : 'ar' ) : get_locale();
+	$ar = str_starts_with( $locale, 'ar' );
 	$brand = wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
 	$url = network_site_url( 'wp-login.php?action=rp&key=' . rawurlencode( $key ) . '&login=' . rawurlencode( $login ), 'login' );
-	$url = add_query_arg( 'wp_lang', get_locale(), $url );
+	$url = add_query_arg( 'wp_lang', $locale, $url );
 	$options = (array) get_option( 'car_dealer_theme_settings', array() );
 	$navy = sanitize_hex_color( $options['primary_color'] ?? '' ) ?: '#0E2A4A';
 	$blue = sanitize_hex_color( $options['accent_color'] ?? '' ) ?: '#2563EB';

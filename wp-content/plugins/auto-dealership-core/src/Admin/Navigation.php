@@ -170,7 +170,7 @@ final class Navigation {
 			'admin.php?page=adc-payments' => __( 'مراجعة دفعات المبيعات والعربون.', 'auto-dealership-core' ),
 			'admin.php?page=adc-refunds' => __( 'طلبات الاسترداد وقراراتها.', 'auto-dealership-core' ),
 			'admin.php?page=adc-delivery' => __( 'التجهيز والمستندات والمطابقة والإطلاق.', 'auto-dealership-core' ),
-			'admin.php?page=car-dealer-subscribers' => __( 'موافقات التواصل التسويقي الحالية.', 'auto-dealership-core' ),
+			'admin.php?page=car-dealer-subscribers' => __( 'إدارة المشتركين والحملات البريدية ونتائج الإرسال.', 'auto-dealership-core' ),
 			'admin.php?page=adc-operational-reports' => __( 'مؤشرات مجمعة ضمن نطاق الصلاحية.', 'auto-dealership-core' ),
 			'admin.php?page=adc-audit' => __( 'الأحداث الإدارية والتشغيلية للقراءة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-settings' => __( 'الفروع والسياسات والإعدادات المركزية.', 'auto-dealership-core' ),

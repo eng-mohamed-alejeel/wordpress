@@ -5,6 +5,15 @@ defined( 'ABSPATH' ) || exit;
 
 /** Registers scoped dealership roles and capabilities. */
 final class Capabilities {
+	public static function migrate_newsletter_permissions(): void {
+		if ( '1' === get_option( 'adc_newsletter_permissions_version' ) ) { return; }
+		$definitions = get_option( 'adc_role_definitions', array() );
+		foreach ( array( 'dealership_marketing', 'dealership_general_manager' ) as $slug ) {
+			$role = get_role( $slug );
+			if ( $role && ! isset( $definitions[$slug] ) && ! array_key_exists( 'adc_manage_newsletter', $role->capabilities ) ) { $role->add_cap( 'adc_manage_newsletter' ); }
+		}
+		update_option( 'adc_newsletter_permissions_version', '1', false );
+	}
 	private const PURCHASE_CAPABILITIES = array( 'adc_view_purchase_orders', 'adc_create_purchase_orders', 'adc_approve_purchase_orders', 'adc_approve_high_purchase_orders', 'adc_receive_purchase_orders', 'adc_cancel_purchase_orders' );
 	private const PURCHASE_ROLES = array(
 		'dealership_purchasing'=>array( 'adc_view_purchase_orders', 'adc_create_purchase_orders', 'adc_receive_purchase_orders', 'adc_cancel_purchase_orders' ),
@@ -143,6 +152,8 @@ final class Capabilities {
 	/** Factory defaults; registered roles may have administrator-managed overrides. */
 	public static function role_matrix(): array {
 		$matrix = self::ROLE_CAPABILITIES;
+		$matrix['dealership_marketing'][] = 'adc_manage_newsletter';
+		$matrix['dealership_general_manager'][] = 'adc_manage_newsletter';
 		foreach ( $matrix as &$caps ) { if ( in_array( 'adc_create_reservations', $caps, true ) || in_array( 'adc_manage_branch_leads', $caps, true ) ) { $caps = array_merge( $caps, self::SALES_CAPABILITIES ); } }
 		unset( $caps );
 		foreach ( self::PURCHASE_ROLES as $role=>$caps ) { $matrix[$role] = array_merge( $matrix[$role], $caps ); }
@@ -150,7 +161,7 @@ final class Capabilities {
 	}
 
 	public static function all_capabilities(): array {
-		$caps = array_merge( self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES );
+		$caps = array_merge( array( 'adc_manage_newsletter' ), self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES );
 		foreach ( self::ROLE_CAPABILITIES as $role_caps ) {
 			$caps = array_merge( $caps, $role_caps );
 		}

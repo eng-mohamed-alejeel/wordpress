@@ -53,12 +53,25 @@ final class CustomerIdentity {
 		$has_meta = metadata_exists( 'user', $user_id, self::PREFERENCE_META );
 		$enabled = $row ? (bool) $row['consent_marketing'] : ( $has_meta && '1' === (string) get_user_meta( $user_id, self::PREFERENCE_META, true ) );
 		$recorded_at = $row ? (string) $row['consent_at'] : (string) get_user_meta( $user_id, self::PREFERENCE_AT_META, true );
-		return array( 'consent_marketing'=>$enabled, 'recorded_at'=>$recorded_at, 'linked_customer_id'=>(int) ( $row['id'] ?? 0 ) );
+		$language = get_user_meta( $user_id, 'adc_preferred_language', true );
+		if ( (int) get_option( 'adc_newsletter_schema' ) >= 2 ) {
+			$account = get_userdata( $user_id );
+			$subscription = $wpdb->get_row( $wpdb->prepare( 'SELECT status,locale,created_at FROM ' . NewsletterService::subscribers() . ' WHERE email=%s', strtolower( $account->user_email ) ), ARRAY_A );
+			if ( $wpdb->last_error ) { return self::error( 'adc_identity_unavailable', 503 ); }
+			if ( $subscription ) {
+				$enabled = 'active' === $subscription['status'];
+				$recorded_at = $enabled ? $subscription['created_at'] : '';
+				if ( ! in_array( $language, array( 'ar', 'en' ), true ) ) { $language = NewsletterService::language( $subscription['locale'] ); }
+			}
+		}
+		if ( ! in_array( $language, array( 'ar', 'en' ), true ) ) { $language = \AutoDealership\Core\Localization::language(); }
+		return array( 'consent_marketing'=>$enabled, 'recorded_at'=>$recorded_at, 'linked_customer_id'=>(int) ( $row['id'] ?? 0 ), 'newsletter_language'=>$language );
 	}
 
 	/** Store opt-in or opt-out explicitly for the account and its linked CRM identity. */
-	public static function update_preferences( bool $marketing ) {
+	public static function update_preferences( bool $marketing, string $language = '' ) {
 		global $wpdb;
+		if ( '' !== $language && ! in_array( $language, array( 'ar', 'en' ), true ) ) { return self::error( 'adc_identity_invalid', 400 ); }
 		$user_id = get_current_user_id();
 		if ( ! $user_id || ! Transaction::begin() ) { return self::error( $user_id ? 'adc_identity_unavailable' : 'adc_identity_forbidden', $user_id ? 503 : 403 ); }
 		foreach ( array( $wpdb->users, $wpdb->usermeta ) as $account_table ) {
@@ -70,6 +83,21 @@ final class CustomerIdentity {
 		$before = $row ? (bool) $row['consent_marketing'] : ( metadata_exists( 'user', $user_id, self::PREFERENCE_META ) && '1' === (string) get_user_meta( $user_id, self::PREFERENCE_META, true ) );
 		$now = current_time( 'mysql', true );
 		$recorded_at = $marketing ? $now : '';
+		if ( $language ) {
+			update_user_meta( $user_id, 'adc_preferred_language', $language );
+			if ( get_user_meta( $user_id, 'adc_preferred_language', true ) !== $language ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
+		}
+		if ( (int) get_option( 'adc_newsletter_schema' ) >= 2 ) {
+			$email = $wpdb->get_var( $wpdb->prepare( "SELECT user_email FROM {$wpdb->users} WHERE ID=%d", $user_id ) );
+			$subscription = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . NewsletterService::subscribers() . ' WHERE email=%s FOR UPDATE', strtolower( $email ) ), ARRAY_A );
+			if ( $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
+			if ( $subscription ) {
+				$changes = array( 'status'=>$marketing ? 'active' : 'unsubscribed' );
+				if ( $language ) { $changes['locale']=$language; }
+				if ( $marketing && 'active' !== $subscription['status'] ) { $changes['consent_key']=wp_generate_uuid4(); $changes['created_at']=$now; }
+				if ( false === $wpdb->update( NewsletterService::subscribers(), $changes, array( 'id'=>$subscription['id'] ) ) ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
+			}
+		}
 		update_user_meta( $user_id, self::PREFERENCE_META, $marketing ? '1' : '0' );
 		update_user_meta( $user_id, self::PREFERENCE_AT_META, $recorded_at );
 		if ( (string) get_user_meta( $user_id, self::PREFERENCE_META, true ) !== ( $marketing ? '1' : '0' ) || (string) get_user_meta( $user_id, self::PREFERENCE_AT_META, true ) !== $recorded_at ) {
@@ -79,12 +107,12 @@ final class CustomerIdentity {
 			$wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
 		}
 		$subject_type = $row ? 'customer' : 'account'; $subject_id = $row ? (int) $row['id'] : $user_id;
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'customer.preference_changed', $subject_type, $subject_id, 'Customer account preference', array( 'consent_marketing'=>$before ), array( 'consent_marketing'=>$marketing ) ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'customer.preference_changed', $subject_type, $subject_id, 'Customer account preference', array( 'consent_marketing'=>$before ), array( 'consent_marketing'=>$marketing, 'newsletter_language'=>$language ) ) ) ) {
 			self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
 		}
 		self::clean_account_cache( $user_id );
 		do_action( 'adc_customer_preferences_updated', $user_id, (int) ( $row['id'] ?? 0 ), $marketing );
-		return array( 'consent_marketing'=>$marketing, 'recorded_at'=>$recorded_at, 'linked_customer_id'=>(int) ( $row['id'] ?? 0 ) );
+		return self::current_preferences();
 	}
 
 	/** Atomically updates the signed-in account profile and any linked core customer. */

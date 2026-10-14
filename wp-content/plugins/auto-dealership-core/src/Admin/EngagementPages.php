@@ -83,16 +83,7 @@ final class EngagementPages {
 	}
 
 	public static function render_subscribers(): void {
-		self::render_table(
-			'subscriber',
-			'car-dealer-subscribers',
-			__( 'اشتراكات النشرة البريدية', 'auto-dealership-core' ),
-			array(
-				'created_at' => __( 'تاريخ الموافقة', 'auto-dealership-core' ),
-				'email'      => __( 'البريد', 'auto-dealership-core' ),
-				'status'     => __( 'الحالة', 'auto-dealership-core' ),
-			)
-		);
+		NewsletterPage::render();
 	}
 
 	private static function render_table( string $type, string $slug, string $title, array $columns ): void {

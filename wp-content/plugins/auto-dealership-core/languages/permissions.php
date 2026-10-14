@@ -46,6 +46,7 @@ return array(
 	'adc_view_integrations' => array( 'Reports and oversight', 'View integrations' ),
 	'adc_manage_integrations' => array( 'Reports and oversight', 'Manage integrations' ),
 	'adc_view_marketing_subscribers' => array( 'Reports and oversight', 'View marketing subscribers' ),
+	'adc_manage_newsletter' => array( 'Reports and oversight', 'Manage newsletter campaigns' ),
 	'edit_cars' => array( 'Website catalog', 'Edit vehicles' ),
 	'edit_others_cars' => array( 'Website catalog', 'Edit others: vehicles' ),
 	'publish_cars' => array( 'Website catalog', 'Publish vehicles' ),

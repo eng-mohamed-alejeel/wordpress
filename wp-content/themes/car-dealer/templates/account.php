@@ -66,9 +66,9 @@ ob_start();
 </form><?php endforeach; ?></div></section>
 <?php else : $user = wp_get_current_user(); $kind = car_dealer_account_kind( $user ); $labels = array( 'administrator' => 'مدير الموقع', 'manager' => 'مدير المعرض', 'sales' => 'مستشار المبيعات', 'staff' => 'موظف المعرض', 'customer' => 'حساب العميل' ); ?>
 <header class="cd-account-welcome"><div><span><?php echo esc_html__( $labels[$kind], 'car-dealer' ); ?></span><h1><?php echo esc_html__( 'مرحباً،', 'car-dealer' ); ?> <?php echo esc_html( $user->display_name ); ?></h1><p><?php echo esc_html__( 'كل ما تحتاجه لإدارة حسابك في مكان واحد.', 'car-dealer' ); ?></p></div><a class="btn" href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>"><?php echo esc_html__( 'تسجيل الخروج', 'car-dealer' ); ?></a></header>
-<?php if ( isset( $_GET['saved'] ) ) : ?><p class="cd-account-notice" role="status"><?php echo esc_html__( 'تم تحديث بياناتك.', 'car-dealer' ); ?></p><?php endif; ?>
-<?php if ( isset( $_GET['preferences_saved'] ) ) : ?><p class="cd-account-notice" role="status"><?php echo esc_html__( 'تم حفظ تفضيلات التواصل التسويقي.', 'car-dealer' ); ?></p><?php endif; ?>
-<?php if ( isset( $_GET['request_updated'] ) ) : ?><p class="cd-account-notice" role="status"><?php echo esc_html__( 'تم تحديث الحجز وإبلاغ المعرض داخل لوحة الإدارة.', 'car-dealer' ); ?></p><?php endif; ?>
+<?php if ( isset( $_GET['saved'] ) ) : ?><p class="cd-account-notice" role="status" data-success-notice data-notice-param="saved"><?php echo esc_html__( 'تم تحديث بياناتك.', 'car-dealer' ); ?></p><?php endif; ?>
+<?php if ( isset( $_GET['preferences_saved'] ) ) : ?><p class="cd-account-notice" role="status" data-success-notice data-notice-param="preferences_saved"><?php echo esc_html__( 'تم حفظ تفضيلات التواصل التسويقي.', 'car-dealer' ); ?></p><?php endif; ?>
+<?php if ( isset( $_GET['request_updated'] ) ) : ?><p class="cd-account-notice" role="status" data-success-notice data-notice-param="request_updated"><?php echo esc_html__( 'تم تحديث الحجز وإبلاغ المعرض داخل لوحة الإدارة.', 'car-dealer' ); ?></p><?php endif; ?>
 <?php if ( 'customer' !== $kind ) : ?>
 <section class="cd-account-panel"><h2><?php echo esc_html__( 'مساحة العمل', 'car-dealer' ); ?></h2><div class="cd-account-tools">
 <?php
@@ -107,6 +107,7 @@ if ( ! is_wp_error( $preferences ) ) : ?>
 <p><?php echo esc_html__( 'اختر ما إذا كنت ترغب في استقبال عروض وأخبار تسويقية. رسائل الطلبات والحجوزات والخدمة اللازمة لتنفيذ طلبك لا تتأثر بهذا الاختيار.', 'car-dealer' ); ?></p>
 <form method="post" action="<?php echo esc_url( car_dealer_account_url() ); ?>">
 <?php wp_nonce_field( 'cd_account_dashboard' ); ?><input type="hidden" name="account_action" value="save_preferences">
+<p><label for="cd-newsletter-language"><?php echo esc_html( car_dealer_text( 'لغة رسائل البريد الإلكتروني', 'Email language preference' ) ); ?></label><select id="cd-newsletter-language" name="newsletter_language"><option value="ar" <?php selected( $preferences['newsletter_language'] ?? 'ar', 'ar' ); ?>>العربية</option><option value="en" <?php selected( $preferences['newsletter_language'] ?? 'ar', 'en' ); ?>>English</option></select></p>
 <fieldset><legend><?php echo esc_html__( 'التواصل التسويقي', 'car-dealer' ); ?></legend>
 <label><input type="radio" name="consent_marketing" value="1" required <?php checked( ! empty( $preferences['consent_marketing'] ) ); ?>> <?php echo esc_html__( 'أوافق على استقبال العروض والأخبار التسويقية.', 'car-dealer' ); ?></label>
 <label><input type="radio" name="consent_marketing" value="0" required <?php checked( empty( $preferences['consent_marketing'] ) ); ?>> <?php echo esc_html__( 'لا أرغب في استقبال تواصل تسويقي.', 'car-dealer' ); ?></label>
