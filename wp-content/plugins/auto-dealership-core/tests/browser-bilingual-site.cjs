@@ -196,6 +196,48 @@ const { spawn } = require('node:child_process');
             control.dispatchEvent(new Event('input', {bubbles:true}));
             return !valid && localized && control.validationMessage === '';
         })()`), 'English email validation is localized and does not remain stale');
+        check(await evaluate(`(() => {
+            const form = document.querySelector('[data-auth-view="register"]');
+            const panel = form.querySelector('[data-password-policy-panel]');
+            const password = form.elements.password;
+            password.value = 'abcdefghijk!';
+            password.dispatchEvent(new Event('input', {bubbles:true}));
+            const rejected = !password.reportValidity() && password.validationMessage === 'Please meet all password requirements.';
+            const rules = [...panel.querySelectorAll('[data-password-rule]')];
+            return rejected && panel.innerText.includes('Password requirements') && rules.length === 4 && rules.filter(rule => rule.classList.contains('is-met')).length === 3 && getComputedStyle(panel.querySelector('[data-password-copy]')).display === 'none';
+        })()`), 'English password policy reports the unmet real requirement');
+        check(await evaluate(`(() => {
+            const form = document.querySelector('[data-auth-view="register"]');
+            const password = form.elements.password;
+            const confirmation = form.elements.password_confirm;
+            password.value = 'Abcdefghij1!';
+            confirmation.value = 'Abcdefghij2!';
+            password.dispatchEvent(new Event('input', {bubbles:true}));
+            confirmation.dispatchEvent(new Event('input', {bubbles:true}));
+            const rejected = !confirmation.reportValidity() && confirmation.validationMessage === 'The password confirmation does not match.';
+            confirmation.value = password.value;
+            confirmation.dispatchEvent(new Event('input', {bubbles:true}));
+            return rejected && confirmation.validationMessage === '' && form.querySelector('[data-password-confirm-status]').textContent === 'Passwords match.';
+        })()`), 'English password confirmation is enforced and updates live');
+        check(await evaluate(`(() => {
+            const form = document.querySelector('[data-auth-view="register"]');
+            form.querySelector('[data-password-generate]').click();
+            const password = form.elements.password.value;
+            const confirmation = form.elements.password_confirm.value;
+            const panel = form.querySelector('[data-password-policy-panel]');
+            return password.length === 20 && password === confirmation && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password) && panel.querySelectorAll('[data-password-rule].is-met').length === 4 && panel.querySelector('[data-password-meter]').dataset.level === '4' && getComputedStyle(panel.querySelector('[data-password-copy]')).display !== 'none' && panel.querySelector('[data-password-status]').textContent.includes('generated and confirmed');
+        })()`), 'Secure generator creates and confirms a very strong English password');
+        check(await evaluate(`(() => {
+            const form = document.querySelector('[data-auth-view="register"]');
+            const data = new URLSearchParams(new FormData(form));
+            data.set('display_name', 'Policy verification');
+            data.set('email', 'password-policy@example.invalid');
+            data.set('phone', '+966500000001');
+            data.set('password', 'abcdefghijk!');
+            data.set('password_confirm', 'abcdefghijk!');
+            data.set('privacy_consent', '1');
+            return fetch(form.action, {method:'POST', credentials:'same-origin', body:data}).then(response => response.text()).then(html => html.includes('The password must be 12 to 128 characters and include a letter, a number, and a symbol.'));
+        })()`), 'Server rejects a weak password even when browser validation is bypassed');
         await visit('/?cd_account=register');
         check(await evaluate(`(() => {
             const control = document.querySelector('[data-auth-view="register"] [name="privacy_consent"]');
@@ -210,6 +252,16 @@ const { spawn } = require('node:child_process');
             control.dispatchEvent(new Event('change', {bubbles:true}));
             return !valid && localized && inline && control.validationMessage === '' && !document.getElementById(control.id + '-validation');
         })()`), 'Arabic required consent uses localized browser and inline validation, then clears after correction');
+        check(await evaluate(`(() => {
+            const form = document.querySelector('[data-auth-view="register"]');
+            const panel = form.querySelector('[data-password-policy-panel]');
+            const password = form.elements.password;
+            password.value = 'كلمةمرورطويلة!';
+            password.dispatchEvent(new Event('input', {bubbles:true}));
+            const rejected = !password.reportValidity() && password.validationMessage === 'تأكد من استيفاء جميع شروط كلمة المرور.';
+            panel.querySelector('[data-password-generate]').click();
+            return rejected && panel.innerText.includes('شروط كلمة المرور') && form.elements.password.value === form.elements.password_confirm.value && panel.querySelectorAll('[data-password-rule].is-met').length === 4 && panel.querySelector('[data-password-strength-label]').textContent === 'قوية جدًا';
+        })()`), 'Arabic password policy and secure generator are fully localized');
         for (const [route, expected] of [['/about/', 'من نحن'], ['/contact/', 'تواصل معنا'], ['/finance/', 'حاسبة التمويل'], ['/faq/', 'الأسئلة الشائعة'], ['/buying-guide/', 'دليلك لاختيار السيارة'], ['/cars/', 'استعرض سيارات أوتو براندز'], ['/offers/', 'اكتشف عروض أوتو براندز'], ['/?cd_account=login', 'أهلاً بك في أوتو براندز']]) {
             await visit(route);
             page = await state();

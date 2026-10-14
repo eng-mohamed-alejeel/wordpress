@@ -3,7 +3,7 @@
 if ( PHP_SAPI !== 'cli' || ! defined( 'DB_NAME' ) || ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', DB_NAME ) ) { exit( 1 ); }
 use AutoDealership\Database\Schema;
 wp_set_current_user( $admin );
-$journey_password = wp_generate_password( 28, true, false );
+$journey_password = 'Aa1!' . wp_generate_password( 24, true, false );
 $journey_user = wp_insert_user( array( 'user_login'=>'browser_customer', 'user_pass'=>$journey_password, 'user_email'=>'browser@example.invalid', 'display_name'=>'عميل الاختبار', 'role'=>'subscriber' ) );
 if ( is_wp_error( $journey_user ) ) { throw new RuntimeException( 'Browser account fixture failed.' ); }
 update_user_meta( $journey_user, 'car_dealer_phone', '+966501111111' );

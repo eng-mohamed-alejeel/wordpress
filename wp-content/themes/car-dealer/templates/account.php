@@ -25,8 +25,31 @@ ob_start();
 <?php else : ?>
 <label><?php echo esc_html__( 'البريد الإلكتروني أو اسم المستخدم', 'car-dealer' ); ?><input name="login" autocomplete="username" required value="<?php echo esc_attr( car_dealer_account_field( 'login' ) ); ?>"></label>
 <?php endif; ?>
-<label><?php echo esc_html__( 'كلمة المرور', 'car-dealer' ); ?><input name="password" type="password" autocomplete="<?php echo $register ? 'new-password' : 'current-password'; ?>" <?php echo $register ? 'minlength="10" aria-describedby="cd-password-help"' : ''; ?> required></label>
-<?php if ( $register ) : ?><small id="cd-password-help" class="ab-field-help"><?php echo esc_html__( 'استخدم 10 أحرف على الأقل.', 'car-dealer' ); ?></small><label><?php echo esc_html__( 'تأكيد كلمة المرور', 'car-dealer' ); ?><input name="password_confirm" type="password" autocomplete="new-password" minlength="10" aria-describedby="cd-password-help" required></label>
+<label><?php echo esc_html__( 'كلمة المرور', 'car-dealer' ); ?><input <?php echo $register ? 'id="cd-register-password" data-password-policy minlength="12" maxlength="128" aria-describedby="cd-password-requirements cd-password-strength"' : ''; ?> name="password" type="password" autocomplete="<?php echo $register ? 'new-password' : 'current-password'; ?>" required></label>
+<?php if ( $register ) : ?>
+<section class="cd-password-policy" data-password-policy-panel aria-labelledby="cd-password-policy-title">
+  <div class="cd-password-policy-head">
+    <strong id="cd-password-policy-title"><?php echo esc_html( car_dealer_text( 'شروط كلمة المرور', 'Password requirements' ) ); ?></strong>
+    <button class="cd-password-generate" type="button" data-password-generate>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M18.36 5.64l-2.12 2.12M7.76 16.24l-2.12 2.12"/><path d="m9.5 14.5 5-5 2 2-5 5-2-2Z"/></svg>
+      <span><?php echo esc_html( car_dealer_text( 'إنشاء كلمة قوية', 'Generate strong password' ) ); ?></span>
+    </button>
+  </div>
+  <ul id="cd-password-requirements" class="cd-password-requirements">
+    <li data-password-rule="length"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'من 12 إلى 128 حرفًا', '12 to 128 characters' ) ); ?></li>
+    <li data-password-rule="letter"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'حرف واحد على الأقل', 'At least one letter' ) ); ?></li>
+    <li data-password-rule="number"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'رقم واحد على الأقل', 'At least one number' ) ); ?></li>
+    <li data-password-rule="symbol"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'رمز خاص واحد على الأقل، مثل ! أو @', 'At least one symbol, such as ! or @' ) ); ?></li>
+  </ul>
+  <div class="cd-password-meter" data-password-meter data-level="0" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  <p id="cd-password-strength" class="cd-password-strength" aria-live="polite"><span><?php echo esc_html( car_dealer_text( 'قوة كلمة المرور:', 'Password strength:' ) ); ?></span> <strong data-password-strength-label><?php echo esc_html( car_dealer_text( 'لم تُكتب بعد', 'Not entered yet' ) ); ?></strong></p>
+  <div class="cd-password-generated-actions">
+    <button type="button" class="cd-password-copy" data-password-copy hidden><?php echo esc_html( car_dealer_text( 'نسخ كلمة المرور', 'Copy password' ) ); ?></button>
+    <span class="cd-password-status" data-password-status role="status" aria-live="polite"></span>
+  </div>
+</section>
+<label><?php echo esc_html__( 'تأكيد كلمة المرور', 'car-dealer' ); ?><input id="cd-register-password-confirm" name="password_confirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" aria-describedby="cd-password-confirm-status" required></label>
+<small id="cd-password-confirm-status" class="cd-password-confirm-status" data-password-confirm-status aria-live="polite"></small>
 <label class="cd-auth-consent">
   <input type="checkbox" name="privacy_consent" required data-validation-required-ar="<?php echo esc_attr( 'يجب الموافقة على سياسة الخصوصية وشروط الاستخدام لإنشاء الحساب.' ); ?>" data-validation-required-en="<?php echo esc_attr( 'You must agree to the Privacy Policy and Terms of Use to create an account.' ); ?>">
   <span><?php echo esc_html( car_dealer_text( 'أوافق على ', 'I agree to the ' ) ); ?><?php $privacy_url = get_privacy_policy_url(); $terms_url = car_dealer_page_url( 'terms' ); ?><?php if ( $privacy_url ) : ?><a href="<?php echo esc_url( car_dealer_catalog_localized_url( $privacy_url ) ); ?>"><?php echo esc_html__( 'سياسة الخصوصية', 'car-dealer' ); ?></a><?php else : ?><?php echo esc_html__( 'سياسة الخصوصية', 'car-dealer' ); ?><?php endif; ?><?php echo esc_html( car_dealer_text( ' و ', ' and ' ) ); ?><?php if ( $terms_url ) : ?><a href="<?php echo esc_url( $terms_url ); ?>"><?php echo esc_html__( 'شروط الاستخدام', 'car-dealer' ); ?></a><?php else : ?><?php echo esc_html__( 'شروط الاستخدام', 'car-dealer' ); ?><?php endif; ?></span>

@@ -13,6 +13,9 @@ defined( 'ABSPATH' ) || exit;
 
 /** Owns customer registration, sign-in and account mutations behind the theme view. */
 final class CustomerAccount {
+	private const PASSWORD_MIN_LENGTH = 12;
+	private const PASSWORD_MAX_LENGTH = 128;
+
 	public static function enabled(): bool {
 		return (bool) apply_filters( 'adc_core_customer_account_enabled', true );
 	}
@@ -157,8 +160,14 @@ final class CustomerAccount {
 		if ( empty( $_POST['privacy_consent'] ) ) {
 			return self::error( 'adc_account_consent', __( 'يجب الموافقة على سياسة الخصوصية وشروط الاستخدام لإنشاء حساب.', 'auto-dealership-core' ) );
 		}
-		if ( '' === $name || self::length( $name ) > 250 || ! is_email( $email ) || strlen( $email ) > 100 || strlen( $password ) < 10 || strlen( $password ) > 4096 || ! hash_equals( $password, self::field( 'password_confirm' ) ) ) {
-			return self::error( 'adc_account_invalid', __( 'أدخل اسمًا وبريدًا صحيحًا وكلمة مرور من 10 أحرف على الأقل مع تأكيد مطابق.', 'auto-dealership-core' ) );
+		if ( '' === $name || self::length( $name ) > 250 || ! is_email( $email ) || strlen( $email ) > 100 ) {
+			return self::error( 'adc_account_invalid', __( 'أدخل اسمًا وبريدًا إلكترونيًا صحيحين.', 'auto-dealership-core' ) );
+		}
+		if ( ! self::password_is_valid( $password ) ) {
+			return self::error( 'adc_account_weak_password', __( 'يجب أن تتكون كلمة المرور من 12 إلى 128 حرفًا، وأن تتضمن حرفًا ورقمًا ورمزًا خاصًا.', 'auto-dealership-core' ) );
+		}
+		if ( ! hash_equals( $password, self::field( 'password_confirm' ) ) ) {
+			return self::error( 'adc_account_password_mismatch', __( 'تأكيد كلمة المرور غير مطابق.', 'auto-dealership-core' ) );
 		}
 		$phone = ContactIdentity::normalize_mobile( sanitize_text_field( self::field( 'phone' ) ), true );
 		if ( is_wp_error( $phone ) ) {
@@ -210,6 +219,17 @@ final class CustomerAccount {
 
 	private static function length( string $value ): int {
 		return function_exists( 'mb_strlen' ) ? mb_strlen( $value ) : strlen( $value );
+	}
+
+	/** Enforced server-side so the registration policy cannot be bypassed in the browser. */
+	private static function password_is_valid( string $password ): bool {
+		$length = self::length( $password );
+		if ( $length < self::PASSWORD_MIN_LENGTH || $length > self::PASSWORD_MAX_LENGTH || strlen( $password ) > 4096 ) {
+			return false;
+		}
+		return 1 === preg_match( '/\p{L}/u', $password )
+			&& 1 === preg_match( '/\p{N}/u', $password )
+			&& 1 === preg_match( '/[\p{P}\p{S}]/u', $password );
 	}
 
 	private static function account_url(): string {

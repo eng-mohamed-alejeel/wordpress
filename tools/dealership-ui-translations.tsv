@@ -1705,3 +1705,6 @@ VIN الجديد	New VIN
 طلب العرض غير صالح.	Invalid offer request.
 طلب العرض لا يطابق الحفظ الأصلي.	Offer request does not match the original submission.
 لم يعد طلب العرض الأصلي متاحًا.	Offer request is no longer available.
+أدخل اسمًا وبريدًا إلكترونيًا صحيحين.	Enter a valid name and email address.
+يجب أن تتكون كلمة المرور من 12 إلى 128 حرفًا، وأن تتضمن حرفًا ورقمًا ورمزًا خاصًا.	The password must be 12 to 128 characters and include a letter, a number, and a symbol.
+تأكيد كلمة المرور غير مطابق.	The password confirmation does not match.

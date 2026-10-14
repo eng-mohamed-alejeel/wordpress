@@ -3,8 +3,20 @@
 
   var sequence = 0;
   var labels = {
-    ar: { show: 'إظهار كلمة المرور', hide: 'إخفاء كلمة المرور' },
-    en: { show: 'Show password', hide: 'Hide password' }
+    ar: {
+      show: 'إظهار كلمة المرور', hide: 'إخفاء كلمة المرور', invalid: 'تأكد من استيفاء جميع شروط كلمة المرور.',
+      mismatch: 'تأكيد كلمة المرور غير مطابق.', empty: 'لم تُكتب بعد', weak: 'ضعيفة', fair: 'مقبولة', strong: 'قوية', veryStrong: 'قوية جدًا',
+      met: 'مستوفى', unmet: 'غير مستوفى',
+      matches: 'كلمتا المرور متطابقتان.', generated: 'تم إنشاء كلمة مرور قوية وتعبئة حقل التأكيد. احفظها في مدير كلمات المرور.',
+      copied: 'تم نسخ كلمة المرور.', copyFailed: 'تعذر النسخ تلقائيًا. استخدم زر إظهار كلمة المرور لنسخها.', unavailable: 'تعذر إنشاء كلمة مرور آمنة في هذا المتصفح.'
+    },
+    en: {
+      show: 'Show password', hide: 'Hide password', invalid: 'Please meet all password requirements.',
+      mismatch: 'The password confirmation does not match.', empty: 'Not entered yet', weak: 'Weak', fair: 'Fair', strong: 'Strong', veryStrong: 'Very strong',
+      met: 'Met', unmet: 'Not met',
+      matches: 'Passwords match.', generated: 'A strong password was generated and confirmed. Save it in your password manager.',
+      copied: 'Password copied.', copyFailed: 'Could not copy automatically. Use the show-password button to copy it.', unavailable: 'A secure password could not be generated in this browser.'
+    }
   };
 
   function language() {
@@ -73,9 +85,154 @@
     });
   }
 
+  function passwordRules(value) {
+    var length = Array.from(value).length;
+    return {
+      length: length >= 12 && length <= 128,
+      letter: /\p{L}/u.test(value),
+      number: /\p{N}/u.test(value),
+      symbol: /[\p{P}\p{S}]/u.test(value)
+    };
+  }
+
+  function strengthLevel(value, rules) {
+    if (!value) return 0;
+    var met = Object.keys(rules).filter(function (key) { return rules[key]; }).length;
+    if (met < 3) return 1;
+    if (met < 4) return 2;
+    var variedCase = /[a-z]/.test(value) && /[A-Z]/.test(value);
+    return Array.from(value).length >= 16 && variedCase ? 4 : 3;
+  }
+
+  function randomIndex(maximum) {
+    if (!window.crypto || !window.crypto.getRandomValues) throw new Error('Secure random values are unavailable.');
+    var limit = 256 - (256 % maximum);
+    var bytes = new Uint8Array(1);
+    do window.crypto.getRandomValues(bytes); while (bytes[0] >= limit);
+    return bytes[0] % maximum;
+  }
+
+  function generateStrongPassword() {
+    var groups = [
+      'ABCDEFGHJKLMNPQRSTUVWXYZ',
+      'abcdefghijkmnopqrstuvwxyz',
+      '23456789',
+      '!@#$%&*+-=?_'
+    ];
+    var all = groups.join('');
+    var characters = groups.map(function (group) { return group[randomIndex(group.length)]; });
+    while (characters.length < 20) characters.push(all[randomIndex(all.length)]);
+    for (var index = characters.length - 1; index > 0; index--) {
+      var swap = randomIndex(index + 1);
+      var current = characters[index];
+      characters[index] = characters[swap];
+      characters[swap] = current;
+    }
+    return characters.join('');
+  }
+
+  function copyText(value) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(value);
+    return new Promise(function (resolve, reject) {
+      var helper = document.createElement('textarea');
+      helper.value = value;
+      helper.setAttribute('readonly', '');
+      helper.style.position = 'fixed';
+      helper.style.opacity = '0';
+      document.body.appendChild(helper);
+      helper.select();
+      try {
+        if (!document.execCommand('copy')) throw new Error('Copy was rejected.');
+        resolve();
+      } catch (error) {
+        reject(error);
+      } finally {
+        helper.remove();
+      }
+    });
+  }
+
+  function enhancePolicy(panel) {
+    if (!(panel instanceof HTMLElement) || panel.dataset.passwordPolicyReady === 'true') return;
+    var form = panel.closest('form');
+    var password = form && form.querySelector('[data-password-policy]');
+    var confirmation = form && form.querySelector('[name="password_confirm"]');
+    if (!password || !confirmation) return;
+    panel.dataset.passwordPolicyReady = 'true';
+
+    var meter = panel.querySelector('[data-password-meter]');
+    var strength = panel.querySelector('[data-password-strength-label]');
+    var generate = panel.querySelector('[data-password-generate]');
+    var copy = panel.querySelector('[data-password-copy]');
+    var status = panel.querySelector('[data-password-status]');
+    var matchStatus = form.querySelector('[data-password-confirm-status]');
+
+    function update() {
+      var copyLabels = labels[language()];
+      var rules = passwordRules(password.value);
+      var valid = Object.keys(rules).every(function (key) { return rules[key]; });
+      Object.keys(rules).forEach(function (key) {
+        var item = panel.querySelector('[data-password-rule="' + key + '"]');
+        if (item) {
+          item.classList.toggle('is-met', rules[key]);
+          item.setAttribute('data-met', String(rules[key]));
+          item.setAttribute('aria-label', item.textContent.trim() + ': ' + (rules[key] ? copyLabels.met : copyLabels.unmet));
+        }
+      });
+      var level = strengthLevel(password.value, rules);
+      meter.dataset.level = String(level);
+      strength.textContent = [copyLabels.empty, copyLabels.weak, copyLabels.fair, copyLabels.strong, copyLabels.veryStrong][level];
+      strength.dataset.level = String(level);
+      password.setCustomValidity(password.value && !valid ? copyLabels.invalid : '');
+
+      var matches = !!confirmation.value && confirmation.value === password.value;
+      confirmation.setCustomValidity(confirmation.value && !matches ? copyLabels.mismatch : '');
+      matchStatus.textContent = confirmation.value ? (matches ? copyLabels.matches : copyLabels.mismatch) : '';
+      matchStatus.classList.toggle('is-match', matches);
+      matchStatus.classList.toggle('is-mismatch', !!confirmation.value && !matches);
+      copy.hidden = !valid;
+      return valid;
+    }
+
+    password.addEventListener('input', function () { status.textContent = ''; update(); });
+    confirmation.addEventListener('input', update);
+    form.addEventListener('submit', update);
+    form.addEventListener('reset', function () {
+      requestAnimationFrame(function () { status.textContent = ''; update(); });
+    });
+
+    generate.addEventListener('click', function () {
+      var copyLabels = labels[language()];
+      try {
+        var generated = generateStrongPassword();
+        password.value = generated;
+        confirmation.value = generated;
+        password.dispatchEvent(new Event('input', { bubbles: true }));
+        confirmation.dispatchEvent(new Event('input', { bubbles: true }));
+        status.textContent = copyLabels.generated;
+        password.focus({ preventScroll: true });
+      } catch (_) {
+        status.textContent = copyLabels.unavailable;
+      }
+    });
+
+    copy.addEventListener('click', function () {
+      var copyLabels = labels[language()];
+      copyText(password.value).then(function () {
+        status.textContent = copyLabels.copied;
+      }).catch(function () {
+        status.textContent = copyLabels.copyFailed;
+      });
+    });
+
+    update();
+  }
+
   function scan(root) {
     if (root instanceof HTMLInputElement && root.matches('input[type="password"]')) enhance(root);
     if (root.querySelectorAll) root.querySelectorAll('input[type="password"]').forEach(enhance);
+    if (root instanceof HTMLElement && root.matches('[data-password-policy-panel]')) enhancePolicy(root);
+    if (root.querySelectorAll) root.querySelectorAll('[data-password-policy-panel]').forEach(enhancePolicy);
   }
 
   function start() {
