@@ -83,6 +83,7 @@ final class CustomerIdentity {
 		$before = $row ? (bool) $row['consent_marketing'] : ( metadata_exists( 'user', $user_id, self::PREFERENCE_META ) && '1' === (string) get_user_meta( $user_id, self::PREFERENCE_META, true ) );
 		$now = current_time( 'mysql', true );
 		$recorded_at = $marketing ? $now : '';
+		$mail_payload = null;
 		if ( $language ) {
 			update_user_meta( $user_id, 'adc_preferred_language', $language );
 			if ( get_user_meta( $user_id, 'adc_preferred_language', true ) !== $language ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
@@ -94,8 +95,23 @@ final class CustomerIdentity {
 			if ( $subscription ) {
 				$changes = array( 'status'=>$marketing ? 'active' : 'unsubscribed' );
 				if ( $language ) { $changes['locale']=$language; }
-				if ( $marketing && 'active' !== $subscription['status'] ) { $changes['consent_key']=wp_generate_uuid4(); $changes['created_at']=$now; }
+				if ( $marketing && 'active' !== $subscription['status'] ) {
+					$changes['consent_key']=wp_generate_uuid4(); $changes['created_at']=$now; $changes['welcome_sent_at']=null;
+					$mail_payload = array( 'subject_type'=>'subscriber', 'subject_id'=>(int) $subscription['id'], 'correlation_id'=>$changes['consent_key'] );
+				}
 				if ( false === $wpdb->update( NewsletterService::subscribers(), $changes, array( 'id'=>$subscription['id'] ) ) ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
+			} elseif ( $marketing ) {
+				$email = strtolower( (string) $email );
+				$locale = $language ?: NewsletterService::language( (string) get_user_meta( $user_id, 'adc_preferred_language', true ) ?: \AutoDealership\Core\Localization::language() );
+				$key = wp_generate_uuid4();
+				if ( ! is_email( $email ) || 1 !== $wpdb->insert( NewsletterService::subscribers(), array( 'email'=>$email, 'status'=>'active', 'locale'=>$locale, 'consent_key'=>$key, 'created_at'=>$now ) ) ) {
+					$wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
+				}
+				$mail_payload = array( 'subject_type'=>'subscriber', 'subject_id'=>(int) $wpdb->insert_id, 'correlation_id'=>$key );
+			}
+			if ( $mail_payload ) {
+				$event = \AutoDealership\Operations\OutboxService::enqueue( 'newsletter.subscription', $mail_payload, 'subscription:' . $mail_payload['subject_id'] . ':' . $mail_payload['correlation_id'] );
+				if ( is_wp_error( $event ) ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
 			}
 		}
 		update_user_meta( $user_id, self::PREFERENCE_META, $marketing ? '1' : '0' );
@@ -111,6 +127,7 @@ final class CustomerIdentity {
 			self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
 		}
 		self::clean_account_cache( $user_id );
+		if ( $mail_payload ) { NewsletterService::subscription_email( $mail_payload ); NewsletterService::wake(); }
 		do_action( 'adc_customer_preferences_updated', $user_id, (int) ( $row['id'] ?? 0 ), $marketing );
 		return self::current_preferences();
 	}

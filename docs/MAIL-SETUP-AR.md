@@ -34,6 +34,24 @@ C:\xampp\php\php.exe tools/test-local-mail.php
 
 ## SMTP الحقيقي والانتقال للنشر
 
+### تجربة Gmail محليًا
+
+تم تجهيز `tools/configure-gmail.ps1` للحساب `mohamedipos@gmail.com`. شغله من PowerShell:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\xampp\htdocs\wordpress\tools\configure-gmail.ps1
+```
+
+أدخل كلمة مرور تطبيق جديدة في المطالبة المخفية. لا تستخدم كلمة مرور سبق مشاركتها في المحادثة. يتحقق السكربت من اتصال TLS ومصادقة Gmail دون إرسال رسالة، ثم يحفظ الإعدادات خارج مجلد الموقع داخل `%LOCALAPPDATA%\AutoBrands\MailCredentials` بصلاحيات مقيدة ويحدث إعداد البريد المحلي. يجب تشغيل Apache تحت حساب Windows نفسه أو إعطاء حساب الخدمة صلاحية قراءة الملف بشكل مقصود. لا تنقل هذا الإعداد المحلي إلى الإنتاج.
+
+بعد نجاح التفعيل، تصبح رسائل النظام الجديدة ومهام البريد المستحقة قابلة للإرسال الحقيقي. لا يشغّل السكربت الطابور بنفسه، ولا يعيد إرسال الحملات المكتملة. لا يثبت اختبار المصادقة وصول الرسائل إلى الوارد. حساب Gmail ليس ربطًا بإشعارات تسليم أو ارتداد من مزود حملات.
+
+للعودة إلى Mailpit دون حذف بيانات الدخول:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\xampp\htdocs\wordpress\tools\configure-gmail.ps1 -Mailpit
+```
+
 ### قالب استعادة كلمة المرور
 
 يضيف `autobrands-password-email.php` قالب HTML عربيًا باتجاه RTL، وقالبًا إنجليزيًا حسب لغة رسالة WordPress. يستخدم اسم الموقع وألوانه من `car_dealer_theme_settings`، وزر تعيين كلمة مرور جديدة، ورابطًا بديلًا قابلًا للنسخ، وتنبيهًا لتجاهل الطلب غير المقصود. لا يعرض اسم المستخدم التقني أو عنوان IP. توجد نسخة نصية بديلة، ولا يتغيّر تنسيق الرسائل الأخرى.

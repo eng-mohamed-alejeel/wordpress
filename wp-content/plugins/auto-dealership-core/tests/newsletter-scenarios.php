@@ -166,7 +166,13 @@ $check( true === Newsletter::retry( $blocked ), 'Employee can recover failed cam
 for ( $i = 0; $i < 5; ++$i ) { OutboxService::process_due( 100, array( 'newsletter.expand', 'newsletter.deliver' ) ); }
 $check( Newsletter::stats( $blocked )['sent'] === 107, 'Recovered preparation sends only one message per subscriber' );
 wp_set_current_user( $customer );
+$account_mail_count = count( $captured );
+$account_preferences = AutoDealership\Leads\CustomerIdentity::update_preferences( true, 'en' );
+$account_subscription = $wpdb->get_row( "SELECT * FROM " . Newsletter::subscribers() . " WHERE email='welcome@example.invalid'", ARRAY_A );
+$check( ! is_wp_error( $account_preferences ) && $account_subscription && 'active' === $account_subscription['status'] && 'en' === $account_subscription['locale'], 'Account opt-in creates an active newsletter subscriber before any footer subscription' );
+$check( count( $captured ) === $account_mail_count + 1 && str_contains( end( $captured )['message'], 'Welcome to the AutoBrands newsletter' ), 'First account opt-in sends the localized subscription welcome' );
 AutoDealership\Leads\CustomerIdentity::update_preferences( true, 'en' );
+$check( count( $captured ) === $account_mail_count + 1 && 1 === (int) $wpdb->get_var( "SELECT COUNT(*) FROM " . Newsletter::subscribers() . " WHERE email='welcome@example.invalid'" ), 'Repeated account opt-in neither duplicates the subscriber nor sends another welcome' );
 $check( $subscribe( 'ignored@example.invalid', 'ar' )['success'] && get_user_meta( $customer, 'adc_preferred_language', true ) === 'en', 'Subscription preserves saved email preference even on an Arabic page' );
 $saved_locale = $wpdb->get_var( "SELECT locale FROM " . Newsletter::subscribers() . " WHERE email='welcome@example.invalid'" );
 $check( $saved_locale === 'en', 'Subscriber language matches the saved account preference' );
