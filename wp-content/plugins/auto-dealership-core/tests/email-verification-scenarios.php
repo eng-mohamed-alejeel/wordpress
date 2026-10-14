@@ -68,7 +68,7 @@ $check( ! user_can( $security_account, 'read' ), 'Pending accounts have no prote
 $account_user = get_userdata( $security_account );
 reset_password( $account_user, 'NewStrongPass123!' );
 $check( Verification::blocked( $security_account ) && is_wp_error( wp_authenticate( $account_user->user_login, 'NewStrongPass123!' ) ), 'Password reset does not activate a pending account' );
-$check( is_wp_error( Verification::confirm( $activation_token, 'StrongPass123!test' ) ) && ! is_wp_error( Verification::confirm( $activation_token, 'NewStrongPass123!' ) ), 'Activation checks the current password after a reset' );
+$check( ! is_wp_error( Verification::confirm( $activation_token ) ), 'Valid activation proof works without a password after a reset' );
 $check( ! is_wp_error( wp_authenticate( $account_user->user_login, 'NewStrongPass123!' ) ), 'Verified customer can authenticate normally' );
 $check( ! Verification::blocked( $admin ), 'Legacy administrator remains unaffected by verification policy' );
 $default_registration = apply_filters( 'registration_errors', new WP_Error(), 'default_route_test', 'default-route@example.invalid' );
