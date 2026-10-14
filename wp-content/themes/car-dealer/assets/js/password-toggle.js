@@ -89,19 +89,19 @@
     var length = Array.from(value).length;
     return {
       length: length >= 12 && length <= 128,
-      letter: /\p{L}/u.test(value),
-      number: /\p{N}/u.test(value),
-      symbol: /[\p{P}\p{S}]/u.test(value)
+      uppercase: /[A-Z]/.test(value),
+      lowercase: /[a-z]/.test(value),
+      number: /[0-9]/.test(value),
+      symbol: /[^A-Za-z0-9\s]/.test(value),
+      ascii: /^[\x21-\x7E]+$/.test(value)
     };
   }
 
   function strengthLevel(value, rules) {
     if (!value) return 0;
     var met = Object.keys(rules).filter(function (key) { return rules[key]; }).length;
-    if (met < 3) return 1;
-    if (met < 4) return 2;
-    var variedCase = /[a-z]/.test(value) && /[A-Z]/.test(value);
-    return Array.from(value).length >= 16 && variedCase ? 4 : 3;
+    if (met < Object.keys(rules).length) return met >= 4 ? 2 : 1;
+    return Array.from(value).length >= 16 ? 4 : 3;
   }
 
   function randomIndex(maximum) {

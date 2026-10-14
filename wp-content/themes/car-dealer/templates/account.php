@@ -37,9 +37,11 @@ ob_start();
   </div>
   <ul id="cd-password-requirements" class="cd-password-requirements">
     <li data-password-rule="length"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'من 12 إلى 128 حرفًا', '12 to 128 characters' ) ); ?></li>
-    <li data-password-rule="letter"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'حرف واحد على الأقل', 'At least one letter' ) ); ?></li>
+    <li data-password-rule="uppercase"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'حرف إنجليزي كبير واحد على الأقل (A–Z)', 'At least one uppercase English letter (A–Z)' ) ); ?></li>
+    <li data-password-rule="lowercase"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'حرف إنجليزي صغير واحد على الأقل (a–z)', 'At least one lowercase English letter (a–z)' ) ); ?></li>
     <li data-password-rule="number"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'رقم واحد على الأقل', 'At least one number' ) ); ?></li>
     <li data-password-rule="symbol"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'رمز خاص واحد على الأقل، مثل ! أو @', 'At least one symbol, such as ! or @' ) ); ?></li>
+    <li data-password-rule="ascii"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'أحرف إنجليزية وأرقام ورموز فقط، دون مسافات', 'English letters, numbers, and symbols only; no spaces' ) ); ?></li>
   </ul>
   <div class="cd-password-meter" data-password-meter data-level="0" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
   <p id="cd-password-strength" class="cd-password-strength" aria-live="polite"><span><?php echo esc_html( car_dealer_text( 'قوة كلمة المرور:', 'Password strength:' ) ); ?></span> <strong data-password-strength-label><?php echo esc_html( car_dealer_text( 'لم تُكتب بعد', 'Not entered yet' ) ); ?></strong></p>

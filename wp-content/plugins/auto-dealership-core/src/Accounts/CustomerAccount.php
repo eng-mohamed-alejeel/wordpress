@@ -164,7 +164,7 @@ final class CustomerAccount {
 			return self::error( 'adc_account_invalid', __( 'أدخل اسمًا وبريدًا إلكترونيًا صحيحين.', 'auto-dealership-core' ) );
 		}
 		if ( ! self::password_is_valid( $password ) ) {
-			return self::error( 'adc_account_weak_password', __( 'يجب أن تتكون كلمة المرور من 12 إلى 128 حرفًا، وأن تتضمن حرفًا ورقمًا ورمزًا خاصًا.', 'auto-dealership-core' ) );
+			return self::error( 'adc_account_weak_password', __( 'استخدم من 12 إلى 128 محرفًا من الأحرف الإنجليزية والأرقام والرموز. يجب تضمين حرف إنجليزي كبير وحرف إنجليزي صغير ورقم ورمز خاص، دون مسافات.', 'auto-dealership-core' ) );
 		}
 		if ( ! hash_equals( $password, self::field( 'password_confirm' ) ) ) {
 			return self::error( 'adc_account_password_mismatch', __( 'تأكيد كلمة المرور غير مطابق.', 'auto-dealership-core' ) );
@@ -227,9 +227,11 @@ final class CustomerAccount {
 		if ( $length < self::PASSWORD_MIN_LENGTH || $length > self::PASSWORD_MAX_LENGTH || strlen( $password ) > 4096 ) {
 			return false;
 		}
-		return 1 === preg_match( '/\p{L}/u', $password )
-			&& 1 === preg_match( '/\p{N}/u', $password )
-			&& 1 === preg_match( '/[\p{P}\p{S}]/u', $password );
+		return 1 === preg_match( '/\A[\x21-\x7E]+\z/D', $password )
+			&& 1 === preg_match( '/[A-Z]/', $password )
+			&& 1 === preg_match( '/[a-z]/', $password )
+			&& 1 === preg_match( '/[0-9]/', $password )
+			&& 1 === preg_match( '/[^A-Za-z0-9]/', $password );
 	}
 
 	private static function account_url(): string {
