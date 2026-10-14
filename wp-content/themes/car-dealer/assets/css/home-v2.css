@@ -156,6 +156,26 @@
 }
 
 /* ── Responsive ── */
+@media (min-width: 901px) {
+  .ab-hero-v2 {
+    min-height: 0;
+    align-items: start;
+    padding-block: 1.25rem 5rem;
+  }
+
+  .ab-hero-v2 .ab-hero-scroll-hint {
+    bottom: .5rem;
+  }
+
+  .ab-hero-v2 .ab-hero-scroll-hint svg {
+    margin-top: 0;
+  }
+
+  #featured-vehicles {
+    padding-block-start: 2rem;
+  }
+}
+
 @media (max-width: 900px) {
   .ab-hero-v2-grid {
     grid-template-columns: 1fr;
