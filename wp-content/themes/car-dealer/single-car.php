@@ -75,7 +75,7 @@ while ( have_posts() ) :
 					__( 'الفئة', 'car-dealer' ) => $vehicle['trim_name'] ?? '',
 					__( 'سنة الصنع', 'car-dealer' ) => $year,
 					__( 'الحالة', 'car-dealer' ) => car_dealer_catalog_value_label( (string) $condition ),
-					__( 'حالة المخزون', 'car-dealer' ) => function_exists( 'car_dealer_inventory_status_label' ) ? car_dealer_inventory_status_label( $status ) : $status,
+					__( 'حالة التوفر', 'car-dealer' ) => function_exists( 'car_dealer_inventory_status_label' ) ? car_dealer_inventory_status_label( $status ) : $status,
 					__( 'اللون', 'car-dealer' ) => car_dealer_catalog_value_label( (string) $color ),
 					__( 'اللون الداخلي', 'car-dealer' ) => car_dealer_catalog_value_label( (string) ( $vehicle['interior_color'] ?? '' ) ),
 					__( 'نوع الهيكل', 'car-dealer' ) => $vehicle && function_exists( 'car_dealer_catalog_value_label' ) ? car_dealer_catalog_value_label( (string) ( $vehicle['body_type'] ?? '' ) ) : ( $vehicle['body_type'] ?? '' ),
@@ -88,7 +88,7 @@ while ( have_posts() ) :
 					__( 'المقاعد', 'car-dealer' ) => $vehicle['seats'] ?? '',
 					__( 'الممشى', 'car-dealer' ) => null !== $kilometers && '' !== $kilometers && false !== $kilometers ? ( function_exists( 'car_dealer_catalog_distance' ) ? car_dealer_catalog_distance( $kilometers ) : number_format_i18n( $kilometers ) . ' كم' ) : '',
 					__( 'الفرع', 'car-dealer' ) => $vehicle['branch_name'] ?? '',
-					__( 'رقم المخزون', 'car-dealer' ) => $vehicle['stock_number'] ?? '',
+					__( 'مرجع السيارة', 'car-dealer' ) => $vehicle['stock_number'] ?? '',
 				) as $label => $value ) : if ( '' === (string) $value ) { continue; } ?><div><dt><?php echo esc_html( $label ); ?></dt><dd><?php echo esc_html( $value ); ?></dd></div><?php endforeach; ?>
 			</dl>
 		</aside>

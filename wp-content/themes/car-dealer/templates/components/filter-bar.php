@@ -40,10 +40,10 @@ $select = static function ( $name, $label, array $values, $current, $all_label )
 	<?php
 };
 ?>
-<form class="filter-bar ab-filter ab-filter-authoritative" method="get" action="<?php echo esc_url( $archive_url ); ?>" aria-label="<?php esc_attr_e( 'تصفية مخزون السيارات', 'car-dealer' ); ?>">
+<form class="filter-bar ab-filter ab-filter-authoritative" method="get" action="<?php echo esc_url( $archive_url ); ?>" aria-label="<?php esc_attr_e( 'تصفية السيارات', 'car-dealer' ); ?>">
 	<?php if ( ! get_option( 'permalink_structure' ) ) : ?><input type="hidden" name="post_type" value="car"><?php endif; ?>
 	<?php if ( function_exists( 'car_dealer_catalog_language' ) && 'en' === car_dealer_catalog_language() ) : ?><input type="hidden" name="lang" value="en"><?php endif; ?>
-	<label><span><?php esc_html_e( 'بحث', 'car-dealer' ); ?></span><input type="search" name="search" value="<?php echo esc_attr( $get( 'search' ) ); ?>" maxlength="120" placeholder="<?php esc_attr_e( 'الماركة أو الموديل أو رقم المخزون', 'car-dealer' ); ?>"></label>
+	<label><span><?php esc_html_e( 'بحث', 'car-dealer' ); ?></span><input type="search" name="search" value="<?php echo esc_attr( $get( 'search' ) ); ?>" maxlength="120" placeholder="<?php esc_attr_e( 'الماركة أو الموديل أو الرقم المرجعي', 'car-dealer' ); ?>"></label>
 	<?php $select( 'brand', __( 'الماركة', 'car-dealer' ), $options['brand'] ?? array(), $get( 'brand' ), __( 'كل الماركات', 'car-dealer' ) ); ?>
 	<label><span><?php esc_html_e( 'الموديل', 'car-dealer' ); ?></span><input name="model" value="<?php echo esc_attr( $get( 'model' ) ); ?>" maxlength="120"></label>
 	<label><span><?php esc_html_e( 'الفئة', 'car-dealer' ); ?></span><input name="trim" value="<?php echo esc_attr( $get( 'trim' ) ); ?>" maxlength="120"></label>

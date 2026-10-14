@@ -131,10 +131,10 @@ $home_scroll_target = $featured_ids ? 'featured-vehicles' : 'why-auto-brands';
 			<div>
 				<p class="eyebrow"><?php esc_html_e( 'وصل حديثاً', 'car-dealer' ); ?></p>
 				<h2><?php esc_html_e( 'أحدث السيارات', 'car-dealer' ); ?></h2>
-				<p class="section-subtitle"><?php esc_html_e( 'آخر الإضافات لمخزوننا المتجدد باستمرار', 'car-dealer' ); ?></p>
+				<p class="section-subtitle"><?php esc_html_e( 'اكتشف أحدث السيارات المتاحة بخيارات تتجدد باستمرار', 'car-dealer' ); ?></p>
 			</div>
 			<?php if ( $catalog_url ) : ?><a class="section-link" href="<?php echo esc_url( $catalog_url ); ?>">
-				<?php esc_html_e( 'تصفح المخزون', 'car-dealer' ); ?>
+				<?php esc_html_e( 'استعرض السيارات', 'car-dealer' ); ?>
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l7-7-7-7"/></svg>
 			</a><?php endif; ?>
 		</div>

@@ -82,7 +82,7 @@ final class GroupedModelCatalog {
 		$ar = \AutoDealership\Core\Localization::language() !== 'en';
 		$options = $view['catalog_model']['options'];
 		echo '<section class="onyx-variants" data-empty="'.esc_attr($ar?'لا توجد خيارات متاحة بهذه المواصفات.':'No available variants match these selections.').'" data-matches="'.esc_attr($ar?'خيارات متاحة':'available variants').'"><h2>'.esc_html($ar?'معلومات السيارة والخيارات المتاحة':'Vehicle information and available options').'</h2>';
-		echo '<p>'.esc_html($ar?'البيانات محدثة من مخزون أونكس. يؤكد الموظف التوفر والسعر النهائي قبل الحجز.':'Information follows the latest Onyx inventory update. Staff confirm availability and final price before reservation.').'</p><div class="onyx-variant-filters">';
+		echo '<p>'.esc_html($ar?'تُعرض أحدث بيانات السيارة المتاحة. سيتحقق فريقنا من التوفر والسعر النهائي قبل تأكيد الحجز.':'This page shows the latest available vehicle information. Our team will confirm availability and the final price before confirming your reservation.').'</p><div class="onyx-variant-filters">';
 		foreach (array('model_year'=>$ar?'الموديل':'Model year', 'trim_name'=>$ar?'الفئة':'Trim', 'exterior_color'=>$ar?'اللون':'Color') as $field=>$label) {
 			echo '<label>'.esc_html($label).'<select data-variant-field="'.esc_attr($field).'"><option value="">'.esc_html($ar?'الكل':'All').'</option>';
 			foreach (array_unique(wp_list_pluck($options, $field)) as $value) {
