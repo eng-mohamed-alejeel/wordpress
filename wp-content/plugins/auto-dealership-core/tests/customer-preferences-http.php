@@ -13,6 +13,7 @@ adc_check( 400 === $http_request( $preference_path, $preference_http, 'POST', ar
 list( $preference_post_status, $preference_post_body ) = $http_request( $preference_path, $preference_http, 'POST', array( 'consent_marketing'=>true ) );
 $preference_post = json_decode( $preference_post_body, true );
 adc_check( 200 === $preference_post_status && true === $preference_post['consent_marketing'] && '1' === (string) $wpdb->get_var( $wpdb->prepare( "SELECT consent_marketing FROM $customers WHERE id=%d", $preference_customer ) ), 'Authenticated preference REST write updates the account-owned canonical customer.' );
+adc_check( 'pending' === $preference_post['subscription_status'] && false === $preference_post['newsletter_active'], 'REST records consent while keeping newsletter delivery disabled until confirmation.' );
 $other_preference_http = $http_auth( $account_actor );
 $other_preference = json_decode( $http_request( $preference_path, $other_preference_http )[1], true );
 $other_preference_customer = (int) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $customers WHERE account_user_id=%d AND merged_into_id IS NULL", $account_actor ) );

@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
  * are a separate canonical consent store and are not a disposable copy.
  */
 final class LegacyEngagementStore {
-	public const VERSION = '1.4.0';
+	public const VERSION = '1.6.0';
 	public const OPTION_VERSION = 'adc_legacy_engagement_version';
 	public const RETIREMENT_DECISION = 'retain_controlled_compatibility';
 
@@ -81,6 +81,9 @@ final class LegacyEngagementStore {
 			locale varchar(20) NOT NULL DEFAULT 'ar',
 			consent_key varchar(36) NOT NULL DEFAULT '',
 			welcome_sent_at datetime NULL,
+			confirmed_at datetime NULL,
+			confirmation_source varchar(20) NOT NULL DEFAULT '',
+			confirmation_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
 			created_at datetime NOT NULL,
 			PRIMARY KEY  (id),
 			UNIQUE KEY email (email)

@@ -101,6 +101,10 @@ final class PrivacyTools {
 		$customers = $wpdb->get_results( 'SELECT id,full_name,mobile,email,city,account_user_id,consent_marketing,consent_at,created_at FROM ' . Schema::table( 'customers' ) . ' WHERE ' . self::identity_where( $email, 'account_user_id' ) . ' ORDER BY id ASC', ARRAY_A ) ?: array();
 		$items = array();
 		$account = get_user_by( 'email', $email );
+		if ( $account && metadata_exists( 'user', $account->ID, 'adc_email_verification_status' ) ) {
+			$items[] = array( 'name'=>\AutoDealership\Accounts\EmailVerification::t( 'حالة تأكيد بريد الحساب', 'Account email verification status' ), 'value'=>(string) get_user_meta( $account->ID, 'adc_email_verification_status', true ) );
+			$items[] = array( 'name'=>\AutoDealership\Accounts\EmailVerification::t( 'تاريخ تأكيد بريد الحساب', 'Account email verified at' ), 'value'=>(string) get_user_meta( $account->ID, 'adc_email_verified_at', true ) );
+		}
 		if ( $account && metadata_exists( 'user', $account->ID, 'adc_marketing_consent' ) ) {
 			$items[] = array( 'name'=>__( 'Account marketing preference', 'auto-dealership-core' ), 'value'=>'1' === (string) get_user_meta( $account->ID, 'adc_marketing_consent', true ) ? __( 'Yes', 'auto-dealership-core' ) : __( 'No', 'auto-dealership-core' ) );
 			$items[] = array( 'name'=>__( 'Account marketing preference recorded', 'auto-dealership-core' ), 'value'=>(string) get_user_meta( $account->ID, 'adc_marketing_consent_at', true ) );
@@ -192,9 +196,11 @@ final class PrivacyTools {
 		}
 		$subscriber_table = $wpdb->prefix . 'car_dealer_subscribers';
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $subscriber_table ) ) ) === $subscriber_table ) {
-			$subscriber = $wpdb->get_row( $wpdb->prepare( "SELECT status,created_at FROM $subscriber_table WHERE email = %s LIMIT 1", $email ), ARRAY_A );
+			$subscriber = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $subscriber_table WHERE email = %s LIMIT 1", $email ), ARRAY_A );
 			if ( $subscriber ) {
 				$items[] = array( 'name' => __( 'Newsletter subscription', 'auto-dealership-core' ), 'value' => sprintf( 'Status: %s; created: %s', $subscriber['status'], $subscriber['created_at'] ) );
+				if ( array_key_exists( 'confirmed_at', $subscriber ) ) { $items[] = array( 'name'=>\AutoDealership\Accounts\EmailVerification::t( 'تاريخ تأكيد النشرة', 'Newsletter confirmed at' ), 'value'=>(string) $subscriber['confirmed_at'] ); }
+				if ( array_key_exists( 'confirmation_source', $subscriber ) ) { $items[] = array( 'name'=>\AutoDealership\Accounts\EmailVerification::t( 'مصدر تأكيد النشرة', 'Newsletter confirmation source' ), 'value'=>(string) $subscriber['confirmation_source'] ); }
 			}
 		}
 		$data = $items ? array( array( 'group_id' => 'adc-customer-data', 'group_label' => __( 'Dealership customer and enquiry data', 'auto-dealership-core' ), 'item_id' => 'adc-customer-' . md5( strtolower( $email ) ), 'data' => $items ) ) : array();
@@ -260,18 +266,25 @@ final class PrivacyTools {
 		}
 		if ( $preference_count && false === $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->usermeta} WHERE user_id=%d AND meta_key IN ('adc_marketing_consent','adc_marketing_consent_at')", $account->ID ) ) ) { $wpdb->query( 'ROLLBACK' ); return self::erase_failed(); }
 		$subscribers = $wpdb->prefix . 'car_dealer_subscribers';
+		$verifications = \AutoDealership\Accounts\EmailVerification::table();
+		$verification_count = 0;
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $verifications ) ) ) === $verifications ) {
+			$verification_count = $wpdb->delete( $verifications, array( 'email_hash'=>\AutoDealership\Accounts\EmailVerification::email_hash( $email ) ), array( '%s' ) );
+			if ( false === $verification_count ) { $wpdb->query( 'ROLLBACK' ); return self::erase_failed(); }
+		}
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $subscribers ) ) ) === $subscribers ) {
 			if ( false === $wpdb->delete( $subscribers, array( 'email' => $email ), array( '%s' ) ) ) {
 				$wpdb->query( 'ROLLBACK' );
 				return self::erase_failed();
 			}
 		}
-		$removed = count( $customer_ids ) + $legacy_count + count( $legacy_profile_ids ) + $preference_count;
+		$removed = count( $customer_ids ) + $legacy_count + count( $legacy_profile_ids ) + $preference_count + $verification_count;
 		if ( $removed && ! AuditLog::record( 'privacy.personal_data_erased', 'privacy_request', 0, 'WordPress personal-data erasure', null, array(
 			'customer_count' => count( $customer_ids ),
 			'legacy_request_count' => $legacy_count,
 			'legacy_profile_count' => count( $legacy_profile_ids ),
 			'account_preference_count' => $preference_count,
+			'verification_count' => $verification_count,
 		) ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return self::erase_failed();
@@ -288,7 +301,7 @@ final class PrivacyTools {
 		if ( $account ) { clean_user_cache( $account->ID ); wp_cache_delete( $account->ID, 'user_meta' ); }
 		return array(
 			'items_removed' => $removed,
-			'items_retained' => count( $customer_ids ) + count( $legacy_profile_ids ),
+			'items_retained' => count( $customer_ids ) + count( $legacy_profile_ids ) + ( $account && metadata_exists( 'user', $account->ID, 'adc_email_verification_status' ) ? 1 : 0 ),
 			'messages' => $removed ? array( __( 'Direct identifiers and enquiry text were erased. Minimal operational records remain for accounting, workflow and audit purposes.', 'auto-dealership-core' ) ) : array(),
 			'done' => true,
 		);

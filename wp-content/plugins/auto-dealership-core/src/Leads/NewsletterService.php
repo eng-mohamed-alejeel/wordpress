@@ -30,6 +30,7 @@ final class NewsletterService {
 	public static function boot(): void {
 		self::install();
 		BrandedMail::boot();
+		\AutoDealership\Accounts\EmailVerification::boot();
 		OutboxService::register_handler( 'customer.welcome', array( self::class, 'welcome' ) );
 		OutboxService::register_handler( 'newsletter.subscription', array( self::class, 'subscription_email' ) );
 		OutboxService::register_handler( 'newsletter.expand', array( self::class, 'expand' ) );
@@ -39,7 +40,7 @@ final class NewsletterService {
 	}
 
 	public static function install(): void {
-		if ( '3' === get_option( 'adc_newsletter_schema' ) ) { return; }
+		if ( '5' === get_option( 'adc_newsletter_schema' ) ) { return; }
 		global $wpdb;
 		$lock = 'adc_newsletter_schema_' . md5( DB_NAME . $wpdb->prefix );
 		if ( '1' !== (string) $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s,0)', $lock ) ) ) { return; }
@@ -90,39 +91,74 @@ final class NewsletterService {
 			KEY campaign_status (campaign_id,status)
 			) $collate ENGINE=InnoDB;" );
 			$ready = true;
+			$subscribers = self::subscribers();
+			if ( LegacyEngagementStore::is_ready() && ! $wpdb->get_var( $wpdb->prepare( "SHOW COLUMNS FROM $subscribers LIKE %s", 'confirmed_at' ) ) ) {
+				$wpdb->query( "ALTER TABLE $subscribers ADD confirmed_at datetime NULL" );
+			}
+			$ready = (bool) $wpdb->get_var( $wpdb->prepare( "SHOW COLUMNS FROM $subscribers LIKE %s", 'confirmed_at' ) );
+			foreach ( array( 'confirmation_source'=>"varchar(20) NOT NULL DEFAULT ''", 'confirmation_user_id'=>'bigint(20) unsigned NOT NULL DEFAULT 0' ) as $column=>$definition ) {
+				if ( ! $wpdb->get_var( $wpdb->prepare( "SHOW COLUMNS FROM $subscribers LIKE %s", $column ) ) ) { $wpdb->query( "ALTER TABLE $subscribers ADD $column $definition" ); }
+				$ready = $ready && (bool) $wpdb->get_var( $wpdb->prepare( "SHOW COLUMNS FROM $subscribers LIKE %s", $column ) );
+			}
 			foreach ( array( $campaigns, $deliveries ) as $table ) {
 				$ready = $ready && 'InnoDB' === $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $table ) );
 			}
 			if ( $ready && LegacyEngagementStore::is_ready() ) {
 				$ar = $wpdb->query( "UPDATE $campaigns SET subject_ar=subject,body_ar=body,button_text_ar=button_text,button_url_ar=button_url WHERE bilingual=0 AND locale NOT LIKE 'en%' AND subject_ar=''" );
 				$en = $wpdb->query( "UPDATE $campaigns SET subject_en=subject,body_en=body,button_text_en=button_text,button_url_en=button_url WHERE bilingual=0 AND locale LIKE 'en%' AND subject_en=''" );
-				if ( false !== $ar && false !== $en ) { update_option( 'adc_newsletter_schema', '3', false ); }
+				if ( false !== $ar && false !== $en ) { update_option( 'adc_newsletter_schema', '5', false ); }
 			}
 		} finally { $wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock ) ); }
 	}
 
 	public static function wake(): void {
-		if ( ! wp_next_scheduled( 'adc_mail_wake' ) ) { wp_schedule_single_event( time(), 'adc_mail_wake' ); }
+		$scheduled = wp_next_scheduled( 'adc_mail_wake' );
+		if ( ! $scheduled || $scheduled > time() ) {
+			if ( $scheduled ) { wp_clear_scheduled_hook( 'adc_mail_wake' ); }
+			wp_schedule_single_event( time(), 'adc_mail_wake' );
+		}
+		// Start a non-blocking worker after committed intake rather than exposing SMTP latency.
+		if ( 'cli' !== PHP_SAPI && ! ( defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON ) ) { spawn_cron(); }
+	}
+
+	/** Caller holds account -> subscriber locks and has obtained explicit marketing consent. */
+	public static function activate_for_current_account( int $subscriber_id ) {
+		global $wpdb;
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::subscribers() . ' WHERE id=%d FOR UPDATE', $subscriber_id ), ARRAY_A );
+		if ( $wpdb->last_error || ! $row ) { return self::error( 'adc_subscription_storage' ); }
+		if ( ! \AutoDealership\Accounts\EmailVerification::current_account_verified_for( $row['email'] ) ) { return false; }
+		if ( '5' !== get_option( 'adc_newsletter_schema' ) ) { return self::error( 'adc_subscription_storage' ); }
+		if ( 'active' === $row['status'] ) { return true; }
+		if ( ! in_array( $row['status'], array( 'pending', 'unsubscribed' ), true ) ) { return self::error( 'adc_subscription_status' ); }
+		$now = current_time( 'mysql', true ); $user_id = get_current_user_id(); $key = wp_generate_uuid4();
+		if ( 1 !== $wpdb->update( self::subscribers(), array( 'status'=>'active', 'consent_key'=>$key, 'created_at'=>$now, 'confirmed_at'=>$now, 'confirmation_source'=>'verified_account', 'confirmation_user_id'=>$user_id, 'welcome_sent_at'=>null ), array( 'id'=>$subscriber_id ) ) ) { return self::error( 'adc_subscription_storage' ); }
+		if ( false === $wpdb->update( \AutoDealership\Accounts\EmailVerification::table(), array( 'used_at'=>$now ), array( 'purpose'=>'newsletter', 'subject_id'=>$subscriber_id ) ) ) { return self::error( 'adc_subscription_storage' ); }
+		$payload = array( 'subject_type'=>'subscriber', 'subject_id'=>$subscriber_id, 'correlation_id'=>$key );
+		$event = OutboxService::enqueue( 'newsletter.subscription', $payload, 'subscription:' . $subscriber_id . ':' . $key );
+		if ( is_wp_error( $event ) || ! AuditLog::record( 'marketing.subscription_confirmed_by_account', 'subscriber', $subscriber_id, 'Explicit opt-in with verified account email', array( 'status'=>$row['status'] ), array( 'status'=>'active', 'confirmation_source'=>'verified_account', 'account_user_id'=>$user_id ) ) ) { return self::error( 'adc_subscription_storage' ); }
+		return $payload;
 	}
 
 	/** Prepare recipients and deliver a bounded batch during the same worker invocation. */
 	public static function run_mail() {
-		$keys = array( 'customer.welcome', 'newsletter.subscription', 'newsletter.expand', 'newsletter.deliver' );
-		$first = OutboxService::process_due( 10, $keys );
+		$keys = array( 'email.verify', 'customer.welcome', 'newsletter.subscription', 'newsletter.expand', 'newsletter.deliver' );
+		$priority = OutboxService::process_due( 5, array( 'email.verify' ) );
+		if ( is_wp_error( $priority ) ) { return $priority; }
+		$first = OutboxService::process_due( 7, $keys );
 		if ( is_wp_error( $first ) ) { return $first; }
-		$second = OutboxService::process_due( 10, $keys );
+		$second = OutboxService::process_due( 8, $keys );
 		if ( is_wp_error( $second ) ) { return $second; }
 		global $wpdb;
-		$next = $wpdb->get_var( "SELECT MIN(next_attempt_at) FROM " . OutboxService::table() . " WHERE event_key IN ('customer.welcome','newsletter.subscription','newsletter.expand','newsletter.deliver') AND status IN ('pending','retry')" );
+		$next = $wpdb->get_var( "SELECT MIN(next_attempt_at) FROM " . OutboxService::table() . " WHERE event_key IN ('email.verify','customer.welcome','newsletter.subscription','newsletter.expand','newsletter.deliver') AND status IN ('pending','retry')" );
 		if ( $next ) {
 			$when = max( time() + MINUTE_IN_SECONDS, strtotime( $next . ' UTC' ) );
 			$scheduled = wp_next_scheduled( 'adc_mail_wake' );
-			if ( ! $scheduled || $scheduled < $when ) {
+			if ( ! $scheduled || $scheduled !== $when ) {
 				wp_clear_scheduled_hook( 'adc_mail_wake' );
 				wp_schedule_single_event( $when, 'adc_mail_wake' );
 			}
 		}
-		foreach ( $second as $key => $value ) { $first[$key] += $value; }
+		foreach ( $second as $key => $value ) { $first[$key] += $value + $priority[$key]; }
 		return $first;
 	}
 
@@ -138,6 +174,7 @@ final class NewsletterService {
 		return self::locked( 'welcome:' . $id, static function () use ( $id, $payload ) {
 			$user = get_userdata( $id );
 			if ( ! $user || ! in_array( 'car_dealer_customer', (array) $user->roles, true ) ) { return true; }
+			if ( \AutoDealership\Accounts\EmailVerification::blocked( $id ) ) { return true; }
 			if ( get_user_meta( $id, 'adc_welcome_sent_at', true ) ) { return true; }
 			$language = get_user_meta( $id, 'adc_preferred_language', true );
 			$language = in_array( $language, array( 'ar', 'en' ), true ) ? $language : self::language( $payload['locale'] ?? 'ar' );

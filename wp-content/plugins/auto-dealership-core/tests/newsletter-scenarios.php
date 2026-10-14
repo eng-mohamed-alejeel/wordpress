@@ -1,6 +1,7 @@
 <?php
 /** Database integration scenarios; never send email or use source subscriber data. */
 use AutoDealership\Accounts\CustomerAccount;
+use AutoDealership\Accounts\EmailVerification;
 use AutoDealership\Core\Capabilities;
 use AutoDealership\Leads\LegacyEngagementStore;
 use AutoDealership\Leads\MarketingSubscription;
@@ -15,28 +16,51 @@ $admin = get_current_user_id();
 $captured = array(); $reject_mail = false;
 remove_filter( 'pre_wp_mail', '__return_true' );
 add_filter( 'pre_wp_mail', static function ( $result, $mail ) use ( &$captured, &$reject_mail ) { if ( $reject_mail ) { return false; } $captured[] = $mail; return true; }, 10, 2 );
-$check( '3' === get_option( 'adc_newsletter_schema' ), 'Newsletter archive and copy schema installed' );
+$check( '5' === get_option( 'adc_newsletter_schema' ), 'Newsletter confirmation provenance schema installed' );
+$verification_token = static function ( array $mail ): string { preg_match( '/#token=([a-f0-9]{64}\.[A-Za-z0-9_-]{43})/', html_entity_decode( $mail['message'], ENT_QUOTES, 'UTF-8' ), $matches ); return $matches[1] ?? ''; };
 $check( in_array( 'adc_manage_newsletter', Capabilities::all_capabilities(), true ), 'Permission is available in role management' );
+wp_set_current_user( 0 );
 
 $_POST = array( 'display_name' => 'عميل تجريبي', 'email' => 'welcome@example.invalid', 'password' => 'StrongPass123!test', 'password_confirm' => 'StrongPass123!test', 'privacy_consent' => '1', 'phone' => '+966505555551' );
 $register = new ReflectionMethod( CustomerAccount::class, 'register' ); $register->setAccessible( true );
 $customer = $register->invoke( null );
-$check( is_int( $customer ), 'Public customer registration succeeds with queued welcome' );
+$check( count( $captured ) === 0, 'Registration queues verification without blocking on SMTP delivery' );
+OutboxService::process_due( 100, array( 'email.verify' ) );
+$check( is_int( $customer ), 'Public customer registration succeeds with queued verification' );
 $check( get_user_meta( $customer, 'adc_preferred_language', true ) === 'ar', 'Registration saves the customer email language' );
-$check( count( $captured ) === 1 && $captured[0]['to'] === 'welcome@example.invalid', 'Welcome sent only to the new customer' );
-$check( str_contains( $captured[0]['message'], 'عميل تجريبي' ) && ! str_contains( $captured[0]['message'], 'StrongPass' ) && ! str_contains( $captured[0]['message'], 'customer_' ), 'Welcome is branded and hides credentials and technical login' );
-$check( true === Newsletter::welcome( array( 'subject_id' => $customer, 'locale' => 'ar' ) ) && count( $captured ) === 1, 'Welcome retry does not duplicate accepted mail' );
+$check( count( $captured ) === 1 && $captured[0]['to'] === 'welcome@example.invalid' && EmailVerification::blocked( $customer ), 'Only verification is sent and new account remains blocked' );
+$account_token = $verification_token( $captured[0] );
+$login = wp_authenticate( get_userdata( $customer )->user_login, 'StrongPass123!test' );
+$check( is_wp_error( $login ) && 'adc_email_pending' === $login->get_error_code(), 'Pending account cannot authenticate through WordPress' );
+$check( true === Newsletter::welcome( array( 'subject_id'=>$customer ) ) && count( $captured ) === 1, 'Early welcome worker cannot welcome an unverified account' );
+$check( is_wp_error( EmailVerification::confirm( $account_token, 'WrongPassword' ) ) && EmailVerification::blocked( $customer ), 'Activation requires the registration password and preserves pending state on failure' );
+$check( ! is_wp_error( EmailVerification::confirm( $account_token, 'StrongPass123!test' ) ) && ! EmailVerification::blocked( $customer ), 'Email possession and password activate the account' );
+$check( ! is_user_logged_in(), 'Email activation does not create an authenticated session' );
+$check( is_wp_error( EmailVerification::confirm( $account_token, 'StrongPass123!test' ) ), 'Consumed activation proof cannot be reused' );
+$check( count( $captured ) === 2 && str_contains( $captured[1]['message'], 'عميل تجريبي' ) && ! str_contains( $captured[1]['message'], 'StrongPass' ) && ! str_contains( $captured[1]['message'], 'customer_' ), 'Post-activation welcome is branded and hides credentials and technical login' );
+$check( true === Newsletter::welcome( array( 'subject_id' => $customer, 'locale' => 'ar' ) ) && count( $captured ) === 2, 'Welcome retry does not duplicate accepted mail' );
 
 if ( ! defined( 'DOING_AJAX' ) ) { define( 'DOING_AJAX', true ); }
 add_filter( 'wp_die_ajax_handler', static fn() => static function () { throw new RuntimeException( 'ajax-response' ); } );
-$subscribe = static function ( string $email, string $lang = 'ar' ): array {
+$subscribe = static function ( string $email, string $lang = 'ar', bool $confirm = true ) use ( &$captured, $verification_token ): array {
 	$_POST = array( 'email' => $email, 'consent_marketing' => '1', 'lang' => $lang, 'nonce' => wp_create_nonce( 'car_dealer_frontend' ) ); $_REQUEST = $_POST;
 	ob_start();
 	try { MarketingSubscription::handle_theme(); } catch ( RuntimeException $error ) { if ( 'ajax-response' !== $error->getMessage() ) { ob_end_clean(); throw $error; } }
-	return json_decode( ob_get_clean(), true );
+	$result = json_decode( ob_get_clean(), true );
+	OutboxService::process_due( 100, array( 'email.verify', 'newsletter.subscription' ) );
+	if ( $confirm && ! empty( $result['success'] ) ) {
+		global $wpdb; $actual_email = is_user_logged_in() ? wp_get_current_user()->user_email : $email;
+		if ( 'pending' === $wpdb->get_var( $wpdb->prepare( 'SELECT status FROM ' . Newsletter::subscribers() . ' WHERE email=%s', $actual_email ) ) ) {
+			$confirmed = EmailVerification::confirm( $verification_token( end( $captured ) ) );
+			if ( is_wp_error( $confirmed ) ) { throw new RuntimeException( 'Fixture subscription confirmation failed' ); }
+		}
+	}
+	return $result;
 };
 wp_set_current_user( 0 );
-$check( $subscribe( 'first@example.invalid' )['success'], 'Newsletter form creates a consented subscription' );
+$check( $subscribe( 'first@example.invalid', 'ar', false )['success'], 'Newsletter form creates a pending consented subscription' );
+$check( 'pending' === $wpdb->get_var( "SELECT status FROM " . Newsletter::subscribers() . " WHERE email='first@example.invalid'" ), 'New footer subscription awaits confirmation' );
+$check( ! is_wp_error( EmailVerification::confirm( $verification_token( end( $captured ) ) ) ), 'Footer email confirmation activates subscription' );
 $before = count( $captured );
 $check( $subscribe( 'first@example.invalid' )['success'] && count( $captured ) === $before, 'Repeated active subscription does not duplicate welcome' );
 $check( $subscribe( 'second@example.invalid', 'en' )['success'], 'English subscription accepted' );
@@ -89,6 +113,7 @@ OutboxService::process_due( 100, array( 'newsletter.expand', 'newsletter.deliver
 $check( count( $captured ) === $before, 'Cancelled campaign does not send remaining mail' );
 
 wp_set_current_user( 0 );
+$wpdb->query( "UPDATE " . EmailVerification::table() . " SET created_at='2000-01-01 00:00:00' WHERE purpose='newsletter'" );
 $check( $subscribe( 'first@example.invalid' )['success'], 'User can explicitly resubscribe' );
 $check( is_wp_error( Newsletter::unsubscribe( (int) $first['id'], $unsubscribe['token'] ) ), 'Old unsubscribe token invalid after renewed consent' );
 wp_set_current_user( $admin );
@@ -168,11 +193,13 @@ $check( Newsletter::stats( $blocked )['sent'] === 107, 'Recovered preparation se
 wp_set_current_user( $customer );
 $account_mail_count = count( $captured );
 $account_preferences = AutoDealership\Leads\CustomerIdentity::update_preferences( true, 'en' );
+OutboxService::process_due( 100, array( 'email.verify', 'newsletter.subscription' ) );
 $account_subscription = $wpdb->get_row( "SELECT * FROM " . Newsletter::subscribers() . " WHERE email='welcome@example.invalid'", ARRAY_A );
-$check( ! is_wp_error( $account_preferences ) && $account_subscription && 'active' === $account_subscription['status'] && 'en' === $account_subscription['locale'], 'Account opt-in creates an active newsletter subscriber before any footer subscription' );
-$check( count( $captured ) === $account_mail_count + 1 && str_contains( end( $captured )['message'], 'Welcome to the AutoBrands newsletter' ), 'First account opt-in sends the localized subscription welcome' );
+$check( ! is_wp_error( $account_preferences ) && $account_subscription && 'active' === $account_subscription['status'] && 'en' === $account_subscription['locale'] && 'verified_account' === $account_subscription['confirmation_source'], 'Verified account opt-in creates an active subscriber without footer confirmation' );
+$check( count( $captured ) === $account_mail_count + 1 && str_contains( end( $captured )['message'], 'Welcome to the AutoBrands newsletter' ), 'Verified account opt-in sends the localized welcome instead of a confirmation' );
 AutoDealership\Leads\CustomerIdentity::update_preferences( true, 'en' );
 $check( count( $captured ) === $account_mail_count + 1 && 1 === (int) $wpdb->get_var( "SELECT COUNT(*) FROM " . Newsletter::subscribers() . " WHERE email='welcome@example.invalid'" ), 'Repeated account opt-in neither duplicates the subscriber nor sends another welcome' );
+$check( 0 === (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . EmailVerification::table() . " WHERE purpose='newsletter' AND subject_id=%d", $account_subscription['id'] ) ), 'Verified account opt-in creates no newsletter challenge' );
 $check( $subscribe( 'ignored@example.invalid', 'ar' )['success'] && get_user_meta( $customer, 'adc_preferred_language', true ) === 'en', 'Subscription preserves saved email preference even on an Arabic page' );
 $saved_locale = $wpdb->get_var( "SELECT locale FROM " . Newsletter::subscribers() . " WHERE email='welcome@example.invalid'" );
 $check( $saved_locale === 'en', 'Subscriber language matches the saved account preference' );
@@ -180,10 +207,13 @@ update_user_meta($customer,'adc_marketing_consent','0');
 $check( AutoDealership\Leads\CustomerIdentity::current_preferences()['consent_marketing'], 'Active newsletter subscription selects consent even when old account metadata disagrees' );
 $optout = AutoDealership\Leads\CustomerIdentity::update_preferences(false,'en');
 $check( ! $optout['consent_marketing'] && $wpdb->get_var("SELECT status FROM ".Newsletter::subscribers()." WHERE email='welcome@example.invalid'")==='unsubscribed', 'Account opt-out updates newsletter status and selects the second choice' );
+$wpdb->query( "UPDATE " . EmailVerification::table() . " SET created_at='2000-01-01 00:00:00' WHERE purpose='newsletter'" );
 $preferences = AutoDealership\Leads\CustomerIdentity::update_preferences( true, 'ar' );
+OutboxService::process_due( 100, array( 'email.verify', 'newsletter.subscription' ) );
 $subscriber_language = $wpdb->get_var( "SELECT locale FROM " . Newsletter::subscribers() . " WHERE email='welcome@example.invalid'" );
 $check( ! is_wp_error( $preferences ) && $preferences['newsletter_language'] === 'ar' && $subscriber_language === 'ar', 'Account preferences synchronize user and newsletter language' );
-$check( $preferences['consent_marketing'] && $wpdb->get_var("SELECT status FROM ".Newsletter::subscribers()." WHERE email='welcome@example.invalid'")==='active', 'Explicit consent reactivates an existing subscription and selects the first choice' );
+$check( $preferences['consent_marketing'] && $preferences['newsletter_active'] && $preferences['subscription_status'] === 'active', 'Explicit renewed consent activates immediately for the verified owner' );
+$check( str_contains( end( $captured )['subject'], 'أهلًا بك' ), 'Renewed verified consent sends the welcome in the newly chosen language' );
 $check( is_wp_error( AutoDealership\Leads\CustomerIdentity::update_preferences( true, 'invalid' ) ), 'Invalid language preferences rejected' );
 wp_set_current_user( $admin ); $_REQUEST['lang']='en';
 $missing_translation = Newsletter::queue( $partial );
@@ -226,4 +256,5 @@ $check(is_wp_error(Newsletter::deliver(array('subject_id'=>$frozen_delivery['id'
 $check($wpdb->get_var($wpdb->prepare('SELECT status FROM '.Newsletter::table('deliveries').' WHERE id=%d',$frozen_delivery['id']))==='failed','Archived retry rejection preserves historical delivery result');
 wp_set_current_user($customer);
 $check(is_wp_error(Newsletter::duplicate($bilingual))&&is_wp_error(Newsletter::archive($bilingual))&&is_wp_error(Newsletter::delete_draft($archived_copy)),'Customers cannot copy, archive or delete campaigns');
+require __DIR__ . '/email-verification-scenarios.php';
 echo "Newsletter integration passed ($checks checks). No real email sent.\n";

@@ -7,7 +7,7 @@ get_header();
 ob_start();
 ?>
 <div class="container cd-account" dir="<?php echo esc_attr( car_dealer_catalog_direction() ); ?>" lang="<?php echo esc_attr( car_dealer_catalog_language() ); ?>">
-<?php if ( $error && $core_available ) : ?><div class="cd-account-notice is-error" role="alert"><?php echo esc_html( $error ); ?></div><?php endif; ?>
+<?php if ( $error && $core_available ) : ?><div class="cd-account-notice is-error" role="alert"><?php echo esc_html( $error ); ?><?php if ( 'login' === $view && \AutoDealership\Accounts\CustomerAccount::verification_required() ) : ?> <a href="<?php echo esc_url( \AutoDealership\Accounts\EmailVerification::page_url( 'account' ) ); ?>"><?php echo esc_html( car_dealer_text( 'إعادة إرسال رابط التفعيل', 'Resend activation link' ) ); ?></a><?php endif; ?></div><?php endif; ?>
 <?php if ( ! $core_available ) : ?>
 <section class="cd-account-panel"><h1><?php esc_html_e( 'الحساب غير متاح حاليًا', 'car-dealer' ); ?></h1><p><?php esc_html_e( 'خدمة المعرض غير متاحة. يرجى المحاولة لاحقًا.', 'car-dealer' ); ?></p></section>
 <?php elseif ( 'dashboard' !== $view ) : $register = 'register' === $view; ?>
@@ -107,10 +107,11 @@ if ( ! is_wp_error( $preferences ) ) : ?>
 <p><?php echo esc_html__( 'اختر ما إذا كنت ترغب في استقبال عروض وأخبار تسويقية. رسائل الطلبات والحجوزات والخدمة اللازمة لتنفيذ طلبك لا تتأثر بهذا الاختيار.', 'car-dealer' ); ?></p>
 <form method="post" action="<?php echo esc_url( car_dealer_account_url() ); ?>">
 <?php wp_nonce_field( 'cd_account_dashboard' ); ?><input type="hidden" name="account_action" value="save_preferences">
-<p><label for="cd-newsletter-language"><?php echo esc_html( car_dealer_text( 'لغة رسائل البريد الإلكتروني', 'Email language preference' ) ); ?></label><select id="cd-newsletter-language" name="newsletter_language"><option value="ar" <?php selected( $preferences['newsletter_language'] ?? 'ar', 'ar' ); ?>>العربية</option><option value="en" <?php selected( $preferences['newsletter_language'] ?? 'ar', 'en' ); ?>>English</option></select></p>
+<?php if ( 'pending' === ( $preferences['subscription_status'] ?? '' ) ) : ?><p role="status"><?php echo esc_html( car_dealer_text( 'طلب الاشتراك محفوظ؛ يرجى تأكيده من بريدك الإلكتروني قبل استقبال الحملات.', 'Your subscription request is saved. Confirm it by email before receiving campaigns.' ) ); ?> <a href="<?php echo esc_url( \AutoDealership\Accounts\EmailVerification::page_url( 'newsletter' ) ); ?>"><?php echo esc_html( car_dealer_text( 'طلب رابط جديد', 'Request a new link' ) ); ?></a></p><?php endif; ?>
+<p><label for="cd-newsletter-language"><?php echo esc_html( car_dealer_text( 'لغة الرسائل المفضلة', 'Preferred email language' ) ); ?></label><select id="cd-newsletter-language" name="newsletter_language"><option value="ar" <?php selected( $preferences['newsletter_language'] ?? 'ar', 'ar' ); ?>>العربية</option><option value="en" <?php selected( $preferences['newsletter_language'] ?? 'ar', 'en' ); ?>>English</option></select></p>
 <fieldset><legend><?php echo esc_html__( 'التواصل التسويقي', 'car-dealer' ); ?></legend>
-<label><input type="radio" name="consent_marketing" value="1" required <?php checked( ! empty( $preferences['consent_marketing'] ) ); ?>> <?php echo esc_html__( 'أوافق على استقبال العروض والأخبار التسويقية.', 'car-dealer' ); ?></label>
-<label><input type="radio" name="consent_marketing" value="0" required <?php checked( empty( $preferences['consent_marketing'] ) ); ?>> <?php echo esc_html__( 'لا أرغب في استقبال تواصل تسويقي.', 'car-dealer' ); ?></label>
+<label><input type="radio" name="consent_marketing" value="1" required <?php checked( ! empty( $preferences['consent_marketing'] ) || 'pending' === ( $preferences['subscription_status'] ?? '' ) ); ?>> <?php echo esc_html__( 'أوافق على استقبال العروض والأخبار التسويقية.', 'car-dealer' ); ?></label>
+<label><input type="radio" name="consent_marketing" value="0" required <?php checked( empty( $preferences['consent_marketing'] ) && 'pending' !== ( $preferences['subscription_status'] ?? '' ) ); ?>> <?php echo esc_html__( 'لا أرغب في استقبال تواصل تسويقي.', 'car-dealer' ); ?></label>
 </fieldset>
 <?php if ( ! empty( $preferences['recorded_at'] ) ) : ?><p><small><?php echo esc_html__( 'آخر موافقة مسجلة:', 'car-dealer' ); ?> <?php echo esc_html( get_date_from_gmt( $preferences['recorded_at'], 'Y-m-d H:i' ) ); ?></small></p><?php endif; ?>
 <button class="btn btn-primary" type="submit"><?php echo esc_html__( 'حفظ التفضيلات', 'car-dealer' ); ?></button>

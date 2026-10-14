@@ -59,13 +59,13 @@ final class CustomerIdentity {
 			$subscription = $wpdb->get_row( $wpdb->prepare( 'SELECT status,locale,created_at FROM ' . NewsletterService::subscribers() . ' WHERE email=%s', strtolower( $account->user_email ) ), ARRAY_A );
 			if ( $wpdb->last_error ) { return self::error( 'adc_identity_unavailable', 503 ); }
 			if ( $subscription ) {
-				$enabled = 'active' === $subscription['status'];
+				$enabled = in_array( $subscription['status'], array( 'active', 'pending' ), true );
 				$recorded_at = $enabled ? $subscription['created_at'] : '';
 				if ( ! in_array( $language, array( 'ar', 'en' ), true ) ) { $language = NewsletterService::language( $subscription['locale'] ); }
 			}
 		}
 		if ( ! in_array( $language, array( 'ar', 'en' ), true ) ) { $language = \AutoDealership\Core\Localization::language(); }
-		return array( 'consent_marketing'=>$enabled, 'recorded_at'=>$recorded_at, 'linked_customer_id'=>(int) ( $row['id'] ?? 0 ), 'newsletter_language'=>$language );
+		return array( 'consent_marketing'=>$enabled, 'recorded_at'=>$recorded_at, 'linked_customer_id'=>(int) ( $row['id'] ?? 0 ), 'newsletter_language'=>$language, 'subscription_status'=>$subscription['status'] ?? ( $enabled ? 'legacy' : 'none' ), 'newsletter_active'=>'active' === ( $subscription['status'] ?? '' ) );
 	}
 
 	/** Store opt-in or opt-out explicitly for the account and its linked CRM identity. */
@@ -84,6 +84,7 @@ final class CustomerIdentity {
 		$now = current_time( 'mysql', true );
 		$recorded_at = $marketing ? $now : '';
 		$mail_payload = null;
+		$direct_activation = false;
 		if ( $language ) {
 			update_user_meta( $user_id, 'adc_preferred_language', $language );
 			if ( get_user_meta( $user_id, 'adc_preferred_language', true ) !== $language ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
@@ -93,10 +94,13 @@ final class CustomerIdentity {
 			$subscription = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . NewsletterService::subscribers() . ' WHERE email=%s FOR UPDATE', strtolower( $email ) ), ARRAY_A );
 			if ( $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
 			if ( $subscription ) {
-				$changes = array( 'status'=>$marketing ? 'active' : 'unsubscribed' );
+				$subscriber_id = (int) $subscription['id'];
+				$changes = array( 'status'=>$marketing ? ( 'active' === $subscription['status'] ? 'active' : 'pending' ) : 'unsubscribed' );
 				if ( $language ) { $changes['locale']=$language; }
-				if ( $marketing && 'active' !== $subscription['status'] ) {
+				if ( $marketing && ! in_array( $subscription['status'], array( 'active', 'pending' ), true ) ) {
 					$changes['consent_key']=wp_generate_uuid4(); $changes['created_at']=$now; $changes['welcome_sent_at']=null;
+					$changes['confirmed_at']=null;
+					$changes['confirmation_source']=''; $changes['confirmation_user_id']=0;
 					$mail_payload = array( 'subject_type'=>'subscriber', 'subject_id'=>(int) $subscription['id'], 'correlation_id'=>$changes['consent_key'] );
 				}
 				if ( false === $wpdb->update( NewsletterService::subscribers(), $changes, array( 'id'=>$subscription['id'] ) ) ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
@@ -104,14 +108,23 @@ final class CustomerIdentity {
 				$email = strtolower( (string) $email );
 				$locale = $language ?: NewsletterService::language( (string) get_user_meta( $user_id, 'adc_preferred_language', true ) ?: \AutoDealership\Core\Localization::language() );
 				$key = wp_generate_uuid4();
-				if ( ! is_email( $email ) || 1 !== $wpdb->insert( NewsletterService::subscribers(), array( 'email'=>$email, 'status'=>'active', 'locale'=>$locale, 'consent_key'=>$key, 'created_at'=>$now ) ) ) {
+				if ( ! is_email( $email ) || 1 !== $wpdb->insert( NewsletterService::subscribers(), array( 'email'=>$email, 'status'=>'pending', 'locale'=>$locale, 'consent_key'=>$key, 'created_at'=>$now ) ) ) {
 					$wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
 				}
 				$mail_payload = array( 'subject_type'=>'subscriber', 'subject_id'=>(int) $wpdb->insert_id, 'correlation_id'=>$key );
+				$subscriber_id = $mail_payload['subject_id'];
 			}
-			if ( $mail_payload ) {
-				$event = \AutoDealership\Operations\OutboxService::enqueue( 'newsletter.subscription', $mail_payload, 'subscription:' . $mail_payload['subject_id'] . ':' . $mail_payload['correlation_id'] );
+			if ( $marketing && ! empty( $subscriber_id ) ) {
+				$activation = NewsletterService::activate_for_current_account( $subscriber_id );
+				if ( is_wp_error( $activation ) ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
+				$direct_activation = (bool) $activation;
+				if ( is_array( $activation ) ) { $mail_payload = $activation; }
+			}
+			if ( $mail_payload && ! $direct_activation ) {
+				$locale = $language ?: NewsletterService::language( (string) get_user_meta( $user_id, 'adc_preferred_language', true ) ?: \AutoDealership\Core\Localization::language() );
+				$event = \AutoDealership\Accounts\EmailVerification::issue( 'newsletter', $mail_payload['subject_id'], $email, $locale, $mail_payload['correlation_id'] );
 				if ( is_wp_error( $event ) ) { $wpdb->query( 'ROLLBACK' ); self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 ); }
+				$mail_payload = $event;
 			}
 		}
 		update_user_meta( $user_id, self::PREFERENCE_META, $marketing ? '1' : '0' );
@@ -127,7 +140,7 @@ final class CustomerIdentity {
 			self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
 		}
 		self::clean_account_cache( $user_id );
-		if ( $mail_payload ) { NewsletterService::subscription_email( $mail_payload ); NewsletterService::wake(); }
+		if ( $mail_payload ) { NewsletterService::wake(); }
 		do_action( 'adc_customer_preferences_updated', $user_id, (int) ( $row['id'] ?? 0 ), $marketing );
 		return self::current_preferences();
 	}

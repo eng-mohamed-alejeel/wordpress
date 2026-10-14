@@ -26,6 +26,8 @@ require_once ADC_PATH . 'src/Core/BrandIdentity.php';
 require_once ADC_PATH . 'src/Core/ConfigurationService.php';
 require_once ADC_PATH . 'src/Accounts/CustomerAccount.php';
 require_once ADC_PATH . 'src/Accounts/BrandedMail.php';
+require_once ADC_PATH . 'src/Accounts/EmailVerification.php';
+\AutoDealership\Accounts\EmailVerification::protect_accounts();
 require_once ADC_PATH . 'src/Leads/NewsletterService.php';
 require_once ADC_PATH . 'src/Admin/NewsletterPage.php';
 require_once ADC_PATH . 'src/Accounts/CustomerRequestView.php';
@@ -476,6 +478,7 @@ register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_privacy_retention' );
 	wp_clear_scheduled_hook( 'adc_process_outbox' );
 	wp_clear_scheduled_hook( 'adc_mail_wake' );
+	wp_clear_scheduled_hook( 'adc_verification_prune' );
 	wp_clear_scheduled_hook( 'adc_scan_followups' );
 	wp_clear_scheduled_hook( 'adc_prune_request_limits' );
 } );

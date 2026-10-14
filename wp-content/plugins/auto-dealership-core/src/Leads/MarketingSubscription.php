@@ -57,20 +57,31 @@ final class MarketingSubscription {
 			wp_send_json_error( array( 'message' => $message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 );
 		}
 		$table = $wpdb->prefix . 'car_dealer_subscribers';
+		if ( is_user_logged_in() ) {
+			foreach ( array( $wpdb->users, $wpdb->usermeta ) as $account_table ) {
+				if ( 'InnoDB' !== $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $account_table ) ) ) { $wpdb->query( 'ROLLBACK' ); wp_send_json_error( array( 'message'=>$message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 ); }
+			}
+			$locked_email = $wpdb->get_var( $wpdb->prepare( "SELECT user_email FROM {$wpdb->users} WHERE ID=%d FOR UPDATE", get_current_user_id() ) );
+			if ( ! $locked_email || $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); wp_send_json_error( array( 'message'=>$message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 ); }
+			$email = strtolower( $locked_email );
+		}
 		$previous = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE email=%s FOR UPDATE", $email ), ARRAY_A );
 		if ( $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); wp_send_json_error( array( 'message' => $message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 ); }
-		if ( $previous && 'active' === $previous['status'] ) {
+		if ( $previous && in_array( $previous['status'], array( 'active', 'pending' ), true ) ) {
 			$ok = $wpdb->update( $table, array( 'locale' => $language ), array( 'id' => $previous['id'] ) );
+			$activation = is_user_logged_in() ? NewsletterService::activate_for_current_account( (int) $previous['id'] ) : false;
 			$language_saved = true;
 			if ( is_user_logged_in() ) { update_user_meta( get_current_user_id(), 'adc_preferred_language', $language ); }
 			if ( is_user_logged_in() ) { $language_saved = get_user_meta( get_current_user_id(), 'adc_preferred_language', true ) === $language; }
-			if ( false === $ok || ! $language_saved || ! Transaction::commit( static fn() => AuditLog::record( 'marketing.language_updated', 'subscriber', (int) $previous['id'], 'Subscription language preference', null, array( 'locale'=>$language ) ) ) ) { $wpdb->query( 'ROLLBACK' ); if ( is_user_logged_in() ) { clean_user_cache( get_current_user_id() ); } wp_send_json_error( array( 'message'=>$message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 ); }
-			wp_send_json_success( array( 'message' => $message( 'أنت مشترك بالفعل في النشرة البريدية.', 'You are already subscribed.' ) ) );
+			if ( false === $ok || ! $language_saved || is_wp_error( $activation ) || ! Transaction::commit( static fn() => AuditLog::record( 'marketing.language_updated', 'subscriber', (int) $previous['id'], 'Subscription language preference', null, array( 'locale'=>$language ) ) ) ) { $wpdb->query( 'ROLLBACK' ); if ( is_user_logged_in() ) { clean_user_cache( get_current_user_id() ); } wp_send_json_error( array( 'message'=>$message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 ); }
+			if ( $activation ) { NewsletterService::wake(); wp_send_json_success( array( 'message'=>$message( 'اشتراكك في النشرة البريدية نشط. ستصلك الحملات باللغة المفضلة لديك.', 'Your newsletter subscription is active. You will receive campaigns in your preferred language.' ) ) ); }
+			if ( 'pending' === $previous['status'] ) { \AutoDealership\Accounts\EmailVerification::request( 'newsletter', $email ); }
+			wp_send_json_success( array( 'message' => $message( 'تم استلام طلبك. إذا كان الاشتراك يحتاج تأكيدًا، ستصلك رسالة برابط التأكيد. تحقق من الوارد والبريد المزعج.', 'Your request has been received. If confirmation is needed, we will email you a verification link. Check your inbox and spam folder.' ) ) );
 		}
 		$now = current_time( 'mysql', true );
 		$consent_key = wp_generate_uuid4();
 		$saved = $wpdb->query( $wpdb->prepare(
-			"INSERT INTO $table (email,status,created_at,locale,consent_key) VALUES (%s,'active',%s,%s,%s) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id),status='active',created_at=VALUES(created_at),locale=VALUES(locale),consent_key=VALUES(consent_key),welcome_sent_at=NULL",
+			"INSERT INTO $table (email,status,created_at,locale,consent_key) VALUES (%s,'pending',%s,%s,%s) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id),status='pending',created_at=VALUES(created_at),locale=VALUES(locale),consent_key=VALUES(consent_key),welcome_sent_at=NULL,confirmed_at=NULL,confirmation_source='',confirmation_user_id=0",
 			$email,
 			$now, $language, $consent_key
 		) );
@@ -78,16 +89,20 @@ final class MarketingSubscription {
 		$language_saved = true;
 		if ( is_user_logged_in() ) { update_user_meta( get_current_user_id(), 'adc_preferred_language', $language ); }
 		if ( is_user_logged_in() ) { $language_saved = get_user_meta( get_current_user_id(), 'adc_preferred_language', true ) === $language; }
-		$mail_payload = array( 'subject_type' => 'subscriber', 'subject_id' => $subscriber_id, 'correlation_id' => $consent_key );
-		$mail_event = false !== $saved && $subscriber_id > 0 ? \AutoDealership\Operations\OutboxService::enqueue( 'newsletter.subscription', $mail_payload, 'subscription:' . $subscriber_id . ':' . $consent_key ) : new \WP_Error( 'adc_subscription_storage' );
-		if ( false === $saved || $subscriber_id < 1 || ! $language_saved || is_wp_error( $mail_event ) || ! Transaction::commit( static fn() => AuditLog::record( 'marketing.subscription_activated', 'subscriber', $subscriber_id, 'Explicit website newsletter opt-in', null, array( 'status' => 'active' ) ) ) ) {
+		$activation = false !== $saved && $subscriber_id > 0 && is_user_logged_in() ? NewsletterService::activate_for_current_account( $subscriber_id ) : false;
+		$mail_event = is_wp_error( $activation ) ? $activation : ( $activation ?: ( false !== $saved && $subscriber_id > 0 ? \AutoDealership\Accounts\EmailVerification::issue( 'newsletter', $subscriber_id, $email, $language, $consent_key ) : new \WP_Error( 'adc_subscription_storage' ) ) );
+		if ( is_wp_error( $mail_event ) && 'adc_verification_throttled' === $mail_event->get_error_code() ) {
+			$wpdb->query( 'ROLLBACK' ); if ( is_user_logged_in() ) { clean_user_cache( get_current_user_id() ); }
+			wp_send_json_success( array( 'message'=>$message( 'تم استلام طلبك. إذا كان الاشتراك يحتاج تأكيدًا، ستصلك رسالة برابط التأكيد. تحقق من الوارد والبريد المزعج.', 'Your request has been received. If confirmation is needed, we will email you a verification link. Check your inbox and spam folder.' ) ) );
+		}
+		if ( false === $saved || $subscriber_id < 1 || ! $language_saved || is_wp_error( $mail_event ) || ! Transaction::commit( static fn() => AuditLog::record( 'marketing.subscription_requested', 'subscriber', $subscriber_id, 'Explicit website newsletter opt-in', null, array( 'status' => $activation ? 'active' : 'pending' ) ) ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			if ( is_user_logged_in() ) { clean_user_cache( get_current_user_id() ); }
 			wp_send_json_error( array( 'message' => $message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 500 );
 		}
 
-		NewsletterService::subscription_email( $mail_payload );
 		NewsletterService::wake();
-		wp_send_json_success( array( 'message' => $message( 'تم الاشتراك بنجاح.', 'You have subscribed successfully.' ) ) );
+		if ( $activation ) { wp_send_json_success( array( 'message'=>$message( 'اشتراكك في النشرة البريدية نشط. ستصلك الحملات باللغة المفضلة لديك.', 'Your newsletter subscription is active. You will receive campaigns in your preferred language.' ) ) ); }
+		wp_send_json_success( array( 'message' => $message( 'تم استلام طلبك. إذا كان الاشتراك يحتاج تأكيدًا، ستصلك رسالة برابط التأكيد. تحقق من الوارد والبريد المزعج.', 'Your request has been received. If confirmation is needed, we will email you a verification link. Check your inbox and spam folder.' ) ) );
 	}
 }

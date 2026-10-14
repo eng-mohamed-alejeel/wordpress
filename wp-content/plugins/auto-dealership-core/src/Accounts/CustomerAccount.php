@@ -15,6 +15,12 @@ defined( 'ABSPATH' ) || exit;
 final class CustomerAccount {
 	private const PASSWORD_MIN_LENGTH = 12;
 	private const PASSWORD_MAX_LENGTH = 128;
+	private static bool $verification_required = false;
+
+	/** Only expose the resend action after authentication reports a pending account. */
+	public static function verification_required(): bool {
+		return self::$verification_required;
+	}
 
 	public static function enabled(): bool {
 		return (bool) apply_filters( 'adc_core_customer_account_enabled', true );
@@ -64,6 +70,7 @@ final class CustomerAccount {
 
 	/** Processes the existing account form contract and returns a localized error. */
 	public static function process_request( string $view ): string {
+		self::$verification_required = false;
 		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
 			return '';
 		}
@@ -94,6 +101,10 @@ final class CustomerAccount {
 				is_ssl()
 			);
 			if ( is_wp_error( $user ) ) {
+				if ( 'adc_email_pending' === $user->get_error_code() ) {
+					self::$verification_required = true;
+					return EmailVerification::t( 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول. افتح رسالة التفعيل أو اطلب رابطًا جديدًا.', 'Please verify your email before signing in. Open your activation email or request a new link.' );
+				}
 				return __( 'تعذر تسجيل الدخول. تحقق من بياناتك أو استخدم استعادة كلمة المرور.', 'auto-dealership-core' );
 			}
 		} else {
@@ -101,13 +112,8 @@ final class CustomerAccount {
 			if ( is_wp_error( $result ) ) {
 				return $result->get_error_message();
 			}
-			$user = get_userdata( $result );
-			if ( ! $user ) {
-				return __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' );
-			}
-			wp_set_current_user( $user->ID );
-			wp_set_auth_cookie( $user->ID, false, is_ssl() );
-			do_action( 'wp_login', $user->user_login, $user );
+			wp_safe_redirect( add_query_arg( 'requested', 1, EmailVerification::page_url( 'account' ) ) );
+			exit;
 		}
 
 		wp_safe_redirect( self::account_url() );
@@ -175,9 +181,11 @@ final class CustomerAccount {
 		if ( is_wp_error( $phone ) ) {
 			return self::error( 'adc_account_invalid_phone', __( 'أدخل رقم هاتف صحيحًا بصيغة محلية أو دولية.', 'auto-dealership-core' ) );
 		}
-		if ( email_exists( $email ) || ! get_role( 'car_dealer_customer' ) || ! Schema::is_ready() ) {
+		if ( ! get_role( 'car_dealer_customer' ) || ! Schema::is_ready() ) {
 			return self::error( 'adc_account_unavailable', __( 'تعذر استخدام هذا البريد. جرّب تسجيل الدخول أو استعادة كلمة المرور.', 'auto-dealership-core' ) );
 		}
+		$existing_account = email_exists( $email );
+		if ( $existing_account ) { EmailVerification::request( 'account', $email ); return (int) $existing_account; }
 		foreach ( array( $wpdb->users, $wpdb->usermeta ) as $table ) {
 			if ( 'InnoDB' !== $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $table ) ) ) {
 				return self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب حاليًا.', 'auto-dealership-core' ) );
@@ -189,6 +197,7 @@ final class CustomerAccount {
 		$existing = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM {$wpdb->users} WHERE user_email=%s LIMIT 1 FOR UPDATE", $email ) );
 		if ( $wpdb->last_error || $existing ) {
 			$wpdb->query( 'ROLLBACK' );
+			if ( $existing ) { EmailVerification::request( 'account', $email ); return (int) $existing; }
 			return self::error( 'adc_account_unavailable', __( 'تعذر استخدام هذا البريد. جرّب تسجيل الدخول أو استعادة كلمة المرور.', 'auto-dealership-core' ) );
 		}
 		$user_id = wp_insert_user(
@@ -213,16 +222,16 @@ final class CustomerAccount {
 		$language = \AutoDealership\Core\Localization::language();
 		update_user_meta( $user_id, 'adc_preferred_language', $language );
 		if ( get_user_meta( $user_id, 'adc_preferred_language', true ) !== $language ) { $wpdb->query( 'ROLLBACK' ); clean_user_cache( $user_id ); return self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) ); }
-		$mail_payload = array( 'subject_type' => 'user', 'subject_id' => (int) $user_id, 'locale' => 'en' === $language ? 'en_US' : 'ar' );
-		$mail_event = \AutoDealership\Operations\OutboxService::enqueue( 'customer.welcome', $mail_payload, 'customer-welcome:' . $user_id );
+		update_user_meta( $user_id, 'adc_email_verification_status', 'pending' );
+		$mail_event = get_user_meta( $user_id, 'adc_email_verification_status', true ) === 'pending' ? EmailVerification::issue( 'account', (int) $user_id, $email, $language ) : new \WP_Error( 'adc_verification_storage' );
 		if ( is_wp_error( $mail_event ) ) {
 			$wpdb->query( 'ROLLBACK' ); clean_user_cache( $user_id );
+			if ( 'adc_verification_throttled' === $mail_event->get_error_code() ) { return 0; }
 			return self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) );
 		}
 		$committed = Transaction::commit( static fn() => AuditLog::record( 'customer.account_registered', 'user', $user_id, '', null, array( 'role'=>'car_dealer_customer', 'privacy_consent'=>true ) ) );
 		clean_user_cache( $user_id );
 		if ( $committed ) {
-			\AutoDealership\Leads\NewsletterService::welcome( $mail_payload );
 			\AutoDealership\Leads\NewsletterService::wake();
 		}
 		return $committed ? (int) $user_id : self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) );

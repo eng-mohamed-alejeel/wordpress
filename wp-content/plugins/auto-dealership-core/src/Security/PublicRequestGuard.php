@@ -11,12 +11,14 @@ final class PublicRequestGuard {
 		'intake'      => array( 'limit'=>8, 'window'=>3600 ),
 		'public_read' => array( 'limit'=>120, 'window'=>60 ),
 		'account_auth'=> array( 'limit'=>10, 'window'=>900 ),
+		'email_verification'=> array( 'limit'=>20, 'window'=>900 ),
+		'email_send'=> array( 'limit'=>5, 'window'=>3600 ),
 	);
 
 	public static function table(): string { return Schema::table( 'request_limits' ); }
 
 	/** Returns rate metadata or WP_Error. No raw address is persisted or returned. */
-	public static function consume( string $policy_key ) {
+	public static function consume( string $policy_key, string $subject = '' ) {
 		global $wpdb;
 		if ( ! isset( self::POLICIES[ $policy_key ] ) ) { return self::error( 'adc_rate_policy_invalid', 500 ); }
 		if ( ! Schema::is_ready() ) { return self::error( 'adc_rate_unavailable', 503 ); }
@@ -24,6 +26,7 @@ final class PublicRequestGuard {
 		$now = time();
 		$window_started = intdiv( $now, $policy['window'] ) * $policy['window'];
 		$identity = get_current_user_id() > 0 ? 'user:' . get_current_user_id() : 'address:' . ClientAddress::resolve();
+		if ( '' !== $subject ) { $identity = 'subject:' . $subject; }
 		$bucket_key = hash_hmac( 'sha256', $policy_key . '|' . $window_started . '|' . $identity, wp_salt( 'auth' ) );
 		$expires = $window_started + $policy['window'] + DAY_IN_SECONDS;
 		$inserted = $wpdb->query( $wpdb->prepare(

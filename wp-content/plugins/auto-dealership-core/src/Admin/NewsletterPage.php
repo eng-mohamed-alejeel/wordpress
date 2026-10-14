@@ -61,6 +61,12 @@ final class NewsletterPage {
 			$result=Newsletter::archive( $id, 'restore' === $op ); $notice='archive' === $op ? 'archived' : 'restored';
 		} elseif ( 'delete' === $op ) {
 			$result=Newsletter::delete_draft( $id ); if ( ! is_wp_error( $result ) ) { $id=0; } $notice='deleted';
+		} elseif ( 'resend_confirmation' === $op ) {
+			global $wpdb;
+			$row = $wpdb->get_row( $wpdb->prepare( 'SELECT email,status FROM ' . Newsletter::subscribers() . ' WHERE id=%d', absint( self::field( 'subscriber' ) ) ), ARRAY_A );
+			$rate = \AutoDealership\Security\PublicRequestGuard::consume( 'email_verification' );
+			$result = is_wp_error( $rate ) ? $rate : ( $row && 'pending' === $row['status'] ? \AutoDealership\Accounts\EmailVerification::request( 'newsletter', $row['email'] ) : new \WP_Error( 'adc_subscriber_missing', self::t( 'لا يوجد اشتراك بانتظار التأكيد.', 'No pending subscription was found.' ) ) );
+			$notice = 'confirmation_requested';
 		} elseif ( 'stop_subscriber' === $op ) {
 			global $wpdb;
 			$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . Newsletter::subscribers() . ' WHERE id=%d', absint( self::field( 'subscriber' ) ) ), ARRAY_A );
@@ -113,7 +119,7 @@ final class NewsletterPage {
 		self::campaigns(); self::subscriber_list(); echo '</div>';
 	}
 	private static function notices(): void {
-		$messages = array( 'saved' => self::t( 'تم حفظ مسودة الحملة.', 'Campaign draft saved.' ), 'queued' => self::t( 'بدأت الحملة. تُرسل الرسائل على دفعات للمشتركين النشطين.', 'Campaign started. Emails are sent in batches to active subscribers.' ), 'cancelled' => self::t( 'تم إيقاف الإرسال المتبقي للحملة.', 'Remaining campaign deliveries cancelled.' ), 'retried' => self::t( 'أُعيدت جدولة الرسائل المتعثرة، حتى 100 رسالة.', 'Failed deliveries requeued, up to 100 emails.' ), 'processed' => self::t( 'تمت معالجة دفعة. حدّث الصفحة لمتابعة النتائج.', 'A batch was processed. Refresh to view progress.' ), 'stopped' => self::t( 'تم إيقاف اشتراك البريد المحدد.', 'Subscription stopped.' ) );
+		$messages = array( 'confirmation_requested'=>self::t( 'تم استلام طلب إعادة إرسال التأكيد. تُطبق مهلة دقيقة وحد أقصى خمس رسائل في الساعة لكل اشتراك.', 'Confirmation resend requested. A one-minute cooldown and a limit of five messages per hour per subscription apply.' ), 'saved' => self::t( 'تم حفظ مسودة الحملة.', 'Campaign draft saved.' ), 'queued' => self::t( 'بدأت الحملة. تُرسل الرسائل على دفعات للمشتركين النشطين.', 'Campaign started. Emails are sent in batches to active subscribers.' ), 'cancelled' => self::t( 'تم إيقاف الإرسال المتبقي للحملة.', 'Remaining campaign deliveries cancelled.' ), 'retried' => self::t( 'أُعيدت جدولة الرسائل المتعثرة، حتى 100 رسالة.', 'Failed deliveries requeued, up to 100 emails.' ), 'processed' => self::t( 'تمت معالجة دفعة. حدّث الصفحة لمتابعة النتائج.', 'A batch was processed. Refresh to view progress.' ), 'stopped' => self::t( 'تم إيقاف اشتراك البريد المحدد.', 'Subscription stopped.' ) );
 		$notice = sanitize_key( $_GET['notice'] ?? '' );
 		$messages += array( 'copied'=>self::t( 'تم إنشاء مسودة مستقلة من الحملة. راجع النسختين قبل الإرسال.', 'An independent draft was created. Review both versions before sending.' ), 'archived'=>self::t( 'تمت أرشفة الحملة مع الاحتفاظ بمحتواها ونتائجها.', 'Campaign archived with its content and results retained.' ), 'restored'=>self::t( 'أُعيدت الحملة إلى القائمة الرئيسية.', 'Campaign restored to the main list.' ), 'deleted'=>self::t( 'تم حذف المسودة التي لم تُرسل.', 'Unsent draft deleted.' ) );
 		if ( 'error' === $notice ) { $error = get_transient( 'adc_newsletter_notice_' . get_current_user_id() ); delete_transient( 'adc_newsletter_notice_' . get_current_user_id() ); if ( $error ) { echo '<div class="notice notice-error"><p>' . esc_html( $error ) . '</p></div>'; } }
@@ -208,20 +214,33 @@ final class NewsletterPage {
 		$status = isset( $_GET['subscriber_status'] ) && is_string( $_GET['subscriber_status'] ) ? sanitize_key( $_GET['subscriber_status'] ) : '';
 		$page = max( 1, absint( $_GET['subscriber_page'] ?? 1 ) ); $where = ' WHERE 1=1';
 		if ( $search ) { $where .= $wpdb->prepare( ' AND email LIKE %s', '%' . $wpdb->esc_like( $search ) . '%' ); }
-		if ( in_array( $status, array( 'active', 'unsubscribed' ), true ) ) { $where .= $wpdb->prepare( ' AND status=%s', $status ); }
+		if ( in_array( $status, array( 'active', 'pending', 'unsubscribed' ), true ) ) { $where .= $wpdb->prepare( ' AND status=%s', $status ); }
 		$total = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Newsletter::subscribers() . $where );
-		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . Newsletter::subscribers() . $where . ' ORDER BY id DESC LIMIT 25 OFFSET %d', ( $page - 1 ) * 25 ), ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT s.*,v.created_at verification_requested_at,v.sent_at verification_sent_at,v.expires_at verification_expires_at FROM ' . Newsletter::subscribers() . ' s LEFT JOIN ' . \AutoDealership\Accounts\EmailVerification::table() . " v ON v.purpose='newsletter' AND v.subject_id=s.id" . $where . ' ORDER BY s.id DESC LIMIT 25 OFFSET %d', ( $page - 1 ) * 25 ), ARRAY_A );
 		echo '<section class="card adc-nl-panel"><h2>' . esc_html( self::t( 'إدارة المشتركين', 'Subscriber management' ) ) . '</h2><form method="get" class="adc-nl-filter"><input type="hidden" name="page" value="car-dealer-subscribers"><label class="screen-reader-text" for="adc-nl-search">' . esc_html( self::t( 'البحث بالبريد', 'Search by email' ) ) . '</label><input id="adc-nl-search" name="search" type="search" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr( self::t( 'البحث بعنوان البريد', 'Search email address' ) ) . '"><label class="screen-reader-text" for="adc-nl-status">' . esc_html( self::t( 'حالة الاشتراك', 'Subscription status' ) ) . '</label><select id="adc-nl-status" name="subscriber_status">';
-		foreach ( array( '' => self::t( 'جميع الاشتراكات', 'All subscriptions' ), 'active' => self::t( 'نشط', 'Active' ), 'unsubscribed' => self::t( 'ملغي', 'Unsubscribed' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( $status, $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		foreach ( array( '' => self::t( 'جميع الاشتراكات', 'All subscriptions' ), 'active' => self::t( 'نشط', 'Active' ), 'pending' => self::t( 'بانتظار التأكيد', 'Awaiting confirmation' ), 'unsubscribed' => self::t( 'ملغي', 'Unsubscribed' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( $status, $value, false ) . '>' . esc_html( $label ) . '</option>'; }
 		echo '</select><button class="button">' . esc_html( self::t( 'بحث', 'Search' ) ) . '</button></form><div class="adc-nl-scroll adc-table-scroll"><table class="widefat striped"><thead><tr>';
-		foreach ( array( self::t( 'البريد الإلكتروني', 'Email address' ), self::t( 'لغة البريد المفضلة', 'Preferred email language' ), self::t( 'حالة الاشتراك', 'Status' ), self::t( 'تاريخ الاشتراك', 'Subscribed' ), self::t( 'إجراء', 'Action' ) ) as $label ) { echo '<th>' . esc_html( $label ) . '</th>'; }
+		foreach ( array( self::t( 'البريد الإلكتروني', 'Email address' ), self::t( 'لغة البريد المفضلة', 'Preferred email language' ), self::t( 'حالة الاشتراك', 'Status' ), self::t( 'تاريخ الطلب', 'Requested' ), self::t( 'تأكيد البريد', 'Email confirmation' ), self::t( 'إجراء', 'Action' ) ) as $label ) { echo '<th>' . esc_html( $label ) . '</th>'; }
 		echo '</tr></thead><tbody>';
 		foreach ( $rows ?: array() as $row ) {
-			echo '<tr><td dir="ltr">' . esc_html( $row['email'] ) . '</td><td>' . esc_html( 'en' === Newsletter::language( $row['locale'] ) ? self::t( 'الإنجليزية', 'English' ) : self::t( 'العربية', 'Arabic' ) ) . '</td><td><span class="adc-status adc-nl-badge">' . esc_html( 'active' === $row['status'] ? self::t( 'نشط', 'Active' ) : self::t( 'ملغي', 'Unsubscribed' ) ) . '</span></td><td>' . esc_html( get_date_from_gmt( $row['created_at'], 'Y-m-d H:i' ) ) . '</td><td>';
-			if ( Newsletter::can_manage() && 'active' === $row['status'] ) { self::form_start(); echo '<input type="hidden" name="subscriber" value="' . esc_attr( $row['id'] ) . '"><button class="button" name="operation" value="stop_subscriber">' . esc_html( self::t( 'إيقاف الاشتراك', 'Unsubscribe' ) ) . '</button></form>'; }
+			$labels = array( 'active'=>self::t( 'نشط', 'Active' ), 'pending'=>self::t( 'بانتظار التأكيد', 'Awaiting confirmation' ), 'unsubscribed'=>self::t( 'ملغي', 'Unsubscribed' ) );
+			$confirmation = ! empty( $row['confirmed_at'] ) ? get_date_from_gmt( $row['confirmed_at'], 'Y-m-d H:i' ) : ( 'active' === $row['status'] ? self::t( 'اشتراك سابق دون سجل تأكيد', 'Legacy subscription without confirmation record' ) : self::t( 'غير مؤكد', 'Not confirmed' ) );
+			if ( ! empty( $row['confirmed_at'] ) ) {
+				$source = array( 'verified_account'=>self::t( 'بريد الحساب الموثّق', 'Verified account email' ), 'newsletter_link'=>self::t( 'رابط تأكيد النشرة', 'Newsletter confirmation link' ) );
+				if ( isset( $source[$row['confirmation_source']] ) ) { $confirmation = $source[$row['confirmation_source']] . ' — ' . $confirmation; }
+			}
+			if ( 'pending' === $row['status'] ) {
+				$confirmation = $row['verification_sent_at'] ? self::t( 'قُبلت رسالة التأكيد للإرسال', 'Confirmation email accepted for sending' ) : self::t( 'بانتظار إرسال التأكيد', 'Confirmation email awaiting delivery' );
+				if ( $row['verification_expires_at'] && strtotime( $row['verification_expires_at'] . ' UTC' ) <= time() ) { $confirmation = self::t( 'انتهت صلاحية رابط التأكيد', 'Verification link expired' ); }
+			}
+			echo '<tr><td dir="ltr">' . esc_html( $row['email'] ) . '</td><td>' . esc_html( 'en' === Newsletter::language( $row['locale'] ) ? self::t( 'الإنجليزية', 'English' ) : self::t( 'العربية', 'Arabic' ) ) . '</td><td><span class="adc-status adc-nl-badge">' . esc_html( $labels[$row['status']] ?? $row['status'] ) . '</span></td><td>' . esc_html( get_date_from_gmt( $row['created_at'], 'Y-m-d H:i' ) ) . '</td><td>' . esc_html( $confirmation ) . '</td><td>';
+			if ( Newsletter::can_manage() && in_array( $row['status'], array( 'active', 'pending' ), true ) ) {
+				if ( 'pending' === $row['status'] ) { self::form_start(); echo '<input type="hidden" name="subscriber" value="' . esc_attr( $row['id'] ) . '"><button class="button" name="operation" value="resend_confirmation">' . esc_html( self::t( 'طلب إعادة إرسال التأكيد', 'Request confirmation resend' ) ) . '</button></form>'; }
+				self::form_start(); echo '<input type="hidden" name="subscriber" value="' . esc_attr( $row['id'] ) . '"><button class="button" name="operation" value="stop_subscriber">' . esc_html( self::t( 'إيقاف الاشتراك', 'Unsubscribe' ) ) . '</button></form>';
+			}
 			else { echo '—'; } echo '</td></tr>';
 		}
-		if ( ! $rows ) { echo '<tr><td colspan="5">' . esc_html( self::t( 'لا توجد اشتراكات مطابقة.', 'No matching subscribers.' ) ) . '</td></tr>'; }
+		if ( ! $rows ) { echo '<tr><td colspan="6">' . esc_html( self::t( 'لا توجد اشتراكات مطابقة.', 'No matching subscribers.' ) ) . '</td></tr>'; }
 		echo '</tbody></table></div>'; self::pagination( 'subscriber_page', $page, $total, 25 ); echo '</section>';
 	}
 	private static function delivery_list( int $id ): void {
