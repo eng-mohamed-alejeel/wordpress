@@ -20,7 +20,7 @@ while ( have_posts() ) :
 	$brand_name   = $view['brand_name'];
 	$catalog_language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
 	$catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl';
-	$wa_message   = 'en' === $catalog_language ? sprintf( 'Hello AUTO BRANDS, I would like to ask about %s', get_the_title() ) : sprintf( 'مرحباً أوتو براندز، أريد الاستفسار عن %s', get_the_title() );
+	$wa_message   = sprintf( car_dealer_text( 'مرحباً %1$s، أريد الاستفسار عن %2$s', 'Hello %1$s, I would like to ask about %2$s' ), car_dealer_brand_name(), get_the_title() );
 	?>
 	<section class="ab-car-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div class="container ab-car-hero-grid">

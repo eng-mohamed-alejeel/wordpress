@@ -116,6 +116,7 @@ final class Navigation {
 				array( 'adc-operational-reports', 'التقارير التشغيلية', 'adc_view_reports', OperationalReportPage::class, 'render' ),
 			) ),
 			'settings' => array( 'إعدادات المنصة', 'dashicons-admin-settings', array(
+				array( 'options-general.php?page=adc-platform-setup', \AutoDealership\Core\ProductSetup::t( 'إعداد الهوية والبريد والنشر', 'Identity, email and launch setup' ), 'manage_options' ),
 				array( 'adc-release-evidence', 'Release evidence', 'manage_options', ReleaseEvidencePage::class, 'render' ),
 				array( 'adc-settings', 'سياسات وإعدادات المنصة', 'manage_options', SettingsPage::class, 'render' ),
 				array( 'adc-reference', 'العلامات التجارية والمواقع', 'manage_options', ReferencePage::class, 'render' ),

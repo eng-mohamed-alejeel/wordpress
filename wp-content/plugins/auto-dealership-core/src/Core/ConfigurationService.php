@@ -22,6 +22,13 @@ final class ConfigurationService {
 	);
 	private const DELIVERY_DOCUMENTS = array( 'invoice', 'customer_identity', 'vehicle_registration', 'insurance', 'handover_form', 'finance_clearance' );
 
+	/** Invalidate option values after an outer transaction rolls back option writes. */
+	public static function clear_option_cache(): void {
+		foreach ( self::OPTIONS as $key ) { wp_cache_delete( $key, 'options' ); }
+		wp_cache_delete( 'alloptions', 'options' );
+		wp_cache_delete( 'notoptions', 'options' );
+	}
+
 	/** Merge a section with persisted values before validating the complete policy. */
 	public static function update_section( array $input, array $fields ) {
 		$current = array();

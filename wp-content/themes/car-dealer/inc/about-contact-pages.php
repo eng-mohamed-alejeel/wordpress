@@ -19,6 +19,10 @@ defined( 'ABSPATH' ) || exit;
  */
 function car_dealer_editorial_page_blueprints( $blueprints ) {
 	$blueprints = is_array( $blueprints ) ? $blueprints : array();
+	if ( class_exists( '\AutoDealership\Core\ProductSetup' ) && ! \AutoDealership\Core\ProductSetup::legacy() ) {
+		foreach ( \AutoDealership\Core\ProductSetup::blueprints() as $page ) { $blueprints[$page['slug']] = $page; }
+		return $blueprints;
+	}
 	return array_merge( $blueprints, array(
 		'finance' => array(
 			'title' => 'حاسبة التمويل',
@@ -71,7 +75,7 @@ function car_dealer_shortcode_ab_hero() {
 			<div class="ab-about-hero-text">
 				<p class="eyebrow"><?php echo esc_html__( 'من نحن', 'car-dealer' ); ?></p>
 				<h1><?php echo esc_html( car_dealer_text( 'أوتو براندز للسيارات', 'AUTO BRANDS Automotive' ) ); ?></h1>
-				<p><?php echo esc_html__( 'إحدى شركات ناصر مطر المطيري للسيارات', 'car-dealer' ); ?></p>
+				<?php if ( class_exists( '\AutoDealership\Core\ProductSetup' ) && \AutoDealership\Core\ProductSetup::legacy() ) : ?><p><?php echo esc_html__( 'إحدى شركات ناصر مطر المطيري للسيارات', 'car-dealer' ); ?></p><?php endif; ?>
 				<p class="ab-about-hero-desc"><?php echo esc_html__( 'نقدّم معلومات السيارات المنشورة ووسائل التواصل مع فريق المعرض. تتحدد أي خدمات إضافية وشروطها بحسب الاتفاق المتاح لكل سيارة.', 'car-dealer' ); ?></p>
 				<div class="ab-actions">
 					<?php if ( $catalog_url ) : ?><a href="<?php echo esc_url( $catalog_url ); ?>" class="btn btn-primary btn-lg">
@@ -209,6 +213,7 @@ car_dealer_register_shortcode_adapter( 'ab_values_section', 'car_dealer_shortcod
    Shortcode: [ab_team_section] - الفريق
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_team() {
+	if ( class_exists( '\AutoDealership\Core\ProductSetup' ) && ! \AutoDealership\Core\ProductSetup::legacy() ) { return ''; }
 	$team_members = array(
 		array(
 			'name' => 'الاستاذ/ ناصر مطر المطيري',
@@ -328,9 +333,14 @@ car_dealer_register_shortcode_adapter( 'ab_contact_hero', 'car_dealer_shortcode_
    Shortcode: [ab_contact_grid] - بطاقات التواصل
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_contact_grid() {
+	if ( class_exists( '\AutoDealership\Core\BranchLocations' ) ) {
+		$branches = \AutoDealership\Core\BranchLocations::contact_cards();
+		if ( $branches ) { return $branches; }
+	}
 	$options = car_dealer_theme_options();
 	$items = array();
-	if ( $options['address'] ) { $items[] = array( 'العنوان', esc_html( $options['address'] ) ); }
+	$address = car_dealer_contact_address();
+	if ( $address ) { $items[] = array( 'العنوان', esc_html( $address ) ); }
 	$phone = preg_replace( '/[^0-9+]/', '', (string) $options['phone'] );
 	if ( $phone ) { $items[] = array( 'الهاتف', '<a class="ab-contact-link" href="tel:' . esc_attr( $phone ) . '">' . esc_html( $options['phone'] ) . '</a>' ); }
 	if ( is_email( $options['email'] ) ) { $items[] = array( 'البريد الإلكتروني', '<a class="ab-contact-link" href="mailto:' . esc_attr( $options['email'] ) . '">' . esc_html( $options['email'] ) . '</a>' ); }
@@ -347,7 +357,7 @@ car_dealer_register_shortcode_adapter( 'ab_contact_grid', 'car_dealer_shortcode_
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_contact_map() {
 	$options = car_dealer_theme_options();
-	$address = trim( (string) $options['address'] );
+	$address = car_dealer_contact_address();
 	if ( '' === $address ) { return ''; }
 	$url = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode( $address );
 	return '<section class="ab-contact-map-section ab-section"><div class="container"><div class="section-heading section-heading-center"><h2>' . esc_html__( 'الموقع', 'car-dealer' ) . '</h2></div><p>' . esc_html( $address ) . '</p><p><a class="btn btn-outline" href="' . esc_url( $url ) . '" target="_blank" rel="noopener">' . esc_html__( 'عرض الموقع على الخريطة', 'car-dealer' ) . '</a></p></div></section>';

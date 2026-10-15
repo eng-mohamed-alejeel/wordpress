@@ -181,7 +181,7 @@ final class NewsletterService {
 			$ar = 'ar' === $language;
 			$brand = wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
 			$title = $ar ? 'مرحبًا بك في ' . $brand : 'Welcome to ' . $brand;
-			$body = '<p>' . esc_html( $ar ? 'مرحبًا ' . $user->display_name . '،' : 'Hello ' . $user->display_name . ',' ) . '</p><p>' . esc_html( $ar ? 'تم إنشاء حسابك بنجاح. يسعدنا انضمامك إلى أوتو براندز، ونتطلع لمساعدتك في العثور على سيارتك المناسبة.' : 'Your account has been created successfully. We look forward to helping you find your next car.' ) . '</p><p>' . esc_html( $ar ? 'يمكنك الآن الدخول إلى حسابك ومتابعة طلباتك وتحديث بياناتك في أي وقت.' : 'You can now access your account, follow your requests and update your profile.' ) . '</p>';
+			$body = '<p>' . esc_html( $ar ? 'مرحبًا ' . $user->display_name . '،' : 'Hello ' . $user->display_name . ',' ) . '</p><p>' . esc_html( $ar ? \AutoDealership\Core\ProductSetup::copy( 'تم إنشاء حسابك بنجاح. يسعدنا انضمامك إلى أوتو براندز، ونتطلع لمساعدتك في العثور على سيارتك المناسبة.', $ar ? 'ar' : 'en' ) : 'Your account has been created successfully. We look forward to helping you find your next car.' ) . '</p><p>' . esc_html( $ar ? 'يمكنك الآن الدخول إلى حسابك ومتابعة طلباتك وتحديث بياناتك في أي وقت.' : 'You can now access your account, follow your requests and update your profile.' ) . '</p>';
 			$url = apply_filters( 'adc_customer_account_url', add_query_arg( 'cd_account', 'dashboard', home_url( '/' ) ), '' );
 			$url = \AutoDealership\Inventory\CatalogPresentation::localized_url( $url, $language );
 			$html = BrandedMail::render( $title, $body, $ar ? 'الدخول إلى حسابي' : 'My account', $url, esc_html( $ar ? 'لا نطلب كلمة مرورك عبر البريد. احتفظ ببيانات الدخول الخاصة بك بأمان.' : 'We never ask for your password by email. Keep your login details safe.' ), $language );
@@ -198,8 +198,8 @@ final class NewsletterService {
 			if ( $wpdb->last_error ) { return self::error( 'adc_subscription_read' ); }
 			if ( ! $row || 'active' !== $row['status'] || $row['consent_key'] !== ( $payload['correlation_id'] ?? '' ) || $row['welcome_sent_at'] ) { return true; }
 			$ar = 'ar' === self::language( $row['locale'] ); $locale = $ar ? 'ar' : 'en_US';
-			$title = $ar ? 'أهلًا بك في نشرة أوتو براندز' : 'Welcome to the AutoBrands newsletter';
-			$body = '<p>' . esc_html( $ar ? 'تم اشتراكك بنجاح، ويسعدنا أن تكون معنا.' : 'You are subscribed. We are glad to have you with us.' ) . '</p><p>' . esc_html( $ar ? 'ستصلك أحدث أخبار السيارات والعروض المختارة من أوتو براندز. يمكنك إلغاء الاشتراك في أي وقت من الرابط أسفل الرسالة.' : 'Look out for our latest car news and selected offers. You can unsubscribe at any time using the link below.' ) . '</p>';
+			$title = $ar ? \AutoDealership\Core\ProductSetup::copy( 'أهلًا بك في نشرة أوتو براندز', $ar ? 'ar' : 'en' ) : \AutoDealership\Core\ProductSetup::copy( 'Welcome to the AutoBrands newsletter', $ar ? 'ar' : 'en' );
+			$body = '<p>' . esc_html( $ar ? 'تم اشتراكك بنجاح، ويسعدنا أن تكون معنا.' : 'You are subscribed. We are glad to have you with us.' ) . '</p><p>' . esc_html( $ar ? \AutoDealership\Core\ProductSetup::copy( 'ستصلك أحدث أخبار السيارات والعروض المختارة من أوتو براندز. يمكنك إلغاء الاشتراك في أي وقت من الرابط أسفل الرسالة.', $ar ? 'ar' : 'en' ) : 'Look out for our latest car news and selected offers. You can unsubscribe at any time using the link below.' ) . '</p>';
 			$url = self::unsubscribe_url( $row );
 			$html = BrandedMail::render( $title, $body, $ar ? 'استكشف السيارات' : 'Explore cars', \AutoDealership\Inventory\CatalogPresentation::localized_url( home_url( '/' ), $ar ? 'ar' : 'en' ), self::footer( $url, $locale ), $locale );
 			if ( ! BrandedMail::send( $row['email'], $title, $html, self::unsubscribe_headers( $url ) ) ) { return self::error( 'adc_subscription_mail' ); }
@@ -214,7 +214,7 @@ final class NewsletterService {
 	private static function unsubscribe_headers( string $url ): array { return array( 'List-Unsubscribe: <' . $url . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click' ); }
 	private static function footer( string $url, string $locale ): string {
 		$ar = str_starts_with( $locale, 'ar' );
-		return '<p>' . esc_html( $ar ? 'تستلم هذه الرسالة لأنك اشتركت في نشرة أوتو براندز.' : 'You received this email because you subscribed to AutoBrands.' ) . '</p><a href="' . esc_url( $url ) . '" style="color:#2563EB">' . esc_html( $ar ? 'إلغاء الاشتراك' : 'Unsubscribe' ) . '</a>';
+		return '<p>' . esc_html( $ar ? \AutoDealership\Core\ProductSetup::copy( 'تستلم هذه الرسالة لأنك اشتركت في نشرة أوتو براندز.', $ar ? 'ar' : 'en' ) : \AutoDealership\Core\ProductSetup::copy( 'You received this email because you subscribed to AutoBrands.', $ar ? 'ar' : 'en' ) ) . '</p><a href="' . esc_url( $url ) . '" style="color:#2563EB">' . esc_html( $ar ? 'إلغاء الاشتراك' : 'Unsubscribe' ) . '</a>';
 	}
 
 	public static function unsubscribe( int $id, string $token ) {
@@ -318,6 +318,10 @@ final class NewsletterService {
 	}
 
 	public static function queue( int $id ) {
+		if ( function_exists( 'adc_product_mail_config' ) ) {
+			$config = adc_product_mail_config();
+			if ( empty( $config['valid'] ) && ! ( 'mailpit' === $config['mode'] && ! empty( $config['local'] ) ) ) { return new \WP_Error( 'adc_mail_configuration', self::t( 'أكمل إعداد البريد قبل إرسال الحملات.', 'Configure email before sending campaigns.' ) ); }
+		}
 		if ( ! self::can_manage() ) { return self::error( 'adc_newsletter_forbidden' ); }
 		global $wpdb;
 		if ( ! Transaction::begin() ) { return self::error( 'adc_newsletter_storage' ); }

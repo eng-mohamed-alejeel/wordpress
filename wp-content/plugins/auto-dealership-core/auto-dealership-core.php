@@ -2,17 +2,28 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.39.1
- * Requires at least: 6.4
+ * Version: 1.40.20
+ * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
  */
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.39.1' );
+define( 'ADC_VERSION', '1.40.20' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
+
+require_once ADC_PATH . 'src/Core/ProductSetup.php';
+require_once ADC_PATH . 'src/Core/BranchLocations.php';
+\AutoDealership\Core\BranchLocations::boot();
+require_once ADC_PATH . 'src/Core/AboutPage.php';
+\AutoDealership\Core\AboutPage::boot();
+require_once ADC_PATH . 'src/Core/UpdateCompatibility.php';
+\AutoDealership\Core\UpdateCompatibility::boot();
+require_once ADC_PATH . 'src/Mail/Transport.php';
+require_once ADC_PATH . 'src/Mail/PasswordReset.php';
+\AutoDealership\Core\ProductSetup::boot();
 
 require_once ADC_PATH . 'src/Core/Capabilities.php';
 require_once ADC_PATH . 'src/Core/Localization.php';
@@ -34,6 +45,8 @@ require_once ADC_PATH . 'src/Accounts/CustomerRequestView.php';
 require_once ADC_PATH . 'src/Content/ContentRegistry.php';
 require_once ADC_PATH . 'src/Content/EditorialPageSetup.php';
 require_once ADC_PATH . 'src/Content/PublicShortcodes.php';
+require_once ADC_PATH . 'src/Content/ComponentEditor.php';
+\AutoDealership\Content\ComponentEditor::boot();
 require_once ADC_PATH . 'src/Content/PublicEditorialTranslations.php';
 require_once ADC_PATH . 'src/Content/StoredTranslations.php';
 require_once ADC_PATH . 'src/Content/TermTranslations.php';

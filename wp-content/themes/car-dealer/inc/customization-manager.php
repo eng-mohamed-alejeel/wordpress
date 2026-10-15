@@ -34,6 +34,7 @@ function car_dealer_customize_theme_settings( $manager ) {
 		'phone' => array( 'الهاتف', 'text', 'sanitize_text_field' ),
 		'email' => array( 'البريد', 'email', 'sanitize_email' ),
 		'address' => array( 'العنوان', 'textarea', 'sanitize_textarea_field' ),
+		'address_en' => array( 'العنوان بالإنجليزية', 'textarea', 'sanitize_textarea_field' ),
 		'facebook' => array( 'فيسبوك', 'url', 'esc_url_raw' ),
 		'instagram' => array( 'إنستغرام', 'url', 'esc_url_raw' ),
 		'whatsapp' => array( 'واتساب', 'text', 'sanitize_text_field' ),
@@ -81,14 +82,23 @@ function car_dealer_sanitize_theme_settings( $input ) {
 		'phone' => sanitize_text_field( $input['phone'] ?? '' ),
 		'email' => sanitize_email( $input['email'] ?? '' ),
 		'address' => sanitize_textarea_field( $input['address'] ?? '' ),
+		'address_en' => sanitize_textarea_field( $input['address_en'] ?? '' ),
 		'facebook' => esc_url_raw( $input['facebook'] ?? '' ),
 		'instagram' => esc_url_raw( $input['instagram'] ?? '' ),
 		'whatsapp' => sanitize_text_field( $input['whatsapp'] ?? '' ),
 	);
 }
 
+/** Public address selection never changes the raw values used by admin forms. */
+function car_dealer_contact_address() {
+	if ( class_exists( '\AutoDealership\Core\ProductSetup' ) ) { return \AutoDealership\Core\ProductSetup::contact_address( car_dealer_catalog_language() ); }
+	$options = car_dealer_theme_options();
+	$address = (string) $options['address'];
+	return 'en' === car_dealer_catalog_language() ? ( trim( (string) $options['address_en'] ) ?: ( preg_match( '/\p{Arabic}/u', $address ) ? '' : $address ) ) : $address;
+}
+
 function car_dealer_theme_options() {
-	$defaults = array( 'primary_color' => '#0E2A4A', 'accent_color' => '#2563EB', 'phone' => '', 'email' => '', 'address' => '', 'facebook' => '', 'instagram' => '', 'whatsapp' => '' );
+	$defaults = array( 'primary_color' => '#0E2A4A', 'accent_color' => '#2563EB', 'phone' => '', 'email' => '', 'address' => '', 'address_en' => '', 'facebook' => '', 'instagram' => '', 'whatsapp' => '' );
 	$defaults['description_en'] = 'Explore available vehicles and contact our team.';
 	return wp_parse_args( get_option( 'car_dealer_theme_settings', array() ), $defaults );
 }

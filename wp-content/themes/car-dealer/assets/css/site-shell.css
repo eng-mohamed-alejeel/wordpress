@@ -1,5 +1,13 @@
 /* Responsive header: keep dropdown below the complete header, including search. */
 .site-header { box-shadow: 0 3px 18px color-mix(in srgb, var(--ab-brand-navy) 5%, transparent); }
+/* WordPress keeps its toolbar fixed above 600px; leave room when the header sticks. */
+body.admin-bar .site-header { top: 32px; }
+@media screen and (max-width: 782px) {
+  body.admin-bar .site-header { top: 46px; }
+}
+@media screen and (max-width: 600px) {
+  body.admin-bar .site-header { top: 0; }
+}
 .header-content { display: flex; flex-wrap: nowrap; gap: clamp(.75rem, 1.5vw, 1.25rem); padding-block: .75rem; }
 @media (min-width: 1121px) {
   .site-header .header-content { max-width: 1600px; padding-inline: 1.25rem; gap: .75rem; }

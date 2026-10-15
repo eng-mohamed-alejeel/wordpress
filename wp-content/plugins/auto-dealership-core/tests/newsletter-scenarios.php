@@ -64,7 +64,7 @@ $check( ! is_wp_error( EmailVerification::confirm( $verification_token( end( $ca
 $before = count( $captured );
 $check( $subscribe( 'first@example.invalid' )['success'] && count( $captured ) === $before, 'Repeated active subscription does not duplicate welcome' );
 $check( $subscribe( 'second@example.invalid', 'en' )['success'], 'English subscription accepted' );
-$check( str_contains( end( $captured )['message'], 'Welcome to the AutoBrands newsletter' ), 'Subscription welcome uses requested English language' );
+$check( str_contains( end( $captured )['message'], 'Welcome to the ' . \AutoDealership\Core\ProductSetup::brand( 'en' ) . ' newsletter' ), 'Subscription welcome uses requested English language' );
 $first = $wpdb->get_row( "SELECT * FROM " . Newsletter::subscribers() . " WHERE email='first@example.invalid'", ARRAY_A );
 parse_str( wp_parse_url( Newsletter::unsubscribe_url( $first ), PHP_URL_QUERY ), $unsubscribe );
 $check( is_wp_error( Newsletter::unsubscribe( (int) $first['id'], 'invalid' ) ), 'Forged unsubscribe token rejected' );
@@ -196,7 +196,7 @@ $account_preferences = AutoDealership\Leads\CustomerIdentity::update_preferences
 OutboxService::process_due( 100, array( 'email.verify', 'newsletter.subscription' ) );
 $account_subscription = $wpdb->get_row( "SELECT * FROM " . Newsletter::subscribers() . " WHERE email='welcome@example.invalid'", ARRAY_A );
 $check( ! is_wp_error( $account_preferences ) && $account_subscription && 'active' === $account_subscription['status'] && 'en' === $account_subscription['locale'] && 'verified_account' === $account_subscription['confirmation_source'], 'Verified account opt-in creates an active subscriber without footer confirmation' );
-$check( count( $captured ) === $account_mail_count + 1 && str_contains( end( $captured )['message'], 'Welcome to the AutoBrands newsletter' ), 'Verified account opt-in sends the localized welcome instead of a confirmation' );
+$check( count( $captured ) === $account_mail_count + 1 && str_contains( end( $captured )['message'], 'Welcome to the ' . \AutoDealership\Core\ProductSetup::brand( 'en' ) . ' newsletter' ), 'Verified account opt-in sends the localized welcome instead of a confirmation' );
 AutoDealership\Leads\CustomerIdentity::update_preferences( true, 'en' );
 $check( count( $captured ) === $account_mail_count + 1 && 1 === (int) $wpdb->get_var( "SELECT COUNT(*) FROM " . Newsletter::subscribers() . " WHERE email='welcome@example.invalid'" ), 'Repeated account opt-in neither duplicates the subscriber nor sends another welcome' );
 $check( 0 === (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . EmailVerification::table() . " WHERE purpose='newsletter' AND subject_id=%d", $account_subscription['id'] ) ), 'Verified account opt-in creates no newsletter challenge' );

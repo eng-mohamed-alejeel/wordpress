@@ -65,7 +65,7 @@ final class OnyxImportService {
 	}
 	/** Backfill existing inventory without reapplying a historical workbook. */
 	public static function complete_model_drafts(){
-		global $wpdb;if(!current_user_can('manage_options')){return self::error('forbidden',403);}if(!OnyxModelDrafts::transactional_tables()){return self::error('transactional_tables',500);}
+		global $wpdb;if(!current_user_can('manage_options')){return self::error('forbidden',403);}if(!OnyxModelDrafts::ensure_transactional_tables()){return self::error('transactional_tables',500);}
 		add_option('adc_onyx_revision',0,'',false);if(!Transaction::begin()){return self::error('database',500);}
 		$revision=(int)$wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name=%s FOR UPDATE",'adc_onyx_revision'));$touched=array();
 		if(!OnyxCatalogConfigurations::split($touched)){return self::rollback('configuration_split',500,$touched);}$drafts=OnyxModelDrafts::create($touched);if(is_wp_error($drafts)){$wpdb->query('ROLLBACK');OnyxModelDrafts::clear_caches($touched);return $drafts;}
@@ -75,7 +75,7 @@ final class OnyxImportService {
 		wp_cache_delete('adc_onyx_revision','options');return $drafts;
 	}
 	public static function apply(int $id){
-		global $wpdb;if(!current_user_can('manage_options')){return self::error('forbidden',403);}if(!OnyxModelDrafts::transactional_tables()){return self::error('transactional_tables',500);}add_option('adc_onyx_revision',0,'',false);if(!Transaction::begin()){return self::error('database',500);}
+		global $wpdb;if(!current_user_can('manage_options')){return self::error('forbidden',403);}if(!OnyxModelDrafts::ensure_transactional_tables()){return self::error('transactional_tables',500);}add_option('adc_onyx_revision',0,'',false);if(!Transaction::begin()){return self::error('database',500);}
 		$revision=(int)$wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name=%s FOR UPDATE",'adc_onyx_revision'));
 		$table=Schema::table('onyx_imports');$batch=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d FOR UPDATE",$id),ARRAY_A);
 		if(!$batch||(int)$batch['actor_user_id']!==get_current_user_id()){return self::rollback('missing',404);}if('applied'===$batch['status']){$wpdb->query('ROLLBACK');return array('id'=>$id,'replayed'=>true);}

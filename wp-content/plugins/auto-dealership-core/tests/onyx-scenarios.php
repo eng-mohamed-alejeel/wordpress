@@ -8,6 +8,34 @@ global $wpdb;$admin=(int)get_user_by('login','verify_admin')->ID;wp_set_current_
 \AutoDealership\Content\ContentRegistry::register();
 \AutoDealership\Inventory\PublicCatalog::boot();
 $check=static function(bool $ok,string $message)use(&$checks):void{if(!$ok){throw new RuntimeException($message);}++$checks;echo "PASS $message\n";};
+$deny_metadata = static fn(string $sql): string => str_contains(strtolower($sql), 'information_schema') ? 'SELECT * FROM adc_test_forbidden_metadata' : $sql;
+add_filter('query', $deny_metadata);
+$check(\AutoDealership\Inventory\OnyxModelDrafts::transactional_tables(), 'Onyx verifies InnoDB without information_schema access');
+remove_filter('query', $deny_metadata);
+$wpdb->query("ALTER TABLE {$wpdb->termmeta} ENGINE=MyISAM");
+try {
+	$issues = \AutoDealership\Inventory\OnyxModelDrafts::storage_issues();
+	$check(isset($issues[$wpdb->termmeta]) && 'MyISAM' === $issues[$wpdb->termmeta] && !\AutoDealership\Inventory\OnyxModelDrafts::transactional_tables(), 'A real nontransactional WordPress table still blocks import with an exact diagnosis');
+} finally { $wpdb->query("ALTER TABLE {$wpdb->termmeta} ENGINE=InnoDB"); }
+$storage_tables = array($wpdb->posts,$wpdb->postmeta,$wpdb->terms,$wpdb->term_taxonomy,$wpdb->term_relationships,$wpdb->termmeta,$wpdb->options);
+$snapshot_storage = static function() use ($wpdb, $storage_tables): array {
+	$data = array(); foreach ($storage_tables as $table) { $rows = array_map('wp_json_encode', $wpdb->get_results("SELECT * FROM `$table`", ARRAY_A)); sort($rows); $data[$table] = hash('sha256', implode("\n", $rows)); } return $data;
+};
+$wpdb->insert($wpdb->termmeta, array('term_id'=>0, 'meta_key'=>'adc_engine_fixture', 'meta_value'=>'Preserve exact data 002902'));
+$storage_before = $snapshot_storage();
+foreach ($storage_tables as $table) { $wpdb->query("ALTER TABLE `$table` ENGINE=MyISAM"); }
+wp_set_current_user(0);
+$check(!\AutoDealership\Inventory\OnyxModelDrafts::ensure_transactional_tables() && count(\AutoDealership\Inventory\OnyxModelDrafts::storage_issues()) === 7, 'Anonymous callers cannot convert database tables');
+wp_set_current_user($admin);
+$deny_alter = static fn(string $sql): string => str_starts_with($sql, 'ALTER TABLE') ? 'ALTER TABLE adc_missing_storage_fixture ENGINE=InnoDB' : $sql;
+add_filter('query', $deny_alter);
+$check(!\AutoDealership\Inventory\OnyxModelDrafts::ensure_transactional_tables(), 'Hosting denial of ALTER TABLE keeps unsafe import blocked');
+remove_filter('query', $deny_alter);
+try {
+	$check(\AutoDealership\Inventory\OnyxModelDrafts::ensure_transactional_tables() && !\AutoDealership\Inventory\OnyxModelDrafts::storage_issues(), 'All seven MyISAM tables convert automatically to InnoDB');
+	$check($storage_before === $snapshot_storage(), 'Automatic engine conversion preserves every existing row and field');
+	$check(\AutoDealership\Inventory\OnyxModelDrafts::ensure_transactional_tables() && $storage_before === $snapshot_storage(), 'Repeated storage preparation is idempotent');
+} finally { foreach ($storage_tables as $table) { $wpdb->query("ALTER TABLE `$table` ENGINE=InnoDB"); } }
 $file=ABSPATH.'docs/مخزون جديد بتاريخ 6-10-2026.xlsx';$parsed=O::parse($file);
 $check(count($parsed['rows'])===523&&!$parsed['errors'],'Actual Onyx export validates all 523 rows');
 $configuration_count=count(array_unique(array_map(static fn($row)=>O::model_key($row['brand'],$row['model'],$row['trim_name'],(int)$row['model_year']),$parsed['rows'])));

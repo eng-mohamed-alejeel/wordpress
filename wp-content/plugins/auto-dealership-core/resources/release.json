@@ -1,0 +1,14 @@
+{
+  "format": 1,
+  "product": "auto-dealership",
+  "component": "plugin",
+  "version": "1.40.20",
+  "contract": 1,
+  "requires_php": "8.0",
+  "requires_wp": "6.7",
+  "partner_min": "1.39.1",
+  "partner_before": "2.0.0",
+  "schema_min": "1.0.0",
+  "schema_max": "1.22.0",
+  "schema_target": "1.22.0"
+}

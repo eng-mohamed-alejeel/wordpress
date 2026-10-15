@@ -32,6 +32,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	unset( $connection );
 	define( 'WP_INSTALLING', true );
 	define( 'WP_ENVIRONMENT_TYPE', 'local' );
+	define( 'ADC_MAIL_MODE', 'mailpit' ); // Synthetic mail is short-circuited by scenario filters.
 	define( 'WP_HTTP_BLOCK_EXTERNAL', true );
 	define( 'DISABLE_WP_CRON', true );
 	define( 'WP_DEBUG', false );
@@ -104,6 +105,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
 	require __DIR__.'/onyx-document-fixture.php';
+	if ( '1' === getenv( 'ADC_PRODUCT_ONLY' ) ) { require __DIR__ . '/product-setup-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_NEWSLETTER_ONLY' ) ) { require __DIR__ . '/newsletter-scenarios.php'; exit; }
 	if('1'===getenv('ADC_LAUNCH_ONLY')){require __DIR__.'/launch-readiness-scenarios.php';exit;}
 	if ( '1' === getenv( 'ADC_DASHBOARD_ONLY' ) ) { require __DIR__ . '/dashboard-queue-scenarios.php'; exit; }

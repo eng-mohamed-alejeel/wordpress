@@ -14,7 +14,8 @@ function car_dealer_ui_gettext( string $translation, string $text, string $domai
 	if ( null === $catalog ) {
 		$catalog = require __DIR__ . '/../languages/ui.php';
 	}
-	return $catalog[ car_dealer_ui_language() ][$text] ?? $translation;
+	$value = $catalog[ car_dealer_ui_language() ][$text] ?? $translation;
+	return class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::copy( $value, car_dealer_ui_language() ) : $value;
 }
 add_filter( 'gettext_car-dealer', 'car_dealer_ui_gettext', 20, 3 );
 

@@ -107,7 +107,7 @@ $wpdb->update( VerificationNewsletter::subscribers(), array( 'locale'=>'en' ), a
 $wpdb->query( 'UPDATE ' . \AutoDealership\Operations\OutboxService::table() . " SET next_attempt_at='2000-01-01 00:00:00' WHERE event_key='email.verify' AND status='retry'" );
 \AutoDealership\Operations\OutboxService::process_due( 100, array( 'email.verify' ) );
 $check( $wpdb->get_var( $wpdb->prepare( 'SELECT sent_at FROM ' . Verification::table() . ' WHERE id=%d', $failed_challenge['id'] ) ) && 'pending' === $wpdb->get_var( $wpdb->prepare( 'SELECT status FROM ' . VerificationNewsletter::subscribers() . ' WHERE id=%d', $failed_row['id'] ) ), 'Mail worker recovers confirmation delivery without activating the address' );
-$check( str_contains( end( $captured )['subject'], 'Confirm your AutoBrands newsletter' ), 'Retried verification mail follows the latest saved language preference' );
+$check( str_contains( end( $captured )['subject'], 'Confirm your ' . \AutoDealership\Core\ProductSetup::brand( 'en' ) . ' newsletter' ), 'Retried verification mail follows the latest saved language preference' );
 $erased_token = $verification_token( end( $captured ) );
 $erased = \AutoDealership\Privacy\PrivacyTools::erase( 'mail-failure-security@example.invalid' );
 $check( $erased['items_removed'] && ! $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Verification::table() . ' WHERE id=%d', $failed_challenge['id'] ) ) && is_wp_error( Verification::confirm( $erased_token ) ), 'Privacy erasure removes pending challenges and invalidates their proofs' );

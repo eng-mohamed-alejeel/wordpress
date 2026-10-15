@@ -7,11 +7,42 @@ defined('ABSPATH') || exit;
 final class OnyxModelDrafts {
 	private static array $terms=array();
 	public static function transactional_tables(): bool {
+		return ! self::storage_issues();
+	}
+	/** Must run before starting any import transaction: ALTER TABLE commits implicitly. */
+	public static function ensure_transactional_tables(): bool {
 		global $wpdb;
-		foreach (array($wpdb->posts,$wpdb->postmeta,$wpdb->terms,$wpdb->term_taxonomy,$wpdb->term_relationships,$wpdb->termmeta,$wpdb->options) as $table) {
-			if ('InnoDB' !== $wpdb->get_var($wpdb->prepare('SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s',$table))) { return false; }
+		if (!current_user_can('manage_options') || !Schema::is_ready()) { return false; }
+		$issues = self::storage_issues();
+		if (!$issues) { return true; }
+		// Never guess missing tables or silently convert an unknown storage engine.
+		foreach ($issues as $table => $engine) {
+			if (!preg_match('/\A[a-zA-Z0-9_]+\z/', $table) || !in_array(strtolower($engine), array('myisam', 'aria'), true)) { return false; }
 		}
-		return true;
+		$lock = 'adc_onyx_storage_' . md5(DB_NAME . $wpdb->prefix);
+		if ('1' !== (string) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 0)', $lock))) { return false; }
+		try {
+			// Recheck after acquiring the lock; another admin may have finished already.
+			foreach (self::storage_issues() as $table => $engine) {
+				if (!preg_match('/\A[a-zA-Z0-9_]+\z/', $table) || !in_array(strtolower($engine), array('myisam', 'aria'), true)) { return false; }
+				$previous = $wpdb->suppress_errors(true);
+				try { $converted = $wpdb->query("ALTER TABLE `$table` ENGINE=InnoDB"); }
+				finally { $wpdb->suppress_errors($previous); }
+				if (false === $converted) { return false; }
+			}
+			return self::transactional_tables();
+		} finally { $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock)); }
+	}
+	/** Use the site's database metadata, without relying on information_schema access. */
+	public static function storage_issues(): array {
+		global $wpdb;
+		$issues = array();
+		foreach (array($wpdb->posts,$wpdb->postmeta,$wpdb->terms,$wpdb->term_taxonomy,$wpdb->term_relationships,$wpdb->termmeta,$wpdb->options) as $table) {
+			$status = $wpdb->get_row($wpdb->prepare('SHOW TABLE STATUS LIKE %s', $wpdb->esc_like($table)), ARRAY_A);
+			if ($wpdb->last_error || !$status || $status['Name'] !== $table) { $issues[$table] = 'unknown'; continue; }
+			if ('innodb' !== strtolower((string) $status['Engine'])) { $issues[$table] = (string) $status['Engine']; }
+		}
+		return $issues;
 	}
 	public static function create(array &$touched) {
 		global $wpdb;

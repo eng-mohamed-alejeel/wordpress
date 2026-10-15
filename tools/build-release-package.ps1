@@ -13,6 +13,7 @@ $runtimePaths = @(
     'wp-content/plugins/auto-dealership-core/readme.txt',
     'wp-content/plugins/auto-dealership-core/languages',
     'wp-content/plugins/auto-dealership-core/src',
+    'wp-content/plugins/auto-dealership-core/resources',
     'wp-content/themes/car-dealer/assets',
     'wp-content/themes/car-dealer/inc',
     'wp-content/themes/car-dealer/languages',
@@ -120,7 +121,7 @@ try {
     foreach ($entry in $archive.Entries) {
         $path = $entry.FullName
         if ($path.EndsWith('/')) { continue }
-        if (($path -notmatch '^wp-content/(plugins/auto-dealership-core|themes/car-dealer)/' -and $path -ne 'wp-content/mu-plugins/autobrands-typography.php') -or
+        if (($path -notmatch '^wp-content/(plugins/auto-dealership-core|themes/car-dealer)/' -and $path -notin @('wp-content/mu-plugins/autobrands-typography.php','wp-content/mu-plugins/autobrands-mail.php','wp-content/mu-plugins/autobrands-password-email.php')) -or
             $path -match '(^|/)\.\.(/|$)' -or $path -match '(^|/)wp-config\.php$' -or
             $path -match '^wp-content/plugins/auto-dealership-core/tests/' -or
             $path -in @('wp-content/themes/car-dealer/build-css.js', 'wp-content/themes/car-dealer/merge-css.ps1') -or

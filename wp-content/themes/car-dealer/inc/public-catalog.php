@@ -18,11 +18,14 @@ function car_dealer_catalog_is_request(): bool {
 }
 
 function car_dealer_text( string $arabic, string $english ): string {
-	return 'en' === car_dealer_catalog_language() ? $english : $arabic;
+	$lang = car_dealer_catalog_language();
+	$text = 'en' === $lang ? $english : $arabic;
+	return class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::copy( $text, $lang ) : $text;
 }
 
 /** Keep the public brand name consistent with the selected site language. */
 function car_dealer_brand_name(): string {
+	if ( class_exists( '\AutoDealership\Core\ProductSetup' ) ) { return \AutoDealership\Core\ProductSetup::brand( car_dealer_catalog_language() ); }
 	return car_dealer_text( 'أوتو براندز', 'AUTO BRANDS' );
 }
 

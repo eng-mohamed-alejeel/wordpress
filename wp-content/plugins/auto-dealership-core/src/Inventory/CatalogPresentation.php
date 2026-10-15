@@ -51,6 +51,7 @@ final class CatalogPresentation {
 	public static function language(): string {
 		$source = wp_doing_ajax() ? $_REQUEST : $_GET;
 		$value = isset( $source['lang'] ) && is_scalar( $source['lang'] ) ? sanitize_key( wp_unslash( (string) $source['lang'] ) ) : '';
+		if ( '' === $value && class_exists( '\AutoDealership\Core\ProductSetup' ) ) { $value = \AutoDealership\Core\ProductSetup::profile()['language'] ?? 'ar'; }
 		return 'en' === $value ? 'en' : 'ar';
 	}
 
@@ -63,7 +64,8 @@ final class CatalogPresentation {
 
 	public static function localized_url( string $url, string $language = '' ): string {
 		$language = in_array( $language, array( 'ar', 'en' ), true ) ? $language : self::language();
-		return 'en' === $language ? add_query_arg( 'lang', 'en', $url ) : remove_query_arg( 'lang', $url );
+		$default = class_exists( '\AutoDealership\Core\ProductSetup' ) ? ( \AutoDealership\Core\ProductSetup::profile()['language'] ?? 'ar' ) : 'ar';
+		return 'en' === $language || 'en' === $default ? add_query_arg( 'lang', $language, $url ) : remove_query_arg( 'lang', $url );
 	}
 
 	/** Switch language on the current public view without carrying arbitrary request values. */

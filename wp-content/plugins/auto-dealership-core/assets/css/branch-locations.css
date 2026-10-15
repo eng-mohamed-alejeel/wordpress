@@ -1,0 +1,30 @@
+.adc-branch-directory{margin-block:clamp(2.5rem,6vw,5rem);text-align:start}
+.adc-contact-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(1.25rem,4vw,3rem);align-items:start;margin-block:2.5rem 1.5rem;text-align:start}
+.adc-contact-intro h2{font-size:clamp(1.6rem,3vw,2.1rem);margin:0 0 1rem}
+.adc-contact-intro p{line-height:1.9;margin:0}
+.adc-contact-guidance{padding:clamp(1.1rem,3vw,1.5rem);border:1px solid var(--cd-color-line,#d9e0ea);border-inline-start:3px solid var(--ab-link,#2563eb);border-radius:1rem;background:var(--cd-color-surface,#fff)}
+.adc-contact-guidance h3{font-size:1.1rem;margin:0 0 .75rem}
+.adc-contact-guidance ul{margin:0;padding-inline-start:1.3rem;line-height:1.85}
+.adc-contact-guidance li+li{margin-block-start:.6rem}
+@media(max-width:700px){.adc-contact-intro{grid-template-columns:1fr}}
+.adc-contact-branch-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:stretch}
+.adc-contact-branch-card{text-align:start;min-width:0}
+.adc-contact-branch-details{margin:0;text-align:start}
+.adc-contact-branch-details>div{padding-block:.85rem;border-bottom:1px solid var(--cd-color-line,#d9e0ea)}
+.adc-contact-branch-details>div:last-child{border-bottom:0}
+.adc-contact-branch-details dt{font-weight:600;margin-bottom:.35rem}
+.adc-contact-branch-details dd{margin:0;line-height:1.8;overflow-wrap:anywhere}
+.adc-contact-branch-details a{color:var(--ab-link,#2563eb)}
+.adc-branches-intro{max-width:46rem;margin:0 auto 2rem;text-align:center}
+.adc-branches-intro>p:first-child{color:var(--ab-link,#2563eb);font-weight:700;margin-bottom:.5rem}
+.adc-branches-intro h2{font-size:clamp(1.75rem,3vw,2.5rem);margin:0 0 .75rem}
+.adc-branch-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5rem}
+.adc-branch-card{min-width:0;overflow:hidden;border:1px solid var(--cd-color-line,#d9e0ea);border-radius:1.25rem;background:var(--cd-color-surface,#fff);box-shadow:0 8px 26px rgba(15,23,42,.06)}
+.adc-branch-map{aspect-ratio:16/10;background:var(--cd-color-bg,#edf2f7)}
+.adc-branch-map iframe{display:block;width:100%;height:100%;border:0}
+.adc-branch-info{padding:clamp(1.25rem,3vw,1.75rem)}
+.adc-branch-info h3{margin:0 0 .65rem;font-size:1.4rem;color:var(--cd-color-text,inherit)}
+.adc-branch-address{line-height:1.8;margin:0 0 1.25rem;overflow-wrap:anywhere}
+.adc-branch-actions{display:flex;align-items:center;flex-wrap:wrap;gap:1rem}
+.adc-branch-phone{font-weight:600;color:var(--ab-link,#2563eb)}
+@media(max-width:700px){.adc-branch-grid,.adc-contact-branch-grid{grid-template-columns:1fr!important}.adc-branch-map{aspect-ratio:4/3}.adc-branch-actions .btn{width:100%;justify-content:center}}

@@ -31,7 +31,7 @@ $before = count( $captured );
 $result = $subscribe( 'spoofed-address@example.invalid', 'ar', false );
 $active = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . AccountNewsletter::subscribers() . ' WHERE id=%d', $guest_row['id'] ), ARRAY_A );
 $check( $result['success'] && 'active' === $active['status'] && 'verified_account' === $active['confirmation_source'] && (int) $active['confirmation_user_id'] === $owner && $active['confirmed_at'], 'Authenticated footer upgrades pending consent using the current account proof' );
-$check( count( $captured ) === $before + 1 && str_contains( end( $captured )['subject'], 'Welcome to the AutoBrands newsletter' ) && 'en' === $active['locale'], 'Footer sends only one welcome in the saved account language' );
+$check( count( $captured ) === $before + 1 && str_contains( end( $captured )['subject'], 'Welcome to the ' . \AutoDealership\Core\ProductSetup::brand( 'en' ) . ' newsletter' ) && 'en' === $active['locale'], 'Footer sends only one welcome in the saved account language' );
 $check( 0 === (int) $wpdb->get_var( "SELECT COUNT(*) FROM " . AccountNewsletter::subscribers() . " WHERE email='spoofed-address@example.invalid'" ), 'Footer cannot subscribe a different submitted address for the owner' );
 $check( $active['consent_key'] !== $guest_row['consent_key'] && is_wp_error( AccountProof::confirm( $guest_token ) ), 'Account-based activation rotates consent and invalidates the old guest link' );
 $before = count( $captured );

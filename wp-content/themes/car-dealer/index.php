@@ -28,7 +28,7 @@ $home_scroll_target = $featured_ids ? 'featured-vehicles' : 'why-auto-brands';
 		<div class="ab-hero-copy">
 			<p class="eyebrow ab-hero-eyebrow"><?php echo esc_html( car_dealer_brand_name() ); ?></p>
 			<h1><?php echo esc_html( car_dealer_text( 'سيارتك الجديدة تبدأ من أوتو براندز', 'Your new vehicle starts with Auto Brands' ) ); ?></h1>
-			<p class="ab-hero-desc"><?php echo esc_html( car_dealer_text( 'مبيعات السيارات الجديدة في جدة، حي الجوهرة، وخدمات ما بعد البيع والتلميع والتظليل. استعرض الخيارات وتواصل مع فريقنا.', 'New vehicle sales in Al Jawharah, Jeddah, with after-sales services, polishing and window tinting. Explore your options and contact our team.' ) ); ?></p>
+			<p class="ab-hero-desc"><?php echo esc_html( class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::hero_description( car_dealer_catalog_language() ) : car_dealer_text( 'استعرض السيارات المتاحة وتواصل مع فريقنا.', 'Explore available vehicles and contact our team.' ) ); ?></p>
 			<div class="ab-actions">
 				<?php if ( $catalog_url ) : ?><a class="btn btn-primary btn-lg" href="<?php echo esc_url( $catalog_url ); ?>">
 					<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
