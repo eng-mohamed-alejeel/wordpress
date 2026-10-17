@@ -75,7 +75,8 @@ final class CustomerIdentity {
 		$user_id = get_current_user_id();
 		if ( ! $user_id || ! Transaction::begin() ) { return self::error( $user_id ? 'adc_identity_unavailable' : 'adc_identity_forbidden', $user_id ? 503 : 403 ); }
 		foreach ( array( $wpdb->users, $wpdb->usermeta ) as $account_table ) {
-			if ( 'InnoDB' !== $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $account_table ) ) ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_identity_unavailable', 503 ); }
+			$storage=$wpdb->get_row($wpdb->prepare('SHOW TABLE STATUS LIKE %s',$wpdb->esc_like($account_table)),ARRAY_A);
+			if ( $wpdb->last_error || !$storage || $storage['Name']!==$account_table || 'innodb'!==strtolower((string)$storage['Engine']) ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_identity_unavailable', 503 ); }
 		}
 		$user = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM {$wpdb->users} WHERE ID=%d FOR UPDATE", $user_id ) );
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT id,consent_marketing,consent_at FROM ' . Schema::table( 'customers' ) . ' WHERE account_user_id=%d AND merged_into_id IS NULL FOR UPDATE', $user_id ), ARRAY_A );
@@ -140,7 +141,10 @@ final class CustomerIdentity {
 			self::clean_account_cache( $user_id ); return self::error( 'adc_identity_unavailable', 503 );
 		}
 		self::clean_account_cache( $user_id );
-		if ( $mail_payload ) { NewsletterService::wake(); }
+		if ( $mail_payload ) {
+			if($direct_activation){NewsletterService::deliver_subscription_committed((int)$subscriber_id);}else{\AutoDealership\Accounts\EmailVerification::deliver_committed($mail_payload);}
+			NewsletterService::wake();
+		}
 		do_action( 'adc_customer_preferences_updated', $user_id, (int) ( $row['id'] ?? 0 ), $marketing );
 		return self::current_preferences();
 	}

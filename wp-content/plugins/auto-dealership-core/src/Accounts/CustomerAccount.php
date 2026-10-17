@@ -233,6 +233,7 @@ final class CustomerAccount {
 		$committed = Transaction::commit( static fn() => AuditLog::record( 'customer.account_registered', 'user', $user_id, '', null, array( 'role'=>'car_dealer_customer', 'privacy_consent'=>true ) ) );
 		clean_user_cache( $user_id );
 		if ( $committed ) {
+			VerificationExperience::enrollment((int)$user_id);
 			EmailVerification::deliver_committed($mail_event);
 			\AutoDealership\Leads\NewsletterService::wake();
 		}

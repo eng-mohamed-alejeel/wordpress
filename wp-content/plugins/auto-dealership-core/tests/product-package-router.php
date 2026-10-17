@@ -21,6 +21,7 @@ define( 'WP_CONTENT_DIR', $config['content'] ); define( 'WP_CONTENT_URL', 'http:
 define( 'WP_SITEURL', 'http://127.0.0.1:' . $_SERVER['SERVER_PORT'] ); define( 'WP_HOME', WP_SITEURL );
 define( 'WP_ENVIRONMENT_TYPE', 'local' ); define( 'WP_HTTP_BLOCK_EXTERNAL', true ); define( 'DISABLE_WP_CRON', true ); define( 'WP_DEBUG', false );
 if ( str_starts_with( $path, '/wp-admin/' ) ) { define( 'WP_ADMIN', true ); }
+if('/wp-admin/admin-ajax.php'===$path){define('DOING_AJAX',true);}
 foreach ( array( 'AUTH_KEY', 'SECURE_AUTH_KEY', 'LOGGED_IN_KEY', 'NONCE_KEY', 'AUTH_SALT', 'SECURE_AUTH_SALT', 'LOGGED_IN_SALT', 'NONCE_SALT' ) as $key ) { define( $key, hash( 'sha512', $config['token'] . $key ) ); }
 $table_prefix = 'test_';
 require ABSPATH . 'wp-includes/plugin.php';
@@ -32,14 +33,17 @@ if ( '/adc-product-session' === $path ) {
 }
 if('/adc-product-mail-state'===$path) {
 	if(!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
-	global $wpdb;header('Content-Type: application/json');echo wp_json_encode($wpdb->get_results("SELECT status,attempts FROM ".\AutoDealership\Operations\OutboxService::table()." WHERE event_key='email.verify' ORDER BY id",ARRAY_A));exit;
+	$kind='subscription'===($_GET['kind']??'')?'newsletter.subscription':'email.verify';
+	global $wpdb;header('Content-Type: application/json');echo wp_json_encode($wpdb->get_results($wpdb->prepare('SELECT status,attempts FROM '.\AutoDealership\Operations\OutboxService::table().' WHERE event_key=%s ORDER BY id',$kind),ARRAY_A));exit;
 }
+if('/wp-admin/admin-ajax.php'===$path){$action=sanitize_key($_POST['action']??'');do_action((is_user_logged_in()?'wp_ajax_':'wp_ajax_nopriv_').$action);http_response_code(400);exit;}
 if('/adc-product-confirmation-fixture'===$path) {
 	if(!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
+	if(isset($_GET['clear_wait'])){$key=new ReflectionMethod(\AutoDealership\Accounts\VerificationExperience::class,'cooldown_key');$key->setAccessible(true);delete_transient($key->invoke(null,'account'));}
 	$user=get_user_by('email','package-verification@example.invalid');global $wpdb;
 	$row=$user?$wpdb->get_row($wpdb->prepare('SELECT * FROM '.\AutoDealership\Accounts\EmailVerification::table()." WHERE purpose='account' AND subject_id=%d",$user->ID),ARRAY_A):null;
 	if(!$row){http_response_code(404);exit;}$method=new ReflectionMethod(\AutoDealership\Accounts\EmailVerification::class,'proof');$method->setAccessible(true);
-	header('Content-Type: application/json');echo wp_json_encode(['url'=>\AutoDealership\Accounts\EmailVerification::page_url('account','en').'#token='.$row['selector'].'.'.$method->invoke(null,$row)]);exit;
+	header('Content-Type: application/json');echo wp_json_encode(['blocked'=>\AutoDealership\Accounts\EmailVerification::blocked((int)$user->ID),'url'=>\AutoDealership\Accounts\EmailVerification::page_url('account','en').'#token='.$row['selector'].'.'.$method->invoke(null,$row)]);exit;
 }
 if ( '/wp-admin/admin-post.php' === $path ) { do_action( 'admin_post_' . sanitize_key( $_POST['action'] ?? '' ) ); exit; }
 if ( '/wp-admin/options-general.php' === $path || ('/wp-admin/admin.php' === $path && 'adc-site-content' === ($_GET['page']??'')) ) {

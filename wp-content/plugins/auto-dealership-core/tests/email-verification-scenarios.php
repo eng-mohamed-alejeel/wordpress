@@ -146,3 +146,4 @@ try {
 	foreach ( $workers as list( $process, $pipes ) ) { if ( is_resource( $process ) ) { proc_terminate( $process ); } }
 }
 require __DIR__ . '/email-verification-mailpit.php';
+require __DIR__ . '/verification-experience-scenarios.php';

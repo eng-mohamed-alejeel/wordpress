@@ -21,9 +21,11 @@ final class EmailVerification {
 		return new \WP_Error( $code, self::t( 'تعذر التأكيد. قد يكون الرابط منتهيًا أو مستخدمًا، أو البيانات غير صحيحة. اطلب رابطًا جديدًا عند الحاجة.', 'Verification could not be completed. The link may be expired or used, or the details may be incorrect. Request a new link if needed.' ) );
 	}
 	public static function boot(): void {
-		if ( isset( $_GET['adc_verify'] ) && ! defined( 'DONOTCACHEPAGE' ) ) { define( 'DONOTCACHEPAGE', true ); }
+		if ( (isset($_GET['adc_verify']) || isset($_GET['cd_account'])) && ! defined( 'DONOTCACHEPAGE' ) ) { define( 'DONOTCACHEPAGE', true ); }
+		if(isset($_GET['cd_account'])){add_action('send_headers','nocache_headers');}
 		self::install();
 		if ( self::$booted ) { return; } self::$booted = true;
+		VerificationExperience::boot();
 		OutboxService::register_handler( 'email.verify', array( self::class, 'send' ) );
 		self::protect_accounts();
 		add_action( 'template_redirect', array( self::class, 'page' ), 0 );
@@ -201,7 +203,8 @@ final class EmailVerification {
 		if ( ! $reference || ! Transaction::begin() ) { return self::error(); }
 		$target = self::target( $reference, true );
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::table() . ' WHERE id=%d FOR UPDATE', $reference['id'] ), ARRAY_A );
-		if ( ! $row || ! $target || $wpdb->last_error || $row['used_at'] || strtotime( $row['expires_at'] . ' UTC' ) <= time() || ! hash_equals( $row['selector'], $parts[1] ) || ! hash_equals( $row['token_hash'], hash( 'sha256', $parts[2] ) ) || ! hash_equals( self::proof( $row ), $parts[2] ) || ! hash_equals( $row['email_hash'], self::email_hash( $target['email'] ) ) ) { $wpdb->query( 'ROLLBACK' ); return self::error(); }
+		if ( ! $row || ! $target || $wpdb->last_error || $row['used_at'] || ! hash_equals( $row['selector'], $parts[1] ) || ! hash_equals( $row['token_hash'], hash( 'sha256', $parts[2] ) ) || ! hash_equals( self::proof( $row ), $parts[2] ) || ! hash_equals( $row['email_hash'], self::email_hash( $target['email'] ) ) ) { $wpdb->query( 'ROLLBACK' ); return self::error(); }
+		if(strtotime($row['expires_at'].' UTC')<=time()){$wpdb->query('ROLLBACK');return new \WP_Error('adc_verification_expired',self::t('انتهت صلاحية رابط التأكيد. اطلب رابطًا جديدًا أدناه دون إعادة التسجيل.','This verification link has expired. Request a new link below; you do not need to register again.'));}
 		$now = current_time( 'mysql', true ); $id = (int) $row['subject_id'];
 		if ( 'account' === $row['purpose'] ) {
 			update_user_meta( $id, 'adc_email_verification_status', 'verified' );
@@ -280,49 +283,70 @@ final class EmailVerification {
 		return in_array($status,array('verified','already_verified'),true)?$status:'';
 	}
 	public static function page(): void {
-		if ( ! isset( $_GET['adc_verify'] ) ) { return; }
-		if ( ! in_array( wp_get_environment_type(), array( 'local', 'development' ), true ) && ! is_ssl() ) {
-			$purpose = isset( $_GET['purpose'] ) && 'newsletter' === $_GET['purpose'] ? 'newsletter' : 'account';
-			wp_safe_redirect( set_url_scheme( self::page_url( $purpose ), 'https' ), 302 ); exit;
+		if(!isset($_GET['adc_verify'])){return;}
+		$purpose=isset($_GET['purpose'])&&'newsletter'===$_GET['purpose']?'newsletter':'account';
+		if(!in_array(wp_get_environment_type(),array('local','development'),true)&&!is_ssl()){wp_safe_redirect(set_url_scheme(self::page_url($purpose),'https'),302);exit;}
+		nocache_headers();header('Referrer-Policy: no-referrer');header('X-Robots-Tag: noindex, nofollow');header('X-Frame-Options: DENY');header('X-Content-Type-Options: nosniff');
+		// Link previews/prefetches never render an auto-activation document.
+		$fetch=strtolower((string)($_SERVER['HTTP_SEC_PURPOSE']??$_SERVER['HTTP_PURPOSE']??''));
+		if(str_contains($fetch,'prefetch')||str_contains($fetch,'prerender')){status_header(204);exit;}
+		$nonce=base64_encode(random_bytes(18));header("Content-Security-Policy: default-src 'none'; script-src 'nonce-$nonce'; style-src 'unsafe-inline'; img-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
+		$title=self::t('تأكيد البريد الإلكتروني','Verify your email');$success=false;$posted='POST'===($_SERVER['REQUEST_METHOD']??'');$retry_token='';
+		$body='<p>'.esc_html(self::t('افتح أحدث رابط وصل إلى بريدك لإتمام التأكيد بأمان.','Open the latest link sent to your email to complete verification securely.')).'</p>';
+		$generic=self::t('تم استلام طلبك. إذا كان البريد ينتظر التأكيد وضمن حدود الإرسال، فسيصلك رابط جديد. تحقق من صندوق الوارد والبريد غير المرغوب فيه. إذا كان حسابك مفعّلًا، يمكنك تسجيل الدخول مباشرة.','Your request has been received. If the email is awaiting verification and within sending limits, a new link will be sent. Check your inbox and spam folder. If your account is already active, you can sign in directly.');
+		if(isset($_GET['requested'])){$title=self::t('تحقق من بريدك الإلكتروني','Check your email');$body='<p role="status">'.esc_html($generic).'</p>';}
+		if($posted){
+			$rate=PublicRequestGuard::consume('email_verification');$valid=wp_verify_nonce(self::field('_wpnonce'),'adc_email_verify');$operation=self::field('operation');
+			if(!$valid||is_wp_error($rate)){
+				status_header(is_wp_error($rate)?(int)($rate->get_error_data()['status']??503):403);
+				if(is_wp_error($rate)&&'adc_rate_limited'===$rate->get_error_code()){header('Retry-After: '.(int)($rate->get_error_data()['retry_after']??60));}
+				$body='<p role="alert">'.esc_html(self::t('تعذر إتمام الطلب الآن. حدّث الصفحة أو حاول لاحقًا.','Unable to complete the request now. Refresh the page or try again later.')).'</p>';
+			}elseif(in_array($operation,array('resend','change_email'),true)){
+				$email=trim(self::field('email'));
+				$result=is_email($email)&&strlen($email)<=100?VerificationExperience::reserve_resend($purpose):new \WP_Error('adc_email_invalid');
+				if(!is_wp_error($result)){$result='change_email'===$operation&&'account'===$purpose?VerificationExperience::change_email($email):self::request($purpose,$email);}
+				if(is_wp_error($result)){
+					$code=$result->get_error_code();$wait=in_array($code,array('adc_verification_throttled','adc_rate_limited'),true);
+					status_header($wait?429:400);if($wait){header('Retry-After: '.max(1,VerificationExperience::remaining($purpose)));}
+					$message=$wait?self::t('انتظر حتى انتهاء مهلة إعادة الإرسال ثم حاول مجددًا.','Wait for the resend cooldown to finish, then try again.'):('adc_email_invalid'===$code?self::t('أدخل بريدًا إلكترونيًا صحيحًا.','Enter a valid email address.'):self::t('تعذر تنفيذ الطلب الآن. تحقق من البيانات وحاول لاحقًا. إذا استمرت المشكلة، تواصل معنا.','Unable to process this request now. Check the details and try again later. Contact us if the problem persists.'));
+					$body='<p role="alert">'.esc_html($message).'</p>';
+				}else{
+					// Post/Redirect/Get: refresh never sends another message.
+					wp_safe_redirect(add_query_arg('requested',1,self::page_url($purpose)),303);exit;
+				}
+			}elseif('confirm'===$operation){
+				$token=self::field('token');
+				$result=VerificationExperience::valid_browser_stamp(self::field('browser_stamp'),$purpose)?self::confirm($token,'',$purpose):new \WP_Error('adc_browser_required',self::t('تعذر تأكيد الطلب. أعد فتح الرابط من البريد وانتظر لحظة لاكتمال التحقق.','Unable to confirm this request. Reopen the email link and wait a moment for verification.'));
+				if('account'===$purpose&&is_wp_error($result)&&'adc_browser_required'!==$result->get_error_code()&&self::confirmed_account_token($token)){self::login_redirect('already_verified');}
+				if(!is_wp_error($result)&&'account'===$result['purpose']){self::login_redirect('verified',$result['locale']);}
+				if(is_wp_error($result)){
+					status_header(400);$body='<p role="alert">'.esc_html($result->get_error_message()).'</p>';
+					if('adc_browser_required'===$result->get_error_code()&&preg_match('/\A[a-f0-9]{64}\.[A-Za-z0-9_-]{43}\z/',$token)){$retry_token=$token;}
+				}else{$success=true;$title=self::t('تم تأكيد اشتراكك','Your subscription is confirmed');$body='<p role="status">'.esc_html(self::t('ستصلك الحملات القادمة باللغة المفضلة لديك. يمكنك إلغاء الاشتراك في أي وقت.','You will receive future campaigns in your preferred language. You can unsubscribe at any time.')).'</p>';}
+			}else{status_header(400);}
 		}
-		nocache_headers(); header( 'Referrer-Policy: no-referrer' ); header( 'X-Robots-Tag: noindex, nofollow' ); header( 'X-Frame-Options: DENY' ); header( 'X-Content-Type-Options: nosniff' );
-		$nonce = base64_encode( random_bytes( 18 ) );
-		header( "Content-Security-Policy: default-src 'none'; script-src 'nonce-$nonce'; style-src 'unsafe-inline'; img-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'" );
-		$purpose = isset( $_GET['purpose'] ) && 'newsletter' === $_GET['purpose'] ? 'newsletter' : 'account';
-		$title = self::t( 'تأكيد البريد الإلكتروني', 'Verify your email' );
-		$body = '<p>' . esc_html( self::t( 'افتح أحدث رابط أرسلناه إلى بريدك، ثم أكد طلبك هنا.', 'Open the latest link we emailed you, then confirm your request here.' ) ) . '</p>';
-		if ( isset( $_GET['requested'] ) ) { $title = self::t( 'تحقق من بريدك الإلكتروني', 'Check your email' ); $body = '<p role="status">' . esc_html( self::t( 'تم استلام طلبك. تحقق من بريدك الإلكتروني والبريد المزعج بحثًا عن رسالة التفعيل. إذا لم تصل، يمكنك طلب رابط جديد أدناه. انتظر دقيقة قبل إعادة الطلب.', 'Your request has been received. Check your inbox and spam folder for the activation email. If it has not arrived, request a new link below. Wait a minute before requesting again.' ) ) . '</p>'; }
-		$success = false; $posted = 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? '' );
-		if ( $posted ) {
-			$rate = PublicRequestGuard::consume( 'email_verification' );
-			if ( ! wp_verify_nonce( self::field( '_wpnonce' ), 'adc_email_verify' ) || is_wp_error( $rate ) ) {
-				status_header( is_wp_error( $rate ) ? (int) ( $rate->get_error_data()['status'] ?? 503 ) : 403 );
-				if ( is_wp_error( $rate ) && 'adc_rate_limited' === $rate->get_error_code() ) { header( 'Retry-After: ' . (int) ( $rate->get_error_data()['retry_after'] ?? 60 ) ); }
-				$body = '<p role="alert">' . esc_html( self::t( 'تعذر إتمام الطلب. حدّث الصفحة أو حاول لاحقًا.', 'The request could not be completed. Refresh the page or try again later.' ) ) . '</p>';
-			} elseif ( 'resend' === self::field( 'operation' ) ) {
-				$result = self::request( $purpose, sanitize_email( self::field( 'email' ) ), true );
-				if(is_array($result) && 'already_verified'===($result['status']??'')) { self::login_redirect('already_verified'); }
-				$body = '<p role="status">' . esc_html( is_wp_error( $result ) ? self::t( 'خدمة التأكيد غير متاحة مؤقتًا. حاول لاحقًا.', 'Verification is temporarily unavailable. Please try again later.' ) : self::t( 'إذا كان البريد مؤهلًا للتأكيد، فسنرسل رابطًا جديدًا. تحقق من الوارد والبريد المزعج. انتظر دقيقة قبل إعادة الطلب.', 'If the email is eligible for verification, we will send a new link. Check your inbox and spam folder. Wait a minute before requesting again.' ) ) . '</p>';
-			} else {
-				$result = self::confirm( self::field( 'token' ), '', $purpose );
-				if('account'===$purpose && is_wp_error($result) && self::confirmed_account_token(self::field('token'))) { self::login_redirect('already_verified'); }
-				if(!is_wp_error($result) && 'account'===$result['purpose']) { self::login_redirect('verified',$result['locale']); }
-				if ( is_wp_error( $result ) ) { status_header( 400 ); $body = '<p role="alert">' . esc_html( $result->get_error_message() ) . '</p>'; }
-				else { $success = true; $purpose = $result['purpose']; $title = 'account' === $purpose ? self::t( 'تم تفعيل حسابك', 'Your account is activated' ) : self::t( 'تم تأكيد اشتراكك', 'Your subscription is confirmed' ); $body = '<p role="status">' . esc_html( 'account' === $purpose ? self::t( 'يمكنك الآن تسجيل الدخول بكلمة المرور الخاصة بك.', 'You can now sign in with your password.' ) : self::t( 'ستصلك الحملات القادمة باللغة المفضلة لديك. يمكنك إلغاء الاشتراك في أي وقت.', 'You will receive future campaigns in your preferred language. You can unsubscribe at any time.' ) ) . '</p>'; }
+		if(!$success){
+			$stamp=VerificationExperience::browser_stamp($purpose);
+			$body.='<form id="adc-verify-form" hidden method="post" action="'.esc_url(self::page_url($purpose)).'">'.str_replace('id="_wpnonce"','id="adc-confirm-nonce"',wp_nonce_field('adc_email_verify','_wpnonce',false,false)).'<input type="hidden" name="browser_stamp" value="'.esc_attr($stamp).'"><input type="hidden" name="token" id="adc-verify-token" value="'.esc_attr($retry_token).'"><input type="hidden" name="operation" value="confirm"><p id="adc-confirm-help" role="status">'.esc_html(self::t('جارٍ تجهيز التأكيد الآمن…','Preparing secure verification…')).'</p><button id="adc-verify-submit" disabled type="submit">'.esc_html('account'===$purpose?self::t('تأكيد وتفعيل الحساب','Confirm and activate account'):self::t('تأكيد الاشتراك','Confirm subscription')).'</button></form><noscript><p>'.esc_html(self::t('فعّل JavaScript ثم افتح رابط البريد مجددًا لإتمام التأكيد.','Enable JavaScript and reopen the email link to complete verification.')).'</p></noscript>';
+			$remaining=VerificationExperience::remaining($purpose);
+			$body.='<section class="adc-resend"><h2>'.esc_html(self::t('طلب رابط تأكيد جديد','Request a new verification link')).'</h2><form data-resend-form method="post" action="'.esc_url(self::page_url($purpose)).'">'.str_replace('id="_wpnonce"','id="adc-resend-nonce"',wp_nonce_field('adc_email_verify','_wpnonce',false,false)).'<input type="hidden" name="operation" value="resend"><label for="adc-resend-email">'.esc_html(self::t('البريد الإلكتروني','Email address')).'</label><input id="adc-resend-email" name="email" type="email" autocomplete="email" maxlength="100" dir="ltr" required><button data-resend-button type="submit" '.($remaining?'disabled':'').'>'.esc_html(self::t('إرسال رابط جديد','Send a new link')).'</button></form><p id="adc-resend-wait" role="status" aria-live="polite" data-remaining="'.(int)$remaining.'"></p></section>';
+			if('account'===$purpose&&VerificationExperience::enrollment_id()){
+				$body.='<details class="adc-correction"><summary>'.esc_html(self::t('هل كتبت بريدك بشكل غير صحيح؟','Entered the wrong email?')).'</summary><p>'.esc_html(self::t('يمكنك تصحيح البريد من المتصفح الذي أنشأت الحساب منه خلال 30 دقيقة. سيُلغى الرابط السابق ولن يتغير اختيارك للتسويق.','You can correct your email in the browser used for registration within 30 minutes. The previous link will be invalidated; your marketing choice is unchanged.')).'</p><form data-resend-form method="post" action="'.esc_url(self::page_url('account')).'">'.str_replace('id="_wpnonce"','id="adc-correction-nonce"',wp_nonce_field('adc_email_verify','_wpnonce',false,false)).'<input type="hidden" name="operation" value="change_email"><label for="adc-correction-email">'.esc_html(self::t('البريد الإلكتروني الصحيح','Correct email address')).'</label><input id="adc-correction-email" type="email" name="email" autocomplete="email" maxlength="100" dir="ltr" required><button data-resend-button type="submit" '.($remaining?'disabled':'').'>'.esc_html(self::t('حفظ وإرسال رابط جديد','Save and send a new link')).'</button></form></details>';
 			}
 		}
-		if ( ! $success ) {
-			$retry_token = $posted && wp_verify_nonce( self::field( '_wpnonce' ), 'adc_email_verify' ) && preg_match( '/\A[a-f0-9]{64}\.[A-Za-z0-9_-]{43}\z/', self::field( 'token' ) ) ? self::field( 'token' ) : '';
-			$body .= '<form id="adc-verify-form" hidden method="post" action="' . esc_url( self::page_url( $purpose ) ) . '">' . str_replace( 'id="_wpnonce"', 'id="adc-confirm-nonce"', wp_nonce_field( 'adc_email_verify', '_wpnonce', false, false ) ) . '<input type="hidden" name="token" id="adc-verify-token" value="' . esc_attr( $retry_token ) . '"><input type="hidden" name="operation" value="confirm">';
-			$body .= '<button id="adc-verify-submit" disabled type="submit" style="padding:12px 24px;border:0;border-radius:8px;background:#2563eb;color:white;font:inherit;cursor:pointer">' . esc_html( 'account' === $purpose ? self::t( 'تأكيد وتفعيل الحساب', 'Confirm and activate account' ) : self::t( 'تأكيد الاشتراك', 'Confirm subscription' ) ) . '</button></form><noscript><p>' . esc_html( self::t( 'فعّل JavaScript ثم افتح رابط البريد مجددًا لإتمام التأكيد.', 'Enable JavaScript and reopen the email link to complete verification.' ) ) . '</p></noscript>';
-			$body .= '<hr style="border:0;border-top:1px solid #e2e8f0;margin:24px 0"><h2 style="font-size:18px">' . esc_html( self::t( 'طلب رابط تأكيد جديد', 'Request a new verification link' ) ) . '</h2><form method="post" action="' . esc_url( self::page_url( $purpose ) ) . '">' . str_replace( 'id="_wpnonce"', 'id="adc-resend-nonce"', wp_nonce_field( 'adc_email_verify', '_wpnonce', false, false ) ) . '<input type="hidden" name="operation" value="resend"><label for="adc-resend-email">' . esc_html( self::t( 'البريد الإلكتروني', 'Email address' ) ) . '</label><input id="adc-resend-email" name="email" type="email" autocomplete="email" maxlength="190" required style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0 16px;border:1px solid #cbd5e1;border-radius:8px"><button type="submit" style="padding:12px 24px;border:1px solid #cbd5e1;border-radius:8px;background:white;font:inherit;cursor:pointer">' . esc_html( self::t( 'إرسال رابط جديد', 'Send a new link' ) ) . '</button></form>';
+		$url='account'===$purpose?add_query_arg('cd_account','login',apply_filters('adc_customer_account_url',home_url('/'),'')):home_url('/');$url=\AutoDealership\Inventory\CatalogPresentation::localized_url($url,\AutoDealership\Core\Localization::language());
+		$html=BrandedMail::render($title,'','','','',\AutoDealership\Core\Localization::language());
+		$html=str_replace('</h1>','</h1>'.$body.'<p><a href="'.esc_url($url).'">'.esc_html('account'===$purpose?self::t('الذهاب إلى تسجيل الدخول','Go to sign in'):self::t('العودة إلى الموقع','Back to the website')).'</a></p>',$html);
+		$css='<style>form input[type=email]{display:block;width:100%;box-sizing:border-box;padding:13px;margin:8px 0 16px;border:1px solid #94a3b8;border-radius:9px;font:inherit;background:#fff;color:#0f172a}button{padding:12px 22px;border:0;border-radius:9px;background:#1d4ed8;color:#fff;font:inherit;cursor:pointer;max-width:100%}button:disabled{opacity:.55;cursor:wait}button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #60a5fa;outline-offset:3px}.adc-resend{border-top:1px solid #cbd5e1;margin-top:24px;padding-top:12px}.adc-resend h2{font-size:18px}.adc-correction{margin:20px 0;padding:14px;background:#f1f5f9;border-radius:10px;color:#0f172a}.adc-correction summary{cursor:pointer;font-weight:600}#adc-resend-wait{font-size:14px;color:#475569;min-height:22px}form[hidden]{display:none}</style>';
+		$html=str_replace('</head>',$css.'</head>',$html);
+		if(!$success){
+			$config=wp_json_encode(array('account'=>'account'===$purpose,'waiting'=>self::t('يمكنك طلب رابط جديد بعد %s ثانية.','You can request a new link in %s seconds.'),'ready'=>self::t('يمكنك الآن طلب رابط جديد.','You can now request a new link.'),'confirming'=>self::t('جارٍ تأكيد الحساب…','Confirming your account…'),'manual'=>self::t('اضغط الزر لإتمام التأكيد.','Press the button to complete verification.')),JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT);
+			$script=<<<'JS'
+(()=>{const cfg=CONFIG;const f=document.getElementById('adc-verify-form'),b=document.getElementById('adc-verify-submit'),input=document.getElementById('adc-verify-token');const original=new URLSearchParams(location.hash.slice(1)).get('token');const token=original||input.value;history.replaceState(null,'',location.pathname+location.search);let started=false;if(token&&/^[a-f0-9]{64}\.[A-Za-z0-9_-]{43}$/.test(token)){input.value=token;f.hidden=false;const prepare=()=>{if(started||document.visibilityState!=='visible'||document.prerendering)return;started=true;setTimeout(()=>{if(document.visibilityState!=='visible'){started=false;return;}b.disabled=false;document.getElementById('adc-confirm-help').textContent=cfg.manual;if(original&&cfg.account){document.getElementById('adc-confirm-help').textContent=cfg.confirming;f.requestSubmit();}},1600);};document.addEventListener('visibilitychange',prepare);document.addEventListener('prerenderingchange',prepare);prepare();}const wait=document.getElementById('adc-resend-wait');let end=Date.now()+Number(wait.dataset.remaining)*1000;let previous=-1;const tick=()=>{const n=Math.max(0,Math.ceil((end-Date.now())/1000));document.querySelectorAll('[data-resend-button]').forEach(x=>x.disabled=n>0);if(n!==previous){wait.textContent=n?cfg.waiting.replace('%s',n):cfg.ready;previous=n;}};tick();setInterval(tick,1000);document.querySelectorAll('[data-resend-form]').forEach(form=>form.addEventListener('submit',()=>{end=Date.now()+60000;tick();}));})();
+JS;
+			$html=str_replace('</body>','<script nonce="'.esc_attr($nonce).'">'.str_replace('CONFIG',$config,$script).'</script></body>',$html);
 		}
-		$url = 'account' === $purpose ? add_query_arg( 'cd_account', 'login', apply_filters( 'adc_customer_account_url', home_url( '/' ), '' ) ) : home_url( '/' );
-		$url = \AutoDealership\Inventory\CatalogPresentation::localized_url( $url, \AutoDealership\Core\Localization::language() );
-		$html = BrandedMail::render( $title, '', '', '', '', \AutoDealership\Core\Localization::language() );
-		// Page controls are trusted HTML, unlike the email body's restricted wp_kses markup.
-		$html = str_replace( '</h1>', '</h1>' . $body . '<p><a href="' . esc_url( $url ) . '">' . esc_html( 'account' === $purpose ? self::t( 'الذهاب إلى تسجيل الدخول', 'Go to sign in' ) : self::t( 'العودة إلى الموقع', 'Back to the website' ) ) . '</a></p>', $html );
-		if ( ! $success ) { $html = str_replace( '</body>', '<script nonce="' . esc_attr( $nonce ) . '">(() => { const fromEmailLink = new URLSearchParams(location.hash.slice(1)).get("token"); const token = fromEmailLink || document.getElementById("adc-verify-token").value; if (token && /^[a-f0-9]{64}\\.[A-Za-z0-9_-]{43}$/.test(token)) { document.getElementById("adc-verify-form").hidden = false; document.getElementById("adc-verify-token").value = token; document.getElementById("adc-verify-submit").disabled = false; } history.replaceState(null, "", location.pathname + location.search); if (fromEmailLink && new URLSearchParams(location.search).get("purpose") === "account" && !document.getElementById("adc-verify-submit").disabled) { document.getElementById("adc-verify-form").requestSubmit(); } })();</script></body>', $html ); }
-		header( 'Content-Type: text/html; charset=UTF-8' ); echo $html; exit;
+		header('Content-Type: text/html; charset=UTF-8');echo $html;exit;
 	}
+
 }

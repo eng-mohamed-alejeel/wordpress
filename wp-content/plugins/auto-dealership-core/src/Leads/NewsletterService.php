@@ -120,6 +120,20 @@ final class NewsletterService {
 		// Start a non-blocking worker after committed intake rather than exposing SMTP latency.
 		if ( 'cli' !== PHP_SAPI && ! ( defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON ) ) { spawn_cron(); }
 	}
+	/** Dispatch only this committed opt-in welcome; never expand or send a campaign. */
+	public static function deliver_subscription_committed(int $subscriber_id): void {
+		if('cli'===PHP_SAPI){return;}
+		global $wpdb;
+		$row=$wpdb->get_row($wpdb->prepare('SELECT id,status,consent_key FROM '.self::subscribers().' WHERE id=%d',$subscriber_id),ARRAY_A);
+		if(!$row || 'active'!==$row['status'] || !wp_is_uuid($row['consent_key'])){return;}
+		$key=hash('sha256','newsletter.subscription|subscription:'.$subscriber_id.':'.$row['consent_key']);
+		$event=(int)$wpdb->get_var($wpdb->prepare('SELECT id FROM '.OutboxService::table()." WHERE event_key='newsletter.subscription' AND idempotency_key=%s",$key));
+		if(!$event){return;}
+		add_action('shutdown',static function()use($event):void{
+			if(function_exists('fastcgi_finish_request')){fastcgi_finish_request();}$previous=ignore_user_abort(true);
+			try{OutboxService::process_due(1,array('newsletter.subscription'),array($event));}finally{ignore_user_abort($previous);}
+		},20);
+	}
 
 	/** Caller holds account -> subscriber locks and has obtained explicit marketing consent. */
 	public static function activate_for_current_account( int $subscriber_id ) {

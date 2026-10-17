@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.41.7
+ * Version: 1.41.10
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.41.7' );
+define( 'ADC_VERSION', '1.41.10' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -44,6 +44,7 @@ require_once ADC_PATH . 'src/Core/ConfigurationService.php';
 require_once ADC_PATH . 'src/Accounts/CustomerAccount.php';
 require_once ADC_PATH . 'src/Accounts/BrandedMail.php';
 require_once ADC_PATH . 'src/Accounts/EmailVerification.php';
+require_once ADC_PATH . 'src/Accounts/VerificationExperience.php';
 \AutoDealership\Accounts\EmailVerification::protect_accounts();
 require_once ADC_PATH . 'src/Leads/NewsletterService.php';
 require_once ADC_PATH . 'src/Admin/NewsletterPage.php';

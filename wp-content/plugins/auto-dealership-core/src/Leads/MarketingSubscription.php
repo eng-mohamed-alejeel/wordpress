@@ -59,7 +59,8 @@ final class MarketingSubscription {
 		$table = $wpdb->prefix . 'car_dealer_subscribers';
 		if ( is_user_logged_in() ) {
 			foreach ( array( $wpdb->users, $wpdb->usermeta ) as $account_table ) {
-				if ( 'InnoDB' !== $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $account_table ) ) ) { $wpdb->query( 'ROLLBACK' ); wp_send_json_error( array( 'message'=>$message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 ); }
+				$storage=$wpdb->get_row($wpdb->prepare('SHOW TABLE STATUS LIKE %s',$wpdb->esc_like($account_table)),ARRAY_A);
+				if ( $wpdb->last_error || !$storage || $storage['Name']!==$account_table || 'innodb'!==strtolower((string)$storage['Engine']) ) { $wpdb->query( 'ROLLBACK' ); wp_send_json_error( array( 'message'=>$message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 ); }
 			}
 			$locked_email = $wpdb->get_var( $wpdb->prepare( "SELECT user_email FROM {$wpdb->users} WHERE ID=%d FOR UPDATE", get_current_user_id() ) );
 			if ( ! $locked_email || $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); wp_send_json_error( array( 'message'=>$message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 ); }
@@ -74,7 +75,7 @@ final class MarketingSubscription {
 			if ( is_user_logged_in() ) { update_user_meta( get_current_user_id(), 'adc_preferred_language', $language ); }
 			if ( is_user_logged_in() ) { $language_saved = get_user_meta( get_current_user_id(), 'adc_preferred_language', true ) === $language; }
 			if ( false === $ok || ! $language_saved || is_wp_error( $activation ) || ! Transaction::commit( static fn() => AuditLog::record( 'marketing.language_updated', 'subscriber', (int) $previous['id'], 'Subscription language preference', null, array( 'locale'=>$language ) ) ) ) { $wpdb->query( 'ROLLBACK' ); if ( is_user_logged_in() ) { clean_user_cache( get_current_user_id() ); } wp_send_json_error( array( 'message'=>$message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 503 ); }
-			if ( $activation ) { NewsletterService::wake(); wp_send_json_success( array( 'message'=>$message( 'اشتراكك في النشرة البريدية نشط. ستصلك الحملات باللغة المفضلة لديك.', 'Your newsletter subscription is active. You will receive campaigns in your preferred language.' ) ) ); }
+			if ( $activation ) { NewsletterService::deliver_subscription_committed((int)$previous['id']); NewsletterService::wake(); wp_send_json_success( array( 'message'=>$message( 'اشتراكك في النشرة البريدية نشط. ستصلك الحملات باللغة المفضلة لديك.', 'Your newsletter subscription is active. You will receive campaigns in your preferred language.' ) ) ); }
 			if ( 'pending' === $previous['status'] ) { \AutoDealership\Accounts\EmailVerification::request( 'newsletter', $email ); }
 			wp_send_json_success( array( 'message' => $message( 'تم استلام طلبك. إذا كان الاشتراك يحتاج تأكيدًا، ستصلك رسالة برابط التأكيد. تحقق من الوارد والبريد المزعج.', 'Your request has been received. If confirmation is needed, we will email you a verification link. Check your inbox and spam folder.' ) ) );
 		}
@@ -101,6 +102,7 @@ final class MarketingSubscription {
 			wp_send_json_error( array( 'message' => $message( 'تعذر حفظ الاشتراك.', 'Your subscription could not be saved.' ) ), 500 );
 		}
 
+		if($activation){NewsletterService::deliver_subscription_committed($subscriber_id);}else{\AutoDealership\Accounts\EmailVerification::deliver_committed($mail_event);}
 		NewsletterService::wake();
 		if ( $activation ) { wp_send_json_success( array( 'message'=>$message( 'اشتراكك في النشرة البريدية نشط. ستصلك الحملات باللغة المفضلة لديك.', 'Your newsletter subscription is active. You will receive campaigns in your preferred language.' ) ) ); }
 		wp_send_json_success( array( 'message' => $message( 'تم استلام طلبك. إذا كان الاشتراك يحتاج تأكيدًا، ستصلك رسالة برابط التأكيد. تحقق من الوارد والبريد المزعج.', 'Your request has been received. If confirmation is needed, we will email you a verification link. Check your inbox and spam folder.' ) ) );
