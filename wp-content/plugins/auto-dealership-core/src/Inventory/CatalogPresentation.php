@@ -96,6 +96,10 @@ final class CatalogPresentation {
 			$view = sanitize_key( wp_unslash( (string) $_GET['cd_account'] ) );
 			if ( in_array( $view, array( 'login', 'register', 'dashboard' ), true ) ) {
 				$base = add_query_arg( 'cd_account', $view, $base );
+				if('dashboard'===$view && isset($_GET['portal']) && is_string($_GET['portal']) && in_array($_GET['portal'],array('overview','requests','bookings','messages','reviews','profile','preferences'),true)) {
+					$base=add_query_arg('portal',$_GET['portal'],$base);
+					foreach(array('thread','review','context','after','portal_page','messages_page','bookings_page') as $key){if(isset($_GET[$key])&&is_scalar($_GET[$key])){$base=add_query_arg($key,absint($_GET[$key]),$base);}}
+				}
 			}
 		}
 		return self::localized_url( $base, $language );

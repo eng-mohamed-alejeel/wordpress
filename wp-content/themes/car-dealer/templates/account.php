@@ -5,6 +5,9 @@ $core_available = function_exists( 'adc_customer_account_process' ) && function_
 $catalog_url = car_dealer_archive_url( 'car' );
 $activation_notice = 'login'===$view && class_exists('\\AutoDealership\\Accounts\\EmailVerification') ? \AutoDealership\Accounts\EmailVerification::consume_login_notice() : '';
 get_header();
+if('dashboard'===$view && is_user_logged_in() && 'customer'===car_dealer_account_kind(wp_get_current_user()) && class_exists('\\AutoDealership\\Portal\\PortalView') && \AutoDealership\Portal\PortalAccess::ready()) {
+	\AutoDealership\Portal\PortalView::render();get_footer();return;
+}
 ob_start();
 ?>
 <div class="container cd-account" dir="<?php echo esc_attr( car_dealer_catalog_direction() ); ?>" lang="<?php echo esc_attr( car_dealer_catalog_language() ); ?>">
@@ -75,6 +78,8 @@ ob_start();
 <section class="cd-account-panel"><h2><?php echo esc_html__( 'مساحة العمل', 'car-dealer' ); ?></h2><div class="cd-account-tools">
 <?php
 $tools = array(
+	array('conversations','admin.php?page=adc-conversations',car_dealer_text('محادثات العملاء','Customer conversations'),car_dealer_text('متابعة المحادثات والردود والملاحظات الداخلية ضمن نطاقك','Follow conversations, replies and internal notes within your scope')),
+	array('reviews','admin.php?page=adc-customer-reviews',car_dealer_text('مراجعة تقييمات العملاء','Customer review moderation'),car_dealer_text('مراجعة الآراء والموافقة على نشر النسخ المصرّح بها','Review feedback and approve consented versions for publication')),
  array( 'workspace', 'admin.php?page=adc-workspace', 'مساحة عمليات المعرض', 'الوصول إلى العمليات المسموح بها حسب دورك وفرعك' ),
  array( 'crm', 'admin.php?page=adc-crm', 'العملاء والمتابعات', 'sales' === $kind ? 'العملاء المسندون إليك' : 'إدارة علاقات العملاء وفرص البيع' ),
  array( 'messages', 'admin.php?page=car-dealer-messages', 'رسائل العملاء', 'متابعة طلبات التواصل والبيع الواقعة ضمن نطاقك' ),

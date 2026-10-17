@@ -61,6 +61,8 @@ final class Navigation {
 		$leads = array( 'adc_view_own_leads', 'adc_view_branch_leads' );
 		$definitions = array(
 			'customers' => array( 'العملاء والمبيعات', 'dashicons-groups', array(
+				array( 'adc-conversations', 'محادثات العملاء', array('manage_options','adc_view_conversations'), \AutoDealership\Portal\PortalAdmin::class, 'conversations' ),
+				array( 'adc-customer-reviews', 'تقييمات العملاء', array('manage_options','adc_moderate_reviews'), \AutoDealership\Portal\PortalAdmin::class, 'reviews' ),
 				array( 'adc-crm', 'فرص العملاء', $leads, OperationsPages::class, 'render_leads' ),
 				array( 'car-dealer-messages', 'رسائل العملاء', $leads, EngagementPages::class, 'render_messages' ),
 				array( 'car-dealer-bookings', 'حجوزات تجربة القيادة', $leads, EngagementPages::class, 'render_bookings' ),

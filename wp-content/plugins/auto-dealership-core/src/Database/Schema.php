@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.22.0';
+	public const VERSION = '1.23.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -636,7 +636,8 @@ final class Schema {
 		$tables[] = \AutoDealership\Audit\AuditLog::definition();
 		require_once __DIR__ . '/ExtensionSchema.php';
 		require_once __DIR__ . '/OnyxSchema.php';
-		return array_merge( $tables, ExtensionSchema::definitions( $collate ), OnyxSchema::definitions( $collate ) );
+		require_once __DIR__ . '/../Portal/PortalSchema.php';
+		return array_merge( $tables, ExtensionSchema::definitions( $collate ), OnyxSchema::definitions( $collate ), \AutoDealership\Portal\PortalSchema::definitions($collate) );
 	}
 
 	/** Empty means that every declared table, column and index matches its contract. */

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.41.10
+ * Version: 1.42.0
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.41.10' );
+define( 'ADC_VERSION', '1.42.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -210,6 +210,10 @@ require_once ADC_PATH . 'src/API/ResponseContract.php';
 require_once ADC_PATH . 'src/API/OpenApiSpecification.php';
 require_once ADC_PATH . 'src/API/CurrencyContract.php';
 require_once ADC_PATH . 'src/API/Routes.php';
+foreach ( array('PortalAccess','Conversations','Reviews','PortalMail','PortalPrivacy','PortalView','PortalAdmin','PortalMigration','Portal') as $portal_class ) {
+	require_once ADC_PATH . 'src/Portal/' . $portal_class . '.php';
+}
+\AutoDealership\Portal\Portal::boot();
 
 register_activation_hook( ADC_FILE, array( 'AutoDealership\\Core\\Capabilities', 'activate' ) );
 register_activation_hook( ADC_FILE, array( 'AutoDealership\\Database\\Schema', 'install' ) );

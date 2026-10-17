@@ -70,7 +70,14 @@ $fingerprint = static function ( bool $all = false ) use ( $db ): array {
 $files = static function () use ( $directory ): array {
 	$r = array(); foreach ( array( 'plugins', 'themes', 'mu-plugins', 'uploads' ) as $part ) { $base = $directory . '/content/' . $part; if ( ! is_dir( $base ) ) { continue; } foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $base, FilesystemIterator::SKIP_DOTS ) ) as $file ) { if ( $file->isFile() ) { $r[str_replace( '\\', '/', substr( $file->getPathname(), strlen( $directory ) + 1 ) )] = hash_file( 'sha256', $file->getPathname() ); } } } ksort( $r ); return $r;
 };
-$settings = static function () use ( $db ): array { return $db->query( "SELECT option_name,option_value FROM wp_options WHERE option_name IN ('blogname','blogdescription','active_plugins','template','stylesheet','timezone_string','wp_user_roles','adc_role_definitions') OR option_name LIKE 'car_dealer_%' OR option_name LIKE 'theme_mods_%' OR option_name LIKE 'adc_seller_%' OR option_name LIKE 'adc_reservation_%' OR option_name LIKE 'adc_vat_%' ORDER BY option_name" )->fetch_all( MYSQLI_ASSOC ); };
+$retains_baseline=static function(array $baseline)use($fingerprint):bool {
+	$current=$fingerprint();foreach($baseline as $table=>$state){if(($current[$table]??null)!==$state){return false;}}
+	foreach(array_diff_key($current,$baseline) as $table=>$state){if(!preg_match('/\Awp_adc_portal_(threads|messages|reads|notifications|reviews|review_versions|review_actions)\z/',$table)||$state['rows']!==0){return false;}}return true;
+};
+$settings = static function () use ( $db ): array {
+	$rows=$db->query( "SELECT option_name,option_value FROM wp_options WHERE option_name IN ('blogname','blogdescription','active_plugins','template','stylesheet','timezone_string','wp_user_roles','adc_role_definitions') OR option_name LIKE 'car_dealer_%' OR option_name LIKE 'theme_mods_%' OR option_name LIKE 'adc_seller_%' OR option_name LIKE 'adc_reservation_%' OR option_name LIKE 'adc_vat_%' ORDER BY option_name" )->fetch_all( MYSQLI_ASSOC );
+	foreach($rows as &$row){if('wp_user_roles'!==$row['option_name']){continue;}$roles=unserialize($row['option_value'],array('allowed_classes'=>false));foreach($roles as &$role){foreach(array('adc_view_conversations','adc_reply_conversations','adc_close_conversations','adc_assign_conversations','adc_moderate_reviews','adc_publish_reviews') as $cap){unset($role['capabilities'][$cap]);}}unset($role);$row['option_value']=serialize($roles);}unset($row);return $rows;
+};
 try {
 	$restore_files(); if ( is_dir( $root . '/wp-content/uploads' ) ) { $copy( $root . '/wp-content/uploads', $directory . '/content/uploads' ); }
 	$restore_sql(); $original_data = $fingerprint( true ); $original_files = $files();
@@ -91,9 +98,9 @@ try {
 	$run=static function( string $stage ) use( $config_file ):void { $process=proc_open( array( PHP_BINARY, __FILE__, '--worker', $config_file, $stage ), array( 0=>array('pipe','r'),1=>STDOUT,2=>STDERR ),$pipes ); fclose($pipes[0]); if(0!==proc_close($process)){throw new RuntimeException('Rehearsal stage failed: '.$stage);} };
 	$run('old'); $baseline=$fingerprint(); $baseline_settings=$settings();
 	$run('plugin'); $run('theme'); $run('new');
-	if($baseline!==$fingerprint() || $baseline_settings!==$settings()){throw new RuntimeException('Populated application data or owner settings changed during upgrade.');} echo 'PASS Upgrade: all '.count($baseline)." application tables and identity/contact/policy/role settings retain exact fingerprints after upgrade.\n";
+	if(!$retains_baseline($baseline) || $baseline_settings!==$settings()){throw new RuntimeException('Populated application data or owner settings changed during upgrade.');} echo 'PASS Upgrade: all '.count($baseline)." existing application tables and identity/contact/policy/role settings retain exact fingerprints; added portal tables are empty.\n";
 	$upgraded_files=$files();foreach($original_files as $file=>$hash){if(str_starts_with($file,'content/uploads/')&&($upgraded_files[$file]??'')!==$hash){throw new RuntimeException('Uploaded media changed during upgrade.');}}echo "PASS Upgrade: uploaded media retained exact file hashes.\n";
-	$before_reject=$files();$run('reject');if($before_reject!==$files()||$baseline!==$fingerprint()){throw new RuntimeException('Rejected update altered installed files or data.');}echo "PASS Upgrade: rejected update left files and data unchanged.\n";
+	$before_reject=$files();$before_reject_data=$fingerprint();$run('reject');if($before_reject!==$files()||$before_reject_data!==$fingerprint()){throw new RuntimeException('Rejected update altered installed files or data.');}echo "PASS Upgrade: rejected update left files and data unchanged.\n";
 	foreach(array('plugins','themes','mu-plugins') as $part){$path=$directory.'/content/'.$part;if(is_dir($path))$remove($path);} $restore_files();$restore_sql();
 	if($original_data!==$fingerprint(true)||$original_files!==$files()){throw new RuntimeException('Full rollback fingerprints differ from the original snapshot.');} echo 'PASS Restore: all '.count($original_data).' database tables and '.count($original_files)." runtime/media files restored exactly.\n";
 	$run('restored'); if($baseline!==$fingerprint()){throw new RuntimeException('Restored old runtime altered application data.');}

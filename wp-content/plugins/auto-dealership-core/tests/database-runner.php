@@ -46,14 +46,19 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 	require ABSPATH . 'wp-settings.php';
 	add_filter( 'pre_wp_mail', '__return_true' );
-	if ( in_array( $scenario, array( 'email_confirm', 'reserve', 'finance_attempt', 'migrate', 'crm_intake', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase', 'outbox', 'rate_limit', 'purchase_create' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
+	if ( in_array( $scenario, array( 'portal_send','portal_change','portal_review','portal_read','portal_withdraw','email_confirm', 'reserve', 'finance_attempt', 'migrate', 'crm_intake', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase', 'outbox', 'rate_limit', 'purchase_create' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
 		require __DIR__ . '/../auto-dealership-core.php';
 		wp_set_current_user( $actor );
 		global $wpdb;
 		$wpdb->suppress_errors( true );
 		if ( '1' !== (string) $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 10)', $barrier ) ) ) { exit( 2 ); }
 		$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $barrier ) );
-		if ( 'email_confirm' === $scenario ) {
+		if('portal_send'===$scenario){$result=\AutoDealership\Portal\Conversations::send($input['id'],$input['body'],$input['uuid']);}
+		elseif('portal_change'===$scenario){$result=\AutoDealership\Portal\Conversations::change($input['id'],$input['operation'],$input['revision'],$input['owner']??0);}
+		elseif('portal_review'===$scenario){$result=\AutoDealership\Portal\Reviews::moderate($input['id'],$input['version'],$input['revision'],'publish');}
+		elseif('portal_withdraw'===$scenario){$result=\AutoDealership\Portal\Reviews::withdraw($input['id'],$input['revision']);}
+		elseif('portal_read'===$scenario){$result=\AutoDealership\Portal\Conversations::read($input['id'],$input['last']);}
+		elseif ( 'email_confirm' === $scenario ) {
 			\AutoDealership\Leads\NewsletterService::boot();
 			$result = \AutoDealership\Accounts\EmailVerification::confirm( (string) ( $input['token'] ?? '' ), (string) ( $input['password'] ?? '' ) );
 		} elseif ( 'rate_limit' === $scenario ) {
@@ -105,6 +110,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
 	require __DIR__.'/onyx-document-fixture.php';
+	if ( '1' === getenv( 'ADC_PORTAL_ONLY' ) ) { require __DIR__ . '/portal-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_PRODUCT_ONLY' ) ) { require __DIR__ . '/product-setup-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_NEWSLETTER_ONLY' ) ) { require __DIR__ . '/newsletter-scenarios.php'; exit; }
 	if('1'===getenv('ADC_LAUNCH_ONLY')){require __DIR__.'/launch-readiness-scenarios.php';exit;}

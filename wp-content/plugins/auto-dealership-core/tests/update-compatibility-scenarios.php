@@ -21,7 +21,7 @@ $check( $error( Compatibility::validate_directory( $fixture( array( 'version'=>'
 $check( $error( Compatibility::validate_directory( $fixture( array( 'partner_min'=>'3.0.0', 'partner_before'=>'4.0.0' ) ), 'plugin' ), 'adc_update_partner' ), 'Incompatible installed partner is blocked' );
 $check( $error( Compatibility::validate_directory( $fixture( array( 'schema_max'=>'1.0.0', 'schema_target'=>'1.0.0' ) ), 'plugin' ), 'adc_update_schema' ), 'Package unable to read installed schema is blocked' );
 $check( $error( Compatibility::validate_directory( $fixture( array( 'schema_target'=>'1.21.0' ) ), 'plugin' ), 'adc_update_schema' ), 'Schema downgrade is blocked even when package version is unchanged' );
-$older = str_replace( 'Version: 1.40.1', 'Version: 1.39.1', $header );
+$older = preg_replace( '/Version:\s*[0-9.]+/', 'Version: 1.39.1', $header, 1 );
 $check( $error( Compatibility::validate_directory( $fixture( array( 'version'=>'1.39.1' ), $older ), 'plugin' ), 'adc_update_downgrade' ), 'Code-only downgrade is blocked' );
 $missing = $fixture(); unlink( $missing . '/resources/release.json' );
 $check( $error( Compatibility::validate_directory( $missing, 'plugin' ), 'adc_update_manifest' ), 'Missing release manifest is blocked' );
@@ -37,14 +37,14 @@ foreach ( array( 'pre_wp_mail', 'wp_mail_from', 'wp_mail_from_name', 'phpmailer_
 	foreach ( ( $wp_filter[$hook]->callbacks ?? array() ) as $callbacks ) { foreach ( $callbacks as $callback ) { if ( $callback['function'] instanceof Closure ) { $file = ( new ReflectionFunction( $callback['function'] ) )->getFileName(); if ( $file && in_array( realpath( $file ), array( realpath( WPMU_PLUGIN_DIR . '/autobrands-mail.php' ), realpath( WPMU_PLUGIN_DIR . '/autobrands-password-email.php' ) ), true ) ) { ++$legacy_callbacks; } } } }
 }
 $check( 0 === $legacy_callbacks, 'Old MU mail callbacks are replaced without duplicate handlers or file edits' );
-$check( has_filter( 'pre_wp_mail', '__return_false' ) !== false && 'disabled' === adc_product_mail_config()['mode'], 'Rehearsal mail block remains registered after legacy compatibility handling' );
+$check( has_filter( 'pre_wp_mail', '__return_false' ) !== false && false===apply_filters('pre_wp_mail',null,array('to'=>'offline@example.invalid','subject'=>'Offline check','message'=>'Offline check','headers'=>array(),'attachments'=>array())), 'Rehearsal mail block remains registered after legacy compatibility handling' );
 $theme = get_theme_root( 'car-dealer' ) . '/car-dealer'; $theme_metadata = file_get_contents( $theme . '/inc/release.json' ); $theme_header = file_get_contents( $theme . '/style.css' );
 try {
 	$data = json_decode( $theme_metadata, true ); $data['partner_before'] = '1.40.1'; file_put_contents( $theme . '/inc/release.json', json_encode( $data ) );
 	$check( $error( Compatibility::validate_directory( ADC_PATH, 'plugin' ), 'adc_update_partner' ), 'Partner compatibility is checked in both directions' );
 	unlink( $theme . '/inc/release.json' );
 	$check( $error( Compatibility::validate_directory( ADC_PATH, 'plugin' ), 'adc_update_partner' ), 'Unknown partner without a manifest is blocked' );
-	file_put_contents( $theme . '/style.css', str_replace( 'Version: 1.40.1', 'Version: 1.40.0', $theme_header ) );
+	file_put_contents( $theme . '/style.css', preg_replace('/Version:\s*[0-9.]+/','Version: 1.40.0',$theme_header,1) );
 	$check( true === Compatibility::validate_directory( ADC_PATH, 'plugin' ), 'Known legacy bridge permits sequential component updates' );
 } finally { file_put_contents( $theme . '/inc/release.json', $theme_metadata ); file_put_contents( $theme . '/style.css', $theme_header ); }
 echo "Compatibility guard passed ($count checks).\n";

@@ -35,7 +35,7 @@ final class CustomerAccount {
 		if ( user_can( $user, 'manage_options' ) ) { return 'administrator'; }
 		if ( user_can( $user, 'adc_view_branch_leads' ) || ( user_can( $user, 'edit_others_cars' ) && user_can( $user, 'manage_car_dealer' ) ) ) { return 'manager'; }
 		if ( user_can( $user, 'adc_view_own_leads' ) || user_can( $user, 'manage_car_dealer' ) ) { return 'sales'; }
-		if ( user_can( $user, 'adc_view_workspace' ) ) { return 'staff'; }
+		if ( user_can( $user, 'adc_view_workspace' ) || user_can($user,'adc_view_conversations') || user_can($user,'adc_moderate_reviews') ) { return 'staff'; }
 		return 'customer';
 	}
 
@@ -43,6 +43,8 @@ final class CustomerAccount {
 	public static function should_redirect_admin( \WP_User $user ): bool {
 		return (bool) array_intersect( array( 'car_dealer_customer', 'subscriber' ), (array) $user->roles )
 			&& ! user_can( $user, 'edit_posts' )
+			&& ! user_can( $user, 'adc_view_conversations' )
+			&& ! user_can( $user, 'adc_moderate_reviews' )
 			&& ! user_can( $user, 'manage_car_dealer' );
 	}
 
@@ -50,6 +52,8 @@ final class CustomerAccount {
 	public static function workspace_targets( \WP_User $user ): array {
 		$rules = array(
 			'workspace'   => array( 'adc_view_workspace' ),
+			'conversations'=>array('adc_view_conversations'),
+			'reviews'=>array('adc_moderate_reviews'),
 			'crm'         => array( 'adc_view_own_leads', 'adc_view_branch_leads' ),
 			'messages'    => array( 'adc_view_own_leads', 'adc_view_branch_leads' ),
 			'bookings'    => array( 'adc_view_own_leads', 'adc_view_branch_leads' ),

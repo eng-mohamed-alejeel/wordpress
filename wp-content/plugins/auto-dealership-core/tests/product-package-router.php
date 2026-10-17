@@ -31,12 +31,24 @@ if ( '/adc-product-session' === $path ) {
 	if ( ! hash_equals( $config['token'], (string) ( $_GET['key'] ?? '' ) ) ) { http_response_code( 403 ); exit; }
 	wp_set_current_user( $config['admin'] ); wp_set_auth_cookie( $config['admin'], false, false ); header( 'Content-Type: application/json' ); echo '{"authenticated":true}'; exit;
 }
+if('/adc-product-portal-fixture'===$path){
+	if(!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
+	wp_set_current_user($config['admin']);$fixture=get_option('adc_test_portal_fixture');
+	if(!$fixture){
+		$branch=\AutoDealership\Branches\BranchService::create(array('code'=>'PORTAL_QA','name'=>'Portal QA branch'))['id'];$ids=array();
+		foreach(array('customer','other') as $name){$id=wp_insert_user(array('user_login'=>'portal_qa_'.$name,'user_email'=>'portal_qa_'.$name.'@example.invalid','display_name'=>'Portal QA '.$name,'user_pass'=>'PortalBrowserPass123!','role'=>'car_dealer_customer'));update_user_meta($id,'adc_email_verification_status','verified');update_user_meta($id,'adc_email_verified_at',current_time('mysql',true));update_user_meta($id,'adc_verified_email_hash',hash('sha256','portal_qa_'.$name.'@example.invalid'));$ids[$name]=$id;}
+		wp_set_current_user($ids['customer']);$thread=\AutoDealership\Portal\Conversations::ensure('general',0,'Browser enquiry',$branch);\AutoDealership\Portal\Conversations::send($thread,'Customer initial message',wp_generate_uuid4());
+		wp_set_current_user($config['admin']);\AutoDealership\Portal\Conversations::send($thread,'PRIVATE_STAFF_NOTE',wp_generate_uuid4(),true);\AutoDealership\Portal\Conversations::send($thread,'Public adviser reply',wp_generate_uuid4());
+		$fixture=array_merge($ids,array('thread'=>$thread,'branch'=>$branch));update_option('adc_test_portal_fixture',$fixture,false);
+	}
+	$actor='other'===($_GET['as']??'')?$fixture['other']:('admin'===($_GET['as']??'')?$config['admin']:$fixture['customer']);wp_set_current_user($actor);wp_set_auth_cookie($actor,false,false);header('Content-Type: application/json');echo wp_json_encode($fixture);exit;
+}
 if('/adc-product-mail-state'===$path) {
 	if(!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
 	$kind='subscription'===($_GET['kind']??'')?'newsletter.subscription':'email.verify';
 	global $wpdb;header('Content-Type: application/json');echo wp_json_encode($wpdb->get_results($wpdb->prepare('SELECT status,attempts FROM '.\AutoDealership\Operations\OutboxService::table().' WHERE event_key=%s ORDER BY id',$kind),ARRAY_A));exit;
 }
-if('/wp-admin/admin-ajax.php'===$path){$action=sanitize_key($_POST['action']??'');do_action((is_user_logged_in()?'wp_ajax_':'wp_ajax_nopriv_').$action);http_response_code(400);exit;}
+if('/wp-admin/admin-ajax.php'===$path){$action=sanitize_key($_REQUEST['action']??'');do_action((is_user_logged_in()?'wp_ajax_':'wp_ajax_nopriv_').$action);http_response_code(400);exit;}
 if('/adc-product-confirmation-fixture'===$path) {
 	if(!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
 	if(isset($_GET['clear_wait'])){$key=new ReflectionMethod(\AutoDealership\Accounts\VerificationExperience::class,'cooldown_key');$key->setAccessible(true);delete_transient($key->invoke(null,'account'));}
@@ -46,6 +58,9 @@ if('/adc-product-confirmation-fixture'===$path) {
 	header('Content-Type: application/json');echo wp_json_encode(['blocked'=>\AutoDealership\Accounts\EmailVerification::blocked((int)$user->ID),'url'=>\AutoDealership\Accounts\EmailVerification::page_url('account','en').'#token='.$row['selector'].'.'.$method->invoke(null,$row)]);exit;
 }
 if ( '/wp-admin/admin-post.php' === $path ) { do_action( 'admin_post_' . sanitize_key( $_POST['action'] ?? '' ) ); exit; }
+if('/wp-admin/admin.php'===$path&&in_array($_GET['page']??'',array('adc-conversations','adc-customer-reviews'),true)){
+	if(!current_user_can('manage_options')){http_response_code(403);exit;}require_once ABSPATH.'wp-admin/includes/admin.php';set_current_screen('toplevel_page_'.sanitize_key($_GET['page']));do_action('admin_enqueue_scripts');wp_enqueue_style('common');wp_enqueue_style('forms');wp_dequeue_script('wp-auth-check');echo '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">';wp_print_styles();echo '</head><body class="wp-admin">';if('adc-conversations'===$_GET['page']){\AutoDealership\Portal\PortalAdmin::conversations();}else{\AutoDealership\Portal\PortalAdmin::reviews();}wp_print_scripts(array('adc-customer-portal'));echo '</body></html>';exit;
+}
 if ( '/wp-admin/options-general.php' === $path || ('/wp-admin/admin.php' === $path && 'adc-site-content' === ($_GET['page']??'')) ) {
 	if ( ! current_user_can( 'manage_options' ) ) { http_response_code( 403 ); exit; }
 	require_once ABSPATH . 'wp-admin/includes/admin.php';

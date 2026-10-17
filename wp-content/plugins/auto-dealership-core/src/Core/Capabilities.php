@@ -157,11 +157,12 @@ final class Capabilities {
 		foreach ( $matrix as &$caps ) { if ( in_array( 'adc_create_reservations', $caps, true ) || in_array( 'adc_manage_branch_leads', $caps, true ) ) { $caps = array_merge( $caps, self::SALES_CAPABILITIES ); } }
 		unset( $caps );
 		foreach ( self::PURCHASE_ROLES as $role=>$caps ) { $matrix[$role] = array_merge( $matrix[$role], $caps ); }
+		foreach ( \AutoDealership\Portal\PortalAccess::role_caps() as $role=>$caps ) { $matrix[$role] = array_merge( $matrix[$role] ?? array(), $caps ); }
 		return $matrix;
 	}
 
 	public static function all_capabilities(): array {
-		$caps = array_merge( array( 'adc_manage_newsletter' ), self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES );
+		$caps = array_merge( array( 'adc_manage_newsletter' ), self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES, \AutoDealership\Portal\PortalAccess::CAPS );
 		foreach ( self::ROLE_CAPABILITIES as $role_caps ) {
 			$caps = array_merge( $caps, $role_caps );
 		}

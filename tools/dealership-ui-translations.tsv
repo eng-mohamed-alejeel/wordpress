@@ -1,4 +1,10 @@
 # Arabic<TAB>English; use \u0020 for leading or trailing spaces. UI copy only; never translate stored identifiers or customer input.
+عرض محادثات العملاء	View customer conversations
+الرد على محادثات العملاء	Reply to customer conversations
+إغلاق محادثات العملاء وإعادة فتحها	Close and reopen customer conversations
+إسناد محادثات العملاء	Assign customer conversations
+مراجعة تقييمات العملاء	Moderate customer reviews
+نشر تقييمات العملاء المعتمدة	Publish approved customer reviews
 تعذر إنشاء إحدى الصفحات المحددة. لم تُحفظ أي صفحة.	A selected page could not be created. No pages were saved.
 لم تحتفظ إحدى الصفحات المحددة بهويتها المطلوبة كمسودة. لم تُحفظ أي صفحة.	A selected page did not retain its required draft identity. No pages were saved.
 نوع مستند معتمد ومرجع مطلوبان.	A supported document type and reference are required.

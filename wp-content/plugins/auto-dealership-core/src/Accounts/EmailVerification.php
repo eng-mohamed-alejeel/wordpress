@@ -163,7 +163,7 @@ final class EmailVerification {
 		global $wpdb; $suffix = $lock ? ' FOR UPDATE' : '';
 		if ( 'account' === $row['purpose'] ) {
 			$user = $wpdb->get_row( $wpdb->prepare( "SELECT ID,user_email,user_pass FROM {$wpdb->users} WHERE ID=%d" . $suffix, $row['subject_id'] ), ARRAY_A );
-			if ( ! $user || ! self::blocked( (int) $user['ID'] ) ) { return null; }
+			if ( ! $user || ( ! self::blocked( (int) $user['ID'] ) && ! get_user_meta( (int) $user['ID'], 'adc_portal_ownership_requested', true ) ) ) { return null; }
 			return array( 'email'=>$user['user_email'], 'password'=>$user['user_pass'], 'locale'=>get_user_meta( (int) $user['ID'], 'adc_preferred_language', true ) ?: $row['locale'] );
 		}
 		$subscriber = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . NewsletterService::subscribers() . ' WHERE id=%d' . $suffix, $row['subject_id'] ), ARRAY_A );
@@ -206,6 +206,7 @@ final class EmailVerification {
 		if ( ! $row || ! $target || $wpdb->last_error || $row['used_at'] || ! hash_equals( $row['selector'], $parts[1] ) || ! hash_equals( $row['token_hash'], hash( 'sha256', $parts[2] ) ) || ! hash_equals( self::proof( $row ), $parts[2] ) || ! hash_equals( $row['email_hash'], self::email_hash( $target['email'] ) ) ) { $wpdb->query( 'ROLLBACK' ); return self::error(); }
 		if(strtotime($row['expires_at'].' UTC')<=time()){$wpdb->query('ROLLBACK');return new \WP_Error('adc_verification_expired',self::t('انتهت صلاحية رابط التأكيد. اطلب رابطًا جديدًا أدناه دون إعادة التسجيل.','This verification link has expired. Request a new link below; you do not need to register again.'));}
 		$now = current_time( 'mysql', true ); $id = (int) $row['subject_id'];
+		$ownership_only = 'account' === $row['purpose'] && (bool) get_user_meta( $id, 'adc_portal_ownership_requested', true );
 		if ( 'account' === $row['purpose'] ) {
 			update_user_meta( $id, 'adc_email_verification_status', 'verified' );
 			$verified_email_hash = self::account_email_hash( $target['email'] );
@@ -213,7 +214,8 @@ final class EmailVerification {
 			update_user_meta( $id, 'adc_email_verified_at', $now );
 			$ok = get_user_meta( $id, 'adc_email_verification_status', true ) === 'verified' && get_user_meta( $id, 'adc_verified_email_hash', true ) === $verified_email_hash && get_user_meta( $id, 'adc_email_verified_at', true ) === $now;
 			$payload = array( 'subject_type'=>'user', 'subject_id'=>$id );
-			$event = OutboxService::enqueue( 'customer.welcome', $payload, 'customer-welcome:' . $id );
+			$event = $ownership_only ? true : OutboxService::enqueue( 'customer.welcome', $payload, 'customer-welcome:' . $id );
+			if ( $ownership_only ) { delete_user_meta( $id, 'adc_portal_ownership_requested' ); }
 		} else {
 			$ok = 1 === $wpdb->update( NewsletterService::subscribers(), array( 'status'=>'active', 'confirmed_at'=>$now, 'confirmation_source'=>'newsletter_link', 'confirmation_user_id'=>0 ), array( 'id'=>$id, 'status'=>'pending', 'consent_key'=>$row['consent_key'] ) );
 			$payload = array( 'subject_type'=>'subscriber', 'subject_id'=>$id, 'correlation_id'=>$row['consent_key'] );
@@ -223,7 +225,7 @@ final class EmailVerification {
 		if ( ! $ok || 1 !== $consumed || is_wp_error( $event ) || ! Transaction::commit( static fn() => AuditLog::record( 'email.' . $row['purpose'] . '_confirmed', 'email_verification', (int) $row['id'], 'Email ownership confirmed', null, array( 'purpose'=>$row['purpose'], 'subject_id'=>$id ) ) ) ) {
 			$wpdb->query( 'ROLLBACK' ); if ( 'account' === $row['purpose'] ) { clean_user_cache( $id ); } return self::error( 'adc_verification_storage' );
 		}
-		if ( 'account' === $row['purpose'] ) { clean_user_cache( $id ); NewsletterService::welcome( $payload ); } else { NewsletterService::subscription_email( $payload ); }
+		if ( 'account' === $row['purpose'] ) { clean_user_cache( $id ); if ( ! $ownership_only ) { NewsletterService::welcome( $payload ); } } else { NewsletterService::subscription_email( $payload ); }
 		NewsletterService::wake();
 		return array( 'purpose'=>$row['purpose'], 'locale'=>$row['locale'] );
 	}

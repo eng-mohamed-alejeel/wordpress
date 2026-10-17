@@ -129,10 +129,16 @@ final class RequestWorkflow {
 		$now = current_time( 'mysql', true );
 		if ( 1 !== $wpdb->insert( Schema::table( 'activities' ), array( 'lead_id'=>$lead_id, 'actor_user_id'=>get_current_user_id(), 'type'=>'note', 'notes'=>$notes, 'created_at'=>$now ) ) ) { return self::rollback( 'adc_request_failed', 500 ); }
 		$activity_id = (int) $wpdb->insert_id;
+		$portal_event=0;
+		if(!$customer_cancel && array_key_exists('customer_reply',$changed) && class_exists('\\AutoDealership\\Portal\\Conversations')) {
+			$portal_event=\AutoDealership\Portal\Conversations::legacy_reply($lead,$row,$changed['customer_reply'],$activity_id);
+			if(is_wp_error($portal_event)){return self::rollback('adc_request_failed',500);}
+		}
 		if ( false === $wpdb->update( Schema::table( 'leads' ), array( 'updated_at'=>$now ), array( 'id'=>$lead_id ) ) ) { return self::rollback( 'adc_request_failed', 500 ); }
 		// Free text and appointment details stay in erasable activity notes, not audit JSON.
 		$audit = array( 'request_type'=>$type, 'request_id'=>(int) $row['id'], 'status'=>$changes['status'], 'activity_id'=>$activity_id, 'fields'=>array_values( array_diff( array_keys( $changed ), array( 'updated_at' ) ) ), 'customer_cancel'=>$customer_cancel );
 		if ( ! Transaction::commit( static fn() => AuditLog::record( 'lead.request_updated', 'lead', $lead_id, '', array( 'status'=>$row['status'] ), $audit ) ) ) { return self::error( 'adc_request_failed', 500 ); }
+		if($portal_event){\AutoDealership\Portal\PortalMail::dispatch_after_commit($portal_event);}
 		return array( 'updated'=>true, 'status'=>$changes['status'] );
 	}
 

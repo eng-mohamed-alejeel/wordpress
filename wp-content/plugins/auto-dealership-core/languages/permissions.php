@@ -1,6 +1,12 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 return array(
+	'adc_view_conversations' => array('Leads and sales','View customer conversations'),
+	'adc_reply_conversations' => array('Leads and sales','Reply to customer conversations'),
+	'adc_close_conversations' => array('Leads and sales','Close and reopen customer conversations'),
+	'adc_assign_conversations' => array('Leads and sales','Assign customer conversations'),
+	'adc_moderate_reviews' => array('Leads and sales','Moderate customer reviews'),
+	'adc_publish_reviews' => array('Leads and sales','Publish approved customer reviews'),
 	'adc_view_purchase_orders' => array( 'Inventory and purchasing', 'View purchase orders' ),
 	'adc_create_purchase_orders' => array( 'Inventory and purchasing', 'Create purchase orders' ),
 	'adc_approve_purchase_orders' => array( 'Inventory and purchasing', 'Approve purchase orders' ),

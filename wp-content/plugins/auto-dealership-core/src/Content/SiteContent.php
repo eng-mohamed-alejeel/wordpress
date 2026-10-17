@@ -109,7 +109,9 @@ final class SiteContent {
 		} finally { $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)',$lock)); }
 	}
 	public static function rows(string $group,?string $lang=null): array {
-		$lang=$lang??Localization::language(); $data=self::data(); $rows=array_filter($data[$group]??[],static fn($r)=>'published'===$r['status'] && self::ready($r,$group,$lang)); usort($rows,static fn($a,$b)=>$a['order']<=>$b['order']); return $rows;
+		$lang=$lang??Localization::language(); $data=self::data(); $rows=array_filter($data[$group]??[],static fn($r)=>'published'===$r['status'] && self::ready($r,$group,$lang));
+		if('reviews'===$group){$rows=apply_filters('adc_site_content_review_rows',array_values($rows),$lang);}
+		usort($rows,static fn($a,$b)=>$a['order']<=>$b['order']); return $rows;
 	}
 	public static function render(string $group,array $attrs=[]): string {
 		if(!in_array($group,self::COLLECTIONS,true)) { return ''; } $rows=self::rows($group); if(!$rows) { return ''; }
@@ -118,7 +120,7 @@ final class SiteContent {
 		$html='<section class="adc-editorial-section adc-editorial-'.esc_attr($group).'"><div class="container"><h2>'.esc_html($custom_title?:self::t(...$title)).'</h2>'.($description?'<p>'.esc_html($description).'</p>':'').'<div class="adc-editorial-grid">';
 		$metric_counts=null;
 		foreach($rows as $r) {
-			$html.='<article class="adc-editorial-card">';
+			$html.='<article class="adc-editorial-card"'.(!empty($r['original_language'])?' lang="'.esc_attr($r['original_language']).'" dir="'.('ar'===$r['original_language']?'rtl':'ltr').'"':'').'>';
 			if('team'===$group) {
 				$image=$r['image']?wp_get_attachment_image($r['image'],'medium',false,['class'=>'adc-team-photo','loading'=>'lazy','alt'=>$r['name_'.$lang]]):'';
 				$html.=$image?:'<div class="adc-team-avatar" aria-hidden="true"><svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="58" fill="currentColor" opacity=".08"/><circle cx="60" cy="43" r="20" fill="currentColor" opacity=".65"/><path d="M24 103v-9a36 30 0 0 1 72 0v9" fill="currentColor" opacity=".65"/></svg></div>';
@@ -129,6 +131,7 @@ final class SiteContent {
 				$html.='<small>'.esc_html(self::t('المصدر: ','Source: ').('manual'===$r['source']?$r['text_'.$lang]:self::t('بيانات النظام الحالية','Current system data'))).'</small>';
 				if('manual'===$r['source']) { $html.='<small>'.esc_html(self::t('آخر مراجعة: ','Last reviewed: ').$r['reviewed_at']).'</small>'; }
 			} else {
+				if('reviews'===$group){$html.='<span class="adc-review-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 7 0 0 1 16 0v3Z"/></svg></span>';}
 				$html.='<h3>'.esc_html($r['name_'.$lang]).'</h3>';
 				if('team'===$group) { $html.='<p class="adc-team-role">'.esc_html($r['role_'.$lang]).'</p>'; }
 				if('reviews'===$group && $r['rating']) { $html.='<p class="adc-review-rating" aria-label="'.esc_attr(sprintf(self::t('التقييم %d من 5','Rating %d out of 5'),$r['rating'])).'">'.str_repeat('★',$r['rating']).'</p>'; }

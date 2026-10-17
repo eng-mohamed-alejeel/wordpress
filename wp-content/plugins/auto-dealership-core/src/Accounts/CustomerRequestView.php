@@ -33,7 +33,7 @@ final class CustomerRequestView {
 			$fields .= ',r.requested_date,r.requested_time';
 			$fields .= ',EXISTS (SELECT 1 FROM ' . Schema::table( 'leads' ) . ' linked INNER JOIN ' . Schema::table( 'customers' ) . " owner ON owner.id=linked.customer_id AND owner.account_user_id=%d AND owner.merged_into_id IS NULL WHERE linked.legacy_request_type='booking' AND linked.legacy_request_id=r.id) AS linked";
 		} else {
-			$fields .= ',r.message';
+			$fields .= ',r.message,r.lead_type,r.subject';
 		}
 		$args = 'bookings' === $type
 			? array( $user_id, $user_id, self::PER_PAGE + 1, ( $page - 1 ) * self::PER_PAGE )
@@ -63,6 +63,8 @@ final class CustomerRequestView {
 				'status' => (string) $row['status'],
 				'status_label' => $statuses[ $row['status'] ] ?? __( 'قيد المتابعة', 'auto-dealership-core' ),
 				'message' => 'messages' === $type ? (string) $row['message'] : '',
+				'request_kind' => 'messages' === $type ? (string) $row['lead_type'] : 'test_drive',
+				'subject' => 'messages' === $type ? (string) $row['subject'] : '',
 				'customer_reply' => (string) $row['customer_reply'],
 				'requested_date' => 'bookings' === $type ? (string) $row['requested_date'] : '',
 				'requested_time' => 'bookings' === $type ? (string) $row['requested_time'] : '',

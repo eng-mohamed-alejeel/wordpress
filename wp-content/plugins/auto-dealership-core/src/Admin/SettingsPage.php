@@ -67,6 +67,7 @@ final class SettingsPage {
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'إعدادات منصة المعرض', 'auto-dealership-core' ); ?></h1>
+			<p><a href="<?php echo esc_url(admin_url('admin.php?page=adc-conversations')); ?>"><?php echo esc_html(\AutoDealership\Portal\PortalAccess::t('إعدادات حساب العميل والمحادثات وإشعارات البريد','Customer portal, conversations and email notification settings')); ?></a></p>
 			<p><?php esc_html_e( 'القيم المالية بالريال السعودي. راجع إعدادات الضرائب وسياسات الحجز والخصومات مع مسؤول الشركة قبل التشغيل.', 'auto-dealership-core' ); ?></p>
 			<?php if ( isset( $_GET['updated'] ) ) : ?><div class="notice notice-success"><p><?php esc_html_e( 'تم حفظ الإعدادات.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>
 			<?php if ( isset( $_GET['error'] ) ) : ?><div class="notice notice-error"><p><?php esc_html_e( 'تعذر حفظ الإعدادات وتوثيقها؛ أُعيدت القيم السابقة.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>
