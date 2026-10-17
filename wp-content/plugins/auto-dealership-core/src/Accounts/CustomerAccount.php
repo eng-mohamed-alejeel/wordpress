@@ -187,7 +187,8 @@ final class CustomerAccount {
 		$existing_account = email_exists( $email );
 		if ( $existing_account ) { EmailVerification::request( 'account', $email ); return (int) $existing_account; }
 		foreach ( array( $wpdb->users, $wpdb->usermeta ) as $table ) {
-			if ( 'InnoDB' !== $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $table ) ) ) {
+			$status=$wpdb->get_row($wpdb->prepare('SHOW TABLE STATUS LIKE %s',$wpdb->esc_like($table)),ARRAY_A);
+			if ( $wpdb->last_error || !$status || $status['Name']!==$table || 'innodb'!==strtolower((string)$status['Engine']) ) {
 				return self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب حاليًا.', 'auto-dealership-core' ) );
 			}
 		}
@@ -232,6 +233,7 @@ final class CustomerAccount {
 		$committed = Transaction::commit( static fn() => AuditLog::record( 'customer.account_registered', 'user', $user_id, '', null, array( 'role'=>'car_dealer_customer', 'privacy_consent'=>true ) ) );
 		clean_user_cache( $user_id );
 		if ( $committed ) {
+			EmailVerification::deliver_committed($mail_event);
 			\AutoDealership\Leads\NewsletterService::wake();
 		}
 		return $committed ? (int) $user_id : self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) );

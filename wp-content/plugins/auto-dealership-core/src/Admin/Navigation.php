@@ -103,6 +103,7 @@ final class Navigation {
 				array( 'adc-delivery', 'تجهيز وتسليم المركبات', array( 'adc_approve_delivery', 'adc_confirm_vehicle_vin' ), WorkflowPages::class, 'delivery' ),
 			) ),
 			'content' => array( 'محتوى الموقع', 'dashicons-admin-page', array(
+				array( 'adc-site-content', 'إدارة المحتوى وجاهزية الموقع', 'manage_options', SiteContentPage::class, 'render' ),
 				array( 'edit.php?post_type=car_offer', 'العروض الترويجية', 'edit_car_offers' ),
 				array( 'edit.php?post_type=page', 'صفحات الموقع', 'edit_pages' ),
 				array( 'upload.php', 'مكتبة الوسائط', 'upload_files' ),

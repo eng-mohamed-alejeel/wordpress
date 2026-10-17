@@ -37,7 +37,7 @@ final class OnyxModelDrafts {
 	public static function storage_issues(): array {
 		global $wpdb;
 		$issues = array();
-		foreach (array($wpdb->posts,$wpdb->postmeta,$wpdb->terms,$wpdb->term_taxonomy,$wpdb->term_relationships,$wpdb->termmeta,$wpdb->options) as $table) {
+		foreach (array($wpdb->posts,$wpdb->postmeta,$wpdb->terms,$wpdb->term_taxonomy,$wpdb->term_relationships,$wpdb->termmeta,$wpdb->options,$wpdb->users,$wpdb->usermeta) as $table) {
 			$status = $wpdb->get_row($wpdb->prepare('SHOW TABLE STATUS LIKE %s', $wpdb->esc_like($table)), ARRAY_A);
 			if ($wpdb->last_error || !$status || $status['Name'] !== $table) { $issues[$table] = 'unknown'; continue; }
 			if ('innodb' !== strtolower((string) $status['Engine'])) { $issues[$table] = (string) $status['Engine']; }

@@ -1,0 +1,60 @@
+<?php
+/** Runs only inside the disposable product scenario. */
+use AutoDealership\Content\SiteContent as Content;
+use AutoDealership\Content\ContentTransfer;
+use AutoDealership\Admin\SiteContentPage;
+if(PHP_SAPI!=='cli' || !preg_match('/\Aadc_verify_[a-f0-9]{16}\z/',DB_NAME)){exit(1);}
+$data=Content::defaults();
+$check(!$data['team'] && !$data['reviews'] && !$data['metrics'] && ''===Content::render('reviews'),'Editorial sections start empty without invented endorsements');
+$check(is_wp_error(Content::normalize(['secret'=>'forbidden'])),'Unknown editorial fields are rejected');
+$row=['id'=>'member-1','status'=>'published','order'=>0,'name_ar'=>'عضو الفريق','name_en'=>'Team member','role_ar'=>'المبيعات','role_en'=>'Sales','text_ar'=>'نبذة','text_en'=>'Biography','verified_ar'=>'1','verified_en'=>'1'];
+$data['team']=[$row];$normalized=Content::normalize($data);
+$check(!is_wp_error($normalized) && Content::ready($normalized['team'][0],'team','en'),'Complete bilingual team entries acquire language approval hashes');
+$tampered=$normalized;$tampered['team'][0]['name_en']='Changed without review';$tampered=Content::normalize($tampered);
+$check(!is_wp_error($tampered) && !Content::ready($tampered['team'][0],'team','en') && Content::ready($tampered['team'][0],'team','ar'),'Editing English invalidates its approval while Arabic remains approved');
+$duplicate=$data;$duplicate['team'][]=$row;$check(is_wp_error(Content::normalize($duplicate)),'Duplicate content IDs are rejected');
+$malformed=$data;$malformed['team'][0]['name_ar']=[];$check(is_wp_error(Content::normalize($malformed)),'Nested values cannot bypass editorial validation');
+$review=['id'=>'review-1','status'=>'published','name_ar'=>'عميل','name_en'=>'Customer','text_ar'=>'رأي حقيقي','text_en'=>'Authentic feedback','verified_ar'=>'1','verified_en'=>'1','consent'=>'','rating'=>5];
+$data['reviews']=[$review];$check(is_wp_error(Content::normalize($data)),'Customer reviews cannot publish without consent');$data['reviews'][0]['consent']='1';
+$metric=['id'=>'metric-1','status'=>'published','title_ar'=>'خبرة','title_en'=>'Experience','unit_ar'=>'سنوات','unit_en'=>'years','source'=>'manual','value'=>'12','verified_ar'=>'1','verified_en'=>'1'];
+$data['metrics']=[$metric];$check(is_wp_error(Content::normalize($data)),'Manual metrics cannot publish without a dated source');
+$data['metrics'][0]['text_ar']='سجل موثق';$data['metrics'][0]['text_en']='Documented record';$data['metrics'][0]['reviewed_at']=current_time('Y-m-d');
+$clean=Content::normalize($data);$check(!is_wp_error($clean),'Documented bilingual manual metrics validate');
+$invalid=$data;$invalid['metrics'][0]['reviewed_at']='2026-02-31';$check(is_wp_error(Content::normalize($invalid)),'Impossible metric review dates are rejected');
+wp_set_current_user(0);$check(is_wp_error(Content::save($data,Content::revision())),'Anonymous users cannot save public editorial content');
+$request=new WP_REST_Request('POST');$request->set_header('Content-Type','application/json');$request->set_body(wp_json_encode(['tab'=>'team','rows'=>[$row]]));
+$check(is_wp_error(SiteContentPage::preview($request)),'Anonymous users cannot create private content previews');wp_set_current_user((int)$install['user_id']);
+$revision=Content::revision();$check(true===Content::save($data,$revision),'Administrator can atomically save complete editorial content');
+$check(is_wp_error(Content::save($data,$revision)),'Stale editorial saves cannot overwrite a newer revision');
+$_GET['lang']='en';$check(str_contains(Content::render('team'),'Team member') && !str_contains(Content::render('team'),'عضو الفريق'),'Public English team never falls back to Arabic');
+$check(str_contains(Content::render('reviews'),'Authentic feedback') && str_contains(Content::render('metrics'),'Documented record'),'Approved reviews and sourced metrics render publicly');unset($_GET['lang']);
+$hidden=Content::data();$hidden['team'][0]['status']='hidden';Content::save($hidden,Content::revision());$check(''===Content::render('team') && count(Content::data()['team'])===1,'Hiding an entry preserves its data and removes it publicly');
+$before=get_option(Content::OPTION);$old_errors=$wpdb->suppress_errors(true);$wpdb->query("CREATE TRIGGER adc_content_audit_failure BEFORE INSERT ON ".\AutoDealership\Audit\AuditLog::table_name()." FOR EACH ROW BEGIN IF NEW.event_key='content.saved' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Isolated content audit failure'; END IF; END");
+try{$failed=$hidden;$failed['home']['why']['status']='hidden';$result=Content::save($failed,Content::revision());$check(is_wp_error($result) && $before===get_option(Content::OPTION),'Editorial audit failure rolls back content including cached options');}finally{$wpdb->query('DROP TRIGGER adc_content_audit_failure');$wpdb->suppress_errors($old_errors);}
+$home=Content::data();$home['home']['why']['status']='hidden';$home['home']['latest']['order']=1;$home['home']['featured']['order']=9;Content::save($home,Content::revision());$html=Content::home_render(['hero'=>'HERO','why'=>'WHY','latest'=>'LATEST','featured'=>'FEATURED']);$check(str_starts_with($html,'HEROLATEST') && !str_contains($html,'WHY') && strpos($html,'LATEST')<strpos($html,'FEATURED'),'Homepage hides disabled sections and orders remaining sections after the hero');
+$check(str_contains($html,'adc-home-empty-offers') && str_contains($html,'adc-home-empty-reviews'),'Enabled empty homepage sections show an informative state');
+$check(''===Content::home_empty('metrics') && ''===Content::home_empty('team'),'Homepage empty states do not introduce team or metric sections');
+$private=SiteContentPage::preview($request);$check(is_array($private) && isset($private['url']) && $home===Content::data(),'Unsaved preview returns a private URL without changing stored content');
+parse_str(parse_url($private['url'],PHP_URL_QUERY),$query);$_GET['adc_content_preview']=$query['adc_content_preview'];$check('published'===Content::data()['team'][0]['status'],'Preview uses the requesting administrator temporary content');wp_set_current_user(0);$check('hidden'===Content::data()['team'][0]['status'],'Anonymous visitors cannot use another user preview token');unset($_GET['adc_content_preview']);wp_set_current_user((int)$install['user_id']);
+$bundle=ContentTransfer::bundle();$check(!str_contains(wp_json_encode($bundle['manifest']),'SMTP') && 0!==($bundle['manifest']['content']['hero_image']??0),'Transfer replaces image IDs with portable asset references and excludes secrets');
+$tmp=tempnam(sys_get_temp_dir(),'adc-content-test-');$zip=new ZipArchive();$zip->open($tmp,ZipArchive::OVERWRITE);$zip->addFromString('content.json',wp_json_encode($bundle['manifest']));$zip->close();$check(!is_wp_error(ContentTransfer::inspect($tmp)),'Exported content validates in the bounded ZIP importer');
+$zip->open($tmp);$zip->addFromString('../escape.php','<?php');$zip->close();$check(is_wp_error(ContentTransfer::inspect($tmp)),'Archive traversal and executable files are rejected');unlink($tmp);
+require_once ABSPATH.'wp-admin/includes/image.php';
+$png=base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aP1sAAAAASUVORK5CYII=');
+$upload=wp_upload_bits('isolated-content-transfer.png',null,$png);$check(!$upload['error'],'Isolated image fixture can be uploaded');
+$image=wp_insert_attachment(['post_mime_type'=>'image/png','post_title'=>'Isolated image fixture'],$upload['file']);
+$with_image=Content::data();$with_image['hero_image']=$image;Content::save($with_image,Content::revision());
+$bundle=ContentTransfer::bundle();$tmp=tempnam(sys_get_temp_dir(),'adc-content-import-');$zip->open($tmp,ZipArchive::OVERWRITE);$zip->addFromString('content.json',wp_json_encode($bundle['manifest']));foreach($bundle['assets'] as $key=>$path){$zip->addFile($path,$key);}$zip->close();
+$inspection=ContentTransfer::inspect($tmp);$check(!is_wp_error($inspection) && count($inspection['assets'])===1,'Portable image hashes and MIME types are verified before import');
+$hash=hash_file('sha256',$tmp);$revision=Content::revision();set_transient('adc_content_import_'.get_current_user_id(),['path'=>$tmp,'hash'=>$hash,'revision'=>$revision,'expires'=>time()+600],600);
+$result=ContentTransfer::apply($hash,$revision);$imported_image=Content::data()['hero_image'];
+$check(true===$result && $imported_image!==$image && wp_attachment_is_image($imported_image),'Content import creates target-local attachment IDs and remaps references');
+$after_images=Content::data();$after_images['hero_image']=0;Content::save($after_images,Content::revision());wp_delete_attachment($image,true);wp_delete_attachment($imported_image,true);
+$check(\AutoDealership\Content\PublicEditorialTranslations::meaning('<p>Hello <strong>world</strong></p>')===\AutoDealership\Content\PublicEditorialTranslations::meaning("<div>Hello world</div>\n"),'Formatting-only editorial changes preserve translation meaning');
+$check(\AutoDealership\Content\PublicEditorialTranslations::meaning('<a href="/first/">Link</a>')!==\AutoDealership\Content\PublicEditorialTranslations::meaning('<a href="/second/">Link</a>'),'Changing a link target requires translation review');
+$check(count(SiteContentPage::readiness())>=25,'Readiness reports identity, channels, catalog, translations and section states');
+$bulk=[];for($i=0;$i<100;$i++){$entry=$row;$entry['id']='bulk-'.$i;$entry['order']=$i;$bulk[]=$entry;}
+$request=new WP_REST_Request('POST');$request->set_header('Content-Type','application/json');$request->set_body(wp_json_encode(['tab'=>'team','rows'=>$bulk,'revision'=>Content::revision()]));
+wp_set_current_user(0);$check(is_wp_error(SiteContentPage::save_json($request)),'JSON content saving requires administrator permission');wp_set_current_user((int)$install['user_id']);
+$result=SiteContentPage::save_json($request);$check(is_array($result) && count(Content::data()['team'])===100,'JSON saving preserves all 100 entries beyond shared-hosting form field limits');
+delete_option(Content::OPTION);

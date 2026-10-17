@@ -30,18 +30,30 @@ if ( '/adc-product-session' === $path ) {
 	if ( ! hash_equals( $config['token'], (string) ( $_GET['key'] ?? '' ) ) ) { http_response_code( 403 ); exit; }
 	wp_set_current_user( $config['admin'] ); wp_set_auth_cookie( $config['admin'], false, false ); header( 'Content-Type: application/json' ); echo '{"authenticated":true}'; exit;
 }
+if('/adc-product-mail-state'===$path) {
+	if(!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
+	global $wpdb;header('Content-Type: application/json');echo wp_json_encode($wpdb->get_results("SELECT status,attempts FROM ".\AutoDealership\Operations\OutboxService::table()." WHERE event_key='email.verify' ORDER BY id",ARRAY_A));exit;
+}
+if('/adc-product-confirmation-fixture'===$path) {
+	if(!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
+	$user=get_user_by('email','package-verification@example.invalid');global $wpdb;
+	$row=$user?$wpdb->get_row($wpdb->prepare('SELECT * FROM '.\AutoDealership\Accounts\EmailVerification::table()." WHERE purpose='account' AND subject_id=%d",$user->ID),ARRAY_A):null;
+	if(!$row){http_response_code(404);exit;}$method=new ReflectionMethod(\AutoDealership\Accounts\EmailVerification::class,'proof');$method->setAccessible(true);
+	header('Content-Type: application/json');echo wp_json_encode(['url'=>\AutoDealership\Accounts\EmailVerification::page_url('account','en').'#token='.$row['selector'].'.'.$method->invoke(null,$row)]);exit;
+}
 if ( '/wp-admin/admin-post.php' === $path ) { do_action( 'admin_post_' . sanitize_key( $_POST['action'] ?? '' ) ); exit; }
-if ( '/wp-admin/options-general.php' === $path ) {
+if ( '/wp-admin/options-general.php' === $path || ('/wp-admin/admin.php' === $path && 'adc-site-content' === ($_GET['page']??'')) ) {
 	if ( ! current_user_can( 'manage_options' ) ) { http_response_code( 403 ); exit; }
 	require_once ABSPATH . 'wp-admin/includes/admin.php';
 	$branch_page = 'adc-branch-locations' === ($_GET['page'] ?? '');
+	$content_page = 'adc-site-content' === ($_GET['page'] ?? '');
 	set_current_screen( $branch_page ? 'settings_page_adc-branch-locations' : 'settings_page_adc-platform-setup' );
 	do_action( 'admin_enqueue_scripts', $branch_page ? 'settings_page_adc-branch-locations' : 'settings_page_adc-platform-setup' );
 	wp_enqueue_style( 'common' ); wp_enqueue_style( 'forms' );
 	wp_dequeue_script('wp-auth-check');
 	echo '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1">'; wp_print_styles(); echo '</head><body class="wp-admin"><main style="padding:16px">';
-	if ($branch_page) { \AutoDealership\Core\BranchLocations::admin(); } else { \AutoDealership\Core\ProductSetup::render(); }
-	echo '</main>'; if ($branch_page) { wp_print_scripts(array('adc-branch-editor')); } echo '</body></html>'; exit;
+	if ($content_page) { \AutoDealership\Admin\SiteContentPage::render(); wp_print_styles(array('adc-site-content-admin')); } elseif ($branch_page) { \AutoDealership\Core\BranchLocations::admin(); } else { \AutoDealership\Core\ProductSetup::render(); }
+	echo '</main>'; if ($content_page) { wp_print_scripts(array('adc-site-content-admin')); } elseif ($branch_page) { wp_print_scripts(array('adc-branch-editor')); } echo '</body></html>'; exit;
 }
 if (str_starts_with($path, '/wp-admin/')) { http_response_code(404); exit; }
 wp();

@@ -15,6 +15,10 @@ final class ComponentEditor {
 	private static function t(string $ar,string $en): string { return str_starts_with(get_user_locale(),'ar') ? $ar : $en; }
 	public static function catalog(): array {
 		$definitions = array(
+			'adc_management'=>array('الإدارة','Leadership','about','الإدارة ومناصبها مع مقدمة تعريفية، من بيانات الفريق المعتمدة.','Leadership roles and introduction, using approved team records.'),
+			'adc_team'=>array('فريق العمل','Team','about','أعضاء الفريق المنشورون من إدارة محتوى الموقع.','Published team members managed in Website content.'),
+			'adc_reviews'=>array('آراء العملاء','Customer reviews','about','آراء حقيقية مراجعة ومعتمدة للنشر.','Authentic reviewed customer feedback approved for publication.'),
+			'adc_metrics'=>array('الإحصاءات الموثقة','Documented metrics','about','أرقام من النظام أو إحصاءات يدوية موثقة بمصدر وتاريخ.','System figures or manual metrics with a dated source.'),
 			'adc_brand_name'=>array('اسم المنشأة','Business name','identity','اسم المنشأة من إعدادات المنصة، حسب لغة الزائر.','Business name from platform settings, in the visitor’s language.'),
 			'adc_about_logo'=>array('شعار الموقع','Site logo','identity','الشعار المحفوظ في تخصيص الموقع.','Logo selected in site customization.'),
 			'adc_legal_contact'=>array('بيانات التواصل القانونية','Legal contact details','identity','اسم المنشأة والعنوان والبريد والهاتف بالنسخة المناسبة للغة.','Business name, address, email and phone in the selected language.'),
@@ -44,11 +48,18 @@ final class ComponentEditor {
 			'car_dealer_testimonials'=>array('قائمة آراء العملاء','Customer review list','legacy','لا تعرض بيانات تجريبية عند عدم توفر مصدر معتمد.','Empty when no approved customer review source is available.'),
 		);
 		$rows = array();
-		foreach($definitions as $tag=>$info) { if(shortcode_exists($tag)) { $rows[] = array('tag'=>$tag,'title'=>self::t($info[0],$info[1]),'group'=>$info[2],'description'=>self::t($info[3],$info[4]),'parameters'=>in_array($tag,array('car_dealer_cars','car_dealer_testimonials'),true)?array('count'):('car_dealer_loan_calculator'===$tag?array('price'):array())); } }
+		foreach($definitions as $tag=>$info) { if(shortcode_exists($tag)) { $rows[] = array('tag'=>$tag,'title'=>self::t($info[0],$info[1]),'group'=>$info[2],'description'=>self::t($info[3],$info[4]),'parameters'=>in_array($tag,array('car_dealer_cars','car_dealer_testimonials','adc_team','adc_reviews','adc_metrics'),true)?array('count'):('car_dealer_loan_calculator'===$tag?array('price'):array())); } }
+		$managed=array('adc_management'=>'team','adc_team'=>'team','ab_team_section'=>'team','adc_reviews'=>'reviews','ab_testimonials_section'=>'reviews','car_dealer_testimonials'=>'reviews','adc_metrics'=>'metrics','ab_stats_section'=>'metrics');
+		foreach($rows as &$row) {
+			$row['manageUrl']=\AutoDealership\Admin\SiteContentPage::url($managed[$row['tag']]??'readiness');
+			if(isset($managed[$row['tag']])) { $group=$managed[$row['tag']]; $row['availability']=count(SiteContent::rows($group,'ar')).' العربية / '.count(SiteContent::rows($group,'en')).' English'; $row['description']=self::t('يعرض العناصر المنشورة والمراجعة من إدارة محتوى الموقع.','Shows published reviewed entries from Website content.'); }
+		}
+		unset($row);
 		return $rows;
 	}
 	public static function register(): void {
-		wp_register_style('adc-component-editor',plugins_url('assets/css/component-editor.css',ADC_FILE),array(),ADC_VERSION);
+		wp_register_style('adc-site-content',plugins_url('assets/css/site-content.css',ADC_FILE),array(),ADC_VERSION);
+		wp_register_style('adc-component-editor',plugins_url('assets/css/component-editor.css',ADC_FILE),array('adc-site-content'),ADC_VERSION);
 		register_block_type('auto-dealership/component',array('api_version'=>3,'editor_style'=>'adc-component-editor','attributes'=>array('component'=>array('type'=>'string','default'=>'adc_brand_name'),'count'=>array('type'=>'integer','default'=>6),'price'=>array('type'=>'number','default'=>0),'previewLanguage'=>array('type'=>'string','default'=>'')),'supports'=>array('html'=>false,'align'=>array('wide','full')),'render_callback'=>array(self::class,'render')));
 		register_block_pattern_category('adc-platform',array('label'=>self::t('أقسام المعرض الجاهزة','Dealership sections')));
 		$contact = ''; foreach(array('ab_contact_grid','adc_branch_locations','adc_contact_intro','car_dealer_contact_form') as $tag) { $contact .= '<!-- wp:auto-dealership/component {"component":"' . $tag . '"} /-->' . "\n"; }
@@ -66,7 +77,7 @@ final class ComponentEditor {
 		$code = self::shortcode($attributes); if(!$code) { return ''; }
 		$had = array_key_exists('lang',$_GET); $old = $_GET['lang']??null;
 		if(defined('REST_REQUEST') && REST_REQUEST && in_array($attributes['previewLanguage']??'',array('ar','en'),true)) { $_GET['lang']=$attributes['previewLanguage']; }
-		try { return '<div class="adc-component-output">' . do_shortcode($code) . '</div>'; }
+		try { $html=do_shortcode($code); return ''===trim($html)?'':'<div class="adc-component-output">' . $html . '</div>'; }
 		finally { if($had) { $_GET['lang']=$old; } else { unset($_GET['lang']); } }
 	}
 	public static function assets(): void {

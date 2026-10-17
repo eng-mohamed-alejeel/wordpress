@@ -6,15 +6,23 @@ defined('ABSPATH') || exit;
 final class AboutPage {
 	public static function boot(): void {
 		add_shortcode('adc_about_logo', array(self::class, 'logo'));
+		add_shortcode('adc_management',array(self::class,'management'));
 		add_filter('the_content', static function(string $content): string {
 			if (!is_admin() && is_page('about') && in_the_loop() && is_main_query()) {
 				$content = self::normalize_legacy_logo($content);
 				$content = str_replace(array('<div class="adc-about-visual-copy"><strong>[adc_brand_name]</strong>', '<div class="adc-about-visual-copy">[adc_about_logo]'), '<div class="adc-about-visual-copy">', $content);
+				if (!str_contains($content,'adc_management') && !str_contains($content,'adc_team') && !str_contains($content,'ab_team_section') && !str_contains($content,'adc-editorial-team')) {
+					$team=self::management();
+					if ($team) { $position=strpos($content,'<section class="adc-about-cta"'); $content=false===$position?$content.$team:substr_replace($content,$team,$position,0); }
+				}
 			}
 			return $content;
 		}, 9);
 		add_shortcode('adc_about_actions', array(self::class, 'actions'));
 		add_shortcode('adc_about_branches', array(self::class, 'branches'));
+	}
+	public static function management(): string {
+		return \AutoDealership\Content\SiteContent::render('team',array('title'=>ProductSetup::t('الإدارة','Our leadership'),'description'=>str_replace('[adc_brand_name]',ProductSetup::brand(Localization::language()),ProductSetup::t('تتولى إدارة [adc_brand_name] توجيه أعمال المعرض والإشراف على المبيعات والعمليات والموارد البشرية، بما يدعم تنظيم العمل ومتابعة احتياجات العملاء.', 'The leadership of [adc_brand_name] oversees the dealership’s direction, sales, operations and human resources, supporting coordinated work and attentive customer service.'))));
 	}
 	/** Visual editors remove empty decorative children; accept both saved legacy shapes. */
 	public static function normalize_legacy_logo(string $content): string {

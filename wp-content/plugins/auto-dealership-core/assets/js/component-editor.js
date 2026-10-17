@@ -24,7 +24,7 @@
       el(TextControl, {label:t('ابحث عن مكوّن','Find a component'), value:query, onChange:setQuery}),
       el('p', {className:'adc-editor-help'}, t('أضف المكوّن ثم حرّكه أو عدّل إعداداته من شريط البلوكات. تظهر البيانات حسب لغة الزائر.','Insert a component, then move it or change its block settings. Public data follows the visitor’s language.')),
       el('div', {className:'adc-library-results'}, items.filter(item => (item.title + item.description + item.tag).toLowerCase().includes(query.toLowerCase())).map(item => el('article', {className:'adc-library-item',key:item.tag},
-        el('small',null,groups[item.group]),el('h3',null,item.title),el('p',null,item.description),el('code',null,code(item)),
+        el('small',null,groups[item.group]),el('h3',null,item.title),el('p',null,item.description),item.availability && el('p',null,item.availability),el('a',{href:item.manageUrl,target:'_blank',rel:'noopener'},t('إدارة البيانات والجاهزية','Manage data and readiness')),el('code',null,code(item)),
         el('div',{className:'adc-library-actions'},
           el(Button,{variant:'primary',onClick:()=>{wp.data.dispatch('core/block-editor').insertBlocks(wp.blocks.createBlock('auto-dealership/component',{component:item.tag}));setMessage(t('تمت إضافة المكوّن.','Component inserted.'));}},t('إضافة للصفحة','Insert block')),
           el(Button,{variant:'secondary',onClick:()=>{if(insertTranslation(code(item)))setMessage(t('أضيف الكود للترجمة الإنجليزية.','Inserted into the English translation.'));else setMessage(t('افتح حقل الترجمة الإنجليزية أولًا.','Open the English translation field first.'));}},t('للترجمة','To translation')),
@@ -47,7 +47,7 @@
           item.parameters.includes('price') && el(TextControl,{label:t('السعر الابتدائي بالريال','Initial price in SAR'),type:'number',min:0,max:100000000,value:a.price,onChange:value=>setAttributes({price:Math.min(100000000,Math.max(0,Number(value)||0))})}),
           el(ToggleControl,{label:t('عرض المعاينة','Show preview'),checked:preview,onChange:setPreview}),
           el(SelectControl,{label:t('لغة المعاينة فقط','Preview language only'),value:language,options:[{label:'العربية',value:'ar'},{label:'English',value:'en'}],onChange:setLanguage}),
-          el('p',null,item.description));
+          el('p',null,item.description),item.availability && el('p',null,item.availability),el('a',{href:item.manageUrl,target:'_blank',rel:'noopener'},t('إدارة بيانات المكوّن','Manage component data')));
         return el('div',wp.blockEditor.useBlockProps({className:'adc-component-block'}),
           el(wp.blockEditor.InspectorControls,null,controls),
           el('div',{className:'adc-component-block-heading'},el('span',{className:'dashicons dashicons-layout','aria-hidden':true}),el('strong',null,item.title),el('code',null,'['+item.tag+']')),

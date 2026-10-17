@@ -65,7 +65,7 @@ final class OutboxService {
 	}
 
 	/** Claim due rows with conditional writes so concurrent workers cannot own the same event. */
-	public static function process_due( int $limit = 20, array $event_keys = array() ) {
+	public static function process_due( int $limit = 20, array $event_keys = array(), array $event_ids = array() ) {
 		global $wpdb;
 		if ( ! Schema::is_ready() ) { return self::error( 'adc_outbox_schema', 503 ); }
 		$limit = min( 100, max( 1, $limit ) );
@@ -77,6 +77,7 @@ final class OutboxService {
 			foreach ( $event_keys as $event_key ) { if ( ! is_string( $event_key ) || ! self::valid_event_key( $event_key ) ) { return self::error( 'adc_outbox_event', 400 ); } }
 			$event_where = $wpdb->prepare( ' AND event_key IN (' . implode( ',', array_fill( 0, count( $event_keys ), '%s' ) ) . ')', $event_keys );
 		}
+		if($event_ids) { foreach($event_ids as $id) { if(!is_int($id) || $id<1) { return self::error('adc_outbox_event',400); } } $event_where.=$wpdb->prepare(' AND id IN ('.implode(',',array_fill(0,count($event_ids),'%d')).')',$event_ids); }
 		$candidates = $wpdb->get_col( $wpdb->prepare(
 			"SELECT id FROM $table WHERE ((status IN ('pending','retry') AND next_attempt_at<=%s) OR (status='processing' AND locked_at IS NOT NULL AND locked_at<%s)) $event_where ORDER BY id ASC LIMIT %d",
 			$now, $stale, min( 300, $limit * 3 )

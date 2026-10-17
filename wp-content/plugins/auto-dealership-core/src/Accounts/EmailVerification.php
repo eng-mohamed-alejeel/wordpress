@@ -128,6 +128,24 @@ final class EmailVerification {
 		return is_wp_error( $event ) ? $event : $payload;
 	}
 	/** A keyed PRF permits safe retry without retaining the raw 256-bit proof anywhere. */
+	public static function deliver_committed(array $payload): void {
+		// Only called after a successful commit. CLI tests/workers keep explicit dispatch control.
+		if('cli'===PHP_SAPI) { return; }
+		add_action('shutdown',static function()use($payload): void {
+			if(function_exists('fastcgi_finish_request')) { fastcgi_finish_request(); }
+			$previous=ignore_user_abort(true);
+			try { self::dispatch_committed($payload); } finally { ignore_user_abort($previous); }
+		},20);
+	}
+	public static function dispatch_committed(array $payload) {
+		global $wpdb;
+		$id=(int)($payload['subject_id']??0);$generation=$payload['correlation_id']??'';
+		if($id<1 || !is_string($generation) || !wp_is_uuid($generation)) { return self::error('adc_verification_invalid'); }
+		$key=hash('sha256','email.verify|email-verify:'.$id.':'.$generation);
+		$event=(int)$wpdb->get_var($wpdb->prepare('SELECT id FROM '.OutboxService::table()." WHERE event_key='email.verify' AND idempotency_key=%s",$key));
+		return $event?OutboxService::process_due(1,array('email.verify'),array($event)):true;
+	}
+	/** A keyed PRF permits safe retry without retaining the raw 256-bit proof anywhere. */
 	private static function proof( array $row ): string {
 		$context = implode( '|', array( 'adc-email-v1', $row['purpose'], $row['subject_id'], $row['email_hash'], $row['selector'], $row['generation'], $row['expires_at'], $row['consent_key'] ) );
 		return rtrim( strtr( base64_encode( hash_hmac( 'sha256', $context, wp_salt( 'secure_auth' ), true ) ), '+/', '-_' ), '=' );
@@ -207,7 +225,7 @@ final class EmailVerification {
 		return array( 'purpose'=>$row['purpose'], 'locale'=>$row['locale'] );
 	}
 	/** Public resend: a uniform response, regardless of account/address existence. */
-	public static function request( string $purpose, string $email ) {
+	public static function request( string $purpose, string $email, bool $report_state = false ) {
 		global $wpdb;
 		if ( ! in_array( $purpose, array( 'account', 'newsletter' ), true ) || ! is_email( $email ) ) { return true; }
 		if ( ! Transaction::begin() ) { return self::error( 'adc_verification_storage' ); }
@@ -216,6 +234,7 @@ final class EmailVerification {
 			$user = $wpdb->get_row( $wpdb->prepare( "SELECT ID,user_email FROM {$wpdb->users} WHERE user_email=%s LIMIT 1 FOR UPDATE", $email ), ARRAY_A );
 			$eligible = $user && get_user_meta( $user['ID'], 'adc_email_verification_status', true ) && self::blocked( (int) $user['ID'] );
 			$id = (int) ( $user['ID'] ?? 0 ); $locale = (string) get_user_meta( $id, 'adc_preferred_language', true ); $key = '';
+			if($report_state && $user && !self::blocked($id)) { $wpdb->query('ROLLBACK'); return array('status'=>'already_verified','locale'=>$locale); }
 		} else {
 			$subscriber = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . NewsletterService::subscribers() . ' WHERE email=%s FOR UPDATE', $email ), ARRAY_A );
 			$eligible = $subscriber && 'pending' === $subscriber['status'];
@@ -227,7 +246,7 @@ final class EmailVerification {
 		if ( is_wp_error( $payload ) ) { $wpdb->query( 'ROLLBACK' ); return 'adc_verification_throttled' === $payload->get_error_code() ? true : $payload; }
 		if ( 'account' === $purpose ) { update_user_meta( $id, 'adc_email_verification_status', 'pending' ); }
 		if ( ! Transaction::commit( static fn() => AuditLog::record( 'email.verification_requested', 'email_verification', (int) $payload['subject_id'], 'Verification link requested', null, array( 'purpose'=>$purpose ) ) ) ) { clean_user_cache( $id ); return self::error( 'adc_verification_storage' ); }
-		clean_user_cache( $id ); NewsletterService::wake(); return true;
+		clean_user_cache( $id ); self::deliver_committed($payload); NewsletterService::wake(); return true;
 	}
 	public static function email_changed( int $id, $old ): void {
 		$user = get_userdata( $id );
@@ -241,6 +260,25 @@ final class EmailVerification {
 		$wpdb->query( $wpdb->prepare( 'DELETE FROM ' . self::table() . ' WHERE expires_at<%s ORDER BY expires_at LIMIT 500', gmdate( 'Y-m-d H:i:s', time() - 30 * DAY_IN_SECONDS ) ) );
 	}
 	private static function field( string $name ): string { return isset( $_POST[$name] ) && is_string( $_POST[$name] ) ? wp_unslash( $_POST[$name] ) : ''; }
+	public static function confirmed_account_token(string $token): bool {
+		if(!preg_match('/\A([a-f0-9]{64})\.([A-Za-z0-9_-]{43})\z/',$token,$parts)) { return false; }
+		global $wpdb;$row=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.self::table()." WHERE selector=%s AND purpose='account'",$parts[1]),ARRAY_A);
+		if(!$row || empty($row['used_at']) || !hash_equals($row['token_hash'],hash('sha256',$parts[2])) || !hash_equals(self::proof($row),$parts[2]) || self::blocked((int)$row['subject_id'])) { return false; }
+		$user=get_userdata((int)$row['subject_id']);return $user && hash_equals($row['email_hash'],self::email_hash($user->user_email));
+	}
+	public static function login_redirect(string $status,string $locale=''): void {
+		$status='already_verified'===$status?'already_verified':'verified';$token=bin2hex(random_bytes(24));
+		set_transient('adc_login_notice_'.hash('sha256',$token),$status,10*MINUTE_IN_SECONDS);
+		setcookie('adc_account_notice',$token,array('expires'=>time()+600,'path'=>defined('COOKIEPATH')?COOKIEPATH:'/','secure'=>is_ssl(),'httponly'=>true,'samesite'=>'Lax'));
+		$url=add_query_arg('cd_account','login',apply_filters('adc_customer_account_url',home_url('/'),''));
+		wp_safe_redirect(\AutoDealership\Inventory\CatalogPresentation::localized_url($url,NewsletterService::language($locale?:\AutoDealership\Core\Localization::language())),303);exit;
+	}
+	public static function consume_login_notice(): string {
+		$token=$_COOKIE['adc_account_notice']??'';if(!is_string($token) || !preg_match('/\A[a-f0-9]{48}\z/',$token)){return '';}
+		$key='adc_login_notice_'.hash('sha256',$token);$status=get_transient($key);delete_transient($key);
+		setcookie('adc_account_notice','',array('expires'=>time()-3600,'path'=>defined('COOKIEPATH')?COOKIEPATH:'/','secure'=>is_ssl(),'httponly'=>true,'samesite'=>'Lax'));
+		return in_array($status,array('verified','already_verified'),true)?$status:'';
+	}
 	public static function page(): void {
 		if ( ! isset( $_GET['adc_verify'] ) ) { return; }
 		if ( ! in_array( wp_get_environment_type(), array( 'local', 'development' ), true ) && ! is_ssl() ) {
@@ -262,10 +300,13 @@ final class EmailVerification {
 				if ( is_wp_error( $rate ) && 'adc_rate_limited' === $rate->get_error_code() ) { header( 'Retry-After: ' . (int) ( $rate->get_error_data()['retry_after'] ?? 60 ) ); }
 				$body = '<p role="alert">' . esc_html( self::t( 'تعذر إتمام الطلب. حدّث الصفحة أو حاول لاحقًا.', 'The request could not be completed. Refresh the page or try again later.' ) ) . '</p>';
 			} elseif ( 'resend' === self::field( 'operation' ) ) {
-				$result = self::request( $purpose, sanitize_email( self::field( 'email' ) ) );
+				$result = self::request( $purpose, sanitize_email( self::field( 'email' ) ), true );
+				if(is_array($result) && 'already_verified'===($result['status']??'')) { self::login_redirect('already_verified'); }
 				$body = '<p role="status">' . esc_html( is_wp_error( $result ) ? self::t( 'خدمة التأكيد غير متاحة مؤقتًا. حاول لاحقًا.', 'Verification is temporarily unavailable. Please try again later.' ) : self::t( 'إذا كان البريد مؤهلًا للتأكيد، فسنرسل رابطًا جديدًا. تحقق من الوارد والبريد المزعج. انتظر دقيقة قبل إعادة الطلب.', 'If the email is eligible for verification, we will send a new link. Check your inbox and spam folder. Wait a minute before requesting again.' ) ) . '</p>';
 			} else {
 				$result = self::confirm( self::field( 'token' ), '', $purpose );
+				if('account'===$purpose && is_wp_error($result) && self::confirmed_account_token(self::field('token'))) { self::login_redirect('already_verified'); }
+				if(!is_wp_error($result) && 'account'===$result['purpose']) { self::login_redirect('verified',$result['locale']); }
 				if ( is_wp_error( $result ) ) { status_header( 400 ); $body = '<p role="alert">' . esc_html( $result->get_error_message() ) . '</p>'; }
 				else { $success = true; $purpose = $result['purpose']; $title = 'account' === $purpose ? self::t( 'تم تفعيل حسابك', 'Your account is activated' ) : self::t( 'تم تأكيد اشتراكك', 'Your subscription is confirmed' ); $body = '<p role="status">' . esc_html( 'account' === $purpose ? self::t( 'يمكنك الآن تسجيل الدخول بكلمة المرور الخاصة بك.', 'You can now sign in with your password.' ) : self::t( 'ستصلك الحملات القادمة باللغة المفضلة لديك. يمكنك إلغاء الاشتراك في أي وقت.', 'You will receive future campaigns in your preferred language. You can unsubscribe at any time.' ) ) . '</p>'; }
 			}

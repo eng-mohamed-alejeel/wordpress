@@ -25,7 +25,13 @@ $_POST = array( 'display_name' => 'عميل تجريبي', 'email' => 'welcome@e
 $register = new ReflectionMethod( CustomerAccount::class, 'register' ); $register->setAccessible( true );
 $customer = $register->invoke( null );
 $check( count( $captured ) === 0, 'Registration queues verification without blocking on SMTP delivery' );
-OutboxService::process_due( 100, array( 'email.verify' ) );
+$verification_row=$wpdb->get_row($wpdb->prepare('SELECT id,generation FROM '.EmailVerification::table()." WHERE purpose='account' AND subject_id=%d",$customer),ARRAY_A);
+$verification_payload=array('subject_id'=>(int)$verification_row['id'],'correlation_id'=>$verification_row['generation']);
+$dispatch=EmailVerification::dispatch_committed($verification_payload);
+$check(is_array($dispatch) && $dispatch['completed']===1,'Committed account verification dispatches its own event without waiting for cron');
+EmailVerification::dispatch_committed($verification_payload);
+$check(count($captured)===1,'Concurrent or repeated dispatch cannot send the same verification twice');
+$check(is_wp_error(OutboxService::process_due(1,array('email.verify'),array(-1))),'Targeted mail processing rejects invalid event IDs');
 $check( is_int( $customer ), 'Public customer registration succeeds with queued verification' );
 $check( get_user_meta( $customer, 'adc_preferred_language', true ) === 'ar', 'Registration saves the customer email language' );
 $check( count( $captured ) === 1 && $captured[0]['to'] === 'welcome@example.invalid' && EmailVerification::blocked( $customer ), 'Only verification is sent and new account remains blocked' );

@@ -31,9 +31,9 @@ final class ProductSetup {
 
 	/** Prepare shared WordPress storage once, with bounded retries on restricted hosts. */
 	public static function prepare_storage(): void {
-		if ( ! current_user_can( 'manage_options' ) || ! Schema::is_ready() || '1' === get_option( 'adc_product_storage_prepared' ) || get_transient( 'adc_product_storage_retry' ) ) { return; }
+		if ( ! current_user_can( 'manage_options' ) || ! Schema::is_ready() || '2' === get_option( 'adc_product_storage_prepared' ) || get_transient( 'adc_product_storage_retry' ) ) { return; }
 		if ( \AutoDealership\Inventory\OnyxModelDrafts::ensure_transactional_tables() ) {
-			update_option( 'adc_product_storage_prepared', '1', false );
+			update_option( 'adc_product_storage_prepared', '2', false );
 		} else { set_transient( 'adc_product_storage_retry', 1, 5 * MINUTE_IN_SECONDS ); }
 	}
 
@@ -315,17 +315,47 @@ final class ProductSetup {
 			$data[$key] = sanitize_text_field( (string) $value );
 		}
 		$password = $input['ADC_SMTP_PASSWORD'] ?? ''; if ( ! is_string( $password ) || strlen( $password ) > 4096 ) { return new \WP_Error( 'adc_setup_mail', 'Invalid password.' ); }
+		// The first dashboard save adopts the working server secret without exposing it in HTML.
+		if(''===$password && empty($data['password']) && !get_option('adc_product_mail_dashboard',false)) { $password=adc_product_mail_setting('ADC_SMTP_PASSWORD'); }
+		if('smtp'===$mode && 'smtp.gmail.com'===strtolower($data['ADC_SMTP_HOST'])) {
+			if(!in_array($data['ADC_SMTP_PORT'].':'.$data['ADC_SMTP_ENCRYPTION'],array('587:tls','465:ssl'),true)) { return new \WP_Error('adc_setup_mail',self::t('لبريد Gmail استخدم المنفذ 587 مع STARTTLS، أو 465 مع TLS / SSL.','For Gmail use port 587 with STARTTLS, or 465 with TLS / SSL.')); }
+			if(strtolower($data['ADC_SMTP_USERNAME'])!==strtolower($data['ADC_MAIL_FROM'])) { return new \WP_Error('adc_setup_mail',self::t('اجعل بريد المرسل هو عنوان Gmail المستخدم لتسجيل الدخول.','Use the Gmail login address as the sender email.')); }
+			$password=preg_replace('/\s+/','',$password);
+		}
 		if ( '' !== $password ) {
 			if ( ! function_exists( 'openssl_encrypt' ) ) { return new \WP_Error( 'adc_setup_crypto', 'OpenSSL is required.' ); }
 			$iv = random_bytes( 12 ); $tag = ''; $encrypted = openssl_encrypt( $password, 'aes-256-gcm', hash( 'sha256', wp_salt( 'secure_auth' ), true ), OPENSSL_RAW_DATA, $iv, $tag, 'adc-product-mail-v1' );
 			if ( false === $encrypted ) { return new \WP_Error( 'adc_setup_crypto', 'Encryption failed.' ); }
 			$data['password'] = base64_encode( $iv . $tag . $encrypted );
 		}
-		$external_password = ( false !== getenv( 'ADC_SMTP_PASSWORD' ) || defined( 'ADC_SMTP_PASSWORD' ) ) && '' !== adc_product_mail_setting( 'ADC_SMTP_PASSWORD' );
-		if ( 'smtp' === $mode && ( ! is_email( $data['ADC_MAIL_FROM'] ) || ! preg_match( '/\A[a-zA-Z0-9.-]+\z/', $data['ADC_SMTP_HOST'] ) || ! in_array( $data['ADC_SMTP_ENCRYPTION'], array( 'tls', 'ssl' ), true ) || ! ctype_digit( $data['ADC_SMTP_PORT'] ) || (int) $data['ADC_SMTP_PORT'] < 1 || (int) $data['ADC_SMTP_PORT'] > 65535 || ! $data['ADC_SMTP_USERNAME'] || ( empty( $data['password'] ) && ! $external_password ) ) ) { return new \WP_Error( 'adc_setup_mail', self::t( 'أكمل إعدادات SMTP الصحيحة.', 'Complete valid SMTP settings.' ) ); }
+		if ( 'smtp' === $mode && ( ! is_email( $data['ADC_MAIL_FROM'] ) || ! preg_match( '/\A[a-zA-Z0-9.-]+\z/', $data['ADC_SMTP_HOST'] ) || ! in_array( $data['ADC_SMTP_ENCRYPTION'], array( 'tls', 'ssl' ), true ) || ! ctype_digit( $data['ADC_SMTP_PORT'] ) || (int) $data['ADC_SMTP_PORT'] < 1 || (int) $data['ADC_SMTP_PORT'] > 65535 || ! $data['ADC_SMTP_USERNAME'] || empty( $data['password'] ) ) ) { return new \WP_Error( 'adc_setup_mail', self::t( 'أكمل إعدادات SMTP الصحيحة.', 'Complete valid SMTP settings.' ) ); }
 		$old = get_option( self::MAIL, null ); update_option( self::MAIL, $data, false );
 		if ( get_option( self::MAIL ) !== $data || ! AuditLog::record( 'platform.mail_configured', 'settings', 0, 'Mail settings updated; credentials excluded from audit', null, array( 'mode'=>$mode ) ) ) { null === $old ? delete_option( self::MAIL ) : update_option( self::MAIL, $old, false ); return new \WP_Error( 'adc_setup_storage', 'Could not save.' ); }
+		update_option('adc_product_mail_dashboard',true,false);
 		return true;
+	}
+	public static function mail_status(): void {
+		$last=(array)get_option('adc_product_mail_result',array());
+		$messages=array(
+			'authentication'=>array('رفض مزود البريد بيانات الدخول. تحقق من عنوان Gmail وكلمة مرور التطبيق.','The provider rejected authentication. Check the Gmail address and app password.'),
+			'connection'=>array('تعذر الاتصال بخادم البريد. تحقق من الخادم والمنفذ وسياسة اتصالات الاستضافة.','Could not connect to SMTP. Check the host, port and hosting connection policy.'),
+			'tls'=>array('تعذر إنشاء اتصال مشفر. تحقق من توافق المنفذ مع نوع التشفير.','Encrypted connection failed. Check the port and encryption combination.'),
+			'configuration'=>array('الإرسال متوقف أو إعداداته غير مكتملة.','Mail is disabled or configuration is incomplete.'),
+			'limit'=>array('تم بلوغ أحد حدود الإرسال لدى مزود البريد.','The provider sending limit was reached.'),
+			'other'=>array('لم يقبل مزود البريد الرسالة. تحقق من الإعدادات ثم أعد الاختبار.','The provider did not accept the message. Check settings and test again.')
+		);
+		echo '<div class="notice notice-info inline"><p>'.esc_html(get_option('adc_product_mail_dashboard',false)?self::t('مصدر الإعدادات الفعّال: إعداد المنصة.','Active settings source: Platform setup.'):self::t('تُستخدم إعدادات الخادم حتى تحفظ إعدادات هذه الشاشة.','Server settings apply until you save this screen.')).'</p><p>'.esc_html(''!==self::mail_setting('ADC_SMTP_PASSWORD','')?self::t('كلمة مرور محفوظة؛ اترك الحقل فارغًا للاحتفاظ بها.','A password is saved; leave the field blank to keep it.'):self::t('لم تُحفظ كلمة مرور في إعداد المنصة بعد.','No password has been saved in Platform setup yet.')).'</p>';
+		if(isset($last['status'])) { echo '<p>'.esc_html('accepted'===$last['status']?self::t('آخر إرسال: قبله خادم البريد. هذا لا يؤكد وصوله إلى صندوق الوارد.','Last send: accepted by the mail server. This does not confirm inbox delivery.'):self::t(...($messages[$last['kind']??'other']??$messages['other']))).' '.esc_html(isset($last['time'])?get_date_from_gmt($last['time'],'Y-m-d H:i'):'').'</p>'; }
+		echo '</div>';
+	}
+	public static function send_mail_test(string $to,string $kind='smtp'): bool {
+		if(!current_user_can('manage_options') || !is_email($to) || !in_array($kind,array('smtp','newsletter'),true)) { return false; }
+		if('smtp'===$kind) { return wp_mail($to,self::brand().' | SMTP test',self::t('هذه رسالة اختبار لإعداد البريد من لوحة الإدارة.','This is an administrator-requested mail configuration test.')); }
+		$lang=Localization::language(); $local=in_array(wp_get_environment_type(),array('local','development'),true);$origin=$local?self::t('اللوكل','Local site'):self::t('الاستضافة','Hosted site');
+		$title=self::t('اختبار النشرة البريدية','Newsletter delivery test').' — '.$origin;
+		$body='<p>'.esc_html(self::t('مرحبًا بك في نشرة ','Welcome to the newsletter of ').self::brand($lang)).'</p><p>'.esc_html(self::t('هذه رسالة اختبار للتحقق من عرض النشرة البريدية وإرسالها من الموقع.','This test checks the newsletter layout and delivery from this website.')).'</p><p>'.esc_html(self::t('أُرسلت هذه النسخة إلى بريد الاختبار المحدد فقط، دون إرسال حملة إلى المشتركين أو تغيير تفضيلات اشتراكك.','This copy was sent only to the specified test address. No subscriber campaign was sent and your subscription preferences were not changed.')).'</p>';
+		$html=\AutoDealership\Accounts\BrandedMail::render($title,$body,self::t('زيارة الموقع','Visit website'),home_url('/'),esc_html(self::t('رسالة اختبار بطلب إدارة الموقع.','Test message requested by the site administrator.')),$lang);
+		return \AutoDealership\Accounts\BrandedMail::send($to,$title,$html);
 	}
 
 	public static function submit(): void {
@@ -347,7 +377,8 @@ final class ProductSetup {
 		} elseif ( 'pages' === $operation ) { $result = self::create_pages();
 		} elseif ( 'mail_test' === $operation ) {
 			$to = sanitize_email( wp_unslash( $_POST['test_email'] ?? '' ) );
-			$result = is_email( $to ) && wp_mail( $to, self::brand() . ' | SMTP test', self::t( 'هذه رسالة اختبار لإعداد البريد من لوحة الإدارة.', 'This is an administrator-requested mail configuration test.' ) ) ? true : new \WP_Error( 'adc_setup_test', self::t( 'تعذر إرسال رسالة الاختبار.', 'Test mail could not be sent.' ) );
+			$kind=isset($_POST['test_kind']) && is_string($_POST['test_kind'])?sanitize_key($_POST['test_kind']):'smtp';
+			$result = self::send_mail_test($to,$kind) ? true : new \WP_Error( 'adc_setup_test', self::t( 'تعذر إرسال رسالة الاختبار.', 'Test mail could not be sent.' ) );
 		} elseif ( 'save' === $operation ) {
 			$input = wp_unslash( $_POST['settings'] ?? array() );
 			if ( ! is_array( $input ) ) { $input = array(); }
@@ -395,7 +426,7 @@ final class ProductSetup {
 			} else {
 				$mail_labels = array( 'ADC_MAIL_MODE'=>self::t( 'طريقة الإرسال', 'Mail transport' ), 'ADC_SMTP_HOST'=>self::t( 'خادم SMTP', 'SMTP host' ), 'ADC_SMTP_PORT'=>self::t( 'المنفذ', 'Port' ), 'ADC_SMTP_ENCRYPTION'=>self::t( 'تشفير الاتصال', 'Connection encryption' ), 'ADC_SMTP_USERNAME'=>self::t( 'اسم المستخدم', 'Username' ), 'ADC_SMTP_PASSWORD'=>self::t( 'كلمة مرور SMTP', 'SMTP password' ), 'ADC_MAIL_FROM'=>self::t( 'بريد المرسل', 'Sender email' ), 'ADC_MAIL_FROM_NAME'=>self::t( 'اسم المرسل', 'Sender name' ) );
 				foreach ( self::MAIL_KEYS as $key ) {
-					$external = false !== getenv( $key ) || defined( $key );
+					$external = !get_option('adc_product_mail_dashboard',false) && (false !== getenv( $key ) || defined( $key ));
 					$value = 'ADC_SMTP_PASSWORD' === $key ? '' : ( $external ? adc_product_mail_setting( $key ) : self::mail_setting( $key, 'ADC_MAIL_MODE' === $key ? 'disabled' : ( 'ADC_SMTP_PORT' === $key ? '587' : ( 'ADC_SMTP_ENCRYPTION' === $key ? 'tls' : '' ) ) ) );
 					$choices = array();
 					if ( 'ADC_MAIL_MODE' === $key ) { $choices = array( 'disabled'=>self::t( 'متوقف', 'Disabled' ), 'smtp'=>self::t( 'SMTP حقيقي', 'Real SMTP' ) ); if ( in_array( wp_get_environment_type(), array( 'local', 'development' ), true ) ) { $choices['mailpit'] = 'Mailpit'; } }
@@ -406,7 +437,7 @@ final class ProductSetup {
 			echo '</table>'; submit_button( self::t( 'حفظ الإعدادات', 'Save settings' ) ); echo '</form>';
 			if ( 'appearance' === $section ) { echo '<p><a class="button" href="' . esc_url( admin_url( 'options-general.php?page=adc-branch-locations' ) ) . '">' . esc_html( self::t( 'إدارة الفروع والخرائط', 'Manage branches and maps' ) ) . '</a></p>'; echo '<p><a class="button" href="' . esc_url( admin_url( 'customize.php?autofocus[control]=custom_logo' ) ) . '">' . esc_html( self::t( 'اختيار الشعار وأيقونة الموقع', 'Choose logo and site icon' ) ) . '</a></p>'; }
 			if ( 'policy' === $section ) { echo '<p>' . esc_html( self::t( 'العملة الحالية: الريال السعودي (SAR). إعداد الفروع والسياسات المتقدمة متاح في إعدادات النظام.', 'Current currency: Saudi Riyal (SAR). Branches and advanced policies are available in system settings.' ) ) . '</p>'; self::render_legal_pages(); }
-			if ( 'mail' === $section ) { echo '<p>' . esc_html( self::t( 'الأوضاع: smtp / disabled / mailpit محليًا فقط. ترك كلمة المرور فارغة يحافظ عليها. إعدادات الخادم الخارجية لها الأولوية، والأسرار لا تدخل ملف التصدير. تغيير مفاتيح ووردبريس يتطلب إعادة إدخال كلمة مرور SMTP.', 'Modes: smtp / disabled / mailpit (local only). Leave password blank to keep it. Server environment/configuration overrides these settings. Secrets are never exported. Changing WordPress salts requires re-entering SMTP credentials.' ) ) . '</p>'; self::form( 'mail', 'mail_test' ); echo '<label>' . esc_html( self::t( 'عنوان رسالة الاختبار', 'Test recipient' ) ) . ' <input type="email" name="test_email" required></label>'; submit_button( self::t( 'إرسال اختبار الآن', 'Send test now' ), 'secondary' ); echo '</form>'; }
+			if ( 'mail' === $section ) { self::mail_status(); echo '<p>' . esc_html( self::t( 'الأوضاع: smtp / disabled / mailpit محليًا فقط. ترك كلمة المرور فارغة يحافظ عليها. بعد الحفظ تُعتمد إعدادات هذه الشاشة، وكلمة المرور محفوظة مشفرة ولا تدخل ملف التصدير. لبريد Gmail استخدم 587 مع STARTTLS وكلمة مرور تطبيق. تغيير مفاتيح ووردبريس يتطلب إعادة إدخال كلمة مرور SMTP.', 'Modes: smtp / disabled / mailpit (local only). Leave password blank to keep it. After saving, this screen controls mail settings. The password is encrypted and excluded from exports. For Gmail use 587 with STARTTLS and an app password. Changing WordPress salts requires re-entering SMTP credentials.' ) ) . '</p>'; self::form( 'mail', 'mail_test' ); echo '<p><label>'.esc_html(self::t('نوع الاختبار','Test type')).' <select name="test_kind"><option value="smtp">SMTP</option><option value="newsletter">'.esc_html(self::t('تصميم النشرة إلى بريد واحد','Newsletter layout to one address')).'</option></select></label></p>'; echo '<label>' . esc_html( self::t( 'عنوان رسالة الاختبار', 'Test recipient' ) ) . ' <input type="email" name="test_email" required></label>'; submit_button( self::t( 'إرسال اختبار الآن', 'Send test now' ), 'secondary' ); echo '</form>'; }
 		} elseif ( 'pages' === $section ) {
 			echo '<p>' . esc_html( self::t( 'تُجهّز الصفحات وتُنشر السياسات تلقائيًا مع إضافتها إلى التذييل. لا تُستبدل نصوص الصفحات أو عناصر القوائم الحالية.', 'Pages are prepared and policies published automatically with footer links. Existing page text and menu items are preserved.' ) ) . '</p>'; self::form( 'pages', 'pages' ); submit_button( self::t( 'تجهيز الصفحات والقوائم', 'Prepare pages and menus' ) ); echo '</form>'; self::render_legal_pages();
 		} else {

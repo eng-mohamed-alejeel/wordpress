@@ -3,6 +3,7 @@ defined( 'ABSPATH' ) || exit;
 $view = car_dealer_account_view(); $error = $GLOBALS['cd_account_error'] ?? '';
 $core_available = function_exists( 'adc_customer_account_process' ) && function_exists( 'adc_core_owns_customer_account_actions' ) && adc_core_owns_customer_account_actions();
 $catalog_url = car_dealer_archive_url( 'car' );
+$activation_notice = 'login'===$view && class_exists('\\AutoDealership\\Accounts\\EmailVerification') ? \AutoDealership\Accounts\EmailVerification::consume_login_notice() : '';
 get_header();
 ob_start();
 ?>
@@ -14,6 +15,7 @@ ob_start();
 <section class="cd-auth-card" data-auth-switch>
 <div class="cd-auth-intro"><span><?php echo esc_html__( 'أهلاً بك في', 'car-dealer' ); ?> <?php echo esc_html( car_dealer_brand_name() ); ?></span><h1 data-login-title="<?php echo esc_attr__( 'سعداء بعودتك', 'car-dealer' ); ?>" data-register-title="<?php echo esc_attr__( 'ابدأ رحلتك معنا', 'car-dealer' ); ?>" aria-live="polite"><?php echo $register ? esc_html__( 'ابدأ رحلتك معنا', 'car-dealer' ) : esc_html__( 'سعداء بعودتك', 'car-dealer' ); ?></h1><p><?php echo esc_html__( 'حساب واحد لمتابعة طلباتك وحجوزات تجربة القيادة والتواصل مع المعرض.', 'car-dealer' ); ?></p><?php if ( $catalog_url ) : ?><a href="<?php echo esc_url( $catalog_url ); ?>"><?php echo esc_html__( 'استكشف السيارات ←', 'car-dealer' ); ?></a><?php endif; ?></div>
 <div class="cd-auth-form"><nav class="cd-auth-tabs" aria-label="<?php echo esc_attr( car_dealer_text( 'الحساب', 'Account' ) ); ?>"><a <?php echo ! $register ? 'aria-current="page"' : ''; ?> href="<?php echo esc_url( car_dealer_account_url( 'login' ) ); ?>"><?php echo esc_html__( 'تسجيل الدخول', 'car-dealer' ); ?></a><a <?php echo $register ? 'aria-current="page"' : ''; ?> href="<?php echo esc_url( car_dealer_account_url( 'register' ) ); ?>"><?php echo esc_html__( 'إنشاء حساب', 'car-dealer' ); ?></a></nav>
+<?php if($activation_notice): ?><div class="cd-account-notice is-success adc-activation-notice" role="status" aria-live="polite" data-success-notice><span class="adc-activation-icon" aria-hidden="true">✓</span><div><strong><?php echo esc_html('verified'===$activation_notice?car_dealer_text('تم تأكيد الحساب','Your account is confirmed'):car_dealer_text('حسابك مفعّل بالفعل','Your account is already active')); ?></strong><p><?php echo esc_html(car_dealer_text('يمكنك الآن تسجيل الدخول باستخدام بريدك الإلكتروني وكلمة المرور.','You can now sign in with your email address and password.')); ?></p></div></div><?php endif; ?>
 <?php foreach ( array( 'login', 'register' ) as $form_view ) : $register = 'register' === $form_view; ?>
 <form data-auth-view="<?php echo esc_attr( $form_view ); ?>" <?php echo $form_view !== $view ? 'hidden' : ''; ?> method="post" action="<?php echo esc_url( car_dealer_account_url( $form_view ) ); ?>">
 <?php echo str_replace( array( 'id="_wpnonce"', 'id="_wp_http_referer"' ), array( 'id="auth-nonce-' . $form_view . '"', 'id="auth-referer-' . $form_view . '"' ), wp_nonce_field( 'cd_account_' . $form_view, '_wpnonce', true, false ) ); ?>

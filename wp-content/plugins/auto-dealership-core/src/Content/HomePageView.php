@@ -7,18 +7,19 @@ defined( 'ABSPATH' ) || exit;
 final class HomePageView {
 	/** @return array<string,mixed> */
 	public static function view(): array {
-		$featured = self::cars( 6, array( 'key' => '_car_featured', 'value' => '1' ) );
-		$latest = self::cars( 36 );
-		$demand = self::cars( 3, array( 'key' => '_car_demand', 'value' => 'yes' ) );
+		$settings = SiteContent::data()['home'];
+		$featured = self::cars( (int)$settings['featured']['count'], array( 'key' => '_car_featured', 'value' => '1' ) );
+		$latest = self::cars( (int)$settings['latest']['count'] );
+		$demand = self::cars( (int)$settings['demand']['count'], array( 'key' => '_car_demand', 'value' => 'yes' ) );
 		$offer_ids = array();
 		if ( PublicOfferView::enabled() ) {
 			$offers = new \WP_Query( array(
-				'post_type' => 'car_offer', 'post_status' => 'publish', 'posts_per_page' => 24,
+				'post_type' => 'car_offer', 'post_status' => 'publish', 'posts_per_page' => 48,
 				'fields' => 'ids', 'no_found_rows' => true, 'ignore_sticky_posts' => true,
 			) );
 			foreach ( $offers->posts as $post_id ) {
 				if ( PublicOfferView::for_post( (int) $post_id ) ) { $offer_ids[] = (int) $post_id; }
-				if ( 8 === count( $offer_ids ) ) { break; }
+				if ( (int)$settings['offers']['count'] === count( $offer_ids ) ) { break; }
 			}
 		}
 		$count = new \WP_Query( array(

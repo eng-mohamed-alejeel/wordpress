@@ -66,7 +66,7 @@ $pages = Product::create_pages();
 $check( is_array( $pages ) && count( $pages ) >= 8, 'Clean installation provisions essential pages without the theme' );
 $check( 'publish' === get_post_status( $pages['privacy-policy'] ) && 'publish' === get_post_status( $pages['terms'] ), 'Legal pages are published automatically' );
 $check( ! empty( get_post_meta( $pages['about'], '_adc_content_en', true ) ), 'Created pages include English content and source hashes' );
-$check(str_contains(get_post($pages['about'])->post_content,'adc-about-page') && str_contains(get_post_meta($pages['about'],'_adc_content_en',true),'Your next vehicle.'), 'New About page ships with complete bilingual professional content');
+$check(str_contains(get_post($pages['about'])->post_content,'adc-about-page') && str_contains(get_post_meta($pages['about'],'_adc_content_en',true),'Vehicle knowledge.'), 'New About page ships with complete bilingual professional content');
 $about_blueprint = array_values(array_filter(Product::blueprints(),static fn($p)=>$p['slug']==='about'))[0];
 wp_update_post(array('ID'=>$pages['about'],'post_content'=>'<p>تعرف على [adc_brand_name]. استعرض السيارات المتاحة وتواصل مع فريقنا للحصول على التفاصيل.</p>'));
 update_post_meta($pages['about'],'_adc_content_en','<p>Meet [adc_brand_name]. Explore available vehicles and contact our team for details.</p>');
@@ -175,6 +175,14 @@ $mail = array( 'ADC_MAIL_MODE'=>'smtp', 'ADC_SMTP_HOST'=>'smtp.example.invalid',
 $check( true === Product::save_mail( $mail ), 'SMTP settings can be saved without sending email' );
 $check( 'synthetic-test-password' === Product::mail_setting( 'ADC_SMTP_PASSWORD', '' ) && ! str_contains( wp_json_encode( get_option( 'adc_product_mail' ) ), 'synthetic-test-password' ), 'SMTP secret is encrypted at rest and decrypts only with this site key' );
 $mail['ADC_SMTP_PASSWORD'] = ''; $check( true === Product::save_mail( $mail ) && 'synthetic-test-password' === Product::mail_setting( 'ADC_SMTP_PASSWORD', '' ), 'Blank password keeps existing encrypted credentials' );
+$check(get_option('adc_product_mail_dashboard') && adc_product_mail_setting('ADC_MAIL_MODE')==='smtp' && adc_product_mail_setting('ADC_SMTP_HOST')==='smtp.example.invalid','Saved platform mail settings override legacy server constants');
+$gmail=$mail;$gmail['ADC_SMTP_HOST']='smtp.gmail.com';$gmail['ADC_SMTP_ENCRYPTION']='ssl';
+$check(is_wp_error(Product::save_mail($gmail)) && adc_product_mail_setting('ADC_SMTP_HOST')==='smtp.example.invalid','Gmail rejects the invalid 587 and SSL combination without replacing working settings');
+do_action('wp_mail_failed',new WP_Error('phpmailer_exception','535 Authentication failed; private-test-token'));
+$check(get_option('adc_product_mail_result')['kind']==='authentication' && !str_contains(wp_json_encode(get_option('adc_product_mail_result')),'private-test-token'),'SMTP diagnostics retain only safe categories without secret error text');
+do_action('wp_mail_succeeded',array());$check(get_option('adc_product_mail_result')['status']==='accepted','Mail status distinguishes SMTP acceptance from inbox delivery');
+$test_mails=[];$capture_test_mail=static function($result,$mail)use(&$test_mails){$test_mails[]=$mail;return true;};add_filter('pre_wp_mail',$capture_test_mail,100,2);
+$check(Product::send_mail_test('single-recipient@example.invalid','newsletter') && count($test_mails)===1 && $test_mails[0]['to']==='single-recipient@example.invalid' && str_contains($test_mails[0]['message'],'<html'),'Newsletter diagnostics send one branded copy only to the selected address');remove_filter('pre_wp_mail',$capture_test_mail,100);
 $check( ! str_contains( wp_json_encode( Product::export() ), 'synthetic-test-password' ) && ! str_contains( wp_json_encode( Product::export() ), 'smtp.example.invalid' ), 'SMTP credentials never enter settings exports' );
 $_GET['section'] = 'mail'; ob_start(); Product::render(); $secret_ui = ob_get_clean(); unset( $_GET['section'] );
 $check( ! str_contains( $secret_ui, 'synthetic-test-password' ), 'Saved SMTP secret is never rendered into HTML' );
@@ -188,4 +196,9 @@ $_GET['section'] = 'identity'; ob_start(); Product::render(); $legacy_ui = ob_ge
 $check( str_contains( $legacy_ui, 'Existing editorial description to preserve' ) && ! Product::profile(), 'Legacy setup pre-fills current descriptions without changing the profile' );
 $paths = array(); foreach ( \AutoDealership\Admin\Navigation::groups() as $group ) { foreach ( $group['items'] as $item ) { $paths[] = $item['path']; } }
 $check( in_array( 'options-general.php?page=adc-platform-setup', $paths, true ), 'Setup remains discoverable in the platform dashboard navigation' );
+$before_users=$wpdb->get_results("SELECT * FROM {$wpdb->users} ORDER BY ID",ARRAY_A);$before_usermeta=$wpdb->get_results("SELECT * FROM {$wpdb->usermeta} ORDER BY umeta_id",ARRAY_A);
+$wpdb->query("ALTER TABLE {$wpdb->users} ENGINE=MyISAM");$wpdb->query("ALTER TABLE {$wpdb->usermeta} ENGINE=MyISAM");update_option('adc_product_storage_prepared','1');delete_transient('adc_product_storage_retry');Product::prepare_storage();
+$check('2'===get_option('adc_product_storage_prepared') && !\AutoDealership\Inventory\OnyxModelDrafts::storage_issues(),'Upgrading storage preparation also converts legacy user tables needed for registration');
+$check($before_users===$wpdb->get_results("SELECT * FROM {$wpdb->users} ORDER BY ID",ARRAY_A) && $before_usermeta===$wpdb->get_results("SELECT * FROM {$wpdb->usermeta} ORDER BY umeta_id",ARRAY_A),'Account storage conversion preserves every user and metadata value');
+require __DIR__.'/site-content-scenarios.php';
 echo "Product setup passed ($checks checks). No real email sent.\n";

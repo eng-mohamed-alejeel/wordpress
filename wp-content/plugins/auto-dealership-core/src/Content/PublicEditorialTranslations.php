@@ -112,7 +112,18 @@ final class PublicEditorialTranslations {
 		if ( ! in_array( $after->post_type, self::TYPES, true ) ) { return; }
 		foreach ( array( self::TITLE_META => $before->post_title, self::CONTENT_META => $before->post_content ) as $key => $source ) {
 			if ( '' !== (string) get_post_meta( $id, $key, true ) && '' === (string) get_post_meta( $id, $key . '_source_hash', true ) ) { update_post_meta( $id, $key . '_source_hash', hash( 'sha256', $source ) ); }
+			$next = self::TITLE_META === $key ? $after->post_title : $after->post_content;
+			$hash = (string)get_post_meta($id,$key.'_source_hash',true);
+			if(hash_equals(hash('sha256',$source),$hash) && self::meaning($source)===self::meaning($next)) { update_post_meta($id,$key.'_source_hash',hash('sha256',$next)); }
 		}
+	}
+	/** Ignore formatting-only edits, retaining link targets and shortcode arguments. */
+	public static function meaning(string $content): string {
+		$content=\AutoDealership\Core\AboutPage::normalize_legacy_logo($content);
+		preg_match_all('/\b(?:href|src)\s*=\s*(["\'])(.*?)\1/is',$content,$links);
+		$content=preg_replace('~<(?:br\b[^>]*|/?(?:p|div|section|article|h[1-6]|li|blockquote)\b[^>]*)>~i',' ',$content);
+		$text=html_entity_decode(wp_strip_all_tags($content),ENT_QUOTES|ENT_HTML5,'UTF-8');
+		return hash('sha256',preg_replace('/\s+/u',' ',trim($text)).wp_json_encode($links[2]??[]));
 	}
 
 	public static function excerpt( string $excerpt, \WP_Post $post ): string {

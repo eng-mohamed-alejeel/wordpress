@@ -10,6 +10,7 @@ require_once __DIR__ . '/LegacyHooks.php';
 adc_product_remove_legacy_mail_hooks( 'autobrands-mail.php', array( 'pre_wp_mail', 'wp_mail_from', 'wp_mail_from_name', 'phpmailer_init', 'wp_mail_failed', 'admin_notices' ) );
 
 function adc_product_mail_setting( string $name, string $default = '' ): string {
+	if ( get_option( 'adc_product_mail_dashboard', false ) && class_exists( '\AutoDealership\Core\ProductSetup' ) ) { return \AutoDealership\Core\ProductSetup::mail_setting( $name, $default ); }
 	$value = getenv( $name );
 	if ( false !== $value ) { return $value; }
 	if ( defined( $name ) ) { return (string) constant( $name ); }
@@ -80,8 +81,17 @@ add_action( 'phpmailer_init', static function ( $mailer ) {
 
 // Record status only: never log recipients, message bodies, tokens or credentials.
 add_action( 'wp_mail_failed', static function ( $error ) {
+	$message=strtolower($error->get_error_message());
+	$kind='other';
+	if('adc_mail_configuration'===$error->get_error_code()){$kind='configuration';}
+	elseif(preg_match('/535|534|authenticat|password|credentials/',$message)){$kind='authentication';}
+	elseif(preg_match('/certificate|crypto|starttls|tls handshake/',$message)){$kind='tls';}
+	elseif(preg_match('/connect|timed out|network|resolve|unreachable/',$message)){$kind='connection';}
+	elseif(preg_match('/quota|rate limit|too many|daily.*limit/',$message)){$kind='limit';}
+	update_option('adc_product_mail_result',array('status'=>'failed','kind'=>$kind,'time'=>gmdate('Y-m-d H:i:s')),false);
 	error_log( '[AutoBrands mail] failed code=' . sanitize_key( (string) $error->get_error_code() ) );
 } );
+add_action('wp_mail_succeeded',static function(): void { update_option('adc_product_mail_result',array('status'=>'accepted','kind'=>'','time'=>gmdate('Y-m-d H:i:s')),false); });
 
 add_action( 'admin_notices', static function () {
 	if ( ! current_user_can( 'manage_options' ) ) { return; }
