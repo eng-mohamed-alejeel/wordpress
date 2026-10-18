@@ -24,18 +24,20 @@ body #customize-controls .iris-picker { background: var(--ab-surface); border-co
 #customize-controls :is(.accordion-section-title, .customize-panel-back, .customize-section-back)::after,
 #customize-controls :is(.customize-controls-close, .customize-help-toggle, .collapse-sidebar, .devices button) { color: var(--ab-muted); }
 #customize-controls .customize-controls-close { background: var(--ab-surface); border-color: var(--ab-border); }
-#customize-controls .wp-full-overlay-footer { height: 88px; }
-#customize-controls .wp-full-overlay-sidebar-content { bottom: 88px; }
-#ab-customizer-appearance { padding: 7px 12px; border-bottom: 1px solid var(--ab-border); background: var(--ab-surface); }
-#ab-customizer-appearance .ab-appearance-control { display: flex; justify-content: space-between; gap: 10px; width: 100%; }
+#customize-controls .wp-full-overlay-footer { height: 104px; }
+#customize-controls .wp-full-overlay-sidebar-content { bottom: 104px; }
+#ab-customizer-appearance { position: relative; display: flex; align-items: center; gap: 12px; padding: 7px 12px; border-bottom: 1px solid var(--ab-border); background: var(--ab-surface); }
+#ab-customizer-appearance > .ab-appearance-control { display: flex; flex: 0 0 auto; }
+.ab-customizer-preferences summary { cursor: pointer; color: var(--ab-text); font-size: 12px; }
+.ab-customizer-preferences .ab-appearance-settings { position: absolute; inset-inline: 0; bottom: 100%; padding: 16px; border: 1px solid var(--ab-border); background: var(--ab-surface); color: var(--ab-text); max-height: 60vh; overflow: auto; box-shadow: var(--ab-shadow); }
 #ab-customizer-appearance .ab-appearance-options { flex: 0 0 auto; }
 #ab-customizer-appearance .ab-appearance-option { min-width: 38px; min-height: 36px; padding: .4rem .5rem; }
 #ab-customizer-appearance .ab-appearance-option-text { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 #customize-controls .devices { background: var(--ab-surface); box-shadow: none; }
 #customize-controls .devices button.active { color: var(--ab-link); border-bottom-color: var(--ab-link); }
 @media (max-width: 600px) {
-  #customize-controls .wp-full-overlay-footer { display: block; height: 48px; }
-  #customize-controls .wp-full-overlay-sidebar-content { bottom: 48px; }
+  #customize-controls .wp-full-overlay-footer { display: block; height: 64px; }
+  #customize-controls .wp-full-overlay-sidebar-content { bottom: 64px; }
   #customize-controls .wp-full-overlay-footer :is(.devices, .collapse-sidebar) { display: none; }
 }
 

@@ -29,7 +29,7 @@ final class BrandCustomizer {
     }
     private static function engine(): void { wp_enqueue_script('adc-brand-color-engine',plugins_url('assets/js/brand-color-engine.js',ADC_FILE),array(),ADC_VERSION,true); }
     public static function controls(): void {
-        remove_action('customize_controls_print_footer_scripts',array(BrandIdentity::class,'customizer_control'),5);
+        // Keep the compact personal appearance switch separate from palette editing.
         self::engine();wp_enqueue_style('adc-brand-customizer',plugins_url('assets/css/brand-customizer.css',ADC_FILE),array(),ADC_VERSION);
         wp_enqueue_script('adc-color-lab',plugins_url('assets/js/brand-color-lab.js',ADC_FILE),array('adc-brand-color-engine'),ADC_VERSION,true);
         wp_enqueue_script('adc-brand-studio',plugins_url('assets/js/brand-studio.js',ADC_FILE),array('customize-controls','adc-brand-color-engine','adc-color-lab'),ADC_VERSION,true);

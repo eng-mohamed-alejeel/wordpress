@@ -35,10 +35,11 @@ async function scan(target) {
     return { ...result, fields };
 }
 async function chooseAppearance(page, appearance) {
-    const option = page.locator(`#ab-customizer-appearance [data-ab-appearance-option="${appearance}"]`);
+    const option = page.locator('#ab-customizer-appearance > .ab-appearance-control [data-ab-toggle]');
+    await page.evaluate(value => window.autoBrandsAppearance.select(value === 'dark' ? 'light' : 'dark'), appearance);
     await option.click();
     await page.waitForFunction(value => document.documentElement.dataset.abPreference === value, appearance);
-    assert.equal(await option.getAttribute('aria-checked'), 'true', `Customizer marks ${appearance} as selected`);
+    assert.ok(await option.getAttribute('aria-label'), `Customizer names the next action in ${appearance}`);
 }
 (async () => {
     const { browser, page } = await launch(true);
@@ -47,8 +48,8 @@ async function chooseAppearance(page, appearance) {
         for (const route of ['/wp-admin/customize.php', '/wp-admin/upload.php?mode=grid']) {
             await page.goto('http://localhost/wordpress' + route, { waitUntil: 'networkidle', timeout: 60000 });
             const customizer = route.includes('customize');
-            await page.waitForSelector(customizer ? '#ab-customizer-appearance [data-ab-appearance-option]' : '.attachments-browser');
-            if (customizer) assert.equal(await page.locator('#ab-customizer-appearance [data-ab-appearance-option]').count(), 3, 'Customizer exposes three appearance choices');
+            await page.waitForSelector(customizer ? '#ab-customizer-appearance [data-ab-toggle]' : '.attachments-browser');
+            if (customizer) assert.equal(await page.locator('#ab-customizer-appearance > .ab-appearance-control [data-ab-toggle]').count(), 1, 'Customizer exposes one compact appearance toggle');
             for (const appearance of ['light', 'dark']) {
                 await mode(page, appearance);
                 if (customizer) {
@@ -120,7 +121,7 @@ async function chooseAppearance(page, appearance) {
                 await mode(page, appearance);
                 report.push({ route: route + '/mobile', mode: appearance, ...await scan(page) });
                 if (customizer) {
-                    assert.ok(await page.locator('#ab-customizer-appearance [data-ab-appearance-option="system"]').isVisible(), 'Mobile Customizer has a visible appearance switch');
+                    assert.ok(await page.locator('#ab-customizer-appearance > .ab-appearance-control [data-ab-toggle]').isVisible(), 'Mobile Customizer has a visible appearance switch');
                     await chooseAppearance(page, appearance);
                 }
                 assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), 'Native screen reflows on mobile');

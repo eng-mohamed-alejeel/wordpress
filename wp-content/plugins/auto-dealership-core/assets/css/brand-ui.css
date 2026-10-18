@@ -1,4 +1,19 @@
 /* Shared interaction states. Scope layout-facing rules to dealership surfaces. */
+.ab-appearance-control .ab-appearance-toggle { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 10px; border: 1px solid var(--ab-control-border); background: var(--ab-surface); color: var(--ab-text); border-radius: 12px; flex-shrink: 0; }
+.site-header .ab-appearance-control .ab-appearance-toggle { color: var(--ab-header-text); background: transparent; border-color: currentColor; }
+.ab-appearance-toggle:focus-visible,.ab-appearance-reset:focus-visible { outline: 3px solid var(--ab-focus); outline-offset: 3px; }
+.ab-appearance-settings .ab-appearance-control { vertical-align: middle; }
+.ab-appearance-settings [data-ab-preference-status] { color: var(--ab-text); font-size: .875rem; }
+.ab-appearance-reset:disabled { opacity: .65; cursor: default; }
+.ab-footer-appearance { max-width: 100%; color: var(--ab-footer-text); font-size: .875rem; }
+.ab-footer-appearance summary { cursor: pointer; padding: .5rem; }
+.ab-footer-appearance summary:focus-visible { outline: 3px solid var(--ab-focus); outline-offset: 2px; }
+.ab-footer-appearance .ab-appearance-settings { padding: 1rem; margin-block: .5rem; background: var(--ab-surface); color: var(--ab-text); border: 1px solid var(--ab-border); border-radius: 12px; max-width: 24rem; }
+.site-footer .ab-footer-appearance .ab-appearance-settings p { color: var(--ab-text); }
+.ab-appearance-settings .ab-appearance-reset { padding: .65rem .8rem; border: 1px solid var(--ab-control-border); border-radius: 8px; font: inherit; background: var(--ab-surface); color: var(--ab-text); cursor: pointer; }
+@media (prefers-reduced-motion: reduce) {
+  html .ab-appearance-toggle, html .ab-appearance-reset { transition: none; animation: none; }
+}
 .site, .adc-admin, .adc-admin-native, .login { color-scheme: light; }
 :root[data-ab-theme="dark"] :is(.site, .adc-admin, .adc-admin-native, .login) { color-scheme: dark; }
 .ab-appearance-control { display: inline-flex; align-items: center; gap: .55rem; min-width: 0; color: var(--ab-text); font: inherit; font-size: .85rem; white-space: nowrap; }

@@ -47,6 +47,7 @@
 					<?php endif; ?>
 			</div>
 				<div class="footer-bottom"><div class="footer-bottom-content">
+				<?php if ( class_exists('\\AutoDealership\\Core\\BrandIdentity') ) : ?><details class="ab-footer-appearance"><summary><?php echo esc_html(car_dealer_text('تفضيلات المظهر','Appearance preferences')); ?></summary><?php \AutoDealership\Core\BrandIdentity::preferences(); ?></details><?php endif; ?>
 				<p class="footer-copyright" dir="<?php echo esc_attr( car_dealer_catalog_direction() ); ?>"><bdi dir="ltr">© <?php echo esc_html( wp_date( 'Y' ) ); ?></bdi> <?php echo esc_html( car_dealer_text( 'شركة أوتو براندز — جميع الحقوق محفوظة.', 'Auto Brands Company — All rights reserved.' ) ); ?></p>
 			</div></div>
 		</div>

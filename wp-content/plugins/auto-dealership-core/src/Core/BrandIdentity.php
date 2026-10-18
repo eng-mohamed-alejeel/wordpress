@@ -25,6 +25,11 @@ final class BrandIdentity {
         add_action( 'login_header', static function (): void { echo '<main id="ab-login-main">'; } );
         add_action( 'login_footer', static function (): void { echo '</main>'; }, 99 );
         add_action( 'customize_controls_print_footer_scripts', array( self::class, 'customizer_control' ), 5 );
+        add_action( 'personal_options', static function (): void {
+            echo '<tr><th scope="row">' . esc_html(Localization::language() === 'en' ? 'Appearance' : 'المظهر') . '</th><td>';
+            self::preferences();
+            echo '</td></tr>';
+        } );
     }
 
     public static function tokens(): void {
@@ -73,41 +78,26 @@ final class BrandIdentity {
 
     public static function preference_script(): void {
         // Runs before first paint; the same cached HTML supports every preference.
+        echo '<script id="autobrands-appearance-bootstrap">(function(){var r=document.documentElement,p="system";try{var s=localStorage.getItem("autobrands.appearance");if(s==="light"||s==="dark")p=s;}catch(e){}var m=p==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):p;r.dataset.abTheme=m;r.dataset.abPreference=p;r.style.colorScheme=m;})();</script>';
+        echo '<style id="autobrands-appearance-initial">html:not([data-ab-appearance-ready]) *,html:not([data-ab-appearance-ready]) *:before,html:not([data-ab-appearance-ready]) *:after{transition:none!important}.ab-show-light{display:none}html[data-ab-theme="dark"] .ab-show-light{display:block}html[data-ab-theme="dark"] .ab-show-dark{display:none}</style>';
         $file = ADC_PATH . 'assets/js/brand-appearance.js';
         echo '<script id="autobrands-appearance" src="' . esc_url( plugins_url( 'assets/js/brand-appearance.js', ADC_FILE ) . '?ver=' . filemtime( $file ) ) . '"></script>';
     }
 
     public static function control(): void {
-        $english = ( isset( $_GET['lang'] ) && 'en' === $_GET['lang'] ) || str_starts_with( determine_locale(), 'en' );
-        if ( function_exists( 'car_dealer_catalog_language' ) && ! is_admin() ) { $english = 'en' === car_dealer_catalog_language(); }
-        $group_label = $english ? 'Appearance' : 'المظهر';
-        $modes = array(
-            'light' => array(
-                'label' => $english ? 'Light' : 'فاتح',
-                'icon'  => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>',
-            ),
-            'system' => array(
-                'label' => $english ? 'Auto' : 'تلقائي',
-                'icon'  => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M12 7a3.5 3.5 0 1 0 0 7V7Z"/></svg>',
-            ),
-            'dark' => array(
-                'label' => $english ? 'Dark' : 'داكن',
-                'icon'  => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg>',
-            ),
-        );
-
-        echo '<div class="ab-appearance-control" data-ab-appearance-control role="radiogroup" aria-label="' . esc_attr( $group_label ) . '">';
-        echo '<span class="ab-appearance-label" aria-hidden="true">' . esc_html( $group_label ) . '</span>';
-        echo '<span class="ab-appearance-options">';
-        foreach ( $modes as $value => $mode ) {
-            $selected = 'system' === $value;
-            echo '<button type="button" class="ab-appearance-option' . ( $selected ? ' is-active' : '' ) . '" data-ab-appearance-option="' . esc_attr( $value ) . '" role="radio" aria-checked="' . ( $selected ? 'true' : 'false' ) . '" tabindex="' . ( $selected ? '0' : '-1' ) . '" aria-label="' . esc_attr( $mode['label'] ) . '" title="' . esc_attr( $mode['label'] ) . '">';
-            echo $mode['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixed, local SVG markup.
-            echo '<span class="ab-appearance-option-text" aria-hidden="true">' . esc_html( $mode['label'] ) . '</span></button>';
-        }
-        echo '</span></div>';
+        $english = Localization::language() === 'en';
+        $label = $english ? 'Switch appearance' : 'تبديل المظهر';
+        echo '<div class="ab-appearance-control" data-ab-appearance-control><button type="button" class="ab-appearance-option ab-appearance-toggle" data-ab-toggle aria-label="' . esc_attr($label) . '" title="' . esc_attr($label) . '">';
+        echo '<svg class="ab-show-light" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>';
+        echo '<svg class="ab-show-dark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg></button></div>';
     }
 
+    public static function preferences(): void {
+        $english = Localization::language() === 'en';
+        echo '<section class="ab-appearance-settings" aria-label="' . esc_attr($english ? 'Appearance preferences' : 'تفضيلات المظهر') . '"><p data-ab-preference-status aria-live="polite"></p>';
+        self::control();
+        echo ' <button type="button" class="button ab-appearance-reset" data-ab-reset>' . esc_html($english ? 'Use device setting' : 'استخدام إعداد الجهاز') . '</button><p class="description">' . esc_html($english ? 'Saved in this browser. Device settings apply until you choose a mode.' : 'يُحفظ اختيارك في هذا المتصفح. يُتبع إعداد الجهاز حتى تختار وضعًا بنفسك.') . '</p></section>';
+    }
     public static function admin_control( $bar ): void {
         if ( ! is_admin() ) { return; }
         $bar->add_node( array( 'id' => 'ab-appearance', 'title' => '<span data-ab-cycle>' . esc_html__( 'المظهر', 'auto-dealership-core' ) . '</span>', 'href' => '#ab-appearance', 'meta' => array( 'title' => 'المظهر / Appearance' ) ) );
@@ -116,6 +106,9 @@ final class BrandIdentity {
     public static function customizer_control(): void {
         echo '<div id="ab-customizer-appearance">';
         self::control();
+        echo '<details class="ab-customizer-preferences"><summary>' . esc_html(Localization::language() === 'en' ? 'Appearance preferences' : 'تفضيلات المظهر') . '</summary>';
+        self::preferences();
+        echo '</details>';
         echo '</div>';
     }
 }

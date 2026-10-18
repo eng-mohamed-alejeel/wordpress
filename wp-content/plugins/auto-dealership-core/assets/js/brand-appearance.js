@@ -1,8 +1,7 @@
 (function () {
     'use strict';
     if (window.autoBrandsAppearance) return;
-    const key = 'autobrands.appearance';
-    const root = document.documentElement;
+    const key = 'autobrands.appearance', root = document.documentElement;
     const system = window.matchMedia('(prefers-color-scheme: dark)');
     const valid = value => ['light', 'dark', 'system'].includes(value);
     let preference = 'system';
@@ -12,62 +11,43 @@
         root.dataset.abTheme = mode;
         root.dataset.abPreference = preference;
         root.style.colorScheme = mode;
-        document.querySelectorAll('[data-ab-appearance]').forEach(control => { control.value = preference; });
-        document.querySelectorAll('[data-ab-appearance-option]').forEach(control => {
-            const active = control.dataset.abAppearanceOption === preference;
-            control.classList.toggle('is-active', active);
-            control.setAttribute('aria-checked', String(active));
-            control.tabIndex = active ? 0 : -1;
-        });
         const ar = root.lang.startsWith('ar');
-        document.querySelectorAll('[data-ab-cycle]').forEach(control => {
-            const label = ar ? { light: 'فاتح', dark: 'داكن', system: 'الجهاز' } : { light: 'Light', dark: 'Dark', system: 'System' };
-            control.textContent = (ar ? 'المظهر: ' : 'Appearance: ') + label[preference];
+        const label = mode === 'dark' ? (ar ? 'تفعيل الوضع الفاتح' : 'Switch to light mode') : (ar ? 'تفعيل الوضع الداكن' : 'Switch to dark mode');
+        document.querySelectorAll('[data-ab-toggle], [data-ab-cycle]').forEach(control => {
+            control.setAttribute('aria-label', label);
+            control.setAttribute('title', label);
+            if (control.matches('[data-ab-cycle]')) control.textContent = label;
         });
+        const status = preference === 'system' ? (ar ? 'تلقائي حسب الجهاز' : 'Automatic — device setting') : preference === 'dark' ? (ar ? 'داكن — اختيارك' : 'Dark — your choice') : (ar ? 'فاتح — اختيارك' : 'Light — your choice');
+        document.querySelectorAll('[data-ab-preference-status]').forEach(control => { control.textContent = status; });
+        document.querySelectorAll('[data-ab-reset]').forEach(control => { control.disabled = preference === 'system'; });
+        document.querySelectorAll('[data-ab-appearance]').forEach(control => { control.value = preference; });
     }
     function select(value) {
         if (!valid(value)) return;
         preference = value;
-        try { localStorage.setItem(key, value); } catch (_) {}
+        try { if (value === 'system') localStorage.removeItem(key); else localStorage.setItem(key, value); } catch (_) {}
         apply();
     }
-    window.autoBrandsAppearance = { select };
+    function toggle() { select(root.dataset.abTheme === 'dark' ? 'light' : 'dark'); }
+    window.autoBrandsAppearance = { select, toggle };
     apply();
-    document.addEventListener('DOMContentLoaded', () => {
+    function ready() {
         const control = document.getElementById('ab-customizer-appearance');
         const footer = document.querySelector('#customize-controls .wp-full-overlay-footer');
         if (control && footer) footer.prepend(control);
         apply();
-    });
+        requestAnimationFrame(() => requestAnimationFrame(() => { root.dataset.abAppearanceReady = 'true'; }));
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready); else ready();
     document.addEventListener('change', event => { if (event.target.matches('[data-ab-appearance]')) select(event.target.value); });
     document.addEventListener('click', event => {
-        const option = event.target.closest('[data-ab-appearance-option]');
-        if (option) {
-            select(option.dataset.abAppearanceOption);
-            return;
-        }
-        if (event.target.closest('#wp-admin-bar-ab-appearance > a')) {
-            event.preventDefault();
-            const modes = ['system', 'light', 'dark'];
-            select(modes[(modes.indexOf(preference) + 1) % modes.length]);
-        }
+        if (event.target.closest('[data-ab-reset]')) { select('system'); return; }
+        if (event.target.closest('[data-ab-toggle], #wp-admin-bar-ab-appearance > a')) { event.preventDefault(); toggle(); }
     });
-    document.addEventListener('keydown', event => {
-        const current = event.target.closest('[data-ab-appearance-option]');
-        if (!current || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
-        const options = [...current.closest('[data-ab-appearance-control]').querySelectorAll('[data-ab-appearance-option]')];
-        let index = options.indexOf(current);
-        if (event.key === 'Home') index = 0;
-        else if (event.key === 'End') index = options.length - 1;
-        else {
-            let step = ['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : -1;
-            if (['ArrowLeft', 'ArrowRight'].includes(event.key) && getComputedStyle(current).direction === 'rtl') step *= -1;
-            index = (index + step + options.length) % options.length;
-        }
-        event.preventDefault();
-        select(options[index].dataset.abAppearanceOption);
-        options[index].focus();
+    system.addEventListener('change', () => { if (preference === 'system') apply(); });
+    window.addEventListener('storage', event => {
+        if (event.key === key || event.key === null) { preference = valid(event.newValue) ? event.newValue : 'system'; apply(); }
     });
-    system.addEventListener('change', apply);
-    window.addEventListener('storage', event => { if (event.key === key) { preference = valid(event.newValue) ? event.newValue : 'system'; apply(); } });
+    window.addEventListener('pageshow', apply);
 })();

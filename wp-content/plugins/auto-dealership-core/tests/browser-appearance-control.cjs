@@ -12,26 +12,25 @@ const auditTextContrast = require('./browser-color-audit.cjs');
         for (const language of ['ar', 'en']) {
             const suffix = language === 'en' ? '?lang=en' : '';
             await page.goto('http://localhost/wordpress/' + suffix, { waitUntil: 'networkidle' });
-            const choices = page.locator('.site-header [data-ab-appearance-option]');
-            assert.equal(await choices.count(), 3, `${language}: three appearance choices are visible`);
-            assert.deepEqual(await choices.evaluateAll(buttons => buttons.map(button => button.dataset.abAppearanceOption)), ['light', 'system', 'dark']);
-
-            const system = choices.filter({ has: page.locator('svg') }).nth(1);
-            await system.focus();
-            await page.keyboard.press(language === 'ar' ? 'ArrowLeft' : 'ArrowRight');
-            assert.equal(await page.evaluate(() => document.documentElement.dataset.abPreference), 'dark', `${language}: arrow keys follow visual direction`);
+            const toggle = page.locator('.site-header [data-ab-toggle]');
+            assert.equal(await toggle.count(), 1, `${language}: one compact toggle is visible`);
+            await page.evaluate(() => window.autoBrandsAppearance.select('light'));
+            await toggle.focus();
+            await page.keyboard.press('Enter');
+            assert.equal(await page.evaluate(() => document.documentElement.dataset.abPreference), 'dark', `${language}: keyboard toggles the appearance`);
 
             for (const width of [1440, 390]) {
                 await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
                 for (const appearance of ['light', 'dark']) {
-                    const option = page.locator(`.site-header [data-ab-appearance-option="${appearance}"]`);
+                    const option = toggle;
+                    await page.evaluate(value => window.autoBrandsAppearance.select(value === 'dark' ? 'light' : 'dark'), appearance);
                     await option.click();
                     await page.waitForFunction(value => document.documentElement.dataset.abPreference === value, appearance);
                     await page.waitForTimeout(500);
-                    assert.equal(await option.getAttribute('aria-checked'), 'true', `${language}/${width}/${appearance}: selected state is announced`);
-                    assert.equal(await page.locator('.site-header [data-ab-appearance-option][aria-checked="true"]').count(), 1, `${language}/${width}/${appearance}: only one choice is selected`);
+                    assert.ok(await option.getAttribute('aria-label'), `${language}/${width}/${appearance}: next action is named`);
+                    assert.equal(await option.locator('svg:visible').count(), 1, `${language}/${width}/${appearance}: only one icon is visible`);
                     const metrics = await page.evaluate(() => {
-                        const button = document.querySelector('.site-header [data-ab-appearance-option][aria-checked="true"]');
+                        const button = document.querySelector('.site-header [data-ab-toggle]');
                         const box = button.getBoundingClientRect();
                         button.focus();
                         const style = getComputedStyle(button);

@@ -115,5 +115,7 @@ final class PortalView {
 		$on=!empty($p['consent_marketing'])||'pending'===($p['subscription_status']??'');foreach(array('1'=>['أوافق على استقبال العروض والأخبار التسويقية.','I agree to receive marketing offers and news.'],'0'=>['لا أرغب في استقبال تواصل تسويقي.','I do not want marketing communication.']) as $value=>$label){echo '<label class="adc-p-check"><input type="radio" name="consent_marketing" value="'.esc_attr((string)$value).'" required '.checked($on,'1'===(string)$value,false).'>'.esc_html(PortalAccess::t(...$label)).'</label>';}echo '</fieldset>';
 		if('pending'===($p['subscription_status']??'')){echo '<p>'.esc_html(PortalAccess::t('طلب الاشتراك ينتظر تأكيد البريد.','Your subscription is awaiting email confirmation.')).' <a href="'.esc_url(\AutoDealership\Accounts\EmailVerification::page_url('newsletter')).'">'.esc_html(PortalAccess::t('طلب رابط جديد','Request a new link')).'</a></p>';}
 		self::button('حفظ التفضيلات','Save preferences');echo '</form></section>';
+		echo '<section class="adc-p-card"><h2>'.esc_html(PortalAccess::t('تفضيلات المظهر','Appearance preferences')).'</h2>';
+		\AutoDealership\Core\BrandIdentity::preferences();echo '</section>';
 	}
 }
