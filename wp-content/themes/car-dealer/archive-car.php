@@ -29,7 +29,12 @@
 		<div class="car-grid"><?php while ( have_posts() ) { the_post(); get_template_part( 'templates/components/car-card' ); } ?></div>
 		<div class="pagination"><?php the_posts_pagination( array( 'prev_text' => __( 'السابق', 'car-dealer' ), 'next_text' => __( 'التالي', 'car-dealer' ), 'screen_reader_text' => car_dealer_text( 'تصفح صفحات السيارات', 'Browse vehicle pages' ), 'aria_label' => car_dealer_text( 'صفحات السيارات', 'Vehicle pages' ) ) ); ?></div>
 	<?php else : ?>
-		<p class="empty-state"><?php esc_html_e( 'لا توجد سيارات مطابقة للبحث.', 'car-dealer' ); ?></p>
+		<section class="empty-state catalog-empty" aria-labelledby="catalog-empty-heading">
+			<h2 id="catalog-empty-heading"><?php echo esc_html(car_dealer_text('لم نجد سيارات مطابقة','No matching vehicles found')); ?></h2>
+			<?php $empty_search = isset($_GET['search']) && is_scalar($_GET['search']) ? sanitize_text_field(wp_unslash((string)$_GET['search'])) : ''; ?>
+			<p><?php echo esc_html($empty_search ? sprintf(car_dealer_text('لم نعثر على نتائج لعبارة «%s». جرّب اسم الماركة أو الموديل، أو وسّع خيارات التصفية.','No results for “%s”. Try a brand or model name, or broaden your filters.'), $empty_search) : car_dealer_text('جرّب تقليل خيارات التصفية أو تصفح جميع السيارات المتاحة.','Try fewer filters or browse all available vehicles.')); ?></p>
+			<div class="catalog-empty-actions"><a class="btn btn-primary" href="#header-search-trigger" data-open-vehicle-search><?php echo esc_html(car_dealer_text('تعديل البحث','Edit search')); ?></a><a class="btn btn-outline" href="<?php echo esc_url(car_dealer_catalog_localized_url($empty_search ? add_query_arg('search', $empty_search, car_dealer_archive_url('car')) : car_dealer_archive_url('car'))); ?>"><?php echo esc_html(car_dealer_text('مسح الفلاتر','Clear filters')); ?></a><a href="<?php echo esc_url(car_dealer_catalog_localized_url(car_dealer_archive_url('car'))); ?>"><?php echo esc_html(car_dealer_text('تصفح جميع السيارات','Browse all vehicles')); ?></a></div>
+		</section>
 	<?php endif; endif; ?>
 </div>
 <?php get_footer(); ?>

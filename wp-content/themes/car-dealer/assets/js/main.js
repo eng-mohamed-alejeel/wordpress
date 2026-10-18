@@ -159,3 +159,44 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 })();
 
+
+/* Compact, progressively enhanced vehicle search; no drafts leave the browser. */
+(function () {
+  function init() {
+    var box = document.querySelector('[data-header-search]');
+    if (!box) return;
+    var trigger = box.querySelector('summary'), input = box.querySelector('input[type="search"]');
+    var form = box.querySelector('form'), clear = box.querySelector('[data-search-clear]');
+    var status = box.querySelector('#header-search-status');
+    // Keep native validation for the no-script form; use one localized message here.
+    form.noValidate = true;
+    trigger.setAttribute('aria-keyshortcuts', 'Control+k Meta+k');
+    function update() { clear.hidden = !input.value; status.textContent = ''; input.removeAttribute('aria-invalid'); }
+    function dismiss(restore) { box.open = false; if (restore) trigger.focus({preventScroll:true}); }
+    box.addEventListener('toggle', function () {
+      if (!box.open) return;
+      document.querySelectorAll('.language-dropdown[open]').forEach(function (item) { item.open = false; });
+      var menu = document.querySelector('.menu-toggle'), nav = document.querySelector('.main-navigation');
+      if (menu && nav) { menu.setAttribute('aria-expanded','false'); nav.classList.remove('is-open'); }
+      input.focus({preventScroll:true});
+    });
+    clear.addEventListener('click', function () { input.value = ''; update(); input.focus(); });
+    input.addEventListener('input', update);
+    function empty() { status.textContent = status.dataset.emptyMessage; input.setAttribute('aria-invalid','true'); input.focus(); }
+    form.addEventListener('invalid', function (event) { if (event.target === input) { event.preventDefault(); empty(); } }, true);
+    form.addEventListener('submit', function (event) { input.value = input.value.trim(); if (!input.value) { event.preventDefault(); empty(); } });
+    document.addEventListener('click', function (event) {
+      if (event.target.closest('[data-open-vehicle-search]')) { event.preventDefault(); box.open = true; input.focus({preventScroll:true}); return; }
+      if (box.open && !box.contains(event.target)) dismiss(false);
+    });
+    box.addEventListener('focusout', function (event) { if (event.relatedTarget && !box.contains(event.relatedTarget)) dismiss(false); });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && box.open) { event.preventDefault(); dismiss(true); return; }
+      if (event.defaultPrevented || event.altKey || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'k') return;
+      if (event.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]')) return;
+      event.preventDefault(); box.open = true; input.focus({preventScroll:true});
+    });
+    update();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();

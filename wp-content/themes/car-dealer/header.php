@@ -32,13 +32,7 @@ $cd_search_value = isset( $_GET['search'] ) && is_scalar( $_GET['search'] ) ? sa
 			</nav>
 			<div class="header-actions">
 				<?php if ( class_exists( '\AutoDealership\Core\BrandIdentity' ) ) { \AutoDealership\Core\BrandIdentity::control(); } ?>
-				<form class="header-search" role="search" aria-label="<?php echo esc_attr( car_dealer_text( 'البحث عن السيارات', 'Vehicle search' ) ); ?>" method="get" action="<?php echo esc_url( $cd_catalog_search_url ?: home_url( '/' ) ); ?>">
-					<?php if ( $cd_catalog_search_url && ! get_option( 'permalink_structure' ) ) : ?><input type="hidden" name="post_type" value="car"><?php endif; ?>
-					<label class="screen-reader-text" for="site-search"><?php echo esc_html( car_dealer_text( 'ابحث', 'Search' ) ); ?></label>
-					<input id="site-search" type="search" name="<?php echo esc_attr( $cd_catalog_search_url ? 'search' : 's' ); ?>" value="<?php echo esc_attr( $cd_search_value ); ?>" placeholder="<?php echo esc_attr( car_dealer_text( 'ابحث عن سيارة', 'Search cars' ) ); ?>">
-					<?php if ( 'en' === $cd_language ) : ?><input type="hidden" name="lang" value="en"><?php endif; ?>
-					<button type="submit" aria-label="<?php echo esc_attr( car_dealer_text( 'بحث', 'Search' ) ); ?>">⌕</button>
-				</form>
+				<?php get_template_part('templates/components/header-search', null, array('url' => $cd_catalog_search_url, 'value' => $cd_search_value, 'language' => $cd_language)); ?>
 				<?php if ( function_exists( 'car_dealer_catalog_language_switch' ) ) { car_dealer_catalog_language_switch(); } ?>
 			</div>
 		</div>
