@@ -23,16 +23,17 @@ final class SiteContent {
 	}
 	public static function t(string $ar,string $en): string { return ProductSetup::t($ar,$en); }
 	public static function home_definitions(): array {
-		return array('hero'=>['المقدمة الرئيسية','Hero'],'featured'=>['السيارات المميزة','Featured vehicles'],'why'=>['لماذا تختارنا','Why choose us'],'latest'=>['أحدث السيارات','Latest vehicles'],'offers'=>['العروض الحالية','Current offers'],'demand'=>['سيارات مختارة','Selected vehicles'],'reviews'=>['آراء العملاء','Customer reviews'],'team'=>['فريقنا','Our team'],'metrics'=>['بالأرقام','In numbers'],'cta'=>['اعثر على سيارتك القادمة','Find your next car']);
+		return array('hero'=>['المقدمة الرئيسية','Hero'],'featured'=>['السيارات المميزة','Featured vehicles'],'why'=>['لماذا تختارنا','Why choose us'],'latest'=>['أحدث السيارات','Latest vehicles'],'offers'=>['العروض الحالية','Current offers'],'demand'=>['سيارات مختارة','Selected vehicles'],'reviews'=>['آراء العملاء','Customer reviews'],'cta'=>['اعثر على سيارتك القادمة','Find your next car']);
 	}
 	public static function defaults(): array {
-		$home=[]; foreach(self::home_definitions() as $key=>$label) { $home[$key]=array('status'=>in_array($key,['team','metrics'],true)?'hidden':'published','order'=>count($home),'count'=>'latest'===$key?36:('offers'===$key?8:(in_array($key,['demand','reviews'],true)?3:6)),'title_ar'=>'','title_en'=>'','description_ar'=>'','description_en'=>''); }
+		$home=[]; foreach(self::home_definitions() as $key=>$label) { $home[$key]=array('status'=>'published','order'=>count($home),'height'=>'auto','spacing'=>'normal','count'=>'latest'===$key?6:('offers'===$key?8:(in_array($key,['demand','reviews'],true)?3:6)),'title_ar'=>'','title_en'=>'','description_ar'=>'','description_en'=>''); }
 		return array('format'=>1,'home'=>$home,'hero_image'=>0,'team'=>[],'reviews'=>[],'metrics'=>[]);
 	}
 	public static function data(): array {
 		$data=get_option(self::OPTION,[]); $defaults=self::defaults();
 		$data=is_array($data)?array_replace($defaults,$data):$defaults;
-		$data['home']=array_replace($defaults['home'],is_array($data['home'])?$data['home']:[]);
+		$data['home']=array_replace($defaults['home'],array_intersect_key(is_array($data['home'])?$data['home']:[],$defaults['home']));
+		foreach($defaults['home'] as $key=>$settings) { $data['home'][$key]=array_replace($settings,is_array($data['home'][$key])?$data['home'][$key]:[]); }
 		if(isset($_GET['adc_content_preview']) && is_scalar($_GET['adc_content_preview']) && current_user_can('manage_options')) {
 			$token=(string)$_GET['adc_content_preview']; if(preg_match('/\A[a-f0-9]{32}\z/',$token)) { $preview=get_transient('adc_content_preview_'.$token); if(is_array($preview) && (int)$preview['user']===get_current_user_id()) { return $preview['data']; } }
 		}
@@ -67,11 +68,12 @@ final class SiteContent {
 				$out[$group][]=$clean;
 			}
 		}
-		$home=$input['home']??[]; if(!is_array($home) || array_diff(array_keys($home),array_keys($out['home']))) { return self::fail('أقسام الرئيسية غير صالحة.','Invalid home sections.'); }
+		$home=$input['home']??[]; if(is_array($home)) { unset($home['team'],$home['metrics']); } if(!is_array($home) || array_diff(array_keys($home),array_keys($out['home']))) { return self::fail('أقسام الرئيسية غير صالحة.','Invalid home sections.'); }
 		foreach($home as $key=>$row) {
 			if(!is_array($row) || array_diff(array_keys($row),array_keys($out['home'][$key]))) { return self::fail('إعدادات القسم غير صالحة.','Invalid section settings.'); }
 			foreach($row as $field=>$value) { if(!is_scalar($value) || strlen((string)$value)>4000) { return self::fail('حقل رئيسية غير صالح.','Invalid home field.'); } $out['home'][$key][$field]=sanitize_textarea_field((string)$value); }
 			if(!in_array($out['home'][$key]['status'],['draft','published','hidden'],true)) { return self::fail('حالة القسم غير صالحة.','Invalid section status.'); }
+			if(!in_array($out['home'][$key]['height'],['auto','balanced','screen'],true) || !in_array($out['home'][$key]['spacing'],['compact','normal','spacious'],true) || ('screen'===$out['home'][$key]['height'] && !in_array($key,['hero','why','cta'],true))) { return self::fail('اختر نمط عرض صالحًا لهذا القسم.','Choose a supported layout for this section.'); }
 			$out['home'][$key]['count']=max(1,min(48,(int)$out['home'][$key]['count'])); $out['home'][$key]['order']=max(0,min(1000,(int)$out['home'][$key]['order']));
 		}
 		if(!is_scalar($input['hero_image']??0)) { return self::fail('صورة المقدمة غير صالحة.','Invalid hero image.'); }
@@ -165,9 +167,22 @@ final class SiteContent {
 		$page=get_page_by_path('contact'); if($page && 'publish'===$page->post_status) { $url=add_query_arg('lang',Localization::language(),get_permalink($page)); $html.='<a class="btn btn-primary" href="'.esc_url($url).'">'.esc_html(self::t('تواصل مع فريقنا','Contact our team')).'</a>'; }
 		return $html.'</div></div></section>';
 	}
+	public static function home_layout(string $html,string $key,array $settings): string {
+		if(''===trim($html)) { return $html; }
+		$tag=new \WP_HTML_Tag_Processor($html);
+		if($tag->next_tag('SECTION')) {
+			$tag->add_class('adc-home-section');
+			$tag->set_attribute('data-home-section',$key);
+			$height=in_array($settings['height']??'auto',['auto','balanced','screen'],true)?($settings['height']??'auto'):'auto';
+			if('screen'===$height && !in_array($key,['hero','why','cta'],true)) { $height='auto'; }
+			$tag->set_attribute('data-section-height',$height);
+			$tag->set_attribute('data-section-spacing',in_array($settings['spacing']??'normal',['compact','normal','spacious'],true)?($settings['spacing']??'normal'):'normal');
+		}
+		return $tag->get_updated_html();
+	}
 	public static function home_render(array $parts): string {
 		foreach(['featured','latest','offers','demand','reviews'] as $key) { if(''===trim($parts[$key]??'')) { $parts[$key]=self::home_empty($key); } }
-		$home=self::data()['home']; uasort($home,static fn($a,$b)=>$a['order']<=>$b['order']); $html=self::home_enabled('hero')?($parts['hero']??''):''; unset($home['hero']); foreach($home as $key=>$settings) { if('published'===$settings['status']) { $html.=$parts[$key]??''; } }
+		$home=array_intersect_key(self::data()['home'],self::home_definitions()); uasort($home,static fn($a,$b)=>$a['order']<=>$b['order']); $html=self::home_enabled('hero')?self::home_layout($parts['hero']??'','hero',$home['hero']):''; unset($home['hero']); foreach($home as $key=>$settings) { if('published'===$settings['status']) { $html.=self::home_layout($parts[$key]??'',$key,$settings); } }
 		if(isset($_GET['adc_content_preview']) && current_user_can('manage_options')) { $html='<div class="adc-content-preview-banner">'.esc_html(self::t('معاينة خاصة — لم تُنشر هذه التغييرات','Private preview — these changes are not published')).'</div>'.$html; }
 		return $html;
 	}

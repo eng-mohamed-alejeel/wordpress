@@ -155,22 +155,7 @@ foreach(array('featured'=>'featured-vehicles','why'=>'why-auto-brands','latest'=
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l7-7-7-7"/></svg>
 			</a><?php endif; ?>
 		</div>
-		<div class="latest-rows">
-		<?php foreach ( array_chunk( $latest_ids, max( 1, (int) ceil( count( $latest_ids ) / 3 ) ) ) as $row_index => $row_ids ) :
-			$row_id = 'latest-vehicles-row-' . ( $row_index + 1 );
-			$row_label = car_dealer_text( 'أحدث السيارات — الصف ', 'Latest vehicles — row ' ) . ( $row_index + 1 );
-		?>
-			<div class="latest-row" data-vehicle-row>
-				<div class="latest-row-controls">
-					<button type="button" data-scroll-direction="left" aria-controls="<?php echo esc_attr( $row_id ); ?>" aria-label="<?php echo esc_attr( car_dealer_text( 'تحريك لليسار: ', 'Scroll left: ' ) . $row_label ); ?>"><span aria-hidden="true">←</span></button>
-					<button type="button" data-scroll-direction="right" aria-controls="<?php echo esc_attr( $row_id ); ?>" aria-label="<?php echo esc_attr( car_dealer_text( 'تحريك لليمين: ', 'Scroll right: ' ) . $row_label ); ?>"><span aria-hidden="true">→</span></button>
-				</div>
-				<div id="<?php echo esc_attr( $row_id ); ?>" class="latest-row-track" tabindex="0" role="region" aria-label="<?php echo esc_attr( $row_label ); ?>">
-					<?php echo car_dealer_render_shortcode_car_ids( $row_ids, 'car-grid car-grid-latest' ); ?>
-				</div>
-			</div>
-		<?php endforeach; ?>
-		</div>
+		<?php echo car_dealer_render_shortcode_car_ids( $latest_ids, 'car-grid car-grid-home-latest' ); ?>
 	</div>
 </section>
 <?php endif; ?>
@@ -242,8 +227,6 @@ foreach(array('featured'=>'featured-vehicles','why'=>'why-auto-brands','latest'=
 </section>
 <?php $home_parts['cta'] = ob_get_clean();
 if ($manage_content) {
- $home_parts['team'] = $content_class::render('team',array('count'=>$site_content['home']['team']['count'],'title'=>$home_text('team','title',''),'description'=>$home_text('team','description','')));
- $home_parts['metrics'] = $content_class::render('metrics',array('count'=>$site_content['home']['metrics']['count'],'title'=>$home_text('metrics','title',''),'description'=>$home_text('metrics','description','')));
  echo $content_class::home_render($home_parts);
 } else { echo implode('', $home_parts); }
 get_footer(); ?>

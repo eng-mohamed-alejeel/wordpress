@@ -235,3 +235,85 @@ body.admin-bar .ab-hero-v2 { --ab-hero-offset: 114px; }
   .ab-hero-v2 .ab-hero-scroll-hint span,
   .ab-hero-v2 .ab-hero-scroll-hint svg { animation: none !important; }
 }
+
+/* Content-aware homepage rhythm: no clipped sections or forced scroll snapping. */
+.adc-home-section:not(.ab-hero-v2) {
+  --adc-section-space: clamp(2.25rem, 5vw, 5rem);
+  padding-block: var(--adc-section-space);
+  min-inline-size: 0;
+  scroll-margin-block-start: calc(var(--ab-header-obstruction, 82px) + 1rem);
+}
+.adc-home-section[data-section-spacing="compact"] { --adc-section-space: clamp(1.5rem, 3vw, 3rem); }
+.adc-home-section[data-section-spacing="spacious"] { --adc-section-space: clamp(3rem, 7vw, 6.5rem); }
+.adc-home-section .section-heading { gap: 1rem 2rem; margin-block-end: clamp(1.5rem, 3vw, 2.5rem); flex-wrap: wrap; }
+.adc-home-section h2 { font-size: clamp(1.5rem, 2.8vw, 2.6rem); line-height: 1.4; overflow-wrap: anywhere; }
+.adc-home-section .section-subtitle,
+.adc-home-section > .container > p { max-inline-size: 65ch; line-height: 1.85; overflow-wrap: anywhere; }
+.adc-home-section .car-grid,
+.adc-home-section .adc-editorial-grid,
+.adc-home-section .ab-feature-grid-v2 {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: clamp(1rem, 2vw, 1.75rem); align-items: stretch;
+}
+.adc-home-section .car-grid > *,
+.adc-home-section .adc-editorial-grid > * { min-inline-size: 0; }
+.adc-home-section .adc-editorial-card { padding: clamp(1rem, 2vw, 1.75rem); }
+.adc-home-section .adc-team-photo,
+.adc-home-section .adc-team-avatar { block-size: clamp(10rem, 17vw, 14rem); }
+.adc-home-section[data-home-section="metrics"][data-section-spacing="normal"] { --adc-section-space: clamp(1.75rem, 3vw, 3rem); }
+.adc-home-section .adc-metric-value { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.3; }
+.adc-home-section .adc-metric-value span { display: inline-block; font-size: 1rem; }
+.adc-home-section .ab-inventory-cta-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.adc-home-section .ab-inventory-cta-actions .btn { min-block-size: 48px; white-space: normal; }
+@media (min-width: 901px) and (min-height: 600px) {
+  .adc-home-section:not(.ab-hero-v2)[data-section-height="balanced"] {
+    min-block-size: min(42rem, calc(75vh - var(--ab-header-obstruction, 82px)));
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .adc-home-section:not(.ab-hero-v2)[data-section-height="screen"] {
+    min-block-size: calc(100vh - var(--ab-header-obstruction, 82px));
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  @supports (height: 100svh) {
+    .adc-home-section:not(.ab-hero-v2)[data-section-height="balanced"] { min-block-size: min(42rem, calc(75svh - var(--ab-header-obstruction, 82px))); }
+    .adc-home-section:not(.ab-hero-v2)[data-section-height="screen"] { min-block-size: calc(100svh - var(--ab-header-obstruction, 82px)); }
+  }
+}
+@media (max-width: 600px) {
+  .adc-home-section .section-heading { align-items: flex-start; }
+  .adc-home-section .section-link { min-block-size: 44px; display: inline-flex; align-items: center; }
+  .adc-home-section .adc-editorial-grid,
+  .adc-home-section .ab-feature-grid-v2 { grid-template-columns: minmax(0, 1fr); }
+  .adc-home-section .ab-inventory-cta-actions > .btn { flex: 1 1 9rem; }
+}
+
+.adc-home-section.ab-hero-v2[data-section-spacing="compact"] { padding-block-start: 1rem; }
+.adc-home-section.ab-hero-v2[data-section-spacing="spacious"] { padding-block-start: clamp(2rem, 5vw, 4rem); }
+@media (min-width: 901px) and (min-height: 600px) {
+ .adc-home-section.ab-hero-v2[data-section-height="balanced"] { min-height: calc(75vh - var(--ab-hero-offset, 82px)); }
+ @supports (height: 100svh) { .adc-home-section.ab-hero-v2[data-section-height="balanced"] { min-height: calc(75svh - var(--ab-hero-offset, 82px)); } }
+}
+.adc-home-section .adc-home-empty .btn { max-inline-size: 100%; min-inline-size: 0; white-space: normal; overflow-wrap: anywhere; justify-content: center; }
+
+/* Every new-arrival card shares the same media slot and grid-row height. */
+#latest-vehicles .car-grid-home-latest { grid-auto-rows: 1fr; }
+#latest-vehicles .car-card { display: flex; flex-direction: column; block-size: 100%; }
+#latest-vehicles .car-image { flex: 0 0 220px; block-size: 220px; min-block-size: 220px; }
+#latest-vehicles .car-image img,
+#latest-vehicles .car-image-placeholder { inline-size: 100%; block-size: 100%; }
+#latest-vehicles .car-image-placeholder svg { max-inline-size: 75%; max-block-size: 150px; }
+#latest-vehicles .car-details { flex: 1 1 auto; display: flex; flex-direction: column; }
+#latest-vehicles .car-card-actions { margin-block-start: auto; }
+
+/* Keep sparse rows at their normal card width; empty tracks stay empty. */
+.adc-home-section.ab-latest-section > .container { max-width: var(--cd-container-max, 1200px); }
+.adc-home-section .adc-editorial-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); }
+.adc-home-section:not(.ab-hero-v2)[data-section-spacing="normal"]:has(.car-grid > .car-card:only-child, .adc-editorial-grid > .adc-editorial-card:only-child) {
+  --adc-section-space: clamp(2rem, 4vw, 3rem);
+}
+.adc-home-section:not(.ab-hero-v2)[data-section-height="balanced"]:has(.car-grid > .car-card:only-child, .adc-editorial-grid > .adc-editorial-card:only-child, .ab-feature-grid-v2 > :only-child) {
+  min-block-size: 0;
+}
+@media (max-width: 600px) {
+  .adc-home-section .adc-editorial-grid { grid-template-columns: minmax(0, 1fr); }
+}
