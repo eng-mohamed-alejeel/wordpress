@@ -24,7 +24,8 @@ $currency_get = rest_do_request( new WP_REST_Request( 'GET', '/auto-dealership/v
 adc_check( '1000.25' === ( $currency_get->get_data()['purchase_cost_sar'] ?? '' ) && 100025 === (int) ( $currency_get->get_data()['purchase_cost'] ?? 0 ), 'Real acquisition output exposes explicit SAR alongside compatible minor units.' );
 ob_start(); AutoDealership\Admin\VehicleAcquisitionPage::render(); $currency_html = ob_get_clean();
 adc_check( str_contains( $currency_html, '1000.25' ) && ! str_contains( $currency_html, '100025' ) && str_contains( $currency_html, 'step="0.01"' ), 'Acquisition form and table render actual SAR values.' );
-ob_start(); AutoDealership\Admin\OperationsPages::render(); $currency_html = ob_get_clean();
+$currency_previous_get=$_GET;$_GET['legacy']='1';
+try { ob_start(); AutoDealership\Admin\OperationsPages::render(); $currency_html = ob_get_clean(); } finally { $_GET=$currency_previous_get; }
 adc_check( str_contains( $currency_html, '1234.56' ) && ! str_contains( $currency_html, '123456' ), 'Inventory view renders SAR without exposing raw minor units.' );
 $currency_filters = AutoDealership\Inventory\PublicCatalog::normalize_filters( array( 'min_price'=>'12.34','max_price'=>'56.78' ), true );
 adc_check( 1234 === $currency_filters['min_price'] && 5678 === $currency_filters['max_price'], 'Public price filters preserve halala fractions in SAR input.' );
@@ -38,7 +39,8 @@ adc_check( 400 === rest_do_request( $currency_request )->get_status(), 'Register
 update_option( 'adc_pricing_fee_amount', 5025 );
 update_option( 'adc_promotion_type', 'fixed' ); update_option( 'adc_promotion_value', 123456 );
 update_option( 'adc_reservation_deposit_type', 'percentage' ); update_option( 'adc_reservation_deposit_value', 1500 );
-ob_start(); AutoDealership\Admin\SettingsPage::render(); $currency_html = ob_get_clean();
+$currency_previous_get=$_GET;$currency_html='';
+try { foreach(array('pricing','reservations') as $currency_section){$_GET['section']=$currency_section;ob_start();AutoDealership\Admin\SettingsPage::render();$currency_html.=ob_get_clean();} } finally { $_GET=$currency_previous_get; }
 adc_check( str_contains( $currency_html, 'value="50.25"' ) && str_contains( $currency_html, 'value="1234.56"' ) && str_contains( $currency_html, 'value="1500"' ), 'Settings render fixed amounts in SAR and preserve percentage basis points.' );
 adc_check( str_contains( $currency_html, 'name="adc_money_unit" value="SAR"' ), 'Money forms declare their unit explicitly.' );
 $currency_die_handler = static fn()=>static function($message){ throw new RuntimeException( (string) $message ); };

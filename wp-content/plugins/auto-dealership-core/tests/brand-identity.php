@@ -11,6 +11,7 @@ $check = static function ( bool $condition, string $message ) use ( &$checks ): 
 };
 \AutoDealership\Core\BrandIdentity::tokens();
 \AutoDealership\Core\BrandIdentity::tokens();
+$check( '' === wp_get_attachment_image( 0, array( 60, 60 ) ), 'A missing brand attachment returns empty markup without a fatal error.' );
 $styles = wp_styles();
 $check( count( $styles->get_data( 'autobrands-tokens', 'after' ) ) === 1, 'Repeated enqueue must not duplicate dynamic colors.' );
 $options = car_dealer_theme_options();

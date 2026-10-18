@@ -284,7 +284,7 @@ final class ProductSetup {
 			self::t( 'SMTP حقيقي مهيّأ', 'Real SMTP configured' )=>'smtp' === ( $mail['mode'] ?? '' ) && ! empty( $mail['valid'] ),
 			self::t( 'الصفحات الأساسية', 'Essential pages' )=>$pages,
 			self::t( 'الصفحات القانونية منشورة', 'Legal pages published' )=>$legal,
-			self::t( 'مهمة معالجة البريد مجدولة', 'Mail worker scheduled' )=>(bool) wp_next_scheduled( 'adc_process_outbox' ),
+			self::t( 'تشغيل عامل البريد مرصود ولا توجد رسائل قديمة معلقة', 'Mail worker execution observed without old held messages' )=>self::job_readiness(),
 			self::t( 'بيانات التواصل', 'Contact details' )=>! empty( get_option( 'car_dealer_theme_settings', array() )['email'] ),
 			self::t( 'بيئة إنتاج', 'Production environment' )=>! $local && 'production' === wp_get_environment_type(),
 		);
@@ -334,6 +334,7 @@ final class ProductSetup {
 		update_option('adc_product_mail_dashboard',true,false);
 		return true;
 	}
+	private static function job_readiness(): bool { $health=\AutoDealership\Operations\JobRuntime::status();return $health['worker_observed'] && 'browser'!==$health['worker_source'] && !$health['held_mail'] && !$health['failed_jobs']; }
 	public static function mail_status(): void {
 		$last=(array)get_option('adc_product_mail_result',array());
 		$messages=array(

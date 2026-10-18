@@ -8,6 +8,7 @@
         "**/vendor/**/{Tests,tests}/**", "**/.history/**", "**/vendor/**/vendor/**",
         "**/.tmp/**", "**/docs/archive/**",
         "**/auto-dealership-core/tests/branch-scope.php",
+        "**/auto-dealership-core/tests/staff-presence.php",
         "**/auto-dealership-core/tests/stored-translations.php",
         "**/auto-dealership-core/tests/pricing-policy.php",
         "**/auto-dealership-core/tests/finance-calculator.php",

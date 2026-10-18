@@ -5,7 +5,7 @@ namespace AutoDealership\Audit {
 }
 namespace AutoDealership\Inventory {
  final class PublicCatalog {
-  public const MODE_COMPATIBILITY = 'compatibility'; public const MODE_AUTHORITATIVE = 'authoritative';
+  public const MODE_COMPATIBILITY = 'compatibility'; public const MODE_AUTHORITATIVE = 'authoritative'; public const MODE_MODELS = 'models';
   public static function mode(): string { return \get_option('adc_public_catalog_mode', 'compatibility'); }
   public static function readiness(): array { return array('ready'=>true); }
  }

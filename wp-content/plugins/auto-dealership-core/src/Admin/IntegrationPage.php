@@ -65,7 +65,8 @@ final class IntegrationPage {
 		$health = get_option( 'adc_outbox_health', array() );
 		$last = is_array( $health ) ? (string) ( $health['finished_at'] ?? '' ) : '';
 		$last_time = $last ? strtotime( $last . ' UTC' ) : false;
-		$worker = ! $next ? 'not_scheduled' : ( ! $last_time || $last_time < time() - 15 * MINUTE_IN_SECONDS ? 'stale' : 'healthy' );
+		$runtime = \AutoDealership\Operations\JobRuntime::status();
+		$worker = ! $next ? 'not_scheduled' : ( $runtime['worker_observed'] ? 'healthy' : 'stale' );
 		?>
 		<h2><?php esc_html_e( 'صحة التشغيل', 'auto-dealership-core' ); ?></h2>
 		<table class="widefat striped"><tbody>

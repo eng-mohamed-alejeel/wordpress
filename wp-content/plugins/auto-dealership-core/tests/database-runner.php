@@ -111,6 +111,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
 	require __DIR__.'/onyx-document-fixture.php';
+	if ( '1' === getenv( 'ADC_JOBS_ONLY' ) ) { require __DIR__ . '/job-runtime-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_PORTAL_ONLY' ) ) { require __DIR__ . '/portal-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_PRODUCT_ONLY' ) ) { require __DIR__ . '/product-setup-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_NEWSLETTER_ONLY' ) ) { require __DIR__ . '/newsletter-scenarios.php'; exit; }

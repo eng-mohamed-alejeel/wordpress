@@ -29,7 +29,7 @@ try {
 	update_option( 'adc_public_catalog_mode', 'authoritative' );
 	$catalog_browser = proc_open( array( getenv( 'ADC_NODE' ) ?: 'C:/Program Files/nodejs/node.exe', __DIR__ . '/browser-public-catalog.cjs' ), array( 0=>array( 'pipe','r' ), 1=>STDOUT, 2=>STDERR ), $catalog_browser_pipes );
 	if ( ! is_resource( $catalog_browser ) ) { throw new RuntimeException( 'Catalog browser worker failed.' ); }
-	fwrite( $catalog_browser_pipes[0], wp_json_encode( array( 'origin'=>'http://127.0.0.1:' . $journey_port, 'car_id'=>(int) $catalog_post_id, 'branch_id'=>(int) $branch_b['id'] ) ) );
+	fwrite( $catalog_browser_pipes[0], wp_json_encode( array( 'origin'=>'http://127.0.0.1:' . $journey_port, 'car_id'=>(int) $catalog_post_id, 'branch_id'=>(int) $branch_b['id'], 'public_price_sar'=>$public_catalog_price / 100, 'brand_name'=>get_bloginfo('name') ) ) );
 	fclose( $catalog_browser_pipes[0] );
 	$catalog_browser_status = proc_close( $catalog_browser );
 	update_option( 'adc_public_catalog_mode', $journey_catalog_mode );

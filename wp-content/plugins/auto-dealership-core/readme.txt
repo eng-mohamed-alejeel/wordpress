@@ -1,13 +1,13 @@
 === Auto Dealership Core ===
 Requires at least: 6.7
 Requires PHP: 8.0
-Stable tag: 1.53.1
+Stable tag: 1.54.1
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The Car Dealer theme is a presentation adapter for this plugin.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
 
-Version 1.53.1 adds a bilingual seven-section customer portal, branch-scoped threaded conversations with private staff notes, durable optional mail notifications, consented versioned customer reviews with moderation and immediate withdrawal, additive legacy imports and paginated privacy export/erasure. Schema 1.23.0 adds seven InnoDB portal tables.
+Version 1.54.1 adds a bilingual seven-section customer portal, branch-scoped threaded conversations with private staff notes, durable optional mail notifications, consented versioned customer reviews with moderation and immediate withdrawal, additive legacy imports and paginated privacy export/erasure. Schema 1.23.0 adds seven InnoDB portal tables.
 
 Version 1.41.10 validates product package compatibility before WordPress replaces files, permits supported sequential component updates, blocks code/schema downgrades, and supports existing legacy MU mail implementations without duplicate handlers. A populated 1.39.1 upgrade and full files/database restore are rehearsed on a separate database with mail and HTTP blocked. See docs/UPGRADE-AND-ROLLBACK-2026-10-15-AR.md.
 

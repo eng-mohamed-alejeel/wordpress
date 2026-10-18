@@ -163,7 +163,8 @@ final class NewsletterService {
 		$second = OutboxService::process_due( 8, $keys );
 		if ( is_wp_error( $second ) ) { return $second; }
 		global $wpdb;
-		$next = $wpdb->get_var( "SELECT MIN(next_attempt_at) FROM " . OutboxService::table() . " WHERE event_key IN ('email.verify','customer.welcome','newsletter.subscription','newsletter.expand','newsletter.deliver') AND status IN ('pending','retry')" );
+		$eligible = (string) apply_filters( 'adc_outbox_worker_where', '' );
+		$next = $wpdb->get_var( "SELECT MIN(next_attempt_at) FROM " . OutboxService::table() . " WHERE event_key IN ('email.verify','customer.welcome','newsletter.subscription','newsletter.expand','newsletter.deliver') AND status IN ('pending','retry') $eligible" );
 		if ( $next ) {
 			$when = max( time() + MINUTE_IN_SECONDS, strtotime( $next . ' UTC' ) );
 			$scheduled = wp_next_scheduled( 'adc_mail_wake' );

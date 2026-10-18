@@ -94,7 +94,7 @@ const assert = require('node:assert/strict');
 
         const filterQuery = new URLSearchParams({
             post_type: 'car', brand: 'Synthetic', model: 'Catalog HTTP', min_year: '2026', max_year: '2026',
-            min_price: '120000', max_price: '120000', min_mileage: '200', max_mileage: '300',
+            min_price: String(input.public_price_sar), max_price: String(input.public_price_sar), min_mileage: '200', max_mileage: '300',
             body_type: 'suv', fuel_type: 'hybrid', transmission: 'automatic', engine_size: '2.0 L',
             drivetrain: 'awd', exterior_color: 'Silver', interior_color: 'Black', condition: 'new',
             branch_id: String(input.branch_id), search: 'HTTP-201', sort: 'price_asc'
@@ -108,9 +108,10 @@ const assert = require('node:assert/strict');
         check(await evaluate("document.querySelectorAll('.car-card').length === 0 && document.querySelector('.empty-state').textContent.trim().length > 0"), 'No-result filters render the catalog empty state without stale cards.');
 
         await navigate('/?post_type=car&p=' + input.car_id, '.car-single-price');
-        check(await evaluate("document.querySelector('.car-single-price').textContent.includes('120,000') && document.querySelector('.car-specification').innerText.includes('HTTP-201') && document.querySelector('.car-specification').innerText.includes('Catalog HTTP')"), 'Vehicle detail uses operational price, stock number and model data.');
+        const expectedPrice = Number(input.public_price_sar).toLocaleString('en-US', {minimumFractionDigits:Number.isInteger(input.public_price_sar)?0:2, maximumFractionDigits:2});
+        check(await evaluate("document.querySelector('.car-single-price').textContent.includes("+JSON.stringify(expectedPrice)+") && document.querySelector('.car-specification').innerText.includes('HTTP-201') && document.querySelector('.car-specification').innerText.includes('Catalog HTTP')"), 'Vehicle detail uses VAT-inclusive public price, stock number and model data.');
         const schema = await evaluate("(() => { const nodes=Array.from(document.querySelectorAll('script[type=\"application/ld+json\"]')).map(node => { try { return JSON.parse(node.textContent); } catch { return null; } }); return nodes.find(node => node && node['@type'] === 'Vehicle'); })()");
-        check(schema && schema.brand.name === 'Synthetic' && schema.model === 'Catalog HTTP' && schema.sku === 'HTTP-201' && schema.offers.price === 120000, 'Vehicle structured data reflects the public operational read model.');
+        check(schema && schema.brand.name === 'Synthetic' && schema.model === 'Catalog HTTP' && schema.sku === 'HTTP-201' && Number(schema.offers.price) === input.public_price_sar, 'Vehicle structured data reflects the public VAT-inclusive read model.');
         const serializedSchema = JSON.stringify(schema);
         check(!serializedSchema.includes('3M8GDM9AXKP000201') && !serializedSchema.includes('purchase_cost') && !serializedSchema.includes('minimum_price'), 'Vehicle page and structured data do not expose private inventory fields.');
 
@@ -131,7 +132,7 @@ const assert = require('node:assert/strict');
 		await navigate('/?post_type=car&lang=en', '.ab-filter-authoritative');
 		check(await evaluate("document.documentElement.lang === 'en' && document.documentElement.dir === 'ltr' && getComputedStyle(document.documentElement).direction === 'ltr' && document.querySelector('.archive-content').lang === 'en'"), 'English catalog declares English and renders LTR at the document and content levels.');
 		const englishArchiveCopy = await evaluate("(() => ({ heading: document.querySelector('.archive-hero h1')?.textContent.trim() || '', search: document.querySelector('[name=search]')?.labels?.[0]?.innerText.trim() || '', count: document.querySelector('.catalog-result-count')?.innerText.trim() || '' }))()");
-		check(englishArchiveCopy.heading.includes('Browse AUTO BRANDS Vehicles') && englishArchiveCopy.search.includes('Search') && englishArchiveCopy.count.includes('matching vehicle'), `English archive heading, filters and result announcement are translated (${JSON.stringify(englishArchiveCopy)}).`);
+		check(englishArchiveCopy.heading.includes('Browse '+input.brand_name+' Vehicles') && englishArchiveCopy.search.includes('Search') && englishArchiveCopy.count.includes('available option'), `English archive heading, filters and result announcement are translated (${JSON.stringify(englishArchiveCopy)}).`);
 		check(await evaluate("document.querySelector('.catalog-language-switch [lang=en]').getAttribute('aria-current') === 'page' && new URL(document.querySelector('.catalog-language-switch [lang=ar]').href).searchParams.get('lang') === null"), 'Catalog language switch exposes the active language and a clean Arabic URL.');
 		check(await evaluate("document.querySelector('.car-price').textContent.startsWith('SAR ') && new URL(document.querySelector('.car-title a').href).searchParams.get('lang') === 'en' && !/[\u0600-\u06ff]/.test(document.querySelector('.archive-content').innerText)"), 'English cards retain language links, format SAR and contain no Arabic interface copy.');
 		await evaluate("(() => { const form=document.querySelector('.ab-filter-authoritative'); form.elements.search.value='HTTP-201'; form.requestSubmit(); })()");
@@ -140,8 +141,8 @@ const assert = require('node:assert/strict');
 
 		await navigate('/?post_type=car&p=' + input.car_id + '&lang=en', '.car-single');
 		check(await evaluate("document.querySelector('.car-single').lang === 'en' && document.querySelector('.car-single').dir === 'ltr' && document.querySelector('.car-single-price').textContent.startsWith('SAR ') && document.querySelector('.car-single-actions').innerText.includes('Request price')"), 'English vehicle detail renders LTR with translated actions and SAR price.');
-		check(await evaluate("document.querySelector('.car-specification').innerText.includes('Stock number') && document.querySelector('.car-specification').innerText.includes('Hybrid') && document.querySelector('.car-specification').innerText.includes('SUV') && document.querySelector('.cd-booking-form h2').innerText.includes('Book a test drive')"), 'English detail specifications and lead forms use translated public copy.');
-		await evaluate("(() => { const form=document.querySelector('.cd-lead-form'); form.elements.name.value='English Catalog Visitor'; form.elements.email.value='catalog-en@example.test'; form.elements.phone.value='+966500000321'; form.requestSubmit(); })()");
+		check(await evaluate("document.querySelector('.car-specification').innerText.includes('Model') && document.querySelector('.car-specification').innerText.includes('Hybrid') && document.querySelector('.car-specification').innerText.includes('SUV') && document.querySelector('.cd-booking-form h2').innerText.includes('Book a test drive')"), 'English detail specifications and lead forms use translated public copy.');
+		await evaluate("(() => { const form=document.querySelector('.cd-lead-form'); form.elements.name.value='English Catalog Visitor'; form.elements.email.value='catalog-en@example.test'; form.elements.phone.value='+966500000321'; if(form.elements.privacy_consent)form.elements.privacy_consent.checked=true; form.requestSubmit(); })()");
 		await wait("document.querySelector('.cd-lead-form .cd-form-status').innerText.includes('request has been received')", 'English catalog lead response');
 		check(await evaluate("document.querySelector('.cd-lead-form .cd-form-status').innerText.includes('successfully')"), 'English catalog lead submission returns a localized success message.');
 		const englishSchema = await evaluate("(() => Array.from(document.querySelectorAll('script[type=\"application/ld+json\"]')).map(node=>{try{return JSON.parse(node.textContent)}catch{return null}}).find(node=>node&&node['@type']==='Vehicle'))()");

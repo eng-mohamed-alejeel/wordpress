@@ -68,7 +68,10 @@ final class OutboxService {
 	public static function process_due( int $limit = 20, array $event_keys = array(), array $event_ids = array() ) {
 		global $wpdb;
 		if ( ! Schema::is_ready() ) { return self::error( 'adc_outbox_schema', 503 ); }
-		$limit = min( 100, max( 1, $limit ) );
+		$limit = min( 100, max( 1, (int) apply_filters( 'adc_outbox_batch_limit', $limit ) ) );
+		$budget = max( 0, (float) apply_filters( 'adc_outbox_budget_seconds', 15 ) );
+		$deadline = microtime( true ) + $budget;
+		if ( $budget <= 0 ) { return array( 'claimed'=>0, 'completed'=>0, 'retried'=>0, 'failed'=>0, 'skipped'=>0 ); }
 		$now = current_time( 'mysql', true );
 		$stale = gmdate( 'Y-m-d H:i:s', time() - self::LEASE_SECONDS );
 		$table = self::table();
@@ -78,16 +81,17 @@ final class OutboxService {
 			$event_where = $wpdb->prepare( ' AND event_key IN (' . implode( ',', array_fill( 0, count( $event_keys ), '%s' ) ) . ')', $event_keys );
 		}
 		if($event_ids) { foreach($event_ids as $id) { if(!is_int($id) || $id<1) { return self::error('adc_outbox_event',400); } } $event_where.=$wpdb->prepare(' AND id IN ('.implode(',',array_fill(0,count($event_ids),'%d')).')',$event_ids); }
+		$event_where .= (string) apply_filters( 'adc_outbox_worker_where', '' );
 		$candidates = $wpdb->get_col( $wpdb->prepare(
 			"SELECT id FROM $table WHERE ((status IN ('pending','retry') AND next_attempt_at<=%s) OR (status='processing' AND locked_at IS NOT NULL AND locked_at<%s)) $event_where ORDER BY id ASC LIMIT %d",
 			$now, $stale, min( 300, $limit * 3 )
 		) ) ?: array();
 		$summary = array( 'claimed'=>0, 'completed'=>0, 'retried'=>0, 'failed'=>0, 'skipped'=>0 );
 		foreach ( $candidates as $candidate ) {
-			if ( $summary['claimed'] >= $limit ) { break; }
+			if ( $summary['claimed'] >= $limit || microtime( true ) >= $deadline ) { break; }
 			$token = wp_generate_uuid4();
 			$claimed = $wpdb->query( $wpdb->prepare(
-				"UPDATE $table SET status='processing',lock_token=%s,locked_at=%s WHERE id=%d AND ((status IN ('pending','retry') AND next_attempt_at<=%s) OR (status='processing' AND locked_at IS NOT NULL AND locked_at<%s))",
+				"UPDATE $table SET status='processing',lock_token=%s,locked_at=%s WHERE id=%d AND ((status IN ('pending','retry') AND next_attempt_at<=%s) OR (status='processing' AND locked_at IS NOT NULL AND locked_at<%s)) $event_where",
 				$token, $now, (int) $candidate, $now, $stale
 			) );
 			if ( 1 !== $claimed ) { ++$summary['skipped']; continue; }
@@ -128,8 +132,9 @@ final class OutboxService {
 		if ( $id < 1 || '' === trim( $reason ) || mb_strlen( $reason ) > 500 ) { return self::error( 'adc_outbox_retry_input', 400 ); }
 		if ( ! Transaction::begin() ) { return self::error( 'adc_outbox_schema', 503 ); }
 		$table = self::table();
-		$row = $wpdb->get_row( $wpdb->prepare( "SELECT id,status,attempts,last_error FROM $table WHERE id=%d FOR UPDATE", $id ), ARRAY_A );
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT id,event_key,created_at,status,attempts,last_error FROM $table WHERE id=%d FOR UPDATE", $id ), ARRAY_A );
 		if ( ! $row || 'failed' !== $row['status'] ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_outbox_not_failed', 409 ); }
+		if ( ! apply_filters( 'adc_outbox_retry_allowed', true, $row ) ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_outbox_review_required', 409 ); }
 		$updated = $wpdb->query( $wpdb->prepare( "UPDATE $table SET status='retry',attempts=0,next_attempt_at=%s,locked_at=NULL,lock_token=NULL,failed_at=NULL,last_error='' WHERE id=%d AND status='failed'", current_time( 'mysql', true ), $id ) );
 		if ( 1 !== $updated || ! Transaction::commit( static fn() => AuditLog::record( 'outbox.retry_requested', 'outbox_event', $id, $reason, array( 'status'=>'failed', 'attempts'=>(int) $row['attempts'], 'error_code'=>$row['last_error'] ), array( 'status'=>'retry', 'attempts'=>0 ) ) ) ) {
 			$wpdb->query( 'ROLLBACK' ); return self::error( 'adc_outbox_retry_failed', 500 );

@@ -43,7 +43,7 @@ final class AccessReviewPage {
 		if ( AccessPolicy::suspended( $user->ID ) ) { return 'Blocked by account suspension'; }
 		if ( 'manage_links' === $cap && ! get_option( 'link_manager_enabled' ) ) { return 'The legacy link manager is disabled in site settings.'; }
 		if ( 'unfiltered_upload' === $cap ) {
-			if ( ! defined( 'ALLOW_UNFILTERED_UPLOADS' ) || ! ALLOW_UNFILTERED_UPLOADS ) { return 'Unrestricted uploads are disabled in site settings. Allowed file types can still be uploaded with upload permission.'; }
+			if ( ! defined( 'ALLOW_UNFILTERED_UPLOADS' ) || ! constant( 'ALLOW_UNFILTERED_UPLOADS' ) ) { return 'Unrestricted uploads are disabled in site settings. Allowed file types can still be uploaded with upload permission.'; }
 			if ( is_multisite() && ! is_super_admin( $user->ID ) ) { return 'Unrestricted uploads require a network super administrator.'; }
 		}
 		if ( array_key_exists( $cap, $user->caps ) && ! $user->caps[$cap] ) { return 'Denied by an individual permission override.'; }

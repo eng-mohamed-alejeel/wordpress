@@ -28,7 +28,7 @@ New-Item -ItemType Directory -Path $output | Out-Null
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $artifacts = @()
-foreach ($component in @(@{root=$pluginRoot;slug='auto-dealership-core';dirs=@('src','assets','languages','resources');files=@('auto-dealership-core.php','readme.txt')}, @{root=$themeRoot;slug='car-dealer';dirs=@('assets','inc','languages','templates');files=@()})) {
+foreach ($component in @(@{root=$pluginRoot;slug='auto-dealership-core';dirs=@('src','assets','languages','resources','bin');files=@('auto-dealership-core.php','readme.txt')}, @{root=$themeRoot;slug='car-dealer';dirs=@('assets','inc','languages','templates');files=@()})) {
     $files = @()
     foreach ($dir in $component.dirs) { $files += @(Get-ChildItem -LiteralPath (Join-Path $component.root $dir) -Recurse -File) }
     if ($component.slug -eq 'car-dealer') { $files += @(Get-ChildItem -LiteralPath $component.root -File | Where-Object { $_.Extension -eq '.php' -or $_.Name -in @('style.css','readme.txt','screenshot.png') }) }
@@ -54,5 +54,6 @@ $dirty = @(& git -C $repo status --porcelain --untracked-files=all -- wp-content
 $manifest = [ordered]@{product='auto-dealership';version=$pluginVersion;built_at_utc=[DateTime]::UtcNow.ToString('o');source_commit=$head;working_tree_changes=($dirty.Count -gt 0);contains_database=$false;contains_credentials=$false;artifacts=$artifacts}
 [IO.File]::WriteAllText((Join-Path $output 'manifest.json'), ($manifest | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
 Copy-Item -LiteralPath (Join-Path $repo 'docs/PRODUCT-INSTALLATION-AR.md') -Destination (Join-Path $output 'INSTALLATION-AR.md')
+Copy-Item -LiteralPath (Join-Path $repo 'docs/PORTABLE-JOB-RUNTIME-AR.md') -Destination (Join-Path $output 'PORTABLE-JOB-RUNTIME-AR.md')
 Write-Output $output
 foreach ($artifact in $artifacts) { Write-Output ($artifact.name + ' SHA256=' + $artifact.sha256 + ' files=' + $artifact.file_count) }

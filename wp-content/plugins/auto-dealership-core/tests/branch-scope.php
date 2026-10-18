@@ -7,6 +7,7 @@ define( 'ABSPATH', dirname( __DIR__, 4 ) . '/' );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'OBJECT', 'OBJECT' );
 require ABSPATH . 'wp-includes/class-wp-error.php';
+function is_wp_error( $value ) { return $value instanceof WP_Error; }
 
 $test_user = 0;
 $test_caps = array();

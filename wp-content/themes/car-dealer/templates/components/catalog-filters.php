@@ -1,5 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
+/** @var callable(string): string $get Query reader provided by filter-bar.php. */
+/** @var string $archive_url Archive URL provided by filter-bar.php. */
+/** @var array $filter_model Catalog options provided by filter-bar.php. */
 $choices=$filter_model['options']['catalog_choices']??array();
 foreach($choices as &$choice){foreach(array('brand','model','trim_name','exterior_color')as$field){$choice[$field.'_label']=car_dealer_catalog_value_label((string)$choice[$field]);}}unset($choice);
 $text=static fn($ar,$en)=>car_dealer_text($ar,$en);

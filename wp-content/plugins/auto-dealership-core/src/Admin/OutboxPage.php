@@ -35,6 +35,7 @@ final class OutboxPage {
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'مراقبة المهام والطابور', 'auto-dealership-core' ); ?></h1>
+			<?php \AutoDealership\Operations\JobRuntime::panel(); ?>
 			<?php self::notice(); ?>
 			<?php if ( is_wp_error( $counts ) || is_wp_error( $events ) ) : ?>
 				<div class="notice notice-error inline"><p><?php esc_html_e( 'المخطط التشغيلي غير جاهز. أكمل ترقية قاعدة البيانات ثم أعد فتح الصفحة.', 'auto-dealership-core' ); ?></p></div>
@@ -78,8 +79,16 @@ final class OutboxPage {
 			'adc_process_outbox'       => __( 'معالجة طابور الأحداث', 'auto-dealership-core' ),
 			'adc_expire_reservations'  => __( 'إنهاء الحجوزات المنتهية', 'auto-dealership-core' ),
 			'adc_privacy_retention'     => __( 'سياسة الاحتفاظ والخصوصية', 'auto-dealership-core' ),
+			'adc_scan_followups' => __( 'تنبيهات المتابعة', 'auto-dealership-core' ),
+			'adc_prune_request_limits' => __( 'صيانة حدود الطلبات', 'auto-dealership-core' ),
+			'adc_verification_prune' => __( 'صيانة تأكيد البريد', 'auto-dealership-core' ),
+			'adc_access_maintenance' => __( 'مراجعة صلاحيات الوصول', 'auto-dealership-core' ),
+			'wp_update_themes' => __( 'فحص تحديثات القوالب', 'auto-dealership-core' ),
+			'wp_update_plugins' => __( 'فحص تحديثات الإضافات', 'auto-dealership-core' ),
+			'wp_version_check' => __( 'فحص إصدار ووردبريس', 'auto-dealership-core' ),
 		);
 		$health = get_option( 'adc_outbox_health', array() );
+		$runtime = \AutoDealership\Operations\JobRuntime::status();
 		$health = is_array( $health ) ? $health : array();
 		?>
 		<h2><?php esc_html_e( 'المهام المجدولة', 'auto-dealership-core' ); ?></h2>
@@ -87,8 +96,10 @@ final class OutboxPage {
 		<?php foreach ( $jobs as $hook => $label ) :
 			$next = wp_next_scheduled( $hook );
 			$is_outbox = 'adc_process_outbox' === $hook;
-			$last = $is_outbox && is_array( $health ) ? (string) ( $health['finished_at'] ?? '' ) : '';
+			$observed = $runtime['jobs'][$hook] ?? array();
+			$last = !empty($observed['finished']) ? gmdate('Y-m-d H:i:s',$observed['finished']) : ($is_outbox && is_array( $health ) ? (string) ( $health['finished_at'] ?? '' ) : '');
 			$summary = $is_outbox && is_array( $health['summary'] ?? null ) ? wp_json_encode( $health['summary'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) : '';
+			if(!$summary && $observed){$summary=($observed['status']??'').' / '.($observed['source']??'');}
 		?>
 			<tr><td><strong><?php echo esc_html__( $label, 'auto-dealership-core' ); ?></strong><br><code><?php echo esc_html( $hook ); ?></code></td><td><?php echo esc_html( $next ? gmdate( 'Y-m-d H:i:s', $next ) : __( 'غير مجدولة', 'auto-dealership-core' ) ); ?></td><td><?php echo esc_html( $last ?: '—' ); ?></td><td><code><?php echo esc_html( $summary ?: '—' ); ?></code></td></tr>
 		<?php endforeach; ?>
@@ -102,9 +113,12 @@ final class OutboxPage {
 		<table class="widefat striped"><thead><tr><th><?php echo esc_html__( 'ID', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحدث', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المحاولات', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الموعد التالي (UTC)', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'آخر رمز خطأ', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'التوقيتات', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'إجراء', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
 		<?php if ( $events['rows'] ) : foreach ( $events['rows'] as $row ) : ?>
 			<tr>
+				<?php $held=in_array($row['event_key'],\AutoDealership\Operations\JobRuntime::MAIL_EVENTS,true)&&in_array($row['status'],array('pending','retry','processing','failed'),true)&&$row['created_at']<gmdate('Y-m-d H:i:s',time()-DAY_IN_SECONDS); ?>
 				<td><?php echo absint( $row['id'] ); ?></td><td><code><?php echo esc_html( $row['event_key'] ); ?></code></td><td><?php echo esc_html( \AutoDealership\Core\Localization::label( (string) $row['status'] ) ); ?></td><td><?php echo absint( $row['attempts'] ); ?></td><td><?php echo esc_html( $row['next_attempt_at'] ); ?></td><td><code><?php echo esc_html( $row['last_error'] ?: '—' ); ?></code></td>
 				<td><small><?php echo esc_html( __( 'Created:', 'auto-dealership-core' ) . ' ' . $row['created_at'] ); ?><br><?php echo esc_html( __( 'Locked:', 'auto-dealership-core' ) . ' ' . ( $row['locked_at'] ?: '—' ) ); ?><br><?php echo esc_html( __( 'Completed:', 'auto-dealership-core' ) . ' ' . ( $row['completed_at'] ?: '—' ) ); ?><br><?php echo esc_html( __( 'Failed:', 'auto-dealership-core' ) . ' ' . ( $row['failed_at'] ?: '—' ) ); ?></small></td>
+				<?php if($held){echo '<td><strong>'.esc_html__( 'معلّقة للمراجعة: أقدم من 24 ساعة ولن تُرسل تلقائيًا.', 'auto-dealership-core' ).'</strong></td>';}else{ ?>
 				<td><?php if ( 'failed' === $row['status'] && current_user_can( 'adc_manage_outbox' ) ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_retry_outbox"><input type="hidden" name="event_id" value="<?php echo absint( $row['id'] ); ?>"><?php wp_nonce_field( 'adc_retry_outbox_' . absint( $row['id'] ) ); ?><textarea name="reason" required maxlength="500" rows="2" placeholder="<?php esc_attr_e( 'سبب إعادة المحاولة', 'auto-dealership-core' ); ?>"></textarea><br><button class="button button-secondary"><?php esc_html_e( 'إعادة المحاولة', 'auto-dealership-core' ); ?></button></form><?php else : ?>—<?php endif; ?></td>
+				<?php } ?>
 			</tr>
 		<?php endforeach; else : ?><tr><td colspan="8"><?php esc_html_e( 'لا توجد أحداث مطابقة.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?>
 		</tbody></table>
@@ -118,6 +132,8 @@ final class OutboxPage {
 		if ( ! $code ) { return; }
 		if ( 'retried' === $code ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'أعيدت المهمة إلى الطابور وسُجل الإجراء في سجل التدقيق.', 'auto-dealership-core' ) . '</p></div>';
+		} elseif ( 'adc_outbox_review_required' === $code ) {
+			echo '<div class="notice notice-warning"><p>'.esc_html__( 'هذه الرسالة قديمة ولا تُعاد تلقائيًا. راجع سببها واستخدم طلبًا جديدًا من المسار المخصص إذا لزم.', 'auto-dealership-core' ).'</p></div>';
 		} else {
 			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'تعذر إعادة المهمة إلى الطابور.', 'auto-dealership-core' ) . ' <code>' . esc_html( $code ) . '</code></p></div>';
 		}

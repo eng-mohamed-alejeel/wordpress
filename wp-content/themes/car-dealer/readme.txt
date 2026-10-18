@@ -1,5 +1,5 @@
 === Car Dealer ===
-Version: 1.53.1
+Version: 1.54.1
 Requires WordPress: 6.7 or newer
 Requires PHP: 8.0 or newer
 Companion plugin: Auto Dealership Core 1.31.0 or newer

@@ -21,7 +21,10 @@ final class BrandLogo {
         $scale=min(1,$max_width/$width,$max_height/$height);
         return array(max(1,(int)round($width*$scale)),max(1,(int)round($height*$scale)));
     }
-    public static function image(string $html,int $attachment,$size,bool $icon,array $attributes): string {
+    public static function image(string $html,int $attachment,$size,bool $icon,$attributes): string {
+        // WordPress passes the original string attributes when no attachment exists.
+        if(''===$html){return $html;}
+        $attributes=wp_parse_args($attributes);
         $classes=preg_split('/\s+/',trim((string)($attributes['class']??'')));
         if(in_array('adc-about-site-logo',$classes,true)){$placement='about';$limits=array(300,180);}
         elseif(in_array('adc-workspace-logo',$classes,true)){$placement='workspace';$limits=array(148,100);}

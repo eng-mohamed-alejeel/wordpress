@@ -70,7 +70,7 @@ final class BranchLocations {
 			update_option(self::OPTION, $clean, false);
 			$ok = !$wpdb->last_error && get_option(self::OPTION) === $clean && Transaction::commit(static fn() => AuditLog::record('platform.branches_updated', 'settings', 0, 'Public branch locations updated', null, array('count'=>count($clean))));
 			if (!$ok) { $wpdb->query('ROLLBACK'); wp_cache_delete(self::OPTION, 'options'); wp_cache_delete('notoptions', 'options'); return new \WP_Error('adc_branches_storage', self::t('تعذر حفظ الفروع.', 'Could not save branches.')); }
-			if (function_exists('w3tc_flush_all')) { w3tc_flush_all(); }
+			if (function_exists('w3tc_flush_all')) { call_user_func('w3tc_flush_all'); }
 			if (function_exists('car_dealer_clear_public_page_cache')) { car_dealer_clear_public_page_cache(); }
 			return true;
 		} finally { $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock)); }
@@ -107,7 +107,7 @@ final class BranchLocations {
 		$rows = array_filter(self::all(), static fn($row) => !empty($row['active'])); if (!$rows) { return ''; }
 		$lang = Localization::language(); $settings = (array)get_option('car_dealer_theme_settings', array());
 		$email = sanitize_email((string)($settings['email'] ?? ''));
-		$html = '<section class="ab-contact-grid-section ab-section adc-contact-branches" aria-label="' . esc_attr(self::t('بيانات التواصل للفروع','Branch contact details')) . '"><div class="container"><div class="ab-contact-grid adc-contact-branch-grid">';
+		$html = '<section class="ab-contact-grid-section ab-section adc-contact-branches" aria-labelledby="adc-contact-cards-heading"><div class="container"><h2 id="adc-contact-cards-heading" class="screen-reader-text">' . esc_html(self::t('بيانات التواصل للفروع','Branch contact details')) . '</h2><div class="ab-contact-grid adc-contact-branch-grid">';
 		foreach ($rows as $row) {
 			$html .= '<article class="ab-contact-info-card adc-contact-branch-card"><h3>' . esc_html($row['name_' . $lang]) . '</h3><dl class="adc-contact-branch-details">';
 			if ($row['address_' . $lang]) { $html .= '<div><dt>' . esc_html(self::t('العنوان','Address')) . '</dt><dd>' . esc_html($row['address_' . $lang]) . '</dd></div>'; }
