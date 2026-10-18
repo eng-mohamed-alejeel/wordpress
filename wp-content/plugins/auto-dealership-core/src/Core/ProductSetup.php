@@ -11,7 +11,7 @@ final class ProductSetup {
 	private const PROFILE = 'adc_product_profile';
 	private const MAIL = 'adc_product_mail';
 	private const SECTIONS = array( 'identity', 'appearance', 'policy', 'mail', 'pages', 'readiness' );
-	private const PROFILE_KEYS = array( 'brand_ar', 'brand_en', 'description_ar', 'description_en', 'hero_ar', 'hero_en', 'language', 'timezone' );
+	private const PROFILE_KEYS = array( 'brand_ar', 'brand_en', 'legal_ar', 'legal_en', 'description_ar', 'description_en', 'hero_ar', 'hero_en', 'language', 'timezone' );
 	private const THEME_KEYS = array( 'primary_color', 'accent_color', 'description_en', 'phone', 'email', 'address', 'address_en', 'facebook', 'instagram', 'whatsapp' );
 	private const POLICY_KEYS = array( 'vat_percent', 'reservation_hours', 'reservation_refund_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'privacy_retention_days' );
 	private const MAIL_KEYS = array( 'ADC_MAIL_MODE', 'ADC_SMTP_HOST', 'ADC_SMTP_PORT', 'ADC_SMTP_ENCRYPTION', 'ADC_SMTP_USERNAME', 'ADC_SMTP_PASSWORD', 'ADC_MAIL_FROM', 'ADC_MAIL_FROM_NAME' );
@@ -25,7 +25,16 @@ final class ProductSetup {
 			if ( ! current_user_can( 'manage_options' ) || get_option( self::PROFILE, false ) || get_option( 'car_dealer_public_setup_version', false ) ) { return; }
 			echo '<div class="notice notice-info"><p><a href="' . esc_url( self::url() ) . '">' . esc_html( self::t( 'ابدأ إعداد منصتك: الهوية والبريد والصفحات.', 'Set up your platform: identity, email and pages.' ) ) . '</a></p></div>';
 		} );
+		add_action( 'update_option_blogname', static function ( $old, $name ): void {
+			$p = self::profile();
+			if ( $p && ( $p['brand_ar'] ?? '' ) !== $name ) { $p['brand_ar'] = sanitize_text_field( $name ); update_option( self::PROFILE, $p, false ); }
+		}, 10, 2 );
+		add_action( 'updated_option', static function ( $option ): void {
+			if ( ! in_array( $option, array( self::PROFILE, 'blogname' ), true ) || has_action( 'shutdown', array( self::class, 'identity_cache' ) ) ) { return; }
+			add_action( 'shutdown', array( self::class, 'identity_cache' ) );
+		} );
 		add_shortcode( 'adc_brand_name', static fn(): string => esc_html( self::brand( Localization::language() ) ) );
+		add_shortcode( 'adc_legal_name', static fn(): string => esc_html( self::legal_name( Localization::language() ) ) );
 		add_shortcode( 'adc_legal_contact', array( self::class, 'legal_contact' ) );
 	}
 
@@ -53,18 +62,48 @@ final class ProductSetup {
 	}
 	public static function brand( string $lang = 'ar' ): string {
 		$profile = self::profile();
-		if ( ! empty( $profile['brand_' . ( 'en' === $lang ? 'en' : 'ar' )] ) ) { return $profile['brand_' . ( 'en' === $lang ? 'en' : 'ar' )]; }
-		if ( self::legacy() && 'en' === $lang ) { return 'AUTO BRANDS'; }
-		return wp_specialchars_decode( (string) get_option( 'blogname', 'Dealership' ), ENT_QUOTES );
+		$lang = 'en' === $lang ? 'en' : 'ar';
+		foreach ( array( 'brand_' . $lang, 'brand_' . ( 'en' === $lang ? 'ar' : 'en' ) ) as $key ) {
+			if ( isset( $profile[$key] ) && '' !== trim( (string) $profile[$key] ) ) { return wp_specialchars_decode( (string) $profile[$key], ENT_QUOTES ); }
+		}
+		return wp_specialchars_decode( (string) get_option( 'blogname', '' ), ENT_QUOTES );
 	}
-	/** Replace only product UI copy; stored customer/editorial content is untouched. */
+	public static function legal_name( string $lang = 'ar' ): string {
+		$p = self::profile(); $lang = 'en' === $lang ? 'en' : 'ar';
+		return trim( (string) ( $p['legal_' . $lang] ?? '' ) ) ?: self::brand( $lang );
+	}
+	/** Plain text tokens only. Callers escape for their output context. */
+	public static function template( string $text, string $lang ): string {
+		return strtr( $text, array( '{site_name}' => self::brand( $lang ), '{legal_name}' => self::legal_name( $lang ) ) );
+	}
+	/** Compatibility for shipped UI translations; never apply to customer records. */
 	public static function copy( string $text, string $lang ): string {
-		if ( self::legacy() ) { return $text; }
-		return str_replace( array( 'أوتو براندز', 'AUTO BRANDS', 'Auto Brands', 'AutoBrands' ), self::brand( $lang ), $text );
+		return strtr( $text, array( '{site_name}' => self::brand( $lang ), '{legal_name}' => self::legal_name( $lang ), 'أوتو براندز' => self::brand( $lang ), 'AUTO BRANDS' => self::brand( $lang ), 'Auto Brands' => self::brand( $lang ), 'AutoBrands' => self::brand( $lang ) ) );
+	}
+	/** Runs after the settings transaction has committed. */
+	public static function identity_cache(): void {
+		if ( function_exists( 'w3tc_flush_all' ) ) { call_user_func( 'w3tc_flush_all' ); }
+		if ( function_exists( 'car_dealer_clear_public_page_cache' ) ) { car_dealer_clear_public_page_cache(); }
+		do_action( 'adc_identity_changed' );
+	}
+	/** Review editable legacy page copy without touching URLs or historical records. */
+	private static function identity_review(): void {
+		echo '<h2>' . esc_html( self::t( 'معاينة الهوية', 'Identity preview' ) ) . '</h2><p><bdi>' . esc_html( self::brand( 'ar' ) ) . '</bdi> · <bdi dir="ltr">' . esc_html( self::brand( 'en' ) ) . '</bdi></p>';
+		echo '<p>' . esc_html( self::t( 'في محرر الصفحات استخدم [adc_brand_name] أو [adc_legal_name]. في حقول نصوص الصفحة الرئيسية استخدم {site_name} أو {legal_name}. لا تتغير الروابط وبيانات التواصل والمستندات الصادرة سابقًا.', 'In the page editor use [adc_brand_name] or [adc_legal_name]. In homepage copy fields use {site_name} or {legal_name}. URLs, contact details and previously issued documents remain unchanged.' ) ) . '</p>';
+		$pages = get_posts( array( 'post_type'=>'page', 'post_status'=>array( 'publish', 'draft', 'private' ), 'numberposts'=>200, 'orderby'=>'ID', 'order'=>'ASC' ) );
+		$matches = array();
+		foreach ( $pages as $page ) {
+			$copy = $page->post_title . ' ' . $page->post_content . ' ' . get_post_meta( $page->ID, '_adc_title_en', true ) . ' ' . get_post_meta( $page->ID, '_adc_content_en', true );
+			if ( preg_match( '/أوتو\s+براندز|auto\s*brands/iu', wp_strip_all_tags( $copy ) ) ) { $matches[] = $page; }
+		}
+		if ( ! $matches ) { return; }
+		echo '<h3>' . esc_html( self::t( 'نصوص محفوظة تحتاج مراجعة', 'Saved copy to review' ) ) . '</h3><p>' . esc_html( self::t( 'تحتوي الصفحات التالية على اسم الهوية السابقة. راجعها من المحرر واستبدل الاسم بالرمز المناسب؛ تُحفظ المراجعات عبر نظام مراجعات ووردبريس.', 'These pages contain the previous identity name. Review them in the editor and insert the appropriate shortcode; WordPress revisions retain page edits.' ) ) . '</p><ul>';
+		foreach ( $matches as $page ) { echo '<li><a href="' . esc_url( get_edit_post_link( $page->ID, 'raw' ) ) . '">' . esc_html( $page->post_title ) . '</a></li>'; }
+		echo '</ul>';
 	}
 	public static function hero_description( string $lang ): string {
 		$p = self::profile();
-		if ( ! empty( $p['hero_' . $lang] ) ) { return $p['hero_' . $lang]; }
+		if ( ! empty( $p['hero_' . $lang] ) ) { return self::template( $p['hero_' . $lang], $lang ); }
 		if ( self::legacy() ) { return 'en' === $lang ? 'New vehicle sales in Al Jawharah, Jeddah, with after-sales services, polishing and window tinting. Explore your options and contact our team.' : 'مبيعات السيارات الجديدة في جدة، حي الجوهرة، وخدمات ما بعد البيع والتلميع والتظليل. استعرض الخيارات وتواصل مع فريقنا.'; }
 		return 'en' === $lang ? 'Explore available vehicles, compare your options and contact our team.' : 'استعرض السيارات المتاحة وقارن الخيارات وتواصل مع فريقنا.';
 	}
@@ -166,7 +205,7 @@ final class ProductSetup {
 	}
 	public static function legal_contact(): string {
 		$settings = (array) get_option( 'car_dealer_theme_settings', array() );
-		$parts = array( esc_html( self::brand( Localization::language() ) ) );
+		$parts = array( esc_html( self::legal_name( Localization::language() ) ) );
 		$address = self::contact_address();
 		if ( '' !== trim( $address ) ) { $parts[] = esc_html( $address ); }
 		$email = sanitize_email( (string) ( $settings['email'] ?? '' ) );
@@ -422,7 +461,7 @@ final class ProductSetup {
 		if ( in_array( $section, array( 'identity', 'appearance', 'policy', 'mail' ), true ) ) {
 			self::form( $section ); echo '<table class="form-table" role="presentation">';
 			if ( 'identity' === $section ) {
-				$p = array_replace( self::profile_defaults(), self::profile() ); $fields = array( 'brand_ar'=>array( 'اسم المنشأة بالعربية', 'Business name (Arabic)' ), 'brand_en'=>array( 'اسم المنشأة بالإنجليزية', 'Business name (English)' ), 'description_ar'=>array( 'وصف الموقع بالعربية', 'Site description (Arabic)' ), 'description_en'=>array( 'وصف الموقع بالإنجليزية', 'Site description (English)' ), 'hero_ar'=>array( 'وصف الواجهة بالعربية', 'Homepage description (Arabic)' ), 'hero_en'=>array( 'وصف الواجهة بالإنجليزية', 'Homepage description (English)' ), 'language'=>array( 'اللغة الافتراضية', 'Default language' ), 'timezone'=>array( 'المنطقة الزمنية، مثل Asia/Riyadh', 'Timezone, e.g. Asia/Riyadh' ) );
+				$p = array_replace( self::profile_defaults(), self::profile() ); $fields = array( 'brand_ar'=>array( 'اسم المنشأة بالعربية', 'Business name (Arabic)' ), 'brand_en'=>array( 'اسم المنشأة بالإنجليزية', 'Business name (English)' ), 'legal_ar'=>array( 'الاسم القانوني بالعربية (اختياري)', 'Legal name (Arabic, optional)' ), 'legal_en'=>array( 'الاسم القانوني بالإنجليزية (اختياري)', 'Legal name (English, optional)' ), 'description_ar'=>array( 'وصف الموقع بالعربية', 'Site description (Arabic)' ), 'description_en'=>array( 'وصف الموقع بالإنجليزية', 'Site description (English)' ), 'hero_ar'=>array( 'وصف الواجهة بالعربية', 'Homepage description (Arabic)' ), 'hero_en'=>array( 'وصف الواجهة بالإنجليزية', 'Homepage description (English)' ), 'language'=>array( 'اللغة الافتراضية', 'Default language' ), 'timezone'=>array( 'المنطقة الزمنية، مثل Asia/Riyadh', 'Timezone, e.g. Asia/Riyadh' ) );
 				foreach ( $fields as $key=>$label ) { $default = 'brand_ar' === $key ? self::brand() : ( 'brand_en' === $key ? self::brand( 'en' ) : ( 'timezone' === $key ? wp_timezone_string() : ( 'language' === $key ? 'ar' : '' ) ) ); self::field( $key, self::t( ...$label ), (string) ( $p[$key] ?? $default ), 'text', 'language' === $key ? array( 'ar'=>'العربية', 'en'=>'English' ) : ( 'timezone' === $key ? array_combine( timezone_identifiers_list(), timezone_identifiers_list() ) : array() ) ); }
 			} elseif ( 'appearance' === $section ) {
 				echo '<tr><th>' . esc_html( self::t( 'الهوية والألوان', 'Brand and colors' ) ) . '</th><td><a class="button button-primary" href="' . esc_url( BrandCustomizer::url() ) . '">' . esc_html( self::t( 'إدارة جميع الألوان والمعاينة المباشرة', 'Manage all colors and live preview' ) ) . '</a></td></tr>';
@@ -441,6 +480,7 @@ final class ProductSetup {
 				}
 			}
 			echo '</table>'; submit_button( self::t( 'حفظ الإعدادات', 'Save settings' ) ); echo '</form>';
+			if ( 'identity' === $section ) { self::identity_review(); }
 			if ( 'appearance' === $section ) { echo '<p><a class="button" href="' . esc_url( admin_url( 'options-general.php?page=adc-branch-locations' ) ) . '">' . esc_html( self::t( 'إدارة الفروع والخرائط', 'Manage branches and maps' ) ) . '</a></p>'; echo '<p><a class="button" href="' . esc_url( admin_url( 'customize.php?autofocus[control]=custom_logo' ) ) . '">' . esc_html( self::t( 'اختيار الشعار وأيقونة الموقع', 'Choose logo and site icon' ) ) . '</a></p>'; }
 			if ( 'policy' === $section ) { echo '<p>' . esc_html( self::t( 'العملة الحالية: الريال السعودي (SAR). إعداد الفروع والسياسات المتقدمة متاح في إعدادات النظام.', 'Current currency: Saudi Riyal (SAR). Branches and advanced policies are available in system settings.' ) ) . '</p>'; self::render_legal_pages(); }
 			if ( 'mail' === $section ) { self::mail_status(); echo '<p>' . esc_html( self::t( 'الأوضاع: smtp / disabled / mailpit محليًا فقط. ترك كلمة المرور فارغة يحافظ عليها. بعد الحفظ تُعتمد إعدادات هذه الشاشة، وكلمة المرور محفوظة مشفرة ولا تدخل ملف التصدير. لبريد Gmail استخدم 587 مع STARTTLS وكلمة مرور تطبيق. تغيير مفاتيح ووردبريس يتطلب إعادة إدخال كلمة مرور SMTP.', 'Modes: smtp / disabled / mailpit (local only). Leave password blank to keep it. After saving, this screen controls mail settings. The password is encrypted and excluded from exports. For Gmail use 587 with STARTTLS and an app password. Changing WordPress salts requires re-entering SMTP credentials.' ) ) . '</p>'; self::form( 'mail', 'mail_test' ); echo '<p><label>'.esc_html(self::t('نوع الاختبار','Test type')).' <select name="test_kind"><option value="smtp">SMTP</option><option value="newsletter">'.esc_html(self::t('تصميم النشرة إلى بريد واحد','Newsletter layout to one address')).'</option></select></label></p>'; echo '<p><label>'.esc_html(self::t('لغة رسالة الاختبار','Test message language')).' <select name="test_language"><option value="ar" '.selected(Localization::language(),'ar',false).'>العربية</option><option value="en" '.selected(Localization::language(),'en',false).'>English</option></select></label></p>'; echo '<label>' . esc_html( self::t( 'عنوان رسالة الاختبار', 'Test recipient' ) ) . ' <input type="email" name="test_email" required></label>'; submit_button( self::t( 'إرسال اختبار الآن', 'Send test now' ), 'secondary' ); echo '</form>'; }

@@ -30,7 +30,7 @@ final class Localization {
 			$labels = require __DIR__ . '/../../languages/labels.php';
 		}
 		$display = $labels[$text] ?? $text;
-		return self::$catalog[ self::language() ][ $display ] ?? ( $display !== $text ? $display : $translation );
+		return ProductSetup::copy( self::$catalog[ self::language() ][ $display ] ?? ( $display !== $text ? $display : $translation ), self::language() );
 	}
 
 	public static function gettext_context( string $translation, string $text, string $context, string $domain ): string {

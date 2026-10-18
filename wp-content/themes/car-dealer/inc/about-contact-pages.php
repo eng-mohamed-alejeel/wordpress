@@ -74,7 +74,7 @@ function car_dealer_shortcode_ab_hero() {
 		<div class="ab-about-hero-inner">
 			<div class="ab-about-hero-text">
 				<p class="eyebrow"><?php echo esc_html__( 'من نحن', 'car-dealer' ); ?></p>
-				<h1><?php echo esc_html( car_dealer_text( 'أوتو براندز للسيارات', 'AUTO BRANDS Automotive' ) ); ?></h1>
+				<h1><?php echo esc_html( car_dealer_text( '{site_name} للسيارات', '{site_name} Automotive' ) ); ?></h1>
 				<?php if ( class_exists( '\AutoDealership\Core\ProductSetup' ) && \AutoDealership\Core\ProductSetup::legacy() ) : ?><p><?php echo esc_html__( 'إحدى شركات ناصر مطر المطيري للسيارات', 'car-dealer' ); ?></p><?php endif; ?>
 				<p class="ab-about-hero-desc"><?php echo esc_html__( 'نقدّم معلومات السيارات المنشورة ووسائل التواصل مع فريق المعرض. تتحدد أي خدمات إضافية وشروطها بحسب الاتفاق المتاح لكل سيارة.', 'car-dealer' ); ?></p>
 				<div class="ab-actions">

@@ -1,30 +1,60 @@
 <?php
-/** Read-only local integration checks; synthetic quotation, no customer records. */
-if ( PHP_SAPI !== 'cli' ) { exit; }
-define( 'DISABLE_WP_CRON', true );
-require dirname( __DIR__, 4 ) . '/wp-load.php';
-if ( ! in_array( wp_parse_url( get_option( 'siteurl' ), PHP_URL_HOST ), array( 'localhost', '127.0.0.1' ), true ) ) { throw new RuntimeException( 'Local verification only.' ); }
+/** Read-only WordPress identity regression checks. No mail or tenant settings writes. */
+if ( PHP_SAPI !== 'cli' ) { exit(1); }
+define('DISABLE_WP_CRON', true);
+require dirname(__DIR__, 4) . '/wp-load.php';
+use AutoDealership\Core\ProductSetup as Identity;
+use AutoDealership\Content\SiteContent;
 $checks = 0;
-$check = static function ( bool $condition, string $message ) use ( &$checks ): void {
-    if ( ! $condition ) { throw new RuntimeException( $message ); }
-    ++$checks;
-};
-\AutoDealership\Core\BrandIdentity::tokens();
-\AutoDealership\Core\BrandIdentity::tokens();
-$check( '' === wp_get_attachment_image( 0, array( 60, 60 ) ), 'A missing brand attachment returns empty markup without a fatal error.' );
-$styles = wp_styles();
-$check( count( $styles->get_data( 'autobrands-tokens', 'after' ) ) === 1, 'Repeated enqueue must not duplicate dynamic colors.' );
-$options = car_dealer_theme_options();
-$resolved = \AutoDealership\Core\BrandPalette::resolve();
-$check( strtoupper( $options['primary_color'] ) === $resolved['brand-navy'] && strtoupper( $options['accent_color'] ) === $resolved['brand-blue'], 'Legacy settings match the central palette.' );
-$palette = \AutoDealership\Core\BrandIdentity::editor_palette( array() );
-$check( count( $palette['colors'] ) >= count( \AutoDealership\Core\BrandPalette::schema() ), 'Editor exposes the full semantic palette and compatibility slugs.' );
-$invalid = car_dealer_sanitize_theme_settings( array( 'primary_color' => '</style><script>', 'accent_color' => 'red' ) );
-$check( '#0E2A4A' === $invalid['primary_color'] && '#2563EB' === $invalid['accent_color'], 'Invalid color input falls back to brand defaults.' );
-$quote = array( 'quote_number'=>'BRAND-TEST', 'version'=>1, 'tax_rate_bps'=>1500, 'seller_name'=>'AUTO BRANDS', 'seller_address'=>'', 'seller_phone'=>'', 'valid_until'=>'2026-12-31', 'customer_name'=>'<script>test</script>', 'vehicle_description'=>'Sample vehicle', 'vehicle_stock_number'=>'TEST', 'base_amount'=>10000000, 'discount_amount'=>0, 'tax_amount'=>1500000, 'final_amount'=>11500000 );
-$html = \AutoDealership\Pricing\QuoteDocument::render( $quote );
-$check( str_contains( $html, '--ab-brand-navy:' . $resolved['brand-navy'] ), 'Printable quote embeds the published brand palette.' );
-$check( str_contains( $html, 'color:var(--ab-text)' ), 'Printable quote consumes the semantic palette.' );
-$check( ! str_contains( $html, '<script>test</script>' ) && str_contains( $html, '&lt;script&gt;test&lt;/script&gt;' ), 'Quotation values remain escaped.' );
-$check( ! str_contains( $html, 'brand-appearance.js' ), 'Documents have deterministic light colors independent of browser preference.' );
-echo "BRAND INTEGRATION PASS: $checks checks.\n";
+function identity_check($actual, $expected, string $label): void {
+ global $checks;
+ if ($actual !== $expected) { throw new RuntimeException($label . ': ' . var_export($actual,true)); }
+ ++$checks; echo "PASS $label\n";
+}
+$profile = ['brand_ar'=>'معرض النخبة','brand_en'=>'Elite Motors','legal_ar'=>'شركة النخبة التجارية','legal_en'=>'Elite Trading LLC'];
+$siteName = 'Independent Site';
+$home = SiteContent::defaults();
+add_filter('pre_option_adc_product_profile', static function() use (&$profile) { return $profile; });
+add_filter('pre_option_blogname', static function() use (&$siteName) { return $siteName; });
+add_filter('pre_option_adc_site_content', static function() use (&$home) { return $home; });
+foreach (['ar'=>'معرض النخبة','en'=>'Elite Motors'] as $language=>$name) {
+ $_GET['lang'] = $language;
+ identity_check(Identity::brand($language),$name,'Bilingual identity '.$language);
+ identity_check(car_dealer_brand_name(),$name,'Theme identity '.$language);
+ identity_check(Identity::copy('AUTO BRANDS / أوتو براندز / AutoBrands',$language),"$name / $name / $name",'Legacy UI compatibility '.$language);
+ identity_check(Identity::template('{site_name}', $language),$name,'Template '.$language);
+ identity_check(do_shortcode('[adc_brand_name]'),esc_html($name),'Editor shortcode '.$language);
+ identity_check(do_shortcode('[adc_legal_name]'),esc_html(Identity::legal_name($language)),'Legal shortcode '.$language);
+ identity_check(car_dealer_text('لماذا {site_name}؟','Why {site_name}?'),$language==='ar'?"لماذا {$name}؟":"Why $name?",'UI template '.$language);
+ identity_check(Identity::copy('https://example.com/other', $language),'https://example.com/other','Unrelated URL preserved '.$language);
+ $home['home']['hero']['title_'.$language]=$language==='ar'?'سيارتك الجديدة تبدأ من أوتو براندز':'Your new vehicle starts with Auto Brands';
+ identity_check(SiteContent::home_text('hero','title','fallback'),$language==='ar'?"سيارتك الجديدة تبدأ من $name":"Your new vehicle starts with $name",'Exact saved default '.$language);
+ $home['home']['hero']['title_'.$language]='Custom أوتو براندز editorial';
+ identity_check(SiteContent::home_text('hero','title','fallback'),'Custom أوتو براندز editorial','Custom editorial preserved '.$language);
+ $home['home']['hero']['title_'.$language]='Welcome {site_name}';
+ identity_check(SiteContent::home_text('hero','title','fallback'),'Welcome '.$name,'Saved token '.$language);
+}
+$profile=['brand_ar'=>'اسم عربي فقط'];
+identity_check(Identity::brand('en'),'اسم عربي فقط','Missing English falls back to Arabic');
+identity_check(Identity::legal_name('en'),'اسم عربي فقط','Missing legal falls back to brand');
+$profile=['brand_en'=>'English only'];
+identity_check(Identity::brand('ar'),'English only','Missing Arabic falls back to English');
+$profile=[];
+identity_check(Identity::brand('en'),'Independent Site','No profile uses WordPress title');
+$profile=['brand_ar'=>'Auto Brands & Sons'];
+identity_check(Identity::copy('Welcome Auto Brands','ar'),'Welcome Auto Brands & Sons','Inserted name is not recursively replaced');
+$profile=['brand_ar'=>'معرض <النخبة> & شركاؤه'];
+identity_check(do_shortcode('[adc_brand_name]'),esc_html($profile['brand_ar']),'Shortcode escapes special characters');
+$profile=['brand_ar'=>str_repeat('معرض ',50)];
+identity_check(Identity::template('{site_name}', 'ar'),$profile['brand_ar'],'Long identity preserved');
+identity_check(is_wp_error(Identity::normalize(['profile'=>['legal_ar'=>'شركة مثال','legal_en'=>'Example LLC'] ])),false,'Legal fields accepted in portable settings');
+identity_check(Identity::template('{unknown}', 'ar'),'{unknown}','Unknown tokens preserved');
+$profile=['brand_ar'=>'Old name','brand_en'=>'Existing English'];
+$captured = null;
+$intercept = static function($value,$old) use (&$captured) { $captured=$value; return $old; };
+add_filter('pre_update_option_adc_product_profile',$intercept,10,2);
+do_action('update_option_blogname','Old name','Updated WordPress name');
+identity_check($captured['brand_ar'] ?? null,'Updated WordPress name','WordPress title synchronizes identity');
+identity_check($captured['brand_en'] ?? null,'Existing English','WordPress title preserves explicit English');
+remove_filter('pre_update_option_adc_product_profile',$intercept,10);
+echo "PASS identity checks: $checks; no persistent identity changes.\n";

@@ -2,8 +2,8 @@
 <?php $catalog_language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar'; $catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl'; ?>
 <section class="archive-hero ab-inventory-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 	<div class="container">
-		<p class="eyebrow"><?php echo esc_html(car_dealer_text('سيارات أوتو براندز','AUTO BRANDS Vehicles')); ?></p>
-		<h1><?php echo esc_html( car_dealer_text( 'استعرض سيارات أوتو براندز', 'Browse AUTO BRANDS Vehicles' ) ); ?></h1>
+		<p class="eyebrow"><?php echo esc_html(car_dealer_text('سيارات {site_name}','{site_name} Vehicles')); ?></p>
+		<h1><?php echo esc_html( car_dealer_text( 'استعرض سيارات {site_name}', 'Browse {site_name} Vehicles' ) ); ?></h1>
 		<p><?php echo esc_html(car_dealer_text('اختر سيارتك حسب الماركة والطراز والفئة واللون والسنة والسعر.','Find your vehicle by brand, model, trim, color, year and price.')); ?></p>
 	</div>
 </section>

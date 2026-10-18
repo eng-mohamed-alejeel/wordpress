@@ -142,7 +142,14 @@ final class SiteContent {
 		return $html.'</div></div></section>';
 	}
 	public static function home_enabled(string $key): bool { return 'published'===(self::data()['home'][$key]['status']??'hidden'); }
-	public static function home_text(string $key,string $field,string $fallback): string { return self::data()['home'][$key][$field.'_'.Localization::language()]?:$fallback; }
+	public static function home_text(string $key,string $field,string $fallback): string {
+		$lang = Localization::language();
+		$text = self::data()['home'][$key][$field.'_'.$lang] ?: $fallback;
+		// Only exact shipped defaults are upgraded; custom editorial copy stays intact.
+		$defaults = array('hero' => array('سيارتك الجديدة تبدأ من أوتو براندز' => 'سيارتك الجديدة تبدأ من {site_name}', 'Your new vehicle starts with Auto Brands' => 'Your new vehicle starts with {site_name}'), 'why' => array('لماذا أوتو براندز؟' => 'لماذا {site_name}؟', 'Why AUTO BRANDS?' => 'Why {site_name}?'));
+		if ('title' === $field) { $text = $defaults[$key][$text] ?? $text; }
+		return ProductSetup::template($text,$lang);
+	}
 	public static function home_empty(string $key): string {
 		$messages=[
 			'featured'=>['نعمل على تجهيز مجموعة مختارة من السيارات لعرضها هنا. يمكنك استعراض السيارات المتاحة حاليًا أو التواصل مع فريقنا لمساعدتك في الاختيار.','We are preparing a selection of featured vehicles. Browse the available vehicles or contact our team for help choosing.'],

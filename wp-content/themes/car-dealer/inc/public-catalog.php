@@ -20,32 +20,18 @@ function car_dealer_catalog_is_request(): bool {
 function car_dealer_text( string $arabic, string $english ): string {
 	$lang = car_dealer_catalog_language();
 	$text = 'en' === $lang ? $english : $arabic;
-	return class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::copy( $text, $lang ) : $text;
+	return class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::copy( $text, $lang ) : strtr( $text, array( '{site_name}' => car_dealer_brand_name(), '{legal_name}' => car_dealer_brand_name() ) );
 }
 
 /** Keep the public brand name consistent with the selected site language. */
 function car_dealer_brand_name(): string {
 	if ( class_exists( '\AutoDealership\Core\ProductSetup' ) ) { return \AutoDealership\Core\ProductSetup::brand( car_dealer_catalog_language() ); }
-	return car_dealer_text( 'أوتو براندز', 'AUTO BRANDS' );
+	return wp_specialchars_decode( (string) get_option( 'blogname', '' ), ENT_QUOTES );
 }
 
-add_filter( 'option_blogname', static function ( $name ) {
-	if ( ! is_admin() && 'ar' === car_dealer_catalog_language() && is_string( $name ) ) {
-		return (string) preg_replace( '/AUTO\s+BRANDS/i', 'أوتو براندز', $name );
-	}
-	return $name;
-}, 20 );
-
 add_filter( 'document_title_parts', static function ( array $parts ): array {
-	if ( 'ar' === car_dealer_catalog_language() ) {
-		foreach ( $parts as $key => $value ) {
-			if ( is_string( $value ) ) {
-				$parts[ $key ] = (string) preg_replace( '/AUTO\s+BRANDS/i', 'أوتو براندز', $value );
-			}
-		}
-	} elseif ( isset( $parts['site'] ) ) {
-		$parts['site'] = car_dealer_brand_name();
-	}
+	if ( isset( $parts['site'] ) ) { $parts['site'] = car_dealer_brand_name(); }
+	if ( is_front_page() && isset( $parts['title'] ) ) { $parts['title'] = car_dealer_brand_name(); }
 	return $parts;
 }, 20 );
 
@@ -55,8 +41,7 @@ add_filter( 'wp_get_attachment_image_attributes', static function ( array $attr,
 	}
 	if ( (int) get_theme_mod( 'custom_logo' ) === (int) $attachment->ID ) {
 		$attr['alt'] = car_dealer_brand_name();
-	} elseif ( 'ar' === car_dealer_catalog_language() && isset( $attr['alt'] ) ) {
-		$attr['alt'] = (string) preg_replace( '/AUTO\s+BRANDS/i', 'أوتو براندز', (string) $attr['alt'] );
+
 	}
 	return $attr;
 }, 20, 2 );

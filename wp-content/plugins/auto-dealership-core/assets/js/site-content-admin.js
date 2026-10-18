@@ -1,5 +1,10 @@
 (function(){
  'use strict'; const cfg=window.adcSiteContent;if(!cfg)return;const t=(ar,en)=>cfg.ar?ar:en;
+
+ document.querySelectorAll('input[name^="home["][name$="_ar]"],input[name^="home["][name$="_en]"],textarea[name^="home["]').forEach(field=>{
+  const button=document.createElement('button');button.type='button';button.className='button button-small';button.textContent=t('إدراج اسم المنشأة','Insert business name');
+  button.addEventListener('click',()=>{field.focus();const start=field.selectionStart??field.value.length,end=field.selectionEnd??start;field.setRangeText('{site_name}',start,end,'end');field.dispatchEvent(new Event('input',{bubbles:true}));field.dispatchEvent(new Event('change',{bubbles:true}));});const label=field.closest('label'),wrapper=document.createElement('div');wrapper.className='adc-content-field';label.before(wrapper);wrapper.append(label,button);button.setAttribute('aria-label',button.textContent+' — '+(label.querySelector('span')?.textContent||''));
+ });
  let serial=Date.now();
  const rows=document.querySelector('[data-content-rows]');
  document.querySelector('[data-content-add]')?.addEventListener('click',()=>{if(rows.children.length>=100){window.alert(t('الحد الأقصى 100 عنصر.','Maximum 100 entries.'));return;} const html=document.querySelector('[data-content-template]').innerHTML.replaceAll('__INDEX__',String(serial++));rows.insertAdjacentHTML('beforeend',html);const row=rows.lastElementChild;row.scrollIntoView({behavior:'smooth',block:'center'});row.querySelector('input:not([type="hidden"])')?.focus();});

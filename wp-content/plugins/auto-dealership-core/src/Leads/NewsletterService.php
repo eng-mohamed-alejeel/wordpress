@@ -194,7 +194,7 @@ final class NewsletterService {
 			$language = get_user_meta( $id, 'adc_preferred_language', true );
 			$language = in_array( $language, array( 'ar', 'en' ), true ) ? $language : self::language( $payload['locale'] ?? 'ar' );
 			$ar = 'ar' === $language;
-			$brand = wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
+			$brand = \AutoDealership\Core\ProductSetup::brand( $language );
 			$title = $ar ? 'مرحبًا بك في ' . $brand : 'Welcome to ' . $brand;
 			$body = '<p>' . esc_html( $ar ? 'مرحبًا ' . $user->display_name . '،' : 'Hello ' . $user->display_name . ',' ) . '</p><p>' . esc_html( $ar ? \AutoDealership\Core\ProductSetup::copy( 'تم إنشاء حسابك بنجاح. يسعدنا انضمامك إلى أوتو براندز، ونتطلع لمساعدتك في العثور على سيارتك المناسبة.', $ar ? 'ar' : 'en' ) : 'Your account has been created successfully. We look forward to helping you find your next car.' ) . '</p><p>' . esc_html( $ar ? 'يمكنك الآن الدخول إلى حسابك ومتابعة طلباتك وتحديث بياناتك في أي وقت.' : 'You can now access your account, follow your requests and update your profile.' ) . '</p>';
 			$url = apply_filters( 'adc_customer_account_url', add_query_arg( 'cd_account', 'dashboard', home_url( '/' ) ), '' );
@@ -260,7 +260,7 @@ final class NewsletterService {
 			$body = self::t( 'هل ترغب في إيقاف رسائل النشرة البريدية؟', 'Would you like to stop receiving newsletter emails?' );
 		}
 		$language = \AutoDealership\Core\Localization::language();
-		$html = BrandedMail::render( $title, '<p>' . esc_html( $body ) . '</p>', '', '', esc_html( get_option( 'blogname' ) ), $language );
+		$html = BrandedMail::render( $title, '<p>' . esc_html( $body ) . '</p>', '', '', esc_html( \AutoDealership\Core\ProductSetup::brand( $language ) ), $language );
 		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
 			$action = add_query_arg( array( 'adc_unsubscribe' => $id, 'token' => $token, 'lang' => $language ), home_url( '/' ) );
 			$colors = \AutoDealership\Core\BrandPalette::email_colors();

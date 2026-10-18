@@ -5,8 +5,8 @@ $catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dea
 ?>
 <section class="archive-hero ab-offers-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 	<div class="container">
-		<p class="eyebrow"><?php echo esc_html( car_dealer_text( 'عروض أوتو براندز', 'AUTO BRANDS Offers' ) ); ?></p>
-		<h1><?php echo esc_html( car_dealer_text( 'اكتشف عروض أوتو براندز', 'Explore AUTO BRANDS Offers' ) ); ?></h1>
+		<p class="eyebrow"><?php echo esc_html( car_dealer_text( 'عروض {site_name}', '{site_name} Offers' ) ); ?></p>
+		<h1><?php echo esc_html( car_dealer_text( 'اكتشف عروض {site_name}', 'Explore {site_name} Offers' ) ); ?></h1>
 		<p><?php echo esc_html( car_dealer_text( 'اكتشف العروض المتاحة وقارن الأسعار والأقساط لاختيار السيارة المناسبة لك.', 'Explore available offers and compare prices and payments to find the right vehicle.' ) ); ?></p>
 	</div>
 </section>

@@ -22,7 +22,7 @@ function adc_product_mail_config(): array {
 	$local = in_array( wp_get_environment_type(), array( 'local', 'development' ), true );
 	$config = array( 'mode' => $mode, 'valid' => false );
 	if ( 'mailpit' === $mode ) {
-		return $config + array( 'host' => '127.0.0.1', 'port' => 1025, 'encryption' => '', 'username' => '', 'password' => '', 'from' => 'wordpress@autobrands.test', 'name' => 'AutoBrands' , 'local' => $local );
+		return $config + array( 'host' => '127.0.0.1', 'port' => 1025, 'encryption' => '', 'username' => '', 'password' => '', 'from' => 'wordpress@autobrands.test', 'name' => wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) , 'local' => $local );
 	}
 	if ( 'smtp' !== $mode ) { return $config; }
 	$config['host'] = adc_product_mail_setting( 'ADC_SMTP_HOST' );
@@ -32,6 +32,10 @@ function adc_product_mail_config(): array {
 	$config['password'] = adc_product_mail_setting( 'ADC_SMTP_PASSWORD' );
 	$config['from'] = adc_product_mail_setting( 'ADC_MAIL_FROM' );
 	$config['name'] = adc_product_mail_setting( 'ADC_MAIL_FROM_NAME', wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) );
+	if ( class_exists( '\AutoDealership\Core\ProductSetup' ) ) {
+		$lang = \AutoDealership\Core\Localization::language();
+		$config['name'] = in_array( trim( $config['name'] ), array( 'AutoBrands', 'Auto Brands', 'AUTO BRANDS', 'أوتو براندز' ), true ) ? \AutoDealership\Core\ProductSetup::brand( $lang ) : \AutoDealership\Core\ProductSetup::template( $config['name'], $lang );
+	}
 	$config['valid'] = '' !== $config['host'] && ! preg_match( '/[\s\/]/', $config['host'] )
 		&& $config['port'] > 0 && $config['port'] <= 65535
 		&& in_array( $config['encryption'], array( 'tls', 'ssl' ), true ) && (bool) is_email( $config['from'] )

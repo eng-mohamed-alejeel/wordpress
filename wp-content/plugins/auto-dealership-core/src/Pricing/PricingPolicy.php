@@ -79,7 +79,7 @@ final class PricingPolicy {
 
 	public static function seller_snapshot(): array {
 		return array(
-			'seller_name'=>sanitize_text_field( (string) get_option( 'adc_seller_name', get_bloginfo( 'name' ) ) ),
+			'seller_name'=>sanitize_text_field( (string) ( trim( (string) get_option( 'adc_seller_name', '' ) ) ?: \AutoDealership\Core\ProductSetup::legal_name( \AutoDealership\Core\Localization::language() ) ) ),
 			'seller_tax_number'=>sanitize_text_field( (string) get_option( 'adc_seller_tax_number', '' ) ),
 			'seller_address'=>sanitize_textarea_field( (string) get_option( 'adc_seller_address', '' ) ),
 			'seller_phone'=>sanitize_text_field( (string) get_option( 'adc_seller_phone', '' ) ),

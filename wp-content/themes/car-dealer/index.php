@@ -14,7 +14,7 @@ $site_content = $manage_content ? $content_class::data() : array();
 $hero_image = !empty($site_content['hero_image']) ? wp_get_attachment_image_url($site_content['hero_image'], 'full') : ($featured_ids ? get_the_post_thumbnail_url( $featured_ids[0], 'full' ) : '');
 $home_text = static fn($key,$field,$fallback) => $manage_content ? $content_class::home_text($key,$field,$fallback) : $fallback;
 $home_parts = array();
-$whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً أوتو براندز، أريد الاستفسار عن السيارات المتاحة.', 'Hello AUTO BRANDS, I would like to ask about the available vehicles.' ) );
+$whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً {site_name}، أريد الاستفسار عن السيارات المتاحة.', 'Hello {site_name}, I would like to ask about the available vehicles.' ) );
 $catalog_url = car_dealer_archive_url( 'car' );
 $offers_url = car_dealer_archive_url( 'car_offer' );
 $home_scroll_target = '';
@@ -37,7 +37,7 @@ foreach(array('featured'=>'featured-vehicles','why'=>'why-auto-brands','latest'=
 	<div class="container ab-hero-grid">
 		<div class="ab-hero-copy">
 			<p class="eyebrow ab-hero-eyebrow"><?php echo esc_html( car_dealer_brand_name() ); ?></p>
-			<h1><?php echo esc_html( $home_text('hero','title',car_dealer_text( 'سيارتك الجديدة تبدأ من أوتو براندز', 'Your new vehicle starts with Auto Brands' )) ); ?></h1>
+			<h1><?php echo esc_html( $home_text('hero','title',car_dealer_text( 'سيارتك الجديدة تبدأ من {site_name}', 'Your new vehicle starts with {site_name}' )) ); ?></h1>
 			<p class="ab-hero-desc"><?php echo esc_html( $home_text('hero','description',class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::hero_description( car_dealer_catalog_language() ) : car_dealer_text( 'استعرض السيارات المتاحة وتواصل مع فريقنا.', 'Explore available vehicles and contact our team.' ) )); ?></p>
 			<div class="ab-actions">
 				<?php if ( $catalog_url ) : ?><a class="btn btn-primary btn-lg" href="<?php echo esc_url( $catalog_url ); ?>">
@@ -97,7 +97,7 @@ foreach(array('featured'=>'featured-vehicles','why'=>'why-auto-brands','latest'=
 		<div class="section-heading section-heading-v2 section-heading-center">
 			<div>
 				<p class="eyebrow"><?php esc_html_e( 'ثقة وخبرة', 'car-dealer' ); ?></p>
-				<h2><?php echo esc_html( $home_text('why','title',car_dealer_text( 'لماذا أوتو براندز؟', 'Why AUTO BRANDS?' )) ); ?></h2>
+				<h2><?php echo esc_html( $home_text('why','title',car_dealer_text( 'لماذا {site_name}؟', 'Why {site_name}?' )) ); ?></h2>
 				<p class="section-subtitle"><?php echo esc_html($home_text('why','description',car_dealer_text('نقدم لك تجربة شراء لا مثيل لها','Explore your options with support from our team.'))); ?></p>
 			</div>
 		</div>

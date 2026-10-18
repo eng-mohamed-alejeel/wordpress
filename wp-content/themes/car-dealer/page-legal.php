@@ -7,7 +7,7 @@ get_header();
 	<?php while ( have_posts() ) : the_post(); ?>
 	<article class="content-area legal-page" dir="<?php echo esc_attr( car_dealer_catalog_direction() ); ?>">
 		<header class="entry-header">
-			<p class="legal-eyebrow"><?php echo esc_html( car_dealer_text( 'شركة أوتو براندز · المعلومات القانونية', 'Auto Brands Company · Legal information' ) ); ?></p>
+			<p class="legal-eyebrow"><?php echo esc_html( car_dealer_text( '{legal_name} · المعلومات القانونية', '{legal_name} · Legal information' ) ); ?></p>
 			<h1 class="entry-title"><?php the_title(); ?></h1>
 			<p class="legal-updated"><?php echo esc_html( car_dealer_text( 'آخر تحديث: ', 'Last updated: ' ) . get_the_modified_date( 'Y-m-d' ) ); ?></p>
 		</header>
