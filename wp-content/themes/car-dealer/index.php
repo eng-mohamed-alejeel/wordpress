@@ -44,8 +44,8 @@ foreach(array('featured'=>'featured-vehicles','why'=>'why-auto-brands','latest'=
 					<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
 					<?php esc_html_e( 'استعرض السيارات', 'car-dealer' ); ?>
 				</a><?php endif; ?>
-				<?php if ( '#' !== $whatsapp_url ) : ?><a class="btn btn-chrome btn-lg" href="<?php echo esc_url( $whatsapp_url ); ?>" target="_blank" rel="noopener">
-					<svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.05-.67.149-.198.198-.597.694-.744.893-.148.198-.297.248-.546.05-.297-.198-1.164-.794-1.743-1.194-.621-.446-1.094-.694-1.39-.893-.198-.149-.446-.05-.645.099l-.744.893c-.148.198-.297.248-.546.05-.297-.198-.893-.597-1.39-.893-.496-.297-.993-.198-1.341.149l-.744.893c-.148.198-.297.248-.546.05-.297-.198-1.758-.867-2.03-.967-.273-.099-.471-.05-.67.149-.198.198-.297.248-.546.05l-.744.893c-.148.198-.297.248-.546.05-.297-.198-.893-.597-1.39-.893-.496-.297-.993-.198-1.341.149l-.744.893c-.148.198-.297.248-.546.05-.297-.198-1.758-.867-2.03-.967-.273-.099-.471-.05-.67.149z"/></svg>
+				<?php if ( '#' !== $whatsapp_url ) : ?><a class="btn btn-whatsapp btn-lg" href="<?php echo esc_url( $whatsapp_url ); ?>" target="_blank" rel="noopener">
+					<?php echo car_dealer_whatsapp_icon(); ?>
 					<?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?>
 				</a><?php endif; ?>
 			</div>

@@ -130,21 +130,24 @@
   box-shadow: 0 4px 15px color-mix(in srgb, var(--ab-action) 30%, transparent);
 }
 
-.btn-chrome {
-  background: var(--ab-color-chrome);
-  color: var(--ab-brand-navy);
-  border: 0;
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.8), 0 4px 15px rgba(0, 0, 0, 0.25);
+.btn-chrome, .btn-whatsapp {
+  background: var(--ab-action);
+  color: var(--ab-on-action);
+  border: 1px solid var(--ab-action);
+  box-shadow: none;
 }
 
-.btn-chrome:hover {
-  color: var(--ab-brand-navy);
-  background: var(--ab-color-chrome);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.8), 0 6px 20px rgba(0, 0, 0, 0.3);
+.btn-chrome:is(:hover, :focus-visible), .btn-whatsapp:is(:hover, :focus-visible) {
+  color: var(--ab-on-action);
+  background: var(--ab-action-hover);
+  border-color: var(--ab-action-hover);
+  box-shadow: none;
 }
 
-.btn-chrome .btn-icon {
-  stroke: currentColor;
+.btn-chrome::before, .btn-whatsapp::before { display: none; }
+.btn-chrome .btn-icon, .btn .btn-icon-whatsapp {
+  stroke: none;
+  fill: currentColor;
 }
 
 .btn-ghost {
