@@ -16,7 +16,7 @@
 			<div class="footer-grid footer-grid-no-legal">
 				<div class="footer-col footer-brand-col">
 					<div class="footer-brand">
-						<?php if ( has_custom_logo() ) : ?><?php the_custom_logo(); ?><?php else : ?><a href="<?php echo esc_url( car_dealer_site_url() ); ?>"><?php echo esc_html( car_dealer_brand_name() ); ?></a><?php endif; ?>
+						<?php if ( has_custom_logo() ) : ?><?php if(class_exists('\AutoDealership\Core\BrandLogo')){echo \AutoDealership\Core\BrandLogo::public_logo('footer');}else{the_custom_logo();} ?><?php else : ?><a href="<?php echo esc_url( car_dealer_site_url() ); ?>"><?php echo esc_html( car_dealer_brand_name() ); ?></a><?php endif; ?>
 					</div>
 					<p class="footer-description"><?php echo esc_html( car_dealer_text( get_bloginfo( 'description' ), $cd_options['description_en'] ?? 'Explore available vehicles and contact our team.' ) ); ?></p>
 

@@ -16,9 +16,9 @@ add_filter( 'retrieve_password_notification_email', static function ( array $ema
 	$brand = class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::brand( $ar ? 'ar' : 'en' ) : wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
 	$url = network_site_url( 'wp-login.php?action=rp&key=' . rawurlencode( $key ) . '&login=' . rawurlencode( $login ), 'login' );
 	$url = add_query_arg( 'wp_lang', $locale, $url );
-	$options = (array) get_option( 'car_dealer_theme_settings', array() );
-	$navy = sanitize_hex_color( $options['primary_color'] ?? '' ) ?: '#0E2A4A';
-	$blue = sanitize_hex_color( $options['accent_color'] ?? '' ) ?: '#2563EB';
+	$palette = \AutoDealership\Core\BrandPalette::email_colors();
+	$navy = $palette['mail-header'];
+	$blue = $palette['mail-action'];
 	$copy = $ar ? array(
 		'preheader' => 'خطوة واحدة لاستعادة الوصول إلى حسابك في ' . $brand . '.',
 		'eyebrow' => 'حسابك لدى ' . $brand,
@@ -85,6 +85,7 @@ add_filter( 'retrieve_password_notification_email', static function ( array $ema
 </table></td></tr></table>
 </body></html>
 HTML;
+	$email['message'] = \AutoDealership\Core\BrandPalette::email_html( $email['message'], $palette );
 	$headers = $email['headers'] ?? array();
 	if ( ! is_array( $headers ) ) { $headers = preg_split( '/\r?\n/', $headers ); }
 	$headers = array_values( array_filter( $headers, static fn( $header ) => '' !== trim( $header ) && ! preg_match( '/^Content-Type\s*:/i', $header ) ) );

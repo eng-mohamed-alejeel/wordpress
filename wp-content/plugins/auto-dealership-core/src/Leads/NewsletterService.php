@@ -228,7 +228,8 @@ final class NewsletterService {
 	private static function unsubscribe_headers( string $url ): array { return array( 'List-Unsubscribe: <' . $url . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click' ); }
 	private static function footer( string $url, string $locale ): string {
 		$ar = str_starts_with( $locale, 'ar' );
-		return '<p>' . esc_html( $ar ? \AutoDealership\Core\ProductSetup::copy( 'تستلم هذه الرسالة لأنك اشتركت في نشرة أوتو براندز.', $ar ? 'ar' : 'en' ) : \AutoDealership\Core\ProductSetup::copy( 'You received this email because you subscribed to AutoBrands.', $ar ? 'ar' : 'en' ) ) . '</p><a href="' . esc_url( $url ) . '" style="color:#2563EB">' . esc_html( $ar ? 'إلغاء الاشتراك' : 'Unsubscribe' ) . '</a>';
+		$colors = \AutoDealership\Core\BrandPalette::email_colors();
+		return '<p>' . esc_html( $ar ? \AutoDealership\Core\ProductSetup::copy( 'تستلم هذه الرسالة لأنك اشتركت في نشرة أوتو براندز.', $ar ? 'ar' : 'en' ) : \AutoDealership\Core\ProductSetup::copy( 'You received this email because you subscribed to AutoBrands.', $ar ? 'ar' : 'en' ) ) . '</p><a href="' . esc_url( $url ) . '" style="color:' . esc_attr( $colors['mail-action'] ) . '">' . esc_html( $ar ? 'إلغاء الاشتراك' : 'Unsubscribe' ) . '</a>';
 	}
 
 	public static function unsubscribe( int $id, string $token ) {
@@ -261,7 +262,8 @@ final class NewsletterService {
 		$html = BrandedMail::render( $title, '<p>' . esc_html( $body ) . '</p>', '', '', esc_html( get_option( 'blogname' ) ), $language );
 		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
 			$action = add_query_arg( array( 'adc_unsubscribe' => $id, 'token' => $token, 'lang' => $language ), home_url( '/' ) );
-			$html = str_replace( '</h1>', '</h1><form method="post" action="' . esc_url( $action ) . '"><button type="submit" style="padding:14px 24px;background:#2563EB;border:0;border-radius:8px;color:white;font:inherit;cursor:pointer">' . esc_html( self::t( 'تأكيد إلغاء الاشتراك', 'Confirm unsubscribe' ) ) . '</button></form>', $html );
+			$colors = \AutoDealership\Core\BrandPalette::email_colors();
+			$html = str_replace( '</h1>', '</h1><form method="post" action="' . esc_url( $action ) . '"><button type="submit" style="padding:14px 24px;background:' . esc_attr($colors['mail-action']) . ';border:0;border-radius:8px;color:' . esc_attr($colors['mail-on-action']) . ';font:inherit;cursor:pointer">' . esc_html( self::t( 'تأكيد إلغاء الاشتراك', 'Confirm unsubscribe' ) ) . '</button></form>', $html );
 		}
 		header( 'Content-Type: text/html; charset=UTF-8' ); echo $html; exit;
 	}

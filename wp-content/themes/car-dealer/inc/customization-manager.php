@@ -39,6 +39,10 @@ function car_dealer_customize_theme_settings( $manager ) {
 		'instagram' => array( 'إنستغرام', 'url', 'esc_url_raw' ),
 		'whatsapp' => array( 'واتساب', 'text', 'sanitize_text_field' ),
 	);
+	if ( class_exists( '\AutoDealership\Core\BrandPalette' ) ) {
+		unset( $fields['primary_color'], $fields['accent_color'] );
+		$manager->remove_section( 'car_dealer_appearance' );
+	}
 	foreach ( $fields as $key => $field ) {
 		$id = 'car_dealer_theme_settings[' . $key . ']';
 		$manager->add_setting( $id, array( 'type' => 'option', 'default' => $options[$key], 'capability' => 'manage_options', 'sanitize_callback' => $field[2], 'transport' => 'color' === $field[1] ? 'postMessage' : 'refresh' ) );
@@ -75,10 +79,11 @@ add_action( 'admin_init', 'car_dealer_register_theme_settings' );
 
 function car_dealer_sanitize_theme_settings( $input ) {
 	$input = is_array( $input ) ? $input : array();
+	$existing = car_dealer_theme_options();
 	return array(
 		'description_en' => sanitize_textarea_field( $input['description_en'] ?? car_dealer_theme_options()['description_en'] ),
-		'primary_color' => sanitize_hex_color( $input['primary_color'] ?? '' ) ?: '#0E2A4A',
-		'accent_color' => sanitize_hex_color( $input['accent_color'] ?? '' ) ?: '#2563EB',
+		'primary_color' => sanitize_hex_color( $input['primary_color'] ?? $existing['primary_color'] ) ?: '#0E2A4A',
+		'accent_color' => sanitize_hex_color( $input['accent_color'] ?? $existing['accent_color'] ) ?: '#2563EB',
 		'phone' => sanitize_text_field( $input['phone'] ?? '' ),
 		'email' => sanitize_email( $input['email'] ?? '' ),
 		'address' => sanitize_textarea_field( $input['address'] ?? '' ),
@@ -122,6 +127,7 @@ function car_dealer_redirect_legacy_settings() {
 add_action( 'admin_init', 'car_dealer_redirect_legacy_settings' );
 
 function car_dealer_dynamic_theme_styles() {
+	if ( class_exists( '\AutoDealership\Core\BrandPalette' ) ) { return; }
 	$options = car_dealer_theme_options();
 	printf( '<style id="car-dealer-dynamic-theme">:root{--ab-brand-navy:%1$s;--ab-brand-blue:%2$s;}</style>', esc_html( sanitize_hex_color( $options['primary_color'] ) ?: '#0E2A4A' ), esc_html( sanitize_hex_color( $options['accent_color'] ) ?: '#2563EB' ) );
 }

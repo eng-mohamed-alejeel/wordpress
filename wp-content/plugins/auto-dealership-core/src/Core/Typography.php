@@ -13,6 +13,11 @@ final class Typography {
 			add_action( $hook, array( self::class, 'enqueue' ), 100 );
 		}
 		add_filter( 'mce_css', array( self::class, 'classic_editor_css' ) );
+		foreach(array('wp_head','admin_head','login_head') as $hook){add_action($hook,array(self::class,'preload'),2);}
+	}
+	public static function preload(): void {
+		if(is_admin() && function_exists('get_current_screen')){$screen=get_current_screen();if($screen && 'customize'===$screen->base){return;}}
+		foreach(array('Regular','Bold') as $weight){$file=dirname(__DIR__,2).'/assets/fonts/tajawal/Tajawal-'.$weight.'.ttf';if(is_readable($file)){echo '<link rel="preload" as="font" type="font/ttf" crossorigin href="'.esc_url(plugins_url('auto-dealership-core/assets/fonts/tajawal/Tajawal-'.$weight.'.ttf')).'">';}}
 	}
 	public static function stylesheet_url(): string {
 		return plugins_url( 'auto-dealership-core/assets/css/typography.css' );

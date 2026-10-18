@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.45.0
+ * Version: 1.49.0
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.45.0' );
+define( 'ADC_VERSION', '1.49.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -39,6 +39,12 @@ require_once ADC_PATH . 'src/Core/SuccessNotices.php';
 require_once ADC_PATH . 'src/Core/Typography.php';
 \AutoDealership\Core\Typography::boot();
 require_once ADC_PATH . 'src/Core/BrandIdentity.php';
+require_once ADC_PATH . 'src/Core/BrandLogo.php';
+\AutoDealership\Core\BrandLogo::boot();
+require_once ADC_PATH . 'src/Core/BrandPalette.php';
+\AutoDealership\Core\BrandPalette::boot();
+require_once ADC_PATH . 'src/Core/BrandCustomizer.php';
+\AutoDealership\Core\BrandCustomizer::boot();
 \AutoDealership\Core\BrandIdentity::boot();
 require_once ADC_PATH . 'src/Core/ConfigurationService.php';
 require_once ADC_PATH . 'src/Accounts/CustomerAccount.php';
@@ -210,7 +216,7 @@ require_once ADC_PATH . 'src/API/ResponseContract.php';
 require_once ADC_PATH . 'src/API/OpenApiSpecification.php';
 require_once ADC_PATH . 'src/API/CurrencyContract.php';
 require_once ADC_PATH . 'src/API/Routes.php';
-foreach ( array('PortalAccess','Conversations','Reviews','PortalMail','PortalPrivacy','PortalView','PortalAdmin','PortalMigration','LiveChat','CustomerJourney','PortalOperations','Portal') as $portal_class ) {
+foreach ( array('PortalAccess','Conversations','Reviews','PortalMail','PortalPrivacy','PortalView','PortalAdmin','PortalMigration','StaffPresence','LiveChat','CustomerJourney','PortalOperations','Portal') as $portal_class ) {
 	require_once ADC_PATH . 'src/Portal/' . $portal_class . '.php';
 }
 \AutoDealership\Portal\Portal::boot();

@@ -63,7 +63,7 @@ final class WorkspacePage {
 		$logo_id = (int) get_theme_mod( 'custom_logo' );
 		$logo = $logo_id ? wp_get_attachment_image( $logo_id, 'medium', false, array( 'class' => 'adc-workspace-logo', 'alt' => get_bloginfo( 'name' ), 'loading' => 'eager' ) ) : '';
 		if ( ! $logo && get_site_icon_url( 128 ) ) {
-			$logo = '<img class="adc-workspace-logo" src="' . esc_url( get_site_icon_url( 128 ) ) . '" alt="' . esc_attr( get_bloginfo( 'name' ) ) . '">';
+			$logo = '<img class="adc-workspace-logo" width="100" height="100" style="width:100px;height:100px;max-width:100%;object-fit:contain" src="' . esc_url( get_site_icon_url( 128 ) ) . '" alt="' . esc_attr( get_bloginfo( 'name' ) ) . '">';
 		}
 		?>
 		<div class="wrap adc-workspace" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
@@ -76,6 +76,7 @@ final class WorkspacePage {
 				<?php if ( $logo ) : ?><div class="adc-workspace-brand"><?php echo $logo; // WordPress attachment markup or escaped site icon. ?></div><?php endif; ?>
 			</div>
 
+			<?php \AutoDealership\Portal\StaffPresence::control('workspace'); ?>
 			<?php foreach ( $groups as $group ) : ?>
 				<?php $items = array_values( array_filter( $group['items'], static fn( array $item ): bool => self::allowed( $item ) ) ); ?>
 				<?php if ( ! $items ) { continue; } ?>

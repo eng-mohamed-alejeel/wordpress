@@ -1,25 +1,34 @@
 (() => {
   'use strict';
   if (!window.adcChat) return;
-  const c=window.adcChat;for(const key of ['logged','staff','available'])c[key]=c[key]===true||c[key]==='1';const ar=c.lang==='ar', tab=crypto.randomUUID();
+  const c=window.adcChat;for(const key of ['logged','staff','available','canReceive'])c[key]=c[key]===true||c[key]==='1';const ar=c.lang==='ar', tab=crypto.randomUUID();
   let root=document.querySelector('[data-thread]'), thread=Number(root?.dataset.thread)||0, beatBusy=false, timer=0, failures=0;
   const text=(a,e)=>ar?a:e;
   async function request(operation,fields={}) {
     const data=new FormData();Object.entries({action:'adc_live_chat',nonce:c.nonce,operation,thread,tab,visible:document.hidden?'0':'1',lang:c.lang,...fields}).forEach(([k,v])=>data.set(k,String(v)));
     const r=await fetch(c.ajax,{method:'POST',body:data,credentials:'same-origin',cache:'no-store'}), j=await r.json();if(!r.ok||!j.success)throw Error(j.data?.message||text('تعذر الاتصال. حاول مجددًا.','Connection failed. Please retry.'));return j.data;
   }
-  if(c.staff){
-    const toggle=document.createElement('button');toggle.type='button';toggle.className='adc-chat-availability';toggle.setAttribute('aria-pressed',String(c.available));
-    const label=()=>{toggle.textContent=c.available?text('متاح للمحادثات · إيقاف','Available for chat · Pause'):text('غير متاح · استقبال المحادثات','Unavailable · Accept chats');toggle.setAttribute('aria-pressed',String(c.available));};label();document.body.append(toggle);
-    toggle.addEventListener('click',async()=>{toggle.disabled=true;try{await request('available',{available:c.available?'0':'1'});c.available=!c.available;label();}catch(e){toggle.textContent=e.message;}finally{toggle.disabled=false;}});
+  let availabilityBusy=false, availabilityVersion=0, connectionHealthy=true, feedbackTimer=0;
+  const toggles=[...document.querySelectorAll('[data-chat-availability],#wp-admin-bar-adc-chat-status>a')];
+  function renderAvailability(){
+    const label=!connectionHealthy?text('جارٍ إعادة الاتصال…','Reconnecting…'):(c.available?text('متاح للمحادثات','Available for chat'):text('غير متاح للمحادثات','Unavailable for chat'));
+    toggles.forEach(toggle=>{toggle.setAttribute('data-mobile-label',!connectionHealthy?'…':(c.available?text('متاح','Available'):text('غير متاح','Unavailable')));toggle.setAttribute('role','button');toggle.setAttribute('aria-pressed',String(c.available));toggle.setAttribute('aria-disabled',String(availabilityBusy||!c.canReceive));toggle.setAttribute('aria-busy',String(availabilityBusy));if(toggle.tagName==='BUTTON')toggle.disabled=availabilityBusy||!c.canReceive;toggle.setAttribute('aria-label',label+'. '+(c.available?text('إيقاف استقبال محادثات جديدة','Pause new chats'):text('استقبال محادثات جديدة','Accept new chats')));const span=toggle.querySelector('[data-availability-label]');if(span)span.textContent=label;toggle.classList.toggle('is-available',c.available&&connectionHealthy);toggle.classList.toggle('is-paused',!c.available);toggle.classList.toggle('is-connection-lost',!connectionHealthy);});
   }
+  function syncAvailability(data){if(typeof data.available==='boolean')c.available=data.available;if(typeof data.canReceive==='boolean')c.canReceive=data.canReceive;renderAvailability();}
+  function feedback(message){clearTimeout(feedbackTimer);document.querySelectorAll('.adc-staff-presence-feedback').forEach(el=>el.textContent=message);if(message)feedbackTimer=setTimeout(()=>feedback(''),6000);}
+  toggles.forEach(toggle=>{
+    const activate=async event=>{event.preventDefault();if(availabilityBusy||!c.canReceive)return;availabilityBusy=true;availabilityVersion++;renderAvailability();feedback('');try{const result=await request('available',{available:c.available?'0':'1',thread:0});connectionHealthy=true;syncAvailability(result);feedback(c.available?text('تم تفعيل استقبال المحادثات الجديدة.','New chat requests enabled.'):text('تم إيقاف استقبال المحادثات الجديدة. يمكنك متابعة محادثاتك الحالية.','New chat requests paused. Existing conversations remain available.'));}catch(error){feedback(error.message);}finally{availabilityBusy=false;renderAvailability();schedule();}};
+    toggle.addEventListener('click',activate);if(toggle.tagName==='A')toggle.addEventListener('keydown',event=>{if(event.key===' '){event.preventDefault();activate(event);}});
+  });
+  renderAvailability();
+
   let indicator;
   if(root){indicator=document.createElement('p');indicator.className='adc-chat-peer';indicator.setAttribute('role','status');const box=root.querySelector('.adc-p-composer');if(box)box.before(indicator);else root.querySelector('header')?.after(indicator);indicator.setAttribute('aria-live','polite');
   }
   let lastBeat=0, seenInbox=new Set();
   async function beat(force=false){
-    if(!c.logged||beatBusy||(!force&&document.hidden&&!c.staff)||(!force&&Date.now()-lastBeat<2500))return;
-    beatBusy=true;lastBeat=Date.now();try{const data=await request('beat');failures=0;for(const item of data.inbox||[]){const key=`${item.id}:${item.last}`;if(seenInbox.has(key)||item.id===thread)continue;seenInbox.add(key);const old=document.querySelector('.adc-chat-incoming');old?.remove();const toast=document.createElement('aside');toast.className='adc-chat-incoming';toast.setAttribute('role','status');const link=document.createElement('a');link.href=item.url;link.textContent=text('رسالة عميل جديدة · افتح المحادثة','New customer message · Open conversation');const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label',text('إغلاق','Dismiss'));close.onclick=()=>toast.remove();toast.append(link,close);document.body.append(toast);break;}}catch{failures++;if(indicator)indicator.textContent=text('جارٍ إعادة الاتصال…','Reconnecting…');}finally{beatBusy=false;}
+    if(!c.logged||availabilityBusy||beatBusy||(!force&&document.hidden&&!c.staff)||(!force&&Date.now()-lastBeat<2500))return;
+    beatBusy=true;lastBeat=Date.now();const version=availabilityVersion;try{const data=await request('beat');failures=0;connectionHealthy=true;if(version===availabilityVersion)syncAvailability(data);renderAvailability();for(const item of data.inbox||[]){const key=`${item.id}:${item.last}`;if(seenInbox.has(key)||item.id===thread)continue;seenInbox.add(key);const old=document.querySelector('.adc-chat-incoming');old?.remove();const toast=document.createElement('aside');toast.className='adc-chat-incoming';toast.setAttribute('role','status');const link=document.createElement('a');link.href=item.url;link.textContent=text('رسالة عميل جديدة · افتح المحادثة','New customer message · Open conversation');const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label',text('إغلاق','Dismiss'));close.onclick=()=>toast.remove();toast.append(link,close);document.body.append(toast);break;}}catch{failures++;connectionHealthy=false;renderAvailability();if(indicator)indicator.textContent=text('جارٍ إعادة الاتصال…','Reconnecting…');}finally{beatBusy=false;}
   }
   const widget=document.querySelector('.adc-chat'), panel=widget?.querySelector('.adc-chat-panel'), launch=widget?.querySelector('.adc-chat-launch'), select=widget?.querySelector('[data-chat-branch]'), status=widget?.querySelector('[data-chat-status]');let branches=[];
   function availabilityLabel(){if(!status)return;const branch=branches.find(b=>Number(b.id)===Number(select.value)), online=!!branch?.available;widget.querySelector('.adc-chat-dot').classList.toggle('is-online',online);if(widgetHistory)return;status.textContent=online?text('يوجد موظف متاح في هذا الفرع.','An adviser is available at this branch.'):text('لا يوجد موظف متاح الآن. اترك رسالتك وسيتابعها فريق الفرع.','No adviser is available now. Leave a message for the branch team.');widget.querySelector('.adc-chat-dot').classList.toggle('is-online',online);}

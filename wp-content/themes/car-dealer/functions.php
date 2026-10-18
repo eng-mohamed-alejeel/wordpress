@@ -46,6 +46,13 @@ require_once get_template_directory() . '/inc/customization-manager.php';
 require_once get_template_directory() . '/inc/public-site-setup.php';
 require_once get_template_directory() . '/inc/page-cache-integration.php';
 
+/** Small first-paint fallback; logos stay bounded even if an external stylesheet fails. */
+add_action('wp_head',static function(): void {
+	$light='#FFFFFF';$dark='#0B1220';
+	if(class_exists('\AutoDealership\Core\BrandPalette')){$light=\AutoDealership\Core\BrandPalette::resolve('light')['bg'];$dark=\AutoDealership\Core\BrandPalette::resolve('dark')['bg'];}
+	echo '<style id="car-dealer-critical-layout">:root{--cd-initial-bg:'.esc_html($light).'}:root[data-ab-theme="dark"]{--cd-initial-bg:'.esc_html($dark).'}html{background:var(--ab-bg,var(--cd-initial-bg))}body{margin:0}.custom-logo{display:block;width:auto;max-width:100%;max-height:48px}.footer-brand .custom-logo{max-height:40px}.adc-about-site-logo{max-width:100%;max-height:180px}.adc-workspace-logo{max-width:148px;max-height:100px}[hidden]{display:none!important}</style>';
+},0);
+
 function car_dealer_assets() {
 	$version = wp_get_theme()->get( 'Version' ); $uri = get_template_directory_uri();
 	if ( class_exists( '\AutoDealership\Core\BrandIdentity' ) ) {

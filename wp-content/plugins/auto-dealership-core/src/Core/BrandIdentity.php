@@ -6,6 +6,12 @@ defined( 'ABSPATH' ) || exit;
 /** Shared visual identity; no business data or user account preference is changed. */
 final class BrandIdentity {
     public static function boot(): void {
+        foreach ( array( 'wp_enqueue_scripts', 'admin_enqueue_scripts', 'login_enqueue_scripts' ) as $hook ) {
+            add_action( $hook, static function (): void {
+                self::tokens();
+                wp_enqueue_style( 'autobrands-palette', plugins_url( 'assets/css/brand-palette.css', ADC_FILE ), array( 'autobrands-ui' ), ADC_VERSION );
+            }, 999 );
+        }
         foreach ( array( 'wp_enqueue_scripts', 'admin_enqueue_scripts', 'login_enqueue_scripts', 'customize_controls_enqueue_scripts' ) as $hook ) {
             add_action( $hook, array( self::class, 'enqueue' ), 100 );
         }
@@ -25,10 +31,7 @@ final class BrandIdentity {
         if ( wp_style_is( 'autobrands-tokens', 'enqueued' ) ) { return; }
         $file = ADC_PATH . 'assets/css/brand-tokens.css';
         wp_enqueue_style( 'autobrands-tokens', plugins_url( 'assets/css/brand-tokens.css', ADC_FILE ), array(), (string) filemtime( $file ) );
-        $options = get_option( 'car_dealer_theme_settings', array() );
-        $navy = sanitize_hex_color( $options['primary_color'] ?? '' ) ?: '#0E2A4A';
-        $blue = sanitize_hex_color( $options['accent_color'] ?? '' ) ?: '#2563EB';
-        wp_add_inline_style( 'autobrands-tokens', ':root{--ab-brand-navy:' . $navy . ';--ab-brand-blue:' . $blue . ';}' );
+        wp_add_inline_style( 'autobrands-tokens', BrandPalette::css() );
     }
 
     public static function enqueue(): void {
@@ -51,18 +54,20 @@ final class BrandIdentity {
         self::tokens();
         $file = ADC_PATH . 'assets/css/brand-editor.css';
         wp_enqueue_style( 'autobrands-editor', plugins_url( 'assets/css/brand-editor.css', ADC_FILE ), array( 'autobrands-tokens' ), (string) filemtime( $file ) );
+        wp_add_inline_style( 'autobrands-editor', BrandPalette::css() );
     }
 
     public static function editor_palette( array $settings ): array {
         if ( 'car-dealer' !== get_stylesheet() ) { return $settings; }
-        $options = get_option( 'car_dealer_theme_settings', array() );
-        $settings['colors'] = array(
-            array( 'name' => 'AUTO BRANDS Navy', 'slug' => 'autobrands-navy', 'color' => sanitize_hex_color( $options['primary_color'] ?? '' ) ?: '#0E2A4A' ),
-            array( 'name' => 'AUTO BRANDS Blue', 'slug' => 'autobrands-blue', 'color' => sanitize_hex_color( $options['accent_color'] ?? '' ) ?: '#2563EB' ),
-            array( 'name' => 'Charcoal', 'slug' => 'autobrands-text', 'color' => '#1A1D20' ),
-            array( 'name' => 'Off white', 'slug' => 'autobrands-background', 'color' => '#F8FAFC' ),
-            array( 'name' => 'White', 'slug' => 'autobrands-white', 'color' => '#FFFFFF' ),
-        );
+        $colors = BrandPalette::resolve();
+        $settings['colors'] = array();
+        foreach ( BrandPalette::schema() as $key => $spec ) {
+            $settings['colors'][] = array( 'name' => $spec['label'], 'slug' => 'autobrands-' . $key, 'color' => $colors[$key] );
+        }
+        // Preserve existing block palette slugs saved in page content.
+        foreach ( array( 'navy'=>'brand-navy', 'blue'=>'brand-blue', 'background'=>'bg', 'white'=>'surface' ) as $slug=>$key ) {
+            $settings['colors'][] = array( 'name'=>$slug, 'slug'=>'autobrands-'.$slug, 'color'=>$colors[$key] );
+        }
         return $settings;
     }
 

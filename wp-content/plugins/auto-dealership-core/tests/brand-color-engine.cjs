@@ -1,0 +1,8 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const context={window:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../assets/js/brand-color-engine.js'),'utf8'),context);const api=context.window.adcBrandColors;
+const value=api.canonical({format:1,light:[],dark:[]});value.light.action='#123456';assert.equal(JSON.parse(JSON.stringify(value)).light.action,'#123456','PHP empty maps retain edits after serialization');
+const copied=api.canonical(value);copied.light.action='#654321';assert.equal(value.light.action,'#123456','draft edits do not mutate the published object');
+const schema={'brand-blue':{group:'brand',light:'#2D7BEA',dark:'#2D7BEA'},action:{group:'buttons',light:['tone','@brand-blue','#2D7BEA','#1764CE'],dark:['mix','@brand-blue','#FFFFFF',.3]},ink:{group:'buttons',light:['ink','@action'],dark:['ink','@action']}};const engine=api.create(schema),empty={format:1,light:{},dark:{}};
+assert.equal(engine.resolve(empty,'light').action,'#1764CE');assert.equal(engine.resolve(empty,'light').ink,'#FFFFFF');assert.equal(engine.resolve(empty,'dark').action,'#6CA3F0');assert.equal(engine.resolve(empty,'dark').ink,'#000000');
+const custom=api.canonical(empty);custom.light['brand-blue']='#7C3AED';assert.equal(engine.resolve(custom,'dark')['brand-blue'],'#7C3AED');custom.dark['brand-blue']='#112233';assert.equal(engine.resolve(custom,'dark')['brand-blue'],'#112233');
+assert.ok(engine.contrast('#FFFFFF','#1764CE')>=4.5);assert.ok(engine.css(custom).includes(':root[data-ab-theme="dark"]'));console.log('10 shared color engine checks passed.');

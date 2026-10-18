@@ -1,0 +1,73 @@
+/* Semantic colors override legacy component skins, without changing their layout. */
+:root{--ab-color-red:var(--ab-offer);--ab-brand-gradient:linear-gradient(135deg,var(--ab-hero),var(--ab-hero-end));--ab-field-invalid:var(--ab-error);--ab-field-invalid-bg:var(--ab-error-bg);--ab-field-valid:var(--ab-success)}
+.site .site-header{background:var(--ab-header);color:var(--ab-header-text);border-bottom-color:var(--ab-border)}
+.site-header .site-title,.site-header .main-navigation>ul>li>a,.site-header .ab-appearance-control,.site-header .site-language-switch a,.site-header .site-language-switcher a,.site-header .site-language-switch a[aria-current]{color:var(--ab-header-text)}
+.site-header .main-navigation>ul>li>a:hover,.site-header .main-navigation>ul>li.current-menu-item>a{color:var(--ab-header-active)}
+.site-header .site-language-switch a,.site-header .site-language-switcher a,.site-header .menu-toggle{border-color:var(--ab-control-border)}
+.site-header .menu-toggle>span:not(.screen-reader-text){background:var(--ab-header-text)}
+.site-header .ab-appearance-options{background:var(--ab-soft);border-color:var(--ab-border)}
+.site-header .ab-appearance-option{color:var(--ab-muted)}
+.site-header .ab-appearance-option.is-active{background:var(--ab-surface);color:var(--ab-heading)}
+.site-header .ab-appearance-option:hover{background:var(--ab-soft);color:var(--ab-header-active)}
+.site-header .site-language-switch .language-options a{color:var(--ab-text)}
+.site-header .site-language-switch .language-options a:hover{color:var(--ab-link)}
+.site :is(.car-price,.car-single-price,.ab-car-price){color:var(--ab-price)}
+.site .site-footer{background:var(--ab-footer);color:var(--ab-footer-text)}
+.site-footer :is(h2,h3,h4,strong,.footer-title,.site-title){color:var(--ab-footer-text)}
+.site-footer :is(p,small,.footer-bottom){color:var(--ab-footer-muted)}
+.site-footer a,.site-footer a:hover{color:var(--ab-footer-link)}
+.site .btn-primary{background:var(--ab-primary);border-color:var(--ab-primary);color:var(--ab-on-primary)}
+.site .btn-primary:hover{background:var(--ab-primary-hover);border-color:var(--ab-primary-hover);color:var(--ab-on-primary)}
+:root[data-ab-theme="dark"] .site .btn-primary{border-color:var(--ab-primary)}
+:root[data-ab-theme="dark"] .site .btn-primary:hover{border-color:var(--ab-primary-hover)}
+.site :is(.btn-danger,.btn-offer,.offer-badge,.car-badge--offer,.ab-offer-badge){background:var(--ab-offer);color:var(--ab-on-offer);border-color:var(--ab-offer)}
+.site :is(.btn-danger,.btn-offer):hover{background:var(--ab-offer-hover);border-color:var(--ab-offer-hover)}
+.site :is(.ab-hero,.archive-hero,.ab-car-hero){color:var(--ab-hero-text)}
+.site :is(.ab-hero,.archive-hero,.ab-car-hero) h1{color:var(--ab-hero-text)}
+.site :is(.ab-hero,.archive-hero,.ab-car-hero) p,.site .ab-hero-desc{color:var(--ab-hero-muted)}
+.site .ab-hero .ab-hero-scroll-hint{color:var(--ab-hero-text)}
+.site .ab-hero :is(.ab-hero-stats,.ab-hero-panel){color:var(--ab-hero-text)}
+.site .ab-hero .btn-ghost{color:var(--ab-hero-text);border-color:var(--ab-hero-muted)}
+.site .adc-about-visual{background:radial-gradient(ellipse at 75% 10%,color-mix(in srgb,var(--ab-brand-blue) 40%,transparent),transparent 65%),linear-gradient(145deg,var(--ab-hero),var(--ab-hero-end));color:var(--ab-hero-text)}
+.site .adc-about-visual-copy strong{color:var(--ab-hero-text)}
+.site .adc-about-visual-copy p{color:var(--ab-hero-muted)}
+.site :is(.ab-hero,.archive-hero,.ab-car-hero){background:radial-gradient(circle at 18% 20%,color-mix(in srgb,var(--ab-brand-blue) 15%,transparent),transparent 28%),linear-gradient(120deg,color-mix(in srgb,var(--ab-hero) 94%,transparent),color-mix(in srgb,var(--ab-hero-end) 92%,transparent)),var(--hero-image,linear-gradient(120deg,var(--ab-hero),var(--ab-hero-end)))}
+.site :is(.ab-hero,.archive-hero,.ab-car-hero)::after{background:linear-gradient(transparent,color-mix(in srgb,var(--ab-hero) 95%,transparent))}
+.site .site-header :focus-visible{outline-color:var(--ab-focus)}
+@media(max-width:1120px){.site-header .main-navigation{background:var(--ab-header)}.site-header .main-navigation>ul>li>a{color:var(--ab-header-text)}}
+:is(.adc-portal,.adc-p-admin){--p-surface:var(--ab-surface);--p-bg:var(--ab-soft);--p-text:var(--ab-text);--p-muted:var(--ab-muted);--p-line:var(--ab-border);--p-action:var(--ab-action)}
+.adc-portal .adc-p-button,.adc-portal .adc-p-nav a[aria-current]{color:var(--ab-on-action)!important}
+.adc-portal .adc-p-button:hover{background:var(--ab-action-hover);filter:none}
+.adc-portal .adc-p-button.is-secondary{background:var(--ab-surface);color:var(--ab-text)!important}
+.adc-portal .adc-p-badge[data-state=published]{background:var(--ab-success-bg);color:var(--ab-success);border-color:var(--ab-success)}
+.adc-portal :is(.adc-p-badge[data-state=staff],.adc-p-badge[data-state=pending]){background:var(--ab-warning-bg);color:var(--ab-warning);border-color:var(--ab-warning)}
+.adc-portal :is(.adc-p-badge[data-state=customer],.adc-p-unread){background:var(--ab-info-bg);color:var(--ab-info);border-color:var(--ab-info)}
+.adc-portal .adc-p-notice.is-success{border-inline-start-color:var(--ab-success)}
+.adc-portal .adc-p-notice.is-error{border-inline-start-color:var(--ab-error)}
+.adc-portal .adc-p-message{background:var(--ab-chat-peer);color:var(--ab-chat-peer-text)}
+.adc-portal .adc-p-message.is-mine{background:var(--ab-chat-bubble);color:var(--ab-chat-text)}
+.adc-portal .adc-p-message.is-internal{background:var(--ab-warning-bg);color:var(--ab-warning);border-color:var(--ab-warning)}
+.adc-chat{color:var(--ab-text)}
+:root .adc-chat :is(.adc-chat-launch,[data-chat-start]),:root .adc-chat-panel form button{background:var(--ab-action);color:var(--ab-on-action)}
+:root .adc-chat :is(.adc-chat-launch,[data-chat-start]):hover,:root .adc-chat-panel form button:hover{background:var(--ab-action-hover)}
+:root .adc-chat-panel,:root .adc-chat-availability,:root .adc-chat-incoming{background:var(--ab-surface);color:var(--ab-text);border-color:var(--ab-border)}
+:root .adc-chat-panel a,:root .adc-chat-incoming a{color:var(--ab-link)}
+:root .adc-chat-panel :is(select,textarea),:root .adc-journey-form :is(input,select){background:var(--ab-field-bg);color:var(--ab-field-text);border-color:var(--ab-field-border)}
+:root .adc-chat-peer{color:var(--ab-muted)}
+:root .adc-chat-peer.is-online{color:var(--ab-success)}
+:root .adc-chat-peer.is-typing{color:var(--ab-success);background:var(--ab-success-bg)}
+:root .adc-chat-dot{background:var(--ab-muted)}
+:root .adc-chat-dot.is-online{background:var(--ab-success);box-shadow:0 0 0 4px color-mix(in srgb,var(--ab-success) 15%,transparent)}
+:root .adc-chat-history article{background:var(--ab-chat-peer);color:var(--ab-chat-peer-text)}
+:root .adc-chat-history article.is-mine{background:var(--ab-chat-bubble);color:var(--ab-chat-text)}
+:root .adc-chat :focus-visible,:root .adc-chat-availability:focus-visible{outline-color:var(--ab-focus)}
+:root .car-card-meta .adc-favorite-heart{background:var(--ab-surface);color:var(--ab-muted);border-color:var(--ab-border)}
+:root .car-card-meta .adc-favorite-heart:hover,:root .car-card-meta .adc-favorite-heart[aria-pressed=true]{color:var(--ab-favorite);border-color:var(--ab-favorite);background:color-mix(in srgb,var(--ab-favorite) 7%,var(--ab-surface))}
+:root .adc-favorite-feedback{background:var(--ab-action);color:var(--ab-on-action)}
+:root .adc-save-car{background:var(--ab-surface);color:var(--ab-link);border-color:var(--ab-control-border)}
+.adc-admin-shell #adminmenu :is(.wp-has-current-submenu>a,li.current>a){background:var(--ab-action);color:var(--ab-on-action)}
+.adc-admin-shell #adminmenu :is(.wp-has-current-submenu>a,li.current>a) .wp-menu-image:before{color:var(--ab-on-action)}
+.adc-admin-shell .adc-workspace-hero{background:linear-gradient(120deg,var(--ab-hero),var(--ab-hero-end))}
+.adc-admin-shell.adc-admin .wrap .adc-workspace-hero :is(h1,p,span){color:var(--ab-hero-text)}
+.has-autobrands-text-color{color:var(--ab-text)}.has-autobrands-background-color{color:var(--ab-bg)}.has-autobrands-white-color{color:var(--ab-surface)}
+.has-autobrands-text-background-color{background-color:var(--ab-text)}.has-autobrands-background-background-color{background-color:var(--ab-bg)}.has-autobrands-white-background-color{background-color:var(--ab-surface)}
