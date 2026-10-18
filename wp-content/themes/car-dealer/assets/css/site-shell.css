@@ -502,3 +502,9 @@ html[dir="rtl"] .cd-customer-filters select { background-position: left .75rem c
 .car-card-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin-bottom:8px}.car-card-meta .car-brand{margin:0;min-width:0;flex:1}.car-card-meta .adc-journey-form{display:block;flex:0 0 44px;margin:0;max-width:none}.ab-section .car-card .car-card-meta{grid-row:1}.car-card-actions>.btn{flex:1 1 calc(50% - .5rem);min-height:44px;min-width:0}
 
 .car-card .car-card-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}.car-card-actions>.btn{width:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:.65rem .75rem;font-size:.9rem;line-height:1.4}.car-card-meta .car-brand{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Archive cards stretch with their grid row; content never pushes one card's actions out of alignment. */
+.post-type-archive-car .car-grid > .car-card { display:flex; flex-direction:column; min-width:0; }
+.post-type-archive-car .car-grid > .car-card > .car-image { flex-shrink:0; }
+.post-type-archive-car .car-grid > .car-card > .car-details { display:flex; flex-direction:column; flex:1; min-width:0; }
+.post-type-archive-car .car-grid .car-title { min-block-size:2.8em; line-height:1.4; overflow-wrap:anywhere; }
+.post-type-archive-car .car-grid .car-card-actions { margin-block-start:auto; }

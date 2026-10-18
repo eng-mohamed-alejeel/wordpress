@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.49.0
+ * Version: 1.53.1
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.49.0' );
+define( 'ADC_VERSION', '1.53.1' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -45,6 +45,8 @@ require_once ADC_PATH . 'src/Core/BrandPalette.php';
 \AutoDealership\Core\BrandPalette::boot();
 require_once ADC_PATH . 'src/Core/BrandCustomizer.php';
 \AutoDealership\Core\BrandCustomizer::boot();
+require_once ADC_PATH . 'src/Core/BrandColorLibrary.php';
+\AutoDealership\Core\BrandColorLibrary::boot();
 \AutoDealership\Core\BrandIdentity::boot();
 require_once ADC_PATH . 'src/Core/ConfigurationService.php';
 require_once ADC_PATH . 'src/Accounts/CustomerAccount.php';

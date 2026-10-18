@@ -19,8 +19,8 @@ final class BrandPalette {
     public static function schema(): array {
         $rows = array(
             array('brand-navy','brand','الكحلي','Navy','#101C32',null),
-            array('brand-blue','brand','أزرق الهوية','Brand blue','#2D7BEA',null),
-            array('brand-red','brand','أحمر الهوية','Brand red','#E60000',null),
+            array('brand-blue','brand','اللون الأساسي للهوية','Primary brand color','#2D7BEA',null),
+            array('brand-red','brand','اللون الثانوي للهوية','Secondary brand color','#E60000',null),
             array('bg','surfaces','خلفية الموقع','Page background','#FFFFFF','#0B1220'),
             array('surface','surfaces','البطاقات والأسطح','Cards and surfaces','#FFFFFF','#142033'),
             array('soft','surfaces','الأقسام البديلة','Alternate sections','#F4F7FB','#1C2B42'),
@@ -88,7 +88,7 @@ final class BrandPalette {
             array('mail-on-action','mail','نص زر البريد','Email button text',array('ink','@mail-action'),null),
             array('mail-border','mail','حدود البريد','Email border','@border',null),
         );
-        foreach(array('blue'=>array('@brand-blue','الأزرق','Blue'),'red'=>array('@brand-red','الأحمر','Red'),'slate'=>array('@brand-navy','الرمادي','Slate')) as $family=>$spec){foreach(array(50=>.94,100=>.88,200=>.75,300=>.58,400=>.30,500=>0,600=>-.12,700=>-.28,800=>-.45,900=>-.62,950=>-.77) as $step=>$amount){$recipe=$amount>=0?array('mix',$spec[0],'#FFFFFF',$amount):array('mix',$spec[0],'#000000',abs($amount));$rows[]=array($family.'-'.$step,'brand',$spec[1].' '.$step,$spec[2].' '.$step,$recipe,$recipe);}}
+        foreach(array('blue'=>array('@brand-blue','الأساسي','Primary'),'red'=>array('@brand-red','الثانوي','Secondary'),'slate'=>array('@brand-navy','الداكن','Deep')) as $family=>$spec){foreach(array(50=>.94,100=>.88,200=>.75,300=>.58,400=>.30,500=>0,600=>-.12,700=>-.28,800=>-.45,900=>-.62,950=>-.77) as $step=>$amount){$recipe=$amount>=0?array('mix',$spec[0],'#FFFFFF',$amount):array('mix',$spec[0],'#000000',abs($amount));$rows[]=array($family.'-'.$step,'brand',$spec[1].' '.$step,$spec[2].' '.$step,$recipe,$recipe);}}
         $schema=array(); foreach($rows as $row){$schema[$row[0]]=array('group'=>$row[1],'label'=>self::t($row[2],$row[3]),'light'=>$row[4],'dark'=>$row[5]??$row[4]);} return $schema;
     }
     public static function empty_config(): array { return array('format'=>1,'light'=>array(),'dark'=>array()); }

@@ -6,7 +6,9 @@
         if(!setting)return;
         let mode='light',advanced=false;
         const config=()=>adcBrandColors.canonical(setting.get());
-        const change=fn=>{const next=config();fn(next);setting.set(next);};
+        const metaSetting=api('adc_brand_palette_meta');
+        const origin=(value,scheme,key)=>{const kind=window.adcColorLab?adcColorLab.origin(value,metaSetting?.get(),scheme,key):(Object.hasOwn(value[scheme],key)?'manual':'automatic');return({automatic:s.automatic,manual:s.custom,generated:document.documentElement.lang.startsWith('ar')?'مولّد':'Generated',extracted:document.documentElement.lang.startsWith('ar')?'من الشعار':'From logo'})[kind];};
+        const change=fn=>{const before=config(),next=config();fn(next);if(metaSetting){const meta=JSON.parse(JSON.stringify(metaSetting.get()));for(const scheme of ['light','dark'])for(const key of Object.keys(before[scheme]))if(before[scheme][key]!==next[scheme][key]&&meta.generated?.[scheme])delete meta.generated[scheme][key];metaSetting.set(meta);}setting.set(next);};
         const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text)el.textContent=text;if(cls)el.className=cls;return el;};
         function sendMode(){document.querySelectorAll('[data-customizer-mode],[data-palette-footer-mode]').forEach(el=>el.value=mode);api.previewer.send('adc-palette-mode',mode);}
         function draw(){
@@ -26,7 +28,7 @@
                     const picker=node('input');picker.type='color';picker.id=label.htmlFor;picker.value=values[key];picker.setAttribute('aria-label',spec.label);
                     const hex=node('input');hex.type='text';hex.dir='ltr';hex.value=values[key];hex.maxLength=7;hex.setAttribute('aria-label',spec.label+' HEX');
                     const automatic=node('button',s.automatic,'button-link');automatic.type='button';automatic.disabled=!Object.hasOwn(value[scheme],key);automatic.setAttribute('aria-label',spec.label+' '+s.automatic);
-                    const status=node('small',automatic.disabled?s.automatic:s.custom);
+                    const status=node('small',origin(value,scheme,key));
                     function update(v){if(!/^#[a-f0-9]{6}$/i.test(v))return;change(next=>{next[scheme][key]=v.toUpperCase();});}
                     picker.addEventListener('input',()=>update(picker.value));hex.addEventListener('input',()=>update(hex.value));hex.addEventListener('blur',()=>{hex.value=engine.resolve(config(),scheme)[key];});
                     automatic.addEventListener('click',()=>change(next=>{delete next[scheme][key];}));
@@ -40,7 +42,7 @@
             const value=config();document.querySelectorAll('[data-palette-group] [data-token]').forEach(row=>{
                 const key=row.dataset.token,scheme=data.schema[key].group==='mail'?'light':mode,color=engine.resolve(value,scheme)[key];
                 row.querySelector('input[type=color]').value=color;const hex=row.querySelector('input[type=text]');if(document.activeElement!==hex)hex.value=color;
-                const auto=row.querySelector('button');auto.disabled=!Object.hasOwn(value[scheme],key);row.querySelector('small').textContent=auto.disabled?s.automatic:s.custom;
+                const auto=row.querySelector('button');auto.disabled=!Object.hasOwn(value[scheme],key);row.querySelector('small').textContent=origin(value,scheme,key);
             });drawContrast();
         }
         function drawContrast(){
@@ -50,11 +52,12 @@
             }
         }
         const overview=document.querySelector('[data-palette-group=overview]');if(!overview)return;
+        window.addEventListener('adc-color-focus',event=>{const {key,scheme}=event.detail;if(!data.schema[key])return;mode=scheme;advanced=true;sendMode();draw();api.section('adc_palette_'+data.schema[key].group).expand({completeCallback:()=>document.querySelector('[data-token="'+key+'"] input[type=text]')?.focus()});});
         overview.append(node('p',s.draft));const label=node('label',s.mode);const select=node('select');select.dataset.customizerMode='';['light','dark'].forEach(value=>{const option=node('option',s[value]);option.value=value;select.append(option);});label.append(select);overview.append(label);select.addEventListener('change',()=>{mode=select.value;sendMode();draw();});
         const advancedLabel=node('label',null,'adc-customizer-advanced'),checkbox=node('input');checkbox.type='checkbox';checkbox.addEventListener('change',()=>{advanced=checkbox.checked;draw();});advancedLabel.append(checkbox,document.createTextNode(s.advanced));overview.append(advancedLabel);
         const contrasts=node('div');contrasts.dataset.customizerContrast='';contrasts.setAttribute('aria-live','polite');overview.append(node('h3',s.contrast),contrasts);
         [[data.tools,s.tools],[data.admin,s.admin]].forEach(([href,text])=>{const p=node('p'),a=node('a',text);a.href=href;a.target='_blank';a.rel='noopener';p.append(a);overview.append(p);});
         const footer=document.querySelector('.wp-full-overlay-footer');if(footer){const wrapper=node('label',s.mode,'adc-palette-footer-mode'),footerSelect=select.cloneNode(true);delete footerSelect.dataset.customizerMode;footerSelect.dataset.paletteFooterMode='';wrapper.append(footerSelect);footerSelect.addEventListener('change',()=>{mode=footerSelect.value;sendMode();draw();});footer.prepend(wrapper);}
-        setting.bind(sync);api.previewer.bind('ready',sendMode);api.previewer.bind('synced',sendMode);draw();sendMode();
+        setting.bind(sync);if(metaSetting)metaSetting.bind(sync);api.previewer.bind('ready',sendMode);api.previewer.bind('synced',sendMode);draw();sendMode();
     });
 })(wp.customize);

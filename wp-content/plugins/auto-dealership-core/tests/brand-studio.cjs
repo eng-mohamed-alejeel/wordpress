@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const context={window:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../assets/js/brand-studio.js'),'utf8'),context);
+const extract=context.window.adcBrandStudio.extract;
+assert.equal(extract(new Uint8ClampedArray([255,0,0,0])).length,0);
+assert.equal(extract(new Uint8ClampedArray([255,255,255,255,20,100,220,255]))[0],'#1464DC');
+assert.equal(extract(new Uint8ClampedArray([0,0,0,255]))[0],'#000000');
+assert.equal(extract(new Uint8ClampedArray([255,255,255,255]))[0],'#FFFFFF');
+assert.equal(extract(new Uint8ClampedArray([20,100,220,255,22,102,222,255])).length,1);
+assert.equal(extract(new Uint8ClampedArray([255,0,0,255,0,0,255,255])).length,2);
+console.log('6 logo extraction regression checks passed.');
+const pixels=[];for(let i=0;i<300;i++)pixels.push(0,15,59,255);for(let i=0;i<120;i++)pixels.push(1,83,180,255);for(let i=0;i<40;i++)pixels.push(4,201,253,255);
+const colors=extract(new Uint8ClampedArray(pixels));assert.equal(colors[0],'#0153B4','visible logo blue wins over nearly black shadow');
+const selected=context.window.adcBrandStudio.select(colors);assert.equal(selected.primary,'#0153B4');assert.equal(selected.accent,'#04C9FD','secondary comes from the actual cyan highlight');
+assert.equal(context.window.adcBrandStudio.select(['#101010']).accent,'#101010','monochrome logo does not invent an accent');
+assert.equal(extract(new Uint8ClampedArray([200,0,0,255,210,0,0,64]))[0],'#CA0000','partially transparent edge has proportional influence');
+console.log('5 shadow, accent and alpha regression checks passed.');

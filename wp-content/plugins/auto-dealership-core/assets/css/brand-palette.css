@@ -27,6 +27,7 @@
 .site :is(.ab-hero,.archive-hero,.ab-car-hero) p,.site .ab-hero-desc{color:var(--ab-hero-muted)}
 .site .ab-hero .ab-hero-scroll-hint{color:var(--ab-hero-text)}
 .site .ab-hero :is(.ab-hero-stats,.ab-hero-panel){color:var(--ab-hero-text)}
+.site .ab-hero :is(.ab-stat strong,.ab-panel-number,.ab-hero-panel strong){color:var(--ab-hero-text)}
 .site .ab-hero .btn-ghost{color:var(--ab-hero-text);border-color:var(--ab-hero-muted)}
 .site .adc-about-visual{background:radial-gradient(ellipse at 75% 10%,color-mix(in srgb,var(--ab-brand-blue) 40%,transparent),transparent 65%),linear-gradient(145deg,var(--ab-hero),var(--ab-hero-end));color:var(--ab-hero-text)}
 .site .adc-about-visual-copy strong{color:var(--ab-hero-text)}
