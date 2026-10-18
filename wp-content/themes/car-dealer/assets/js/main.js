@@ -200,3 +200,23 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
+
+/* Measure layout chrome only; the hero remains content-driven and uses stable viewport units. */
+(function () {
+  var hero = document.querySelector('.ab-hero-v2'), header = document.querySelector('.site-header');
+  if (!hero || !header) return;
+  var frame = 0;
+  function sync() {
+    frame = 0;
+    hero.style.setProperty('--ab-hero-offset', Math.max(0, hero.getBoundingClientRect().top + window.scrollY) + 'px');
+    var obstruction = header.getBoundingClientRect().height + (parseFloat(getComputedStyle(header).top) || 0);
+    document.documentElement.style.setProperty('--ab-header-obstruction', obstruction + 'px');
+    document.documentElement.style.setProperty('--ab-header-scroll-padding', (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) + 'px');
+  }
+  function schedule() { if (!frame) frame = requestAnimationFrame(sync); }
+  sync();
+  if (window.ResizeObserver) { var observer = new ResizeObserver(schedule); observer.observe(header); var bar = document.getElementById('wpadminbar'); if (bar) observer.observe(bar); }
+  window.addEventListener('resize', schedule, {passive:true});
+  window.addEventListener('pageshow', schedule);
+  if (document.fonts) document.fonts.ready.then(schedule);
+})();
