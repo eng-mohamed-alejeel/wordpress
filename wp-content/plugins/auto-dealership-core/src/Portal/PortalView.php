@@ -20,6 +20,7 @@ final class PortalView {
 	}
 	public static function render():void {
 		$user=wp_get_current_user();$sections=array('overview'=>['نظرة عامة','Overview'],'requests'=>['طلباتي واستفساراتي','My enquiries'],'bookings'=>['تجارب القيادة','Test drives'],'messages'=>['الرسائل','Messages'],'reviews'=>['تقييماتي','My reviews'],'profile'=>['بياناتي وأمان الحساب','Account & security'],'preferences'=>['تفضيلات التواصل','Communication preferences']);
+		$sections=CustomerJourney::sections($sections);
 		$section=isset($_GET['portal'])&&is_string($_GET['portal'])?sanitize_key($_GET['portal']):'overview';
 		if(isset($_GET['preferences_saved'])){$section='preferences';}elseif(isset($_GET['saved'])){$section='profile';}elseif(isset($_GET['request_updated'])||isset($_GET['bookings_page'])){$section='bookings';}elseif(isset($_GET['messages_page'])){$section='requests';}
 		if(!isset($sections[$section])){$section='overview';}
@@ -29,7 +30,7 @@ final class PortalView {
 		$error=$GLOBALS['cd_account_error']??'';if($error){echo '<div class="adc-p-notice is-error" role="alert">'.esc_html($error).'</div>';}
 		foreach(array('saved'=>['تم تحديث بياناتك.','Your details were updated.'],'preferences_saved'=>['تم حفظ تفضيلات التواصل.','Communication preferences saved.'],'request_updated'=>['تم تحديث الحجز وإبلاغ الفريق.','Booking updated and the team notified.']) as $param=>$label){if(isset($_GET[$param])){echo '<p class="adc-p-notice is-success" data-success-notice data-notice-param="'.esc_attr($param).'" role="status">'.esc_html(PortalAccess::t(...$label)).'</p>';}}
 		if(!PortalAccess::verified()&&in_array($section,array('messages','reviews'),true)){echo '<p class="adc-p-notice">'.esc_html(PortalAccess::t('يمكنك الاطلاع على سجلك. لإرسال رسالة أو تقييم، أكّد ملكية بريدك من بيانات الحساب.','You can read your history. Confirm email ownership in Account & security to send messages or reviews.')).' <a href="'.esc_url(PortalAccess::url('profile')).'">'.esc_html(PortalAccess::t('بيانات الحساب','Account details')).'</a></p>';}
-		switch($section){case 'requests':self::requests('messages');break;case 'bookings':self::requests('bookings');break;case 'messages':self::messages();break;case 'reviews':self::reviews();break;case 'profile':self::profile();break;case 'preferences':self::preferences();break;default:self::overview();}
+		switch($section){case 'favorites':CustomerJourney::favorites();break;case 'purchases':CustomerJourney::purchases();break;case 'documents':CustomerJourney::documents();break;case 'requests':self::requests('messages');break;case 'bookings':self::requests('bookings');break;case 'messages':self::messages();break;case 'reviews':self::reviews();break;case 'profile':self::profile();break;case 'preferences':self::preferences();break;default:self::overview();}
 		echo '</section></div></div>';
 	}
 	private static function overview():void {
@@ -54,7 +55,7 @@ final class PortalView {
 			if($item['customer_reply']){echo '<blockquote class="adc-p-last-reply"><strong>'.esc_html(PortalAccess::t('آخر رد من المعرض','Latest team reply')).'</strong><p>'.nl2br(esc_html($item['customer_reply'])).'</p></blockquote>';}
 			echo '<div class="adc-p-actions">';Portal::form('context','messages',array('kind'=>'bookings'===$type?'booking':'message','source'=>$item['id']));self::button('فتح المحادثة','Open conversation');echo '</form>';
 			if('completed'===$item['status']){Portal::form('review_context','reviews',array('kind'=>'bookings'===$type?'booking':'message','source'=>$item['id']));self::button('تقييم التجربة','Review this experience','is-secondary');echo '</form>';}if($item['can_cancel']){echo '<form method="post" action="'.esc_url(PortalAccess::url('bookings')).'" data-confirm="'.esc_attr(PortalAccess::t('هل تريد إلغاء طلب تجربة القيادة؟','Cancel this test-drive request?')).'">';wp_nonce_field('cd_account_dashboard');echo '<input type="hidden" name="account_action" value="cancel_booking"><input type="hidden" name="request_id" value="'.(int)$item['id'].'">';self::button('إلغاء الطلب','Cancel request','is-secondary');echo '</form>';}
-			echo '</div></article>';
+			echo '</div>';if('bookings'===$type&&$item['can_cancel']){CustomerJourney::reschedule_form((int)$item['id']);}echo '</article>';
 		}
 		self::pagination($page,$result['has_more'],PortalAccess::url('bookings'===$type?'bookings':'requests'),$type.'_page');
 		$url=function_exists('car_dealer_archive_url')?car_dealer_archive_url('car'):home_url('/cars/');echo '<a class="adc-p-button is-secondary" href="'.esc_url($url).'">'.esc_html(PortalAccess::t('استعرض السيارات','Browse cars')).'</a>';

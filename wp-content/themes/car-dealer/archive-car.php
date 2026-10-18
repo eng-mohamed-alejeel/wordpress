@@ -27,7 +27,7 @@
 		?>
 		<p class="catalog-result-count" role="status" aria-live="polite"><?php echo esc_html( $result_label ); ?></p>
 		<div class="car-grid"><?php while ( have_posts() ) { the_post(); get_template_part( 'templates/components/car-card' ); } ?></div>
-		<div class="pagination"><?php the_posts_pagination( array( 'prev_text' => __( 'السابق', 'car-dealer' ), 'next_text' => __( 'التالي', 'car-dealer' ) ) ); ?></div>
+		<div class="pagination"><?php the_posts_pagination( array( 'prev_text' => __( 'السابق', 'car-dealer' ), 'next_text' => __( 'التالي', 'car-dealer' ), 'screen_reader_text' => car_dealer_text( 'تصفح صفحات السيارات', 'Browse vehicle pages' ), 'aria_label' => car_dealer_text( 'صفحات السيارات', 'Vehicle pages' ) ) ); ?></div>
 	<?php else : ?>
 		<p class="empty-state"><?php esc_html_e( 'لا توجد سيارات مطابقة للبحث.', 'car-dealer' ); ?></p>
 	<?php endif; endif; ?>

@@ -285,7 +285,7 @@ html[lang="ar"] .entry-content > section[lang="en"], html[lang="en"] .entry-cont
 .ab-section:has(.car-card .car-specs li:nth-child(4)) { --home-card-specs: 4.5rem; }
 .ab-section .car-card .car-image { height: 190px; }
 .ab-latest-section .car-card .car-image { height: auto; }
-.ab-section .car-card .car-details { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1.25rem 3rem 1.65rem 2.1rem 2.2rem var(--home-card-monthly) var(--home-card-specs) 2.8rem; gap: .2rem; padding: .85rem; align-content: start; }
+.ab-section .car-card .car-details { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 2.75rem 3rem 1.65rem 2.1rem 2.2rem var(--home-card-monthly) var(--home-card-specs) 2.8rem; gap: .2rem; padding: .85rem; align-content: start; }
 .ab-section .car-card .car-details > * { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .ab-section .car-card .car-brand { grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ab-section .car-card .car-title { grid-row: 2; font-size: 1rem; line-height: 1.45; }
@@ -497,3 +497,8 @@ html[dir="rtl"] .cd-customer-filters select { background-position: left .75rem c
 .cd-customer-filters .filter-actions .btn { min-height: 44px; min-width: 130px; display: inline-flex; align-items: center; justify-content: center; padding: .65rem 1rem; font-size: .9rem; }
 @media(max-width:1000px){.cd-filter-primary,.cd-filter-secondary{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:480px){.cd-filter-primary,.cd-filter-secondary{grid-template-columns:minmax(0,1fr);}.cd-customer-filters{padding:1rem;}}
+
+/* Brand and saved-car action share their own row, above the vehicle title. */
+.car-card-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin-bottom:8px}.car-card-meta .car-brand{margin:0;min-width:0;flex:1}.car-card-meta .adc-journey-form{display:block;flex:0 0 44px;margin:0;max-width:none}.ab-section .car-card .car-card-meta{grid-row:1}.car-card-actions>.btn{flex:1 1 calc(50% - .5rem);min-height:44px;min-width:0}
+
+.car-card .car-card-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}.car-card-actions>.btn{width:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:.65rem .75rem;font-size:.9rem;line-height:1.4}.car-card-meta .car-brand{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

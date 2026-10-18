@@ -24,7 +24,10 @@ $permalink  = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer
 		<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'car-card', array( 'loading' => 'lazy', 'alt' => get_post_meta( get_post_thumbnail_id(), '_wp_attachment_image_alt', true ) ?: get_the_title() ) ); } else { ?><span class="car-image-placeholder"><?php echo car_dealer_vehicle_placeholder(); ?><span class="car-image-placeholder-label"><?php echo esc_html( car_dealer_text( 'صورة افتراضية للسيارة', 'Default vehicle image' ) ); ?></span></span><?php } ?>
 	</a>
 	<div class="car-details">
+		<div class="car-card-meta">
 		<p class="car-brand"><?php echo $brand_name ? esc_html( car_dealer_catalog_value_label( (string) $brand_name ) ) : esc_html__( 'سيارة متاحة', 'car-dealer' ); ?></p>
+		<?php if ( class_exists( '\AutoDealership\Portal\CustomerJourney' ) ) { \AutoDealership\Portal\CustomerJourney::favorite_button( (int) $id, true ); } ?>
+		</div>
 		<h2 class="car-title"><a href="<?php echo esc_url( $permalink ); ?>"><?php the_title(); ?></a></h2>
 		<?php if ( $price ) : ?><p class="car-price"><?php if ( ! empty( $view['price_from'] ) ) { echo esc_html( car_dealer_text( 'يبدأ من ', 'From ' ) ); } echo esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ); ?></p><?php endif; ?>
 		<?php if ( isset( $view['catalog_model'] ) ) : ?><p class="car-model-colors"><?php echo esc_html( implode( ' / ', array_map( 'car_dealer_catalog_value_label', $view['catalog_model']['colors'] ) ) ); ?></p><?php endif; ?>

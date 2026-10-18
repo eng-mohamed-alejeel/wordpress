@@ -1,6 +1,7 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 return array(
+	'adc_publish_customer_documents' => array('Leads and sales','Share customer contracts and invoices'),
 	'adc_view_conversations' => array('Leads and sales','View customer conversations'),
 	'adc_reply_conversations' => array('Leads and sales','Reply to customer conversations'),
 	'adc_close_conversations' => array('Leads and sales','Close and reopen customer conversations'),

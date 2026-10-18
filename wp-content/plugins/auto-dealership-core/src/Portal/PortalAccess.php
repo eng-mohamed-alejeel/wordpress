@@ -8,7 +8,7 @@ final class PortalAccess {
 	public const CAPS=array('adc_view_conversations','adc_reply_conversations','adc_close_conversations','adc_assign_conversations','adc_moderate_reviews','adc_publish_reviews');
 	public static function language():string {
 		$action=$_REQUEST['action']??'';$value=$_REQUEST['lang']??'';
-		if(is_string($action)&&in_array($action,array('adc_portal','adc_portal_poll'),true)&&is_string($value)&&in_array($value,array('ar','en'),true)){return $value;}
+		if(is_string($action)&&in_array($action,array('adc_portal','adc_portal_poll','adc_live_chat','adc_live_status','adc_chat_availability','adc_customer_journey','adc_portal_operations'),true)&&is_string($value)&&in_array($value,array('ar','en'),true)){return $value;}
 		return \AutoDealership\Core\Localization::language();
 	}
 	public static function t(string $ar,string $en):string { return 'en'===self::language()?$en:$ar; }
@@ -40,8 +40,8 @@ final class PortalAccess {
 		foreach(self::role_caps() as $slug=>$caps){$role=get_role($slug);if(!$role||isset($definitions[$slug])){continue;}foreach($caps as $cap){if(!array_key_exists($cap,$role->capabilities)){$role->add_cap($cap);}}}
 		$admin=get_role('administrator');if($admin){foreach(self::CAPS as $cap){$admin->add_cap($cap);}}update_option('adc_portal_roles','2',false);
 	}
-	public static function branches():array {global $wpdb;return $wpdb->get_results('SELECT id,name FROM '.Schema::table('branches').' WHERE active=1 ORDER BY name',ARRAY_A)?:array(array('id'=>0,'name'=>self::t('خدمة العملاء','Customer care')));}
-	public static function label(string $key):string {$labels=array('staff'=>['بانتظار الموظف','Awaiting staff'],'customer'=>['بانتظار ردك','Awaiting customer'],'closed'=>['مغلقة','Closed'],'pending'=>['بانتظار المراجعة','Under review'],'published'=>['منشور','Published'],'rejected'=>['لم يُعتمد','Not approved'],'hidden'=>['مخفي','Hidden'],'withdrawn'=>['سُحبت موافقة النشر','Publication consent withdrawn']);return isset($labels[$key])?self::t(...$labels[$key]):$key;}
+	public static function branches():array {global $wpdb;$rows=$wpdb->get_results('SELECT id,name FROM '.Schema::table('branches').' WHERE active=1 ORDER BY name',ARRAY_A)?:array();$mapping=(array)get_option('adc_chat_branch_mapping',array());foreach(\AutoDealership\Core\BranchLocations::all() as $location){$id=(int)($mapping[$location['id']]??0);foreach($rows as &$row){if($id&&(int)$row['id']===$id){$row['name']=self::t($location['name_ar'],$location['name_en']);}}unset($row);}return $rows?:array(array('id'=>0,'name'=>self::t('خدمة العملاء','Customer care')));}
+	public static function label(string $key):string {$labels=array('staff'=>["\u{0645}\u{0641}\u{062a}\u{0648}\u{062d}\u{0629}",'Open'],'customer'=>["\u{0645}\u{0641}\u{062a}\u{0648}\u{062d}\u{0629}",'Open'],'closed'=>['مغلقة','Closed'],'pending'=>['بانتظار المراجعة','Under review'],'published'=>['منشور','Published'],'rejected'=>['لم يُعتمد','Not approved'],'hidden'=>['مخفي','Hidden'],'withdrawn'=>['سُحبت موافقة النشر','Publication consent withdrawn']);return isset($labels[$key])?self::t(...$labels[$key]):$key;}
 	public static function notify(int $user,string $kind,int $object,string $event):bool {
 		if(!$user){return true;}global $wpdb;$key=hash('sha256',$event);
 		return false!==$wpdb->query($wpdb->prepare('INSERT INTO '.self::table('notifications').'(user_id,kind,object_id,event_key,created_at) VALUES(%d,%s,%d,%s,%s) ON DUPLICATE KEY UPDATE id=id',$user,$kind,$object,$key,current_time('mysql',true)));

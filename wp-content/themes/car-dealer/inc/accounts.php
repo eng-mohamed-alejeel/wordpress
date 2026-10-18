@@ -7,7 +7,7 @@ function car_dealer_account_url( $view = 'dashboard' ) {
 	$section=isset($_GET['portal_return'])&&is_string($_GET['portal_return'])?$_GET['portal_return']:'';
 	$from_dashboard='login'===$view&&'dashboard'===($_GET['cd_account']??'');
 	if($from_dashboard&&isset($_GET['portal'])&&is_string($_GET['portal'])){$section=$_GET['portal'];}
-	if(in_array($view,array('login','dashboard'),true)&&in_array($section,array('overview','requests','bookings','messages','reviews','profile','preferences'),true)){
+	if(in_array($view,array('login','dashboard'),true)&&in_array($section,array('overview','requests','bookings','messages','reviews','profile','preferences','favorites','purchases','documents'),true)){
 		$url=add_query_arg('login'===$view?'portal_return':'portal',$section,$url);
 		foreach(array('thread','review') as $key){$source=$from_dashboard?$key:'portal_'.$key;if(isset($_GET[$source])&&is_scalar($_GET[$source])){$url=add_query_arg(('login'===$view?'portal_':'').$key,absint($_GET[$source]),$url);}}
 	}

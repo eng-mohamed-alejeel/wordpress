@@ -41,6 +41,7 @@ final class Conversations {
 			$last=(int)$wpdb->get_var($wpdb->prepare('SELECT MAX(id) FROM '.PortalAccess::table('messages')." WHERE thread_id=%d AND visibility='public'",$id));
 			$wpdb->query($wpdb->prepare('UPDATE '.PortalAccess::table('threads').' SET last_public_id=GREATEST(last_public_id,%d) WHERE id=%d',$last,$id));
 		}
+		if('general'===$kind&&!LiveChat::assign($id)){$wpdb->query('ROLLBACK');return PortalAccess::error();}
 		if(!Transaction::commit(static fn()=>PortalAccess::audit('context_opened','portal_thread',$id))){return PortalAccess::error();}return $id;
 	}
 	public static function list(int $page=1,string $status='',int $owner=-1,int $branch=0):array {
@@ -65,7 +66,7 @@ final class Conversations {
 		return array('id'=>$id,'subject'=>self::subject($row),'kind'=>$row['kind'],'status'=>$row['status'],'revision'=>(int)$row['revision'],'owner'=>$label,'branch_id'=>(int)$row['branch_id'],'messages'=>$messages,'has_more'=>$more,'can_reply'=>$is_customer?PortalAccess::verified():PortalAccess::can_thread($row,true),'can_close'=>$is_customer?PortalAccess::verified():PortalAccess::cap('adc_close_conversations'),'can_assign'=>!$is_customer&&PortalAccess::cap('adc_assign_conversations'),'last_public_id'=>(int)$row['last_public_id']);
 	}
 	private static function public_label(\WP_User $user,string $fallback):string {$label=sanitize_text_field($user->display_name);return $label&&!str_contains($label,'@')?mb_substr($label,0,120):$fallback;}
-	public static function subject(array $row):string {return 'general'===$row['kind']?$row['subject']:PortalAccess::t('booking'===$row['kind']?'تجربة قيادة':'طلب واستفسار','booking'===$row['kind']?'Test drive':'Enquiry').' #'.$row['source_id'];}
+	public static function subject(array $row):string {if('general'===$row['kind']){return in_array($row['subject'],array('محادثة مباشرة مع الفرع','Branch live chat'),true)?PortalAccess::t('محادثة مباشرة مع الفرع','Branch live chat'):$row['subject'];}return PortalAccess::t('booking'===$row['kind']?'تجربة قيادة':'طلب واستفسار','booking'===$row['kind']?'Test drive':'Enquiry').' #'.$row['source_id'];}
 	/** Caller owns the existing request transaction; this method never starts or commits one. */
 	public static function legacy_reply(array $lead,array $old,string $body,int $activity) {
 		global $wpdb;if(!Schema::is_ready()||!(int)$old['user_id']||!get_userdata((int)$old['user_id'])){return 0;}

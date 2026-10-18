@@ -4,13 +4,16 @@ defined('ABSPATH') || exit;
 
 final class Portal {
 	public static function boot():void {
+		LiveChat::boot();CustomerJourney::boot();PortalOperations::boot();
+		add_action('wp_enqueue_scripts',array(LiveChat::class,'assets'));
+		add_action('admin_enqueue_scripts',static function(){if(PortalAccess::staff()){LiveChat::assets();}});
 		add_action('init',array(PortalAccess::class,'migrate_permissions'),35);
 		add_action('admin_init',array(PortalMigration::class,'batch'),40);
 		add_action('admin_post_adc_portal',array(self::class,'submit'));
 		add_action('admin_post_nopriv_adc_portal',static function(){wp_die('Forbidden','',array('response'=>403));});
 		add_action('wp_ajax_adc_portal_poll',array(self::class,'poll'));
 		add_action('wp_enqueue_scripts',array(self::class,'assets'));
-		add_action('admin_enqueue_scripts',static function(){if(in_array($_GET['page']??'',array('adc-conversations','adc-customer-reviews'),true)){self::assets();}});
+		add_action('admin_enqueue_scripts',static function(){if(in_array($_GET['page']??'',array('adc-conversations','adc-customer-reviews','adc-portal-operations'),true)){self::assets();}});
 		\AutoDealership\Operations\OutboxService::register_handler('portal.message',array(PortalMail::class,'send'));
 		\AutoDealership\Operations\OutboxService::register_handler('portal.review',array(PortalMail::class,'review'));
 		add_filter('adc_site_content_review_rows',array(Reviews::class,'content_rows'),10,2);
@@ -18,7 +21,7 @@ final class Portal {
 		add_filter('wp_privacy_personal_data_erasers',array(PortalPrivacy::class,'eraser'));
 	}
 	public static function assets():void {
-		if(!isset($_GET['cd_account'])&&!in_array($_GET['page']??'',array('adc-conversations','adc-customer-reviews'),true)){return;}
+		if(!isset($_GET['cd_account'])&&!in_array($_GET['page']??'',array('adc-conversations','adc-customer-reviews','adc-portal-operations'),true)){return;}
 		wp_enqueue_style('adc-customer-portal',plugins_url('assets/css/customer-portal.css',ADC_FILE),array(),ADC_VERSION);
 		wp_enqueue_script('adc-customer-portal',plugins_url('assets/js/customer-portal.js',ADC_FILE),array(),ADC_VERSION,true);
 		wp_localize_script('adc-customer-portal','adcPortal',array('ajax'=>admin_url('admin-ajax.php'),'action'=>admin_url('admin-post.php'),'nonce'=>wp_create_nonce('adc_portal'),'pollNonce'=>wp_create_nonce('adc_portal_poll'),'lang'=>PortalAccess::language(),'saved'=>PortalAccess::t('تم الحفظ بنجاح.','Saved successfully.'),'failed'=>PortalAccess::t('تعذر الاتصال. احتفظنا بالنص لتتمكن من المحاولة مجددًا.','Connection failed. Your text is preserved so you can retry.'),'more'=>PortalAccess::t('تحميل المزيد من الرسائل','Load more messages'),'new'=>PortalAccess::t('رسائل جديدة','New messages')));

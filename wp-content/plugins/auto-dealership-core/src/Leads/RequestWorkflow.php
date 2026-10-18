@@ -72,7 +72,11 @@ final class RequestWorkflow {
 		return false === $payload ? self::error( 'adc_request_unavailable', 503 ) : hash_hmac( 'sha256', $payload, wp_salt( 'auth' ) );
 	}
 
-	public static function update( int $lead_id, array $input, bool $customer_cancel = false ) {
+	public static function customer_revision(array $row):string {
+		return hash_hmac('sha256',wp_json_encode(array((int)$row['id'],(int)$row['user_id'],$row['status'],$row['requested_date'],$row['requested_time'],$row['updated_at']??'')),wp_salt('auth'));
+	}
+
+	public static function update( int $lead_id, array $input, bool $customer_cancel = false, bool $customer_reschedule = false ) {
 		global $wpdb;
 		if ( ! is_user_logged_in() ) { return self::error( 'adc_request_forbidden', 403 ); }
 		foreach ( array( 'status'=>20, 'customer_reply'=>4000, 'requested_date'=>10, 'requested_time'=>5, 'revision'=>64 ) as $key => $max ) {
@@ -86,15 +90,32 @@ final class RequestWorkflow {
 		if ( $wpdb->last_error ) { return self::rollback( 'adc_request_unavailable', 503 ); }
 		$lead = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . Schema::table( 'leads' ) . ' WHERE id=%d FOR UPDATE', $lead_id ), ARRAY_A );
 		if ( $wpdb->last_error ) { return self::rollback( 'adc_request_unavailable', 503 ); }
-		if ( ! $customer || ! $lead || (int) $lead['customer_id'] !== (int) $customer_id || ( ! $customer_cancel && ! BranchScope::can_manage_lead( $lead ) ) ) { return self::rollback( 'adc_request_not_found', 404 ); }
+		if ( ! $customer || ! $lead || (int) $lead['customer_id'] !== (int) $customer_id || ( ! $customer_cancel && !$customer_reschedule && ! BranchScope::can_manage_lead( $lead ) ) ) { return self::rollback( 'adc_request_not_found', 404 ); }
 		$type = (string) $lead['legacy_request_type']; $table = self::table( $type );
 		if ( ! $table || ! $lead['legacy_request_id'] ) { return self::rollback( 'adc_request_not_found', 404 ); }
 		$engine = $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $table ) );
 		if ( 'InnoDB' !== $engine ) { return self::rollback( 'adc_request_unavailable', 503 ); }
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id=%d FOR UPDATE", $lead['legacy_request_id'] ), ARRAY_A );
 		if ( $wpdb->last_error ) { return self::rollback( 'adc_request_unavailable', 503 ); }
-		if ( ! $row || ( $customer_cancel && ( 'booking' !== $type || (int) $row['user_id'] !== get_current_user_id() ) ) ) { return self::rollback( 'adc_request_not_found', 404 ); }
-		if ( $customer_cancel ) {
+		if ( ! $row || ( ($customer_cancel||$customer_reschedule) && ( 'booking' !== $type || (int) $row['user_id'] !== get_current_user_id() ) ) ) { return self::rollback( 'adc_request_not_found', 404 ); }
+		if($customer_reschedule){
+			if(!\AutoDealership\Portal\PortalAccess::verified()){return self::rollback('adc_request_not_found',403);}
+			$account=(int)$wpdb->get_var($wpdb->prepare('SELECT account_user_id FROM '.Schema::table('customers').' WHERE id=%d AND merged_into_id IS NULL',$customer_id));
+			if($account!==get_current_user_id()){return self::rollback('adc_request_not_found',404);}
+			if(!isset($input['revision'])||!hash_equals(self::customer_revision($row),$input['revision'])){return self::rollback('adc_request_stale',409);}
+			if(!in_array($row['status'],array('pending','confirmed'),true)){return self::rollback('adc_request_transition',409);}
+			$date=$input['requested_date']??'';$time=$input['requested_time']??'';$policy=\AutoDealership\Portal\PortalOperations::schedule();
+			if(!self::future_appointment($date,$time)){return self::rollback('adc_request_date',400);}
+			$when=\DateTimeImmutable::createFromFormat('!Y-m-d H:i',"$date $time",wp_timezone());$old=\DateTimeImmutable::createFromFormat('!Y-m-d H:i',substr($row['requested_date'].' '.$row['requested_time'],0,16),wp_timezone());
+			if(!$when||!$old||$when->getTimestamp()<time()+$policy['notice']*HOUR_IN_SECONDS||$old->getTimestamp()<time()+$policy['notice']*HOUR_IN_SECONDS||$when->getTimestamp()>time()+$policy['days']*DAY_IN_SECONDS||(int)$when->format('H')<$policy['start']||(int)$when->format('H')>=$policy['end']||!in_array($when->format('i'),array('00','30'),true)){return self::rollback('adc_request_date',400);}
+			// Serialize a car's appointment checks, including vehicles not migrated to operational stock.
+			$wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE ID=%d FOR UPDATE",$row['car_id']));
+			if(!self::vehicle_available((int)$row['car_id'],(int)$lead['branch_id'])){return self::rollback('adc_request_vehicle',409);}
+			$busy=$wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE car_id=%d AND id<>%d AND status IN ('pending','confirmed') AND requested_date=%s AND ABS(TIME_TO_SEC(requested_time)-TIME_TO_SEC(%s))<1800 LIMIT 1 FOR UPDATE",$row['car_id'],$row['id'],$date,$time));
+			if($wpdb->last_error||$busy){return self::rollback('adc_request_slot',409);}
+			if($date===$row['requested_date']&&$time===substr($row['requested_time'],0,5)){$wpdb->query('ROLLBACK');return array('updated'=>false,'status'=>$row['status']);}
+			$changes=array('status'=>'pending','requested_date'=>$date,'requested_time'=>$time);
+		}elseif ( $customer_cancel ) {
 			if ( 'cancelled' === $row['status'] ) { $wpdb->query( 'ROLLBACK' ); return array( 'updated'=>false, 'status'=>'cancelled' ); }
 			if ( ! in_array( $row['status'], array( 'pending', 'confirmed' ), true ) ) { return self::rollback( 'adc_request_transition', 409 ); }
 			$changes = array( 'status'=>'cancelled' );
@@ -123,14 +144,15 @@ final class RequestWorkflow {
 		if ( ! $changed ) { $wpdb->query( 'ROLLBACK' ); return array( 'updated'=>false, 'status'=>$row['status'] ); }
 		$changed['updated_at'] = current_time( 'mysql' );
 		if ( 1 !== $wpdb->update( $table, $changed, array( 'id'=>(int) $row['id'] ) ) ) { return self::rollback( 'adc_request_failed', 500 ); }
-		$notes = ( $customer_cancel ? 'Customer cancellation' : 'Staff request update' ) . ': ' . $type . ' #' . $row['id'] . "\nStatus: " . $row['status'] . ' -> ' . $changes['status'];
+		$notes = ( $customer_reschedule ? 'Customer reschedule' : ( $customer_cancel ? 'Customer cancellation' : 'Staff request update' ) ) . ': ' . $type . ' #' . $row['id'] . "\nStatus: " . $row['status'] . ' -> ' . $changes['status'];
 		if ( isset( $changed['requested_date'] ) || isset( $changed['requested_time'] ) ) { $notes .= "\nAppointment: " . $changes['requested_date'] . ' ' . $changes['requested_time'] . ' (' . wp_timezone_string() . ')'; }
 		if ( array_key_exists( 'customer_reply', $changed ) ) { $notes .= "\nCustomer reply: " . $changed['customer_reply']; }
 		$now = current_time( 'mysql', true );
 		if ( 1 !== $wpdb->insert( Schema::table( 'activities' ), array( 'lead_id'=>$lead_id, 'actor_user_id'=>get_current_user_id(), 'type'=>'note', 'notes'=>$notes, 'created_at'=>$now ) ) ) { return self::rollback( 'adc_request_failed', 500 ); }
 		$activity_id = (int) $wpdb->insert_id;
+		if($customer_reschedule&&(int)$lead['owner_user_id']>0&& !\AutoDealership\Portal\PortalAccess::notify((int)$lead['owner_user_id'],'booking',(int)$row['id'],'booking-rescheduled:'.$activity_id)){return self::rollback('adc_request_failed',500);}
 		$portal_event=0;
-		if(!$customer_cancel && array_key_exists('customer_reply',$changed) && class_exists('\\AutoDealership\\Portal\\Conversations')) {
+		if(!$customer_cancel && !$customer_reschedule && array_key_exists('customer_reply',$changed) && class_exists('\\AutoDealership\\Portal\\Conversations')) {
 			$portal_event=\AutoDealership\Portal\Conversations::legacy_reply($lead,$row,$changed['customer_reply'],$activity_id);
 			if(is_wp_error($portal_event)){return self::rollback('adc_request_failed',500);}
 		}

@@ -16,6 +16,7 @@ final class PublicRequestGuard {
 		'portal_message'=> array( 'limit'=>30, 'window'=>900 ),
 		'portal_context'=> array( 'limit'=>10, 'window'=>900 ),
 		'portal_review'=> array( 'limit'=>5, 'window'=>3600 ),
+		'portal_presence'=> array( 'limit'=>360, 'window'=>60 ),
 	);
 
 	public static function table(): string { return Schema::table( 'request_limits' ); }

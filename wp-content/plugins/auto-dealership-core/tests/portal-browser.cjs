@@ -2,11 +2,12 @@
 module.exports=async({browser,config,check,errors})=>{
   const context=await browser.newContext(),page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   const fixture=await(await context.request.get(config.base+'/adc-product-portal-fixture?key='+config.key)).json();
+  if(process.env.ADC_PRODUCT_LIVE_ONLY==='1'){await context.close();return require('./portal-extensions-browser.cjs')({browser,config,check,errors});}
   const account=(section,lang='en',extra='')=>config.base+'/?cd_account=dashboard&portal='+section+'&lang='+lang+extra;
   const signedOut=await browser.newContext(),login=await signedOut.newPage();await login.goto(account('messages','en','&thread='+fixture.thread));check(login.url().includes('portal_return=messages')&&login.url().includes('portal_thread='+fixture.thread),'notification destination is retained on the sign-in page');const loginForm=login.locator('form[data-auth-view=login]');await loginForm.locator('[name=login]').fill('portal_qa_customer');await loginForm.locator('[name=password]').fill('PortalBrowserPass123!');await Promise.all([login.waitForNavigation(),loginForm.locator('button[type=submit]').click()]);check(await login.locator('[data-thread="'+fixture.thread+'"]').count()===1,'signing in returns to the authorized notification conversation');await signedOut.close();
   for(const lang of ['ar','en']){
-    for(const section of ['overview','requests','bookings','messages','reviews','profile','preferences']){
-      await page.goto(account(section,lang));check(await page.locator('.adc-p-nav a').count()===7,`portal ${lang} ${section}: seven account sections render`);
+    for(const section of ['overview','requests','bookings','messages','reviews','profile','preferences','favorites','purchases','documents']){
+      await page.goto(account(section,lang));check(await page.locator('.adc-p-nav a').count()===10,`portal ${lang} ${section}: ten account sections render`);
       check(!(await page.locator('.adc-p-main').innerText()).includes('PRIVATE_STAFF_NOTE'),`portal ${lang} ${section}: internal notes stay private`);
       await page.setViewportSize({width:390,height:844});check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`portal ${lang} ${section}: mobile fits without horizontal scroll`);
       await page.setViewportSize({width:1440,height:1000});
@@ -38,6 +39,7 @@ module.exports=async({browser,config,check,errors})=>{
   await page.goto(account('preferences'));const nonce=await page.locator('input[name=_wpnonce]').inputValue();check(!!nonce,'preferences retain their existing protected account form');
   const plain=await browser.newContext({javaScriptEnabled:false});await plain.request.get(config.base+'/adc-product-portal-fixture?key='+config.key);const plainPage=await plain.newPage();await plainPage.goto(account('messages','en','&thread='+fixture.thread));check(await plainPage.locator('.adc-p-message').count()===4&&await plainPage.locator('textarea').count()===1,'conversation and posting form remain available without JavaScript');
   await page.goto(account('reviews'));await page.addScriptTag({path:config.root+'/.tmp/accessibility-tools/node_modules/axe-core/axe.min.js'});const a11y=await page.evaluate(async()=>{const result=await axe.run(document.querySelector('.adc-portal'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}));});check(!a11y.some(v=>['serious','critical'].includes(v.impact)),'portal review forms pass serious/critical WCAG checks: '+JSON.stringify(a11y));
+  await require('./portal-extensions-browser.cjs')({browser,config,check,errors});
   check(errors.length===0,'portal scripts have no runtime errors: '+errors.join(' | '));
   await plain.close();await other.close();await admin.close();await context.close();await publicPage.close();
 };

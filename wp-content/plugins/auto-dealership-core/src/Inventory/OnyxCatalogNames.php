@@ -14,23 +14,24 @@ final class OnyxCatalogNames {
 	}
 	public static function boot():void{
 		add_action('clean_post_cache',array(self::class,'invalidate'));
-		add_filter('the_title',static function($title,$id){if($id&&get_post_type($id)==='car'){$full=self::for_post((int)$id);if($full){return $full;}}return $title;},30,2);
+		add_filter('the_title',static function($title,$id){if($id&&get_post_type($id)==='car'){$english=(!is_admin()||wp_doing_ajax())&&'en'===CatalogPresentation::language();$full=self::for_post((int)$id,$english);if($full){return $english?\AutoDealership\Content\PublicEditorialTranslations::title($full,(int)$id):$full;}}return $title;},30,2);
 	}
-	public static function row(array $row):string{
+	public static function row(array $row,bool $display=false):string{
+		if($display){foreach(array('brand','model','trim_name')as$field){if(isset($row[$field])){$row[$field]=__((string)$row[$field],'auto-dealership-core');}}}
 		return implode(' ',array_filter(array_map('trim',array((string)($row['brand']??''),(string)($row['model']??''),(string)($row['trim_name']??''),(string)($row['model_year']??''))),static fn($v)=>$v!==''));
 	}
-	public static function for_model(int $id):string{
+	public static function for_model(int $id,bool $display=false):string{
 		global $wpdb;
 		if(get_option('adc_db_version')!==Schema::VERSION){return '';}
-		$model=self::models()[$id]??null;if(!$model){return '';}if($model['model_year']){return self::row($model);}
+		$model=self::models()[$id]??null;if(!$model){return '';}if($model['model_year']){return self::row($model,$display);}
 		$stock=Schema::table('onyx_stock');$rows=array();
 		foreach(array(GroupedModelCatalog::availability(),'s.present=1','1=1')as$where){$rows=$wpdb->get_results($wpdb->prepare("SELECT DISTINCT s.trim_name,s.model_year FROM $stock s WHERE s.model_id=%d AND $where ORDER BY s.model_year DESC,s.trim_name ASC",$id),ARRAY_A);if($wpdb->last_error){return '';}if($rows){break;}}
-		$variants=array();foreach($rows?:array()as$row){$variants[]=trim($row['trim_name'].' '.$row['model_year']);}
-		return trim($model['brand'].' '.$model['model'].' '.($variants[0]??''));
+		$variants=array();foreach($rows?:array()as$row){$variants[]=trim(($display?__((string)$row['trim_name'],'auto-dealership-core'):$row['trim_name']).' '.$row['model_year']);}
+		return trim(self::row(array('brand'=>$model['brand'],'model'=>$model['model']),$display).' '.($variants[0]??''));
 	}
-	public static function for_post(int $id):string{
+	public static function for_post(int $id,bool $display=false):string{
 		global $wpdb;if(get_option('adc_db_version')!==Schema::VERSION){return '';}
-		foreach(self::models()as$model){if((int)$model['public_post_id']===$id){return self::for_model((int)$model['id']);}}return '';
+		foreach(self::models()as$model){if((int)$model['public_post_id']===$id){return self::for_model((int)$model['id'],$display);}}return '';
 	}
 	/** Caller owns the stock transaction and must clean touched caches after rollback. */
 	public static function sync(array &$touched):bool{

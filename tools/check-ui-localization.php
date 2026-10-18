@@ -23,5 +23,20 @@ $labels = require ABSPATH . 'wp-content/plugins/auto-dealership-core/languages/l
 foreach ( $labels as $key=>$label ) {
 	if ( ! isset( $catalog['ar'][$label] ) ) { $errors[] = 'Workflow label ' . $key . ': ' . $label; }
 }
+// Navigation labels are data passed to gettext at runtime, outside literal-call scanning.
+function __( $text, $domain = '' ) { global $catalog; return $catalog['en'][$text] ?? $text; }
+function is_admin() { return true; }
+function wp_doing_ajax() { return false; }
+function get_user_locale() { return 'en_US'; }
+require ABSPATH . 'wp-content/plugins/auto-dealership-core/src/Core/Localization.php';
+require ABSPATH . 'wp-content/plugins/auto-dealership-core/src/Core/ProductSetup.php';
+require ABSPATH . 'wp-content/plugins/auto-dealership-core/src/Admin/Navigation.php';
+$navigation_count = 0;
+foreach ( \AutoDealership\Admin\Navigation::groups() as $group ) {
+	foreach ( array_merge( array( array( 'title'=>$group['title'] ) ), $group['items'] ) as $item ) {
+		foreach ( array( $item['title'], $item['description'] ?? '' ) as $copy ) { if ( preg_match( '/\p{Arabic}/u', $copy ) ) { $errors[] = 'Navigation: ' . $copy; } }
+		++$navigation_count;
+	}
+}
 if ( $errors ) { fwrite( STDERR, implode( "\n", array_unique( $errors ) ) . "\n" ); exit( 1 ); }
-echo "PASS {$count} literal gettext occurrences and " . count( $labels ) . " dynamic workflow labels have bilingual copy.\n";
+echo "PASS {$count} literal gettext occurrences, " . count( $labels ) . " workflow labels and {$navigation_count} navigation titles have bilingual copy.\n";

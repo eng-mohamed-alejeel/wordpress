@@ -42,7 +42,7 @@ $catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dea
 	<?php else : ?>
 		<div class="empty-state"><?php esc_html_e( 'لا توجد عروض منشورة حالياً.', 'car-dealer' ); ?></div>
 	<?php endif; ?>
-	<?php if ( $had_posts ) : ?><div class="pagination"><?php the_posts_pagination( array( 'prev_text' => car_dealer_text( 'السابق', 'Previous' ), 'next_text' => car_dealer_text( 'التالي', 'Next' ) ) ); ?></div><?php endif; ?>
+	<?php if ( $had_posts ) : ?><div class="pagination"><?php the_posts_pagination( array( 'prev_text' => car_dealer_text( 'السابق', 'Previous' ), 'next_text' => car_dealer_text( 'التالي', 'Next' ), 'screen_reader_text' => car_dealer_text( 'تصفح صفحات العروض', 'Browse offer pages' ), 'aria_label' => car_dealer_text( 'صفحات العروض', 'Offer pages' ) ) ); ?></div><?php endif; ?>
 	<?php endif; ?>
 </div>
 <?php get_footer(); ?>

@@ -5,6 +5,7 @@ defined('ABSPATH') || exit;
 
 final class PortalMail {
 	public static function enqueue(int $user,int $thread,int $message) {
+		$recipient=get_userdata($user);if(!$recipient||('1'===get_user_meta($user,'adc_demo_chat_staff',true)&&str_ends_with(strtolower($recipient->user_email),'.invalid'))){return true;}
 		if(!PortalAccess::ready()||!PortalAccess::settings()['mail']){return true;}
 		return OutboxService::enqueue('portal.message',array('subject_type'=>'portal_message','subject_id'=>$message,'actor_user_id'=>$user),'portal-message:'.$message.':'.$user);
 	}
@@ -21,7 +22,7 @@ final class PortalMail {
 	}
 	public static function send(array $payload) {
 		global $wpdb;if(!PortalAccess::ready()||!PortalAccess::settings()['mail']){return true;}$message=$wpdb->get_row($wpdb->prepare('SELECT id,thread_id,sender_id,visibility FROM '.PortalAccess::table('messages').' WHERE id=%d',(int)($payload['subject_id']??0)),ARRAY_A);$id=(int)($payload['actor_user_id']??0);$user=get_userdata($id);
-		if(!$message||'public'!==$message['visibility']||!$user){return true;}$row=Conversations::row((int)$message['thread_id']);if(!$row){return true;}
+		if(!$message||'public'!==$message['visibility']||!$user||('1'===get_user_meta($id,'adc_demo_chat_staff',true)&&str_ends_with(strtolower($user->user_email),'.invalid'))){return true;}$row=Conversations::row((int)$message['thread_id']);if(!$row){return true;}
 		if($id!==(int)$row['customer_id']&&($id!==(int)$row['owner_id']||!user_can($id,'adc_view_conversations')||!\AutoDealership\Security\BranchScope::allows((int)$row['branch_id'],$id))){return true;}
 		$lang=\AutoDealership\Leads\NewsletterService::language((string)get_user_meta($id,'adc_preferred_language',true));$ar='ar'===$lang;
 		// Once per minute per recipient/thread. The unread in-account notification remains canonical.

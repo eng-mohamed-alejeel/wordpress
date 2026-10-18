@@ -39,6 +39,7 @@ namespace {
 	function get_the_ID() { return 10; }
 	function get_queried_object_id() { return 10; }
 	function wp_strip_all_tags( $value ) { return strip_tags( $value ); }
+	function wp_json_encode( $value ) { return json_encode( $value ); }
 	function strip_shortcodes( $value ) { return $value; }
 	function wp_trim_words( $value, $length ) { return $value; }
 	$GLOBALS['wpdb'] = new class {
@@ -74,6 +75,7 @@ namespace {
 	check( 'Riyadh branch' === T::text( 'branches', 1, 'name', 'فرع الرياض' ), 'Audit failure restores the previous approved copy' );
 	$GLOBALS['audit_ok'] = true;
 	check( true === T::save( 'branches', 1, 'en', array( 'name' => '' ), array( 'name' => $hash ) ) && '' === T::approved( 'branches', 1, 'name', 'فرع الرياض', 'en' ), 'Clearing a copy removes its approval' );
+	require dirname( __DIR__ ) . '/src/Core/AboutPage.php';
 	require dirname( __DIR__ ) . '/src/Content/PublicEditorialTranslations.php';
 	$editorial = '\AutoDealership\Content\PublicEditorialTranslations';
 	check( 'Content #10' === $editorial::title( 'سيارة تجريبية', 10 ), 'Untranslated public title has an English fallback' );

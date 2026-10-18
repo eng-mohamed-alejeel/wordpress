@@ -1,4 +1,136 @@
 # Arabic<TAB>English; use \u0020 for leading or trailing spaces. UI copy only; never translate stored identifiers or customer input.
+محادثات العملاء	Customer conversations
+تقييمات العملاء	Customer reviews
+مستشار المحادثات	Chat adviser
+محادثة مباشرة مع الفرع	Branch live chat
+تعدد صفحات المقالات	Pagination
+جيتور	Jetour
+فيات	Fiat
+بايك	BAIC
+ام جى	MG
+فتون	Foton
+سوزوكى	Suzuki
+هونداى	Hyundai
+دونق فينق	Dongfeng
+ابيض	White
+اسود	Black
+فضى	Silver
+رمادى	Gray
+رصاصى	Gray
+ازرق	Blue
+رصاصى غامق	Dark gray
+رصاصى فاتح	Light gray
+ازرق فاتح	Light blue
+ازرق غامق	Dark blue
+ذهبى فاتح	Light gold
+اخضر - اسود	Green - Black
+رصاصي - اسود	Gray - Black
+رمادى / اسود	Gray / Black
+ابيض / اسود	White / Black
+جراند افنيو	Grand Avenue
+فيجوس	Vigus
+فيجوس غمارة	Vigus Single Cab
+غمارتين	Double Cab
+اوربان كروزر	Urban Cruiser
+رايز	Raize
+كامرى	Camry
+لاندكروزر	Land Cruiser
+هايلاندر	Highlander
+داشينج	Dashing
+شاين	Shine
+ميج	Mage
+اكسبريس	Express
+ايكو	Eeco
+دباب كارى	Carry
+اريزو 5 برو	Arrizo 5 Pro
+اريزو 6 برو	Arrizo 6 Pro
+تيجو 2 برو	Tiggo 2 Pro
+باص	Bus
+ايفريست	Everest
+تورس	Taurus
+تيريتوري	Territory
+دوبلو	Doblo
+اسبورتاج	Sportage
+بيجاس	Pegas
+سونيت	Sonet
+كرنفال	Carnival
+اكس تريل	X-Trail
+اكستيرا	X-Terra
+التيما	Altima
+صنى	Sunny
+كيكس	Kicks
+ميجنايت	Magnite
+اكسنت	Accent
+النترا	Elantra
+غمارتين دبل بنزين	Double Cab 4WD Gasoline
+غمارة جوانب ديزل	Single Cab Dropside Diesel
+صندوق ثلاجة ديزل	Refrigerated Box Diesel
+الشكل القديم استندر	Previous Design Standard
+فل كامل	Full Option
+T60 غمارتين جير عادي دبل ديزل	T60 Double Cab Manual 4WD Diesel
+T60 غمارتين جيرعادي بدون دبل ديزل	T60 Double Cab Manual 2WD Diesel
+CVT لكجري 1.5 فتحة سقف	CVT Luxury 1.5 Sunroof
+لكجري 1.5 CVT	Luxury 1.5 CVT
+GL اتوماتيك	GL Automatic
+LE دبل	LE 4WD
+XLE اتوماتيك دبل	XLE Automatic 4WD
+XLE اتوماتيك	XLE Automatic
+جنوط LE بنزين	LE Alloy Wheels Gasoline
+مصندق 5 باب اتوماتيك ديزل	Hardtop 5-Door Automatic Diesel
+هايبرد GLE	Hybrid GLE
+واى  بلس	Y Plus
+فلاجشيب 2.0 هايبرد	Flagship 2.0 Hybrid
+لكجري 2.0 هايبرد	Luxury 2.0 Hybrid
+لكجري بلس	Luxury Plus
+لكجري 1.5 سي سي	Luxury 1.5
+لكجري 1.6 سي سي	Luxury 1.6
+كمفورت 1.5 سي سي	Comfort 1.5
+بضاعه  -  ديزل	Cargo - Diesel
+بضاعة بنزين جير عادي	Cargo Gasoline Manual
+غمارة استندر	Single Cab Standard
+فل كامل لكجرى 1500سي سي	Full Option Luxury 1500 cc
+13 راكب ديزل سقف عالي	13-Seater High Roof Diesel
+باص توانو 18 راكب ديزل	Toano 18-Seater Diesel Bus
+بضاعة ديزل سقف عالي	High Roof Cargo Diesel
+غمارتين دبل ديزل	Double Cab 4WD Diesel
+XLS دبل ديزل	XLS 4WD Diesel
+الشكل الجديد استندر	New Design Standard
+الشكل الجديد تريند	New Design Trend
+الشكل الجديد تيتانيوم	New Design Titanium
+تيتانيوم الشكل الجديد	Titanium New Design
+تريند	Trend
+تيتانيوم	Titanium
+بضاعة ديزل طويل	Long Wheelbase Cargo Diesel
+ميني فان بضاعة ديزل	Cargo Diesel Minivan
+استندر	Standard
+نصف فل	Mid Option
+2.0 نصف فل	2.0 Mid Option
+بصمة	Keyless Entry
+7 راكب استندر دبل	7-Seater Standard 4WD
+7 راكب دبل SV+	7-Seater 4WD SV+
+استندر 5 راكب	Standard 5-Seater
+استندر 7  راكب	Standard 7-Seater
+دبل 5راكب	4WD 5-Seater
+استندر دبل	Standard 4WD
+T10 استندر	T10 Standard
+فتحه SV	SV Sunroof
+بلاتنيوم 6 سلندر تيربو	Platinum 6-Cylinder Turbo
+اسمارت	Smart
+فليت 1.5 سي سي	Fleet 1.5
+اسمارت 2000 سىسى	Smart 2000 cc
+إدارة المشتركين والحملات البريدية ونتائج الإرسال.	Manage subscribers, email campaigns, and sending results.
+إسناد إلى	Assign to
+نوع النشاط	Activity type
+ملاحظات النشاط	Activity notes
+مفتاح الماركة	Brand key
+رمز الموقع	Location code
+نوع الموقع	Location type
+طريقة الاسترداد	Refund method
+رمز العرض الترويجي	Promotion code
+نوع العرض الترويجي	Promotion type
+قيمة العرض الترويجي	Promotion value
+حالة المخزون	Inventory status
+المظهر	Appearance
 عرض محادثات العملاء	View customer conversations
 الرد على محادثات العملاء	Reply to customer conversations
 إغلاق محادثات العملاء وإعادة فتحها	Close and reopen customer conversations
@@ -1716,3 +1848,6 @@ VIN الجديد	New VIN
 تأكيد كلمة المرور غير مطابق.	The password confirmation does not match.
 
 إدارة المحتوى وجاهزية الموقع	Website content and readiness
+تشغيل بوابة العميل	Customer portal operations
+مشاركة عقود العميل وفواتيره	Share customer contracts and invoices
+اختر موعدًا آخر؛ هذا الموعد غير متاح حاليًا.	Choose another time; this appointment slot is currently unavailable.

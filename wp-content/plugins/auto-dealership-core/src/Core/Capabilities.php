@@ -126,6 +126,7 @@ final class Capabilities {
 			'dealership_purchasing' => __( 'Dealership Purchasing', 'auto-dealership-core' ),
 			'dealership_delivery' => __( 'Dealership Delivery', 'auto-dealership-core' ),
 			'dealership_customer_service' => __( 'Dealership Customer Service', 'auto-dealership-core' ),
+			'dealership_chat_adviser' => Localization::language()==='en'?'Chat adviser':'مستشار المحادثات',
 			'dealership_marketing' => __( 'Dealership Marketing', 'auto-dealership-core' ),
 			'dealership_auditor' => __( 'Dealership Auditor', 'auto-dealership-core' ),
 		);
@@ -136,7 +137,7 @@ final class Capabilities {
 	public static function localize_roles(): void {
 		$roles = wp_roles();
 		$definitions = get_option( 'adc_role_definitions', array() );
-		foreach ( array_unique( array_merge( array_keys( self::ROLE_CAPABILITIES ), array_keys( $definitions ) ) ) as $slug ) {
+		foreach ( array_unique( array_merge( array_keys( self::role_matrix() ), array_keys( $definitions ) ) ) as $slug ) {
 			if ( isset( $roles->roles[$slug] ) ) {
 				$roles->roles[$slug]['name'] = self::role_label( $slug );
 				$roles->role_names[$slug] = self::role_label( $slug );
@@ -152,17 +153,19 @@ final class Capabilities {
 	/** Factory defaults; registered roles may have administrator-managed overrides. */
 	public static function role_matrix(): array {
 		$matrix = self::ROLE_CAPABILITIES;
+		$matrix['dealership_chat_adviser']=array('read','adc_view_workspace','adc_view_own_leads','adc_manage_own_leads','adc_view_conversations','adc_reply_conversations','adc_close_conversations');
 		$matrix['dealership_marketing'][] = 'adc_manage_newsletter';
 		$matrix['dealership_general_manager'][] = 'adc_manage_newsletter';
 		foreach ( $matrix as &$caps ) { if ( in_array( 'adc_create_reservations', $caps, true ) || in_array( 'adc_manage_branch_leads', $caps, true ) ) { $caps = array_merge( $caps, self::SALES_CAPABILITIES ); } }
 		unset( $caps );
 		foreach ( self::PURCHASE_ROLES as $role=>$caps ) { $matrix[$role] = array_merge( $matrix[$role], $caps ); }
 		foreach ( \AutoDealership\Portal\PortalAccess::role_caps() as $role=>$caps ) { $matrix[$role] = array_merge( $matrix[$role] ?? array(), $caps ); }
+		foreach(array('dealership_general_manager','dealership_finance','dealership_sales_manager') as $role){$matrix[$role][]='adc_publish_customer_documents';}
 		return $matrix;
 	}
 
 	public static function all_capabilities(): array {
-		$caps = array_merge( array( 'adc_manage_newsletter' ), self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES, \AutoDealership\Portal\PortalAccess::CAPS );
+		$caps = array_merge( array( 'adc_manage_newsletter','adc_publish_customer_documents' ), self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES, \AutoDealership\Portal\PortalAccess::CAPS );
 		foreach ( self::ROLE_CAPABILITIES as $role_caps ) {
 			$caps = array_merge( $caps, $role_caps );
 		}
