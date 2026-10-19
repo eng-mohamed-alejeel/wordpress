@@ -185,13 +185,21 @@ add_filter( 'nav_menu_link_attributes', static function ( array $atts ): array {
 } );
 
 add_filter( 'nav_menu_item_title', static function ( string $title, $item ): string {
+	$is_car_archive = 'post_type_archive' === ( $item->type ?? '' ) && 'car' === ( $item->object ?? '' );
+	if ( 'custom' === ( $item->type ?? '' ) && ! empty( $item->url ) ) {
+		$archive_url = get_post_type_archive_link( 'car' );
+		$is_car_archive = $archive_url && untrailingslashit( strtok( $item->url, '?#' ) ) === untrailingslashit( strtok( $archive_url, '?#' ) );
+	}
+	if ( ! is_admin() && $is_car_archive && in_array( trim( $title ), array( 'كل السيارات', 'All vehicles' ), true ) ) {
+		$title = 'السيارات';
+	}
 	if ( is_admin() || 'en' !== car_dealer_catalog_language() ) { return $title; }
 	if ( isset( $item->object_id ) && in_array( get_post_type( (int) $item->object_id ), array( 'page', 'car', 'car_offer' ), true ) ) {
 		$translated = class_exists( '\AutoDealership\Content\PublicEditorialTranslations' ) ? \AutoDealership\Content\PublicEditorialTranslations::approved( (int) $item->object_id, '_adc_title_en' ) : (string) get_post_meta( (int) $item->object_id, '_adc_title_en', true );
 		if ( '' !== trim( $translated ) ) { return $translated; }
 	}
 	$labels = array(
-		'الرئيسية' => 'Home', 'السيارات' => 'Vehicles', 'كل السيارات' => 'All vehicles', 'العروض' => 'Offers',
+		'الرئيسية' => 'Home', 'السيارات' => 'Vehicles', 'كل السيارات' => 'Vehicles', 'العروض' => 'Offers',
 		'التمويل' => 'Finance Calculator', 'حاسبة التمويل' => 'Finance Calculator', 'من نحن' => 'About us', 'تواصل معنا' => 'Contact us',
 		'حسابي' => 'My account', 'تسجيل الدخول' => 'Log in',
 	);

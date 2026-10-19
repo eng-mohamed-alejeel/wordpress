@@ -294,7 +294,7 @@ final class ProductSetup {
 				$items = wp_get_nav_menu_items( $menu ) ?: array();
 				$linked = array_map( static fn( $item ): int => 'post_type' === $item->type && 'page' === $item->object ? (int) $item->object_id : 0, $items );
 				if ( 'primary' === $slot && ! array_filter( $items, static fn( $item ): bool => 'post_type_archive' === $item->type && 'car' === $item->object ) ) {
-					$item = wp_update_nav_menu_item( $menu, 0, array( 'menu-item-title'=>'كل السيارات', 'menu-item-object'=>'car', 'menu-item-type'=>'post_type_archive', 'menu-item-status'=>'publish', 'menu-item-position'=>1 ) );
+					$item = wp_update_nav_menu_item( $menu, 0, array( 'menu-item-title'=>'السيارات', 'menu-item-object'=>'car', 'menu-item-type'=>'post_type_archive', 'menu-item-status'=>'publish', 'menu-item-position'=>1 ) );
 					if ( is_wp_error( $item ) ) { return $item; }
 				}
 				foreach ( $slugs as $slug ) { if ( isset( $ids[$slug] ) && ! in_array( (int) $ids[$slug], $linked, true ) && 'publish' === get_post_status( $ids[$slug] ) ) { $item = wp_update_nav_menu_item( $menu, 0, array( 'menu-item-object-id'=>$ids[$slug], 'menu-item-object'=>'page', 'menu-item-type'=>'post_type', 'menu-item-status'=>'publish' ) ); if ( is_wp_error( $item ) ) { return $item; } } }

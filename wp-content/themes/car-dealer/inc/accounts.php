@@ -42,7 +42,7 @@ add_filter( 'wp_nav_menu_items', function ( $items, $args ) {
 function car_dealer_account_menu_fallback() {
   $catalog_url = car_dealer_archive_url( 'car' );
   echo '<ul id="primary-menu"><li><a href="' . esc_url( car_dealer_site_url() ) . '">' . esc_html( car_dealer_text( 'الرئيسية', 'Home' ) ) . '</a></li>';
-  if ( $catalog_url ) { echo '<li><a href="' . esc_url( $catalog_url ) . '">' . esc_html( car_dealer_text( 'كل السيارات', 'All vehicles' ) ) . '</a></li>'; }
+  if ( $catalog_url ) { echo '<li><a href="' . esc_url( $catalog_url ) . '">' . esc_html( car_dealer_text( 'السيارات', 'Vehicles' ) ) . '</a></li>'; }
   echo car_dealer_account_links() . '</ul>';
 }
 add_action( 'wp_enqueue_scripts', function () { wp_enqueue_style( 'car-dealer-account', get_template_directory_uri() . '/assets/css/account.css', array( 'car-dealer-main' ), filemtime( __DIR__ . '/../assets/css/account.css' ) ); } );
