@@ -190,9 +190,9 @@ foreach(array('featured'=>'featured-vehicles','why'=>'why-auto-brands','latest'=
 	<div class="container">
 		<div class="section-heading section-heading-v2">
 			<div>
-				<p class="eyebrow"><?php esc_html_e( 'من الكتالوج', 'car-dealer' ); ?></p>
+				<p class="eyebrow"><?php echo esc_html( car_dealer_text( 'اختر ما يناسبك', 'Find your match' ) ); ?></p>
 				<h2><?php echo esc_html($home_text('demand','title',car_dealer_text('سيارات مختارة','Selected vehicles'))); ?></h2>
-				<p class="section-subtitle"><?php echo esc_html($home_text('demand','description',car_dealer_text('استعرض سيارات منشورة اختارها فريق المعرض لهذا القسم.','Explore published vehicles selected by our team.'))); ?></p>
+				<p class="section-subtitle"><?php echo esc_html($home_text('demand','description',car_dealer_text('اكتشف خيارات متنوعة من السيارات، وقارن المواصفات لتجد ما يناسب احتياجاتك.','Explore a range of vehicles and compare specifications to find the right fit for your needs.'))); ?></p>
 			</div>
 		</div>
 		<?php echo car_dealer_render_shortcode_car_ids( $demand_ids, 'car-grid car-grid-demand' ); ?>

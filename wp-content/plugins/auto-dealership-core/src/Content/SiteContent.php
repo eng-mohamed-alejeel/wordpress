@@ -23,17 +23,26 @@ final class SiteContent {
 	}
 	public static function t(string $ar,string $en): string { return ProductSetup::t($ar,$en); }
 	public static function home_definitions(): array {
-		return array('hero'=>['المقدمة الرئيسية','Hero'],'featured'=>['السيارات المميزة','Featured vehicles'],'why'=>['لماذا تختارنا','Why choose us'],'latest'=>['أحدث السيارات','Latest vehicles'],'offers'=>['العروض الحالية','Current offers'],'demand'=>['سيارات مختارة','Selected vehicles'],'reviews'=>['آراء العملاء','Customer reviews'],'cta'=>['اعثر على سيارتك القادمة','Find your next car']);
+		return array('hero'=>['المقدمة الرئيسية','Hero'],'needs'=>['تصفح حسب احتياجك','Explore your options'],'featured'=>['السيارات المميزة','Featured vehicles'],'why'=>['لماذا تختارنا','Why choose us'],'journey'=>['رحلتك لامتلاك السيارة','Your buying journey'],'latest'=>['أحدث السيارات','Latest vehicles'],'offers'=>['العروض الحالية','Current offers'],'demand'=>['سيارات مختارة','Selected vehicles'],'reviews'=>['آراء العملاء','Customer reviews'],'branches'=>['فروعنا وزيارتك','Visit our branches'],'cta'=>['اعثر على سيارتك القادمة','Find your next car']);
 	}
 	public static function defaults(): array {
 		$home=[]; foreach(self::home_definitions() as $key=>$label) { $home[$key]=array('status'=>'published','order'=>count($home),'height'=>'auto','spacing'=>'normal','count'=>'latest'===$key?6:('offers'===$key?8:(in_array($key,['demand','reviews'],true)?3:6)),'title_ar'=>'','title_en'=>'','description_ar'=>'','description_en'=>''); }
+		foreach(range(1,3) as $step) { foreach(['ar','en'] as $lang) { foreach(['title','text'] as $field) { $home['journey']['step_'.$step.'_'.$field.'_'.$lang]=''; } } }
 		return array('format'=>1,'home'=>$home,'hero_image'=>0,'team'=>[],'reviews'=>[],'metrics'=>[]);
 	}
 	public static function data(): array {
 		$data=get_option(self::OPTION,[]); $defaults=self::defaults();
+		$stored_home=is_array($data)&&is_array($data['home']??null)?$data['home']:[];
 		$data=is_array($data)?array_replace($defaults,$data):$defaults;
 		$data['home']=array_replace($defaults['home'],array_intersect_key(is_array($data['home'])?$data['home']:[],$defaults['home']));
 		foreach($defaults['home'] as $key=>$settings) { $data['home'][$key]=array_replace($settings,is_array($data['home'][$key])?$data['home'][$key]:[]); }
+		// Insert new sections without changing the relative order of existing sections.
+		if($stored_home && !isset($stored_home['needs']) && !isset($stored_home['journey']) && !isset($stored_home['branches'])) {
+			$existing=array_intersect_key($data['home'],$stored_home); uasort($existing,static fn($a,$b)=>(int)$a['order']<=>(int)$b['order']); $order=[];
+			foreach($existing as $key=>$row) { if('cta'===$key) { $order[]='branches'; } $order[]=$key; if('hero'===$key) { $order[]='needs'; } if('why'===$key) { $order[]='journey'; } }
+			foreach(array_keys($data['home']) as $key) { if(!in_array($key,$order,true)) { $order[]=$key; } }
+			foreach($order as $index=>$key) { $data['home'][$key]['order']=$index; }
+		}
 		if(isset($_GET['adc_content_preview']) && is_scalar($_GET['adc_content_preview']) && current_user_can('manage_options')) {
 			$token=(string)$_GET['adc_content_preview']; if(preg_match('/\A[a-f0-9]{32}\z/',$token)) { $preview=get_transient('adc_content_preview_'.$token); if(is_array($preview) && (int)$preview['user']===get_current_user_id()) { return $preview['data']; } }
 		}
@@ -182,6 +191,7 @@ final class SiteContent {
 	}
 	public static function home_render(array $parts): string {
 		foreach(['featured','latest','offers','demand','reviews'] as $key) { if(''===trim($parts[$key]??'')) { $parts[$key]=self::home_empty($key); } }
+		foreach(['needs','journey','branches'] as $key) { $parts[$key]=HomeDiscovery::render($key); }
 		$home=array_intersect_key(self::data()['home'],self::home_definitions()); uasort($home,static fn($a,$b)=>$a['order']<=>$b['order']); $html=self::home_enabled('hero')?self::home_layout($parts['hero']??'','hero',$home['hero']):''; unset($home['hero']); foreach($home as $key=>$settings) { if('published'===$settings['status']) { $html.=self::home_layout($parts[$key]??'',$key,$settings); } }
 		if(isset($_GET['adc_content_preview']) && current_user_can('manage_options')) { $html='<div class="adc-content-preview-banner">'.esc_html(self::t('معاينة خاصة — لم تُنشر هذه التغييرات','Private preview — these changes are not published')).'</div>'.$html; }
 		return $html;

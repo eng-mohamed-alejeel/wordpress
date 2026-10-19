@@ -317,3 +317,46 @@ body.admin-bar .ab-hero-v2 { --ab-hero-offset: 114px; }
 @media (max-width: 600px) {
   .adc-home-section .adc-editorial-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Local-review discovery sections: real catalog links and lightweight branch cards. */
+.adc-discovery-grid { grid-auto-rows: 1fr; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: clamp(1rem, 2vw, 1.75rem); align-items: stretch; }
+.adc-discovery-card { min-inline-size: 0; display: flex; flex-direction: column; gap: .9rem; padding: clamp(1.25rem, 2.5vw, 2rem); border: 1px solid var(--ab-border); border-radius: 1.25rem; background: var(--ab-surface); color: var(--ab-heading); overflow-wrap: anywhere; text-align: start; }
+.adc-discovery-link { text-decoration: none; transition: border-color .2s ease, box-shadow .2s ease; }
+.adc-discovery-link:hover { border-color: var(--ab-action); box-shadow: 0 8px 24px color-mix(in srgb, var(--ab-action) 10%, transparent); }
+.adc-discovery-link:focus-visible { outline: 3px solid var(--ab-action); outline-offset: 4px; }
+.adc-discovery-card h3 { margin: 0; font-size: clamp(1.1rem, 1.5vw, 1.35rem); line-height: 1.5; color: var(--ab-heading); }
+.adc-discovery-card p { margin: 0; line-height: 1.85; color: var(--ab-muted); }
+.adc-discovery-icon,.adc-journey-number { display: grid; place-items: center; inline-size: 3rem; block-size: 3rem; flex: 0 0 auto; border-radius: .85rem; color: var(--ab-action); background: var(--ab-soft); }
+.adc-journey-number { font-weight: 800; font-size: 1.35rem; }
+.adc-discovery-action { margin-block-start: auto; padding-block-start: .5rem; font-weight: 700; color: var(--ab-link); }
+.adc-discovery-branch-actions { margin-block-start: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; padding-block-start: .5rem; }
+.adc-discovery-branch-actions .btn,.adc-discovery-footer .btn { min-block-size: 44px; max-inline-size: 100%; white-space: normal; }
+.adc-discovery-phone { display: inline-flex; align-items: center; min-block-size: 44px; color: var(--ab-link); font-weight: 600; padding-block: .6rem; }
+.adc-discovery-footer { display: flex; justify-content: center; margin-block-start: clamp(1.5rem, 3vw, 2.25rem); }
+.adc-discovery-empty { max-inline-size: 65ch; padding: 1.5rem; border: 1px solid var(--ab-border); border-radius: 1rem; color: var(--ab-muted); }
+.adc-discovery-branches .adc-discovery-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); }
+@media (min-width: 901px) { .adc-discovery-journey .adc-discovery-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .adc-discovery-grid,.adc-discovery-branches .adc-discovery-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .adc-discovery-link { transition: none; } }
+
+/* Six-item sections: three columns on desktop, two on tablet, one on mobile.
+   Retain empty tracks and allow fewer columns when text is enlarged. */
+.adc-home-section :is(.car-grid,.adc-editorial-grid,.adc-discovery-grid):has(> :nth-child(6):last-child) {
+  --adc-six-gap: clamp(1rem, 2vw, 1.75rem);
+  gap: var(--adc-six-gap);
+}
+@media (min-width: 901px) {
+  .adc-home-section :is(.car-grid,.adc-editorial-grid,.adc-discovery-grid):has(> :nth-child(6):last-child) {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, max(16rem, calc((100% - 2 * var(--adc-six-gap)) / 3))), 1fr));
+  }
+}
+@media (min-width: 601px) and (max-width: 900px) {
+  .adc-home-section :is(.car-grid,.adc-editorial-grid,.adc-discovery-grid):has(> :nth-child(6):last-child) {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, max(16rem, calc((100% - var(--adc-six-gap)) / 2))), 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .adc-home-section :is(.car-grid,.adc-editorial-grid,.adc-discovery-grid):has(> :nth-child(6):last-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
