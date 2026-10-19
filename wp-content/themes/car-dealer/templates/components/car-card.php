@@ -30,7 +30,24 @@ $permalink  = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer
 		</div>
 		<h2 class="car-title"><a href="<?php echo esc_url( $permalink ); ?>"><?php the_title(); ?></a></h2>
 		<?php if ( $price ) : ?><p class="car-price"><?php if ( ! empty( $view['price_from'] ) ) { echo esc_html( car_dealer_text( 'يبدأ من ', 'From ' ) ); } echo esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ); ?></p><?php endif; ?>
-		<?php if ( isset( $view['catalog_model'] ) ) : ?><p class="car-model-colors"><?php echo esc_html( implode( ' / ', array_map( 'car_dealer_catalog_value_label', $view['catalog_model']['colors'] ) ) ); ?></p><?php endif; ?>
+		<?php
+		$card_colors = isset( $view['catalog_model'] ) ? (array) $view['catalog_model']['colors'] : array( $view['color'] ?? '' );
+		$card_swatches = array();
+		foreach ( $card_colors as $card_color ) {
+			if ( ! is_string( $card_color ) || '' === trim( $card_color ) ) { continue; }
+			$resolved = class_exists( '\AutoDealership\Inventory\VehicleColors' ) ? \AutoDealership\Inventory\VehicleColors::resolve( $card_color ) : array( 'key' => $card_color, 'label' => car_dealer_catalog_value_label( $card_color ), 'hex' => '', 'second' => '' );
+			$card_swatches[ $resolved['key'] ] = $resolved;
+		}
+		if ( $card_swatches ) : ?>
+		<ul class="car-model-colors car-card-swatches" aria-label="<?php echo esc_attr( car_dealer_text( 'ألوان السيارة', 'Vehicle colors' ) ); ?>">
+			<?php foreach ( $card_swatches as $card_swatch ) :
+				$swatch_hex = sanitize_hex_color( $card_swatch['hex'] ) ?: '';
+				$swatch_second = sanitize_hex_color( $card_swatch['second'] ) ?: $swatch_hex;
+				$swatch_style = $swatch_hex ? '--card-color:' . $swatch_hex . ';--card-color-second:' . $swatch_second . ';' : '';
+				?><li><span class="car-card-swatch<?php echo $swatch_hex ? '' : ' is-unknown'; ?>" role="img" aria-label="<?php echo esc_attr( $card_swatch['label'] ); ?>" title="<?php echo esc_attr( $card_swatch['label'] ); ?>" style="<?php echo esc_attr( $swatch_style ); ?>"><?php if ( ! $swatch_hex ) : ?><span aria-hidden="true">?</span><?php endif; ?></span></li>
+			<?php endforeach; ?>
+		</ul>
+		<?php endif; ?>
 		<?php if ( $price && ! empty( $view['price_label'] ) ) : ?><p class="public-price-inclusions"><?php echo esc_html( $view['price_label'] ); ?></p><?php endif; ?>
 		<?php if ( $monthly ) : ?><p class="car-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $monthly ) : car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
 		<ul class="car-specs">

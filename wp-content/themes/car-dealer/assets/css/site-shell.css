@@ -293,7 +293,7 @@ html[lang="ar"] .entry-content > section[lang="en"], html[lang="en"] .entry-cont
 .ab-section .car-card .car-model-colors { grid-row: 4; line-height: 1.25; font-size: .85rem; }
 .ab-section .car-card .public-price-inclusions { grid-row: 5; line-height: 1.25; font-size: .85rem; }
 .ab-section .car-card .car-monthly { grid-row: 6; line-height: 1.5; font-size: .9rem; }
-.ab-section .car-card :is(.car-title, .car-model-colors, .public-price-inclusions) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.ab-section .car-card :is(.car-title, .public-price-inclusions) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .ab-section .car-card :is(.car-price, .car-monthly) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ab-section .car-card .car-specs { grid-row: 7; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: 2rem 1.1rem 1.1rem; gap: .15rem .5rem; align-content: start; overflow: hidden; }
 .ab-section .car-card .car-specs li { min-width: 0; font-size: .85rem; line-height: 1.15; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
@@ -544,7 +544,7 @@ html[dir="rtl"] .cd-customer-filters select { background-position: left .75rem c
 .catalog-empty-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .8rem; margin-top: 1.2rem; }
 .catalog-empty-actions > a { min-height: 44px; display: inline-flex; align-items: center; }
 
-/* Vehicle archive: twelve results per page, four desktop rows of three. */
+/* Vehicle archive: twenty-four results per page, eight desktop rows of three. */
 .post-type-archive-car .archive-content > .car-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 900px) { .post-type-archive-car .archive-content > .car-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .post-type-archive-car .archive-content > .car-grid { grid-template-columns: minmax(0, 1fr); } }
@@ -599,6 +599,13 @@ body.single-car .car-single-content .car-single-price { margin-block:.1rem 0; }
 body.single-car .car-single-content .public-price-inclusions { margin-block:.15rem .25rem; }
 body.single-car .car-single-content p.car-single-summary { margin-block:.25rem 0; line-height:1.75; }
 body.single-car .car-single-actions { margin-block:.9rem .5rem; }
+/* Shared vehicle cards use the same Onyx color definitions as the vehicle page. */
+.car-card .car-card-swatches { display:flex; flex-wrap:wrap; align-items:center; gap:.45rem; padding:0; margin:.4rem 0 .6rem; list-style:none; }
+.car-card .car-card-swatches > li { display:flex; margin:0; padding:0; }
+.ab-section .car-card .car-card-swatches { display:flex; flex-direction:row; flex-wrap:nowrap; min-inline-size:0; margin-block:0; overflow-x:auto; overflow-y:hidden; scrollbar-width:thin; }
+.ab-section .car-card .car-card-swatches > li { flex:0 0 auto; }
+.car-card .car-card-swatch { display:inline-flex; align-items:center; justify-content:center; flex:0 0 24px; inline-size:24px; block-size:24px; box-sizing:border-box; border:1px solid var(--ab-muted); border-radius:50%; background:linear-gradient(135deg,var(--card-color) 0%,var(--card-color) 50%,var(--card-color-second) 50%,var(--card-color-second) 100%); box-shadow:inset 0 0 0 2px rgba(255,255,255,.3); }
+.car-card .car-card-swatch.is-unknown { background:var(--ab-soft); color:var(--ab-text); font-size:.8rem; line-height:1; }
 /* Reserve two text lines on desktop without limiting longer vehicle names or summaries.
    Keep actions in the content flow rather than at the bottom of the viewport. */
 body.single-car .car-single-content { min-inline-size:0; }
