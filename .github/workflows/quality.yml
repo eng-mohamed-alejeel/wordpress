@@ -37,6 +37,7 @@ jobs:
           php wp-content/plugins/auto-dealership-core/tests/money.php
           php wp-content/plugins/auto-dealership-core/tests/pricing-policy.php
           php wp-content/plugins/auto-dealership-core/tests/branch-scope.php
+          php wp-content/plugins/auto-dealership-core/tests/authentication-guard.php
           php wp-content/plugins/auto-dealership-core/tests/newsletter-language.php
           php wp-content/plugins/auto-dealership-core/tests/response-contract.php
       - name: Pinned Intelephense analysis of owned code

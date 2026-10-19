@@ -88,7 +88,9 @@ final class CustomerAccount {
 			return '';
 		}
 
-		$limited = PublicRequestGuard::consume( 'account_auth' );
+		// Login is charged centrally by AuthenticationGuard through wp_signon.
+		// Registration still needs its own protection before creating an account.
+		$limited = 'register' === $view ? \AutoDealership\Security\AuthenticationGuard::registration( self::field( 'email' ) ) : true;
 		if ( is_wp_error( $limited ) ) {
 			return 'adc_rate_limited' === $limited->get_error_code()
 				? __( 'محاولات كثيرة. يرجى المحاولة لاحقًا.', 'auto-dealership-core' )
@@ -105,6 +107,9 @@ final class CustomerAccount {
 				is_ssl()
 			);
 			if ( is_wp_error( $user ) ) {
+				if ( in_array( $user->get_error_code(), array( 'adc_rate_limited', 'adc_rate_unavailable' ), true ) ) {
+					return $user->get_error_message();
+				}
 				if ( 'adc_email_pending' === $user->get_error_code() ) {
 					self::$verification_required = true;
 					return EmailVerification::t( 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول. افتح رسالة التفعيل أو اطلب رابطًا جديدًا.', 'Please verify your email before signing in. Open your activation email or request a new link.' );

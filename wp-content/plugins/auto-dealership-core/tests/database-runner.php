@@ -110,6 +110,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( 0 );
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
+	if ( '1' === getenv( 'ADC_AUTH_ONLY' ) ) { require __DIR__ . '/authentication-scenarios.php'; exit; }
 	require __DIR__.'/onyx-document-fixture.php';
 	if ( '1' === getenv( 'ADC_JOBS_ONLY' ) ) { require __DIR__ . '/job-runtime-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_PORTAL_ONLY' ) ) { require __DIR__ . '/portal-scenarios.php'; exit; }

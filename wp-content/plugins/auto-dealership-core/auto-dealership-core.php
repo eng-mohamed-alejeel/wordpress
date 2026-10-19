@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.61.0
+ * Version: 1.61.2
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.61.0' );
+define( 'ADC_VERSION', '1.61.2' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -102,6 +102,8 @@ require_once ADC_PATH . 'src/Security/BranchScope.php';
 require_once ADC_PATH . 'src/Security/CustomerScope.php';
 require_once ADC_PATH . 'src/Security/ClientAddress.php';
 require_once ADC_PATH . 'src/Security/PublicRequestGuard.php';
+require_once ADC_PATH . 'src/Security/AuthenticationGuard.php';
+\AutoDealership\Security\AuthenticationGuard::boot();
 require_once ADC_PATH . 'src/Security/SecurityAudit.php';
 require_once ADC_PATH . 'src/Reference/ReferenceService.php';
 require_once ADC_PATH . 'src/Purchasing/SupplierService.php';

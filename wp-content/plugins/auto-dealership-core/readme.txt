@@ -1,11 +1,15 @@
 === Auto Dealership Core ===
 Requires at least: 6.7
 Requires PHP: 8.0
-Stable tag: 1.61.0
+Stable tag: 1.61.2
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The Car Dealer theme is a presentation adapter for this plugin.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
+
+Version 1.61.2 isolates authentication quotas by account and address, with canonical username/email aliases and generous network safety ceilings. Registration has independent per-email/address and network quotas. Blocked narrow attempts cannot drain the shared network allowance. No schema migration is required.
+
+Version 1.61.1 centralizes credential throttling before native WordPress password validation, covering theme sign-in, wp-login, XML-RPC and REST application passwords. Address-scoped, HMAC-only atomic limits return retry-aware failures and fail closed on storage errors. Registration shares the password-login budget without double charging sign-in. No schema migration is required.
 
 Version 1.61.0 unifies eight social platform SVG icons, shared account settings, ordering and visibility controls, Customizer preview, theme/platform color styles, and localized sharing with copy and native-share fallbacks. Existing URLs are preserved. No schema migration is required.
 
