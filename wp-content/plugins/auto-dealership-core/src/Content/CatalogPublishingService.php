@@ -44,11 +44,25 @@ final class CatalogPublishingService {
 		$plate = $input['plate_type'] ?? '';
 		if ( '' === $title || mb_strlen($title)>($source_title?4000:200) || strlen($description)>200000 || ! in_array( $status, array('draft','pending','publish','private','future'), true ) || ! in_array( $plate, array('','private_transport','commercial_transport'), true ) || ( 'future' === $status && ( ! $id || get_post_status($id)!=='future' ) ) ) { return self::error( 'adc_invalid', __( 'Invalid vehicle publishing fields.', 'auto-dealership-core' ) ); }
 		if ( in_array($status,array('publish','private','future'),true) && ! current_user_can($type->cap->publish_posts) ) { return self::error( 'adc_forbidden', __( 'You cannot publish vehicle pages.', 'auto-dealership-core' ) ); }
+		$save_general_media=array_key_exists('thumbnail_id',$input)||array_key_exists('gallery_ids',$input);
 		$thumbnail = $input['thumbnail_id'] ?? 0;
 		$gallery = array_filter(explode(',', $input['gallery_ids'] ?? ''));
 		if ( ! self::image($thumbnail) || count($gallery)>20 ) { return self::error('adc_images', __( 'Select valid vehicle images from the media library.', 'auto-dealership-core')); }
 		foreach ($gallery as $image) { if (!self::image($image) || (int)$image<1) { return self::error('adc_images', __( 'Select valid vehicle images from the media library.', 'auto-dealership-core')); } }
 		$gallery=array_values(array_unique(array_map('intval',$gallery)));
+		$color_galleries=null;$color_mains=null;$default_color=null;
+		if(isset($input['color_galleries_present'])){
+			$color_galleries=\AutoDealership\Inventory\VehicleColors::validate_galleries($input['color_galleries']??array());
+			if(is_wp_error($color_galleries)){return $color_galleries;}
+		}
+		if(isset($input['color_primary_present'])){
+			$color_mains=\AutoDealership\Inventory\VehicleColors::validate_primary_images($input['color_main']??array(),$color_galleries??array());
+			if(is_wp_error($color_mains)){return $color_mains;}
+			foreach($color_mains as$color_key=>$main){$color_galleries[$color_key]=array_values(array_unique(array_merge($main?array($main):array(),$color_galleries[$color_key])));}
+			$default_color=$input['default_color']??'';
+			$known=array_map(array(\AutoDealership\Inventory\VehicleColors::class,'gallery_key'),\AutoDealership\Inventory\VehicleColors::source_names($id));
+			if(!is_string($default_color)||($default_color!==''&&(!preg_match('/^[a-f0-9]{64}$/D',$default_color)||!in_array($default_color,$known,true)))){return self::error('adc_colors',(\AutoDealership\Core\Localization::language()==='en'?'Choose a default color from this vehicle’s Onyx colors.':'اختر لون العرض الافتراضي من ألوان هذه السيارة في أونكس.'));}
+		}
 		$terms=array();
 		foreach(array('car_brand','car_category')as$taxonomy){
 			if(!array_key_exists($taxonomy,$input)){continue;}
@@ -75,11 +89,16 @@ final class CatalogPublishingService {
 			if('publish'===$status && GroupedModelCatalog::is_mapped($id) && !GroupedModelCatalog::view($id)){ $wpdb->query('ROLLBACK');clean_post_cache($id);return self::error('adc_stock',__('No available Onyx stock exists for this model.','auto-dealership-core')); }
 			$result=wp_update_post(wp_slash(array('ID'=>$id,'post_title'=>$title,'post_content'=>$description,'post_excerpt'=>sanitize_textarea_field($input['summary']??''),'post_status'=>$status)),true);
 			if(is_wp_error($result)||!$result){throw new \RuntimeException('update');}
-			$meta=array('_thumbnail_id'=>(int)$thumbnail,'_car_gallery_ids'=>$gallery,'_car_plate_type'=>$plate,'_car_features'=>sanitize_textarea_field($input['features']??''),'_car_featured'=>!empty($input['featured'])?'1':'','_car_demand'=>!empty($input['demand'])?'yes':'');
+			$meta=array('_car_plate_type'=>$plate,'_car_features'=>sanitize_textarea_field($input['features']??''),'_car_featured'=>!empty($input['featured'])?'1':'','_car_demand'=>!empty($input['demand'])?'yes':'');
+			if($save_general_media){$meta['_thumbnail_id']=(int)$thumbnail;$meta['_car_gallery_ids']=$gallery;}
+			if($color_galleries!==null){$existing_colors=get_post_meta($id,\AutoDealership\Inventory\VehicleColors::META,true);$meta[\AutoDealership\Inventory\VehicleColors::META]=array_replace(is_array($existing_colors)?$existing_colors:array(),$color_galleries);}
+			if($color_mains!==null){$existing_mains=get_post_meta($id,\AutoDealership\Inventory\VehicleColors::MAIN_META,true);$meta[\AutoDealership\Inventory\VehicleColors::MAIN_META]=array_replace(is_array($existing_mains)?$existing_mains:array(),$color_mains);$meta[\AutoDealership\Inventory\VehicleColors::DEFAULT_META]=$default_color;}
 			foreach($meta as$key=>$value){update_post_meta($id,$key,$value);if((string)maybe_serialize(get_post_meta($id,$key,true))!==(string)maybe_serialize($value)){throw new \RuntimeException('meta');}}
 			foreach($terms as$taxonomy=>$ids){$assigned=wp_set_object_terms($id,$ids,$taxonomy);if(is_wp_error($assigned)){throw new \RuntimeException('terms');}$term_ids=array_merge($term_ids,$ids);}
 			if(!Transaction::commit(static fn()=>AuditLog::record('content.vehicle_published','car_post',$id,'Dedicated vehicle publishing',null,array('status'=>$status,'plate_type'=>$plate,'image_count'=>count($gallery),'created'=>$new)))){throw new \RuntimeException('audit');}
-			clean_post_cache($id);return array('id'=>$id,'created'=>$new);
+			clean_post_cache($id);
+			if(($color_galleries!==null||$color_mains!==null)&&function_exists('car_dealer_clear_public_page_cache')){\car_dealer_clear_public_page_cache();}
+			return array('id'=>$id,'created'=>$new);
 		}catch(\Throwable){$wpdb->query('ROLLBACK');if(is_int($id)){clean_post_cache($id);}foreach(array_keys($terms)as$taxonomy){clean_term_cache($term_ids,$taxonomy);}return self::error('adc_save',__('The change could not be saved; reload and try again.','auto-dealership-core'));}
 	}
 

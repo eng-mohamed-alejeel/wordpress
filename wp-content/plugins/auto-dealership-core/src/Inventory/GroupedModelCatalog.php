@@ -77,6 +77,7 @@ final class GroupedModelCatalog {
 		return array('post_id'=>$post_id,'price_label'=>PublicVehiclePrice::label($post_id),'vehicle'=>null,'price'=>$prices?Money::decimal((string)min($prices)):'','price_from'=>count(array_unique($prices))>1||count($prices)<count($variants),'monthly'=>'','year'=>implode(' / ',$years),'model'=>$model['model'],'color'=>implode(' / ',array_map(static fn($color)=>__( $color, 'auto-dealership-core' ),$colors)),'kilometers'=>'','transmission'=>'','fuel'=>'','condition'=>'','status'=>'available','featured'=>(bool)get_post_meta($post_id,'_car_featured',true),'features'=>self::editorial_features($post_id),'brand_name'=>$model['brand'],'category'=>'','catalog_model'=>array('options'=>array_values($options),'variants'=>$variants,'colors'=>$colors,'available_count'=>array_sum(wp_list_pluck($variants,'available_count'))));
 	}
 	public static function render_variants(int $post_id): void {
+		if(!is_admin()&&current_theme_supports('adc-color-configurator')){return;}
 		$view = self::view($post_id);
 		if (!$view) { return; }
 		$ar = \AutoDealership\Core\Localization::language() !== 'en';

@@ -1,13 +1,17 @@
 === Auto Dealership Core ===
 Requires at least: 6.7
 Requires PHP: 8.0
-Stable tag: 1.57.0
+Stable tag: 1.59.0
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The Car Dealer theme is a presentation adapter for this plugin.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
 
-Version 1.57.0 adds a bilingual seven-section customer portal, branch-scoped threaded conversations with private staff notes, durable optional mail notifications, consented versioned customer reviews with moderation and immediate withdrawal, additive legacy imports and paginated privacy export/erasure. Schema 1.23.0 adds seven InnoDB portal tables.
+Version 1.59.0 adds independent main images and additional photos for each Onyx color, a default display color shared by cards and vehicle pages. Existing ordered color galleries remain compatible.
+
+The color configurator includes explicit Onyx color swatches, independent color galleries, image ordering, a synchronized public vehicle configurator and server-validated option context for enquiries. Vehicle request forms and the finance calculator use accessible responsive dialogs. Existing Onyx source values and stock remain unchanged. No schema migration is required.
+
+The customer portal provides a bilingual seven-section customer portal, branch-scoped threaded conversations with private staff notes, durable optional mail notifications, consented versioned customer reviews with moderation and immediate withdrawal, additive legacy imports and paginated privacy export/erasure. Schema 1.23.0 adds seven InnoDB portal tables.
 
 Version 1.41.10 validates product package compatibility before WordPress replaces files, permits supported sequential component updates, blocks code/schema downgrades, and supports existing legacy MU mail implementations without duplicate handlers. A populated 1.39.1 upgrade and full files/database restore are rehearsed on a separate database with mail and HTTP blocked. See docs/UPGRADE-AND-ROLLBACK-2026-10-15-AR.md.
 

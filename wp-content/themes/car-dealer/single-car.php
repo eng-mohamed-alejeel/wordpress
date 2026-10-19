@@ -25,6 +25,7 @@ while ( have_posts() ) :
 	<section class="ab-car-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div class="container ab-car-hero-grid">
 			<div class="car-single-media">
+				<?php if ( ! class_exists('\AutoDealership\Inventory\VehicleColors') || ! \AutoDealership\Inventory\VehicleColors::render((int)$id) ) : ?>
 				<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large', array( 'loading' => 'eager', 'alt' => get_post_meta( get_post_thumbnail_id(), '_wp_attachment_image_alt', true ) ?: get_the_title() ) ); } else { ?><div class="car-image-placeholder"><?php echo car_dealer_vehicle_placeholder(); ?><span class="car-image-placeholder-label"><?php echo esc_html( car_dealer_text( 'صورة افتراضية للسيارة', 'Default vehicle image' ) ); ?></span></div><?php } ?>
 				<?php $gallery_ids = get_post_meta( $id, '_car_gallery_ids', true ); if ( is_array( $gallery_ids ) && $gallery_ids ) : ?>
 				<div class="adc-public-gallery" aria-label="<?php echo esc_attr( car_dealer_text( 'معرض صور السيارة', 'Vehicle photo gallery' ) ); ?>">
@@ -32,6 +33,7 @@ while ( have_posts() ) :
 					<a href="<?php echo esc_url( wp_get_attachment_image_url( (int)$gallery_id, 'full' ) ); ?>"><?php echo wp_get_attachment_image( (int)$gallery_id, 'medium', false, array( 'loading'=>'lazy', 'alt'=>get_post_meta( (int)$gallery_id, '_wp_attachment_image_alt', true ) ?: get_the_title() ) ); ?></a>
 					<?php endforeach; ?>
 				</div>
+				<?php endif; ?>
 				<?php endif; ?>
 			</div>
 			<div class="car-single-content">
@@ -53,6 +55,10 @@ while ( have_posts() ) :
 				<?php if ( $price ) : ?><p class="car-single-price"><?php if ( ! empty( $view['price_from'] ) ) { echo esc_html( car_dealer_text( 'يبدأ من ', 'From ' ) ); } echo esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ); ?></p><?php endif; ?>
 				<?php if ( $price && ! empty( $view['price_label'] ) ) : ?><p class="public-price-inclusions"><?php echo esc_html( $view['price_label'] ); ?></p><?php endif; ?>
 		<?php if ( $monthly ) : ?><p class="car-monthly car-single-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $monthly ) : car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
+				<?php if ( '' !== trim( (string) get_post_field( 'post_excerpt', $id, 'raw' ) ) ) : ?>
+					<?php $car_summary = trim( wp_strip_all_tags( get_the_excerpt( $id ) ) ); ?>
+					<?php if ( '' !== $car_summary ) : ?><p class="car-single-summary"><?php echo esc_html( $car_summary ); ?></p><?php endif; ?>
+				<?php endif; ?>
 				<div class="car-single-actions">
 					<a class="btn btn-primary" href="#request-price"><?php esc_html_e( 'اطلب السعر', 'car-dealer' ); ?></a>
 					<a class="btn btn-outline" href="#book-drive"><?php esc_html_e( 'احجز تجربة قيادة', 'car-dealer' ); ?></a>
@@ -67,7 +73,6 @@ while ( have_posts() ) :
 
 	<article class="car-single container" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div>
-			<?php if ( isset( $view['catalog_model'] ) ) { \AutoDealership\Inventory\GroupedModelCatalog::render_variants( $id ); } ?>
 			<div class="car-description"><h2><?php esc_html_e( 'الوصف', 'car-dealer' ); ?></h2><?php the_content(); ?></div>
 			<?php if ( $features ) : ?>
 				<div class="car-features"><h2><?php esc_html_e( 'المزايا', 'car-dealer' ); ?></h2><ul><?php foreach ( $features as $feature ) : ?><li><?php echo esc_html( $feature ); ?></li><?php endforeach; ?></ul></div>
@@ -76,12 +81,12 @@ while ( have_posts() ) :
 		</div>
 		<aside class="ab-spec-panel">
 			<h2><?php esc_html_e( 'المواصفات', 'car-dealer' ); ?></h2>
+			<?php if ( isset($view['catalog_model']) && class_exists('\AutoDealership\Inventory\VehicleColors') ) { \AutoDealership\Inventory\VehicleColors::render_variant_picker(); } ?>
 			<dl class="car-specification">
 				<?php foreach ( isset( $view['catalog_model'] ) ? array(
 					car_dealer_text( 'الماركة', 'Brand' ) => car_dealer_catalog_value_label( (string) $brand_name ),
 					car_dealer_text( 'الطراز', 'Model' ) => car_dealer_catalog_value_label( (string) $model ),
 					car_dealer_text( 'الفئة', 'Trim' ) => implode( ' / ', array_map( 'car_dealer_catalog_value_label', array_values( array_unique( array_filter( wp_list_pluck( $view['catalog_model']['options'], 'trim_name' ) ) ) ) ) ),
-					car_dealer_text( 'اللون', 'Color' ) => $color,
 					car_dealer_text( 'الموديل', 'Model year' ) => $year,
 					car_dealer_text( 'سعر البيع', 'Sale price' ) => $price ? ( ! empty( $view['price_from'] ) ? car_dealer_text( 'يبدأ من ', 'From ' ) : '' ) . car_dealer_catalog_format_price( $price ) : '',
 				) : array(
@@ -103,7 +108,7 @@ while ( have_posts() ) :
 					__( 'الممشى', 'car-dealer' ) => null !== $kilometers && '' !== $kilometers && false !== $kilometers ? ( function_exists( 'car_dealer_catalog_distance' ) ? car_dealer_catalog_distance( $kilometers ) : number_format_i18n( $kilometers ) . ' كم' ) : '',
 					__( 'الفرع', 'car-dealer' ) => $vehicle['branch_name'] ?? '',
 					__( 'مرجع السيارة', 'car-dealer' ) => $vehicle['stock_number'] ?? '',
-				) as $label => $value ) : if ( '' === (string) $value ) { continue; } ?><div><dt><?php echo esc_html( $label ); ?></dt><dd><?php echo esc_html( $value ); ?></dd></div><?php endforeach; ?>
+				) as $label => $value ) : if ( '' === (string) $value ) { continue; } ?><div><dt><?php echo esc_html( $label ); ?></dt><dd<?php $spec_key=array(car_dealer_text('الفئة','Trim')=>'trim',car_dealer_text('الموديل','Model year')=>'year',car_dealer_text('سعر البيع','Sale price')=>'price'); if(isset($view['catalog_model'],$spec_key[$label])) { echo ' data-vehicle-spec="'.esc_attr($spec_key[$label]).'"'; } ?>><?php echo esc_html($value); ?></dd></div><?php endforeach; ?>
 			</dl>
 		</aside>
 	</article>

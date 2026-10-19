@@ -10,6 +10,7 @@ function car_dealer_setup() {
 	add_image_size( 'car-card', 720, 460, true );
 	register_nav_menus( array( 'primary' => __( 'القائمة الرئيسية', 'car-dealer' ), 'footer' => __( 'قائمة التذييل', 'car-dealer' ) ) );
 	add_theme_support( 'page-templates' );
+	add_theme_support( 'adc-color-configurator' );
 }
 add_action( 'after_setup_theme', 'car_dealer_setup' );
 

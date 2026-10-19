@@ -84,10 +84,17 @@ final class PublicIntake {
 			$when = \DateTimeImmutable::createFromFormat( '!Y-m-d H:i', $date . ' ' . $time, wp_timezone() );
 			if ( ! $post_id || ! $when || $when->format( 'Y-m-d H:i' ) !== $date . ' ' . $time || $when->getTimestamp() <= time() ) { return self::error( 'adc_invalid_booking_time', 400 ); }
 		} elseif ( '' !== $date || '' !== $time ) { return self::error( 'adc_invalid_lead', 400 ); }
+		$selected_variant=null;
+		if(isset($input['vehicle_option'])&&$input['vehicle_option']!==''){
+			if(!$post_id||!is_string($input['vehicle_option'])||!preg_match('/^[a-f0-9]{64}$/D',$input['vehicle_option'])){return self::error('adc_invalid_lead',400);}
+			$selected_variant=\AutoDealership\Inventory\VehicleColors::selected($post_id,$input['vehicle_option']);
+			if(!$selected_variant){return self::error('adc_intake_vehicle_unavailable',400);}
+		}
 		$message = sanitize_textarea_field( $input['message'] ?? '' );
 		if ( 'message' === $compatibility_type && 'contact' === $kind && '' === trim( $message ) ) { return self::error( 'adc_invalid_lead', 400 ); }
 		$context = 'Request: ' . $kind;
 		if ( $post_id ) { $context .= "\nVehicle post: " . $post_id; }
+		if($selected_variant){$context.="\nOnyx option: ".$selected_variant['full_name']."\nOnyx color: ".$selected_variant['exterior_color']."\nPublic price at request: ".\AutoDealership\Inventory\VehicleColors::price_label($selected_variant);}
 		if ( $date ) { $context .= "\nRequested appointment: $date $time (" . wp_timezone_string() . ')'; }
 		if ( '' !== $message ) { $context .= "\n" . $message; }
 		$rate = PublicRequestGuard::consume( 'intake' );
