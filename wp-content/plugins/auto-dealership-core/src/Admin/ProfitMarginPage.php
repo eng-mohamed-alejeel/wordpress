@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
 final class ProfitMarginPage {
  private static function t($ar,$en):string{return \AutoDealership\Core\Localization::language()==='en'?$en:$ar;}
  public static function boot():void {
-  add_action('admin_menu',static function(){add_submenu_page('adc-area-settings',self::t('هامش ربح السيارات','Vehicle profit margin'),self::t('هامش ربح السيارات','Vehicle profit margin'),'manage_options','adc-profit-margin',array(self::class,'render'));},110);
+  // Navigation owns menu registration and workspace cards together.
   add_action('admin_post_adc_profit_margin',array(self::class,'save'));
   add_action('admin_enqueue_scripts',static function(){if(($_GET['page']??'')==='adc-profit-margin'){wp_enqueue_script('adc-profit-margin',plugins_url('assets/js/profit-margin.js',ADC_FILE),array(),filemtime(ADC_PATH.'assets/js/profit-margin.js'),true);}});
  }

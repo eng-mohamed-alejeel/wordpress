@@ -1,0 +1,62 @@
+{
+  "release": "1.63.0",
+  "date": "2026-10-19",
+  "status": "implemented and verified locally; not deployed to hosting",
+  "schema": "1.25 (unchanged)",
+  "navigation": {
+    "groups": 11,
+    "unique_central_destinations": 59,
+    "home": "One area card per permitted group; no repeated module directory; retired core dashboard redirects before menu access validation."
+  },
+  "checks": {
+    "wordpress_mariadb_http": 101,
+    "populated_workspace_browser": 52,
+    "product_and_content": 138,
+    "extracted_zip_actual_core_admin_browser": 200,
+    "offline_branch_authorization": 52,
+    "offline_money": 33,
+    "offline_pricing": 16,
+    "production_php_syntax_files": 238,
+    "intelephense_files": 272,
+    "intelephense_owned_errors": 0,
+    "maximum_observed_snapshot_queries": 27
+  },
+  "resolved_audit_items": [
+    "DUP-01",
+    "DUP-02",
+    "DUP-03",
+    "DUP-04",
+    "DUP-05",
+    "DUP-06",
+    "DUP-07",
+    "DUP-08",
+    "DUP-09",
+    "DUP-10"
+  ],
+  "package_directory": ".tmp/product-release/1.63.0-20261019-193701",
+  "artifacts": [
+    {
+      "name": "auto-dealership-core-1.63.0.zip",
+      "sha256": "dab174f3c777843fcf0cbf246283d5c3ba646351e8b24e28cebcef975a2d0577",
+      "file_count": 295
+    },
+    {
+      "name": "car-dealer-1.63.0.zip",
+      "sha256": "9dbc1b904946e9b5f23ae83e538c85c5d597bc835f82b860154afad89bc1d075",
+      "file_count": 68
+    }
+  ],
+  "runtime_files_match_source": true,
+  "tests_and_wp_config_excluded": true,
+  "runtime_menu_snapshots": [
+    "menu-admin.json",
+    "menu-sales.json"
+  ],
+  "screenshots": ".tmp/admin-structure-acceptance/",
+  "limitations": [
+    "The general public-site package suite was not passed: its legacy six-item public-menu expectation is outside this admin consolidation.",
+    "Actual core menu browser matrix covers administrator and dealership_sales; additional role/branch/owner boundaries are covered by the model and HTTP suite.",
+    "Production provider connectivity, hosting deployment and real-data migration were not performed."
+  ],
+  "isolation": "Dedicated loopback MariaDB 33369; disposable databases/extracted packages removed in finally; source wp-config/database never loaded."
+}

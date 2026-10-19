@@ -7,6 +7,7 @@ let checks = 0;
 const check = (ok, label) => { if (!ok) throw new Error(label); checks++; process.stdout.write(`PASS Package browser: ${label}\n`); };
 (async () => {
   browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+  if(process.env.ADC_PRODUCT_ADMIN_ONLY==='1'){await require('./admin-structure-package-browser.cjs')({browser,config,check});process.stdout.write(`Admin package browser passed (${checks} checks).\n`);return;}
   if(process.env.ADC_PRODUCT_PORTAL_ONLY==='1'){await require('./portal-browser.cjs')({browser,config,check,errors:[]});process.stdout.write(`Portal package browser passed (${checks} checks).\n`);return;}
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -18,7 +19,7 @@ const check = (ok, label) => { if (!ok) throw new Error(label); checks++; proces
   check(!(await page.locator('body').innerText()).includes('Auto Brands'), 'homepage has no old business identity');
   check(await page.locator('a[href*="wa.me"]').count() === 0, 'unset contact channels do not create fake WhatsApp links');
   const defaultMenu = await page.locator('#primary-menu > li:not(.menu-item-home):not(.cd-account-link) > a').allTextContents();
-  check(JSON.stringify(defaultMenu.map(x => x.trim())) === JSON.stringify(['All vehicles','About us','Finance Calculator','FAQ','Your vehicle buying guide','Contact us']), 'upper menu contains only six requested pages in order with English labels');
+  check(JSON.stringify(defaultMenu.map(x => x.trim())) === JSON.stringify(['Vehicles','About us','Finance Calculator','FAQ','Your vehicle buying guide','Contact us']), 'upper menu contains only six requested pages in order with English labels: '+JSON.stringify(defaultMenu));
   for (const lang of ['ar','en']) {
     await page.goto(config.base + '/?pagename=about&lang=' + lang);
     check(await page.locator('main h1').count() === 1 && await page.locator('.adc-about-service').count() === 2 && await page.locator('.adc-about-step,.adc-about-value').count() === 0 && await page.locator('.adc-about-actions').count()===1, `About layout has a single heading and distinct concise sections: ${lang}`);
@@ -78,11 +79,11 @@ const check = (ok, label) => { if (!ok) throw new Error(label); checks++; proces
   while (await page.locator('[data-branch-remove]').count()) await page.locator('[data-branch-remove]').first().click();
   await Promise.all([page.waitForNavigation(), page.locator('#adc-branches-form input[type=submit]').click()]);
   check(await page.locator('.adc-branch-editor').count() === 0, 'administrator can remove branches without leaving stale cards');
-  const setup = config.base + '/wp-admin/options-general.php?page=adc-platform-setup';
+  const setup = config.base + '/wp-admin/admin.php?page=adc-platform-setup';
   for (const section of ['identity', 'appearance', 'policy', 'mail', 'pages', 'readiness']) {
     await page.goto(setup + '&section=' + section);
-    if (await page.locator('.nav-tab').count() !== 6) throw new Error('Setup response: ' + page.url() + ' ' + (await page.content()).slice(0, 3000));
-    check(await page.locator('h1').count() === 1 && await page.locator('.nav-tab').count() === 6, `${section} setup renders without fatal errors`);
+    const destination = {appearance:'adc-contact',policy:'adc-settings',pages:'adc-editorial-setup'}[section] || 'adc-platform-setup';
+    check(new URL(page.url()).searchParams.get('page') === destination && await page.locator('h1').count() === 1, `${section} opens its canonical screen without fatal errors`);
   }
   await page.goto(setup + '&section=identity');
   await page.locator('#setup-brand_en').fill('Updated Motors');
@@ -124,8 +125,8 @@ const check = (ok, label) => { if (!ok) throw new Error(label); checks++; proces
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'setup fits mobile viewport');
   await page.setViewportSize({width:1280,height:900});
   const contentAdmin = config.base + '/wp-admin/admin.php?page=adc-site-content';
-  await page.goto(contentAdmin);
-  check(await page.locator('.widefat tbody tr').count() >= 25, 'content readiness reports real optional content requirements');
+  await page.goto(contentAdmin+'&tab=readiness');
+  check(new URL(page.url()).searchParams.get('page')==='adc-platform-setup' && await page.locator('.widefat tbody tr').count() >= 25, 'moved content readiness preserves its real optional content requirements');
   await page.goto(contentAdmin + '&tab=team');
   await page.locator('[data-content-add]').click();
   const member = page.locator('[data-content-rows] .adc-content-row').first();
@@ -152,20 +153,24 @@ const check = (ok, label) => { if (!ok) throw new Error(label); checks++; proces
   check(await page.locator('.notice-success').count()===1,'team content saves through a nonce-protected dashboard form');
   await page.reload(); check(await page.locator('.notice-success').count()===0,'content save confirmation does not persist after reload');
   await page.goto(contentAdmin+'&tab=home');
-  await page.locator('[name="home[team][status]"]').selectOption('published');
-  await page.locator('[name="home[team][title_en]"]').fill('Meet our advisers');
+  await page.locator('[name="home[reviews][status]"]').selectOption('published');
+  await page.locator('[name="home[reviews][title_en]"]').fill('Customer experiences');
   await Promise.all([page.waitForNavigation(),page.locator('input[type=submit]').click()]);
   await page.goto(config.base+'/?lang=en');
-  check((await page.locator('.adc-editorial-team').innerText()).includes('Meet our advisers'),'homepage uses published section data and customized English headings');
+  check((await page.locator('.adc-home-empty-reviews').innerText()).includes('Customer experiences'),'homepage uses published section data and customized English headings');
   await page.goto(config.base+'/?pagename=about&lang=en');
   check(await page.locator('.adc-editorial-team').count()===1 && await page.locator('.adc-team-avatar').count()===1,'About page shows published team once with a local default avatar');
   await page.goto(contentAdmin+'&tab=home');
-  await page.locator('[name="home[team][status]"]').selectOption('hidden');
+  await page.locator('[name="home[reviews][status]"]').selectOption('hidden');
   await Promise.all([page.waitForNavigation(),page.locator('input[type=submit]').click()]);
   await page.goto(config.base+'/?lang=en');
-  check(await page.locator('.adc-editorial-team').count()===0 && await page.locator('.adc-home-empty-section').count()===5,'Homepage hides team while keeping five empty data sections visible');
+  check(await page.locator('.adc-home-empty-reviews').count()===0 && await page.locator('.adc-home-empty-section').count()===4,'Homepage hides reviews while keeping four other empty data sections visible');
   await page.goto(config.base+'/?pagename=about&lang=en');
-  check(await page.locator('.adc-editorial-team').count()===1,'Moving team off the homepage preserves its About page display');
+  check(await page.locator('.adc-editorial-team').count()===1,'Editing homepage sections preserves the About page team display');
+  // Restore the section for the independent public-review moderation scenario below.
+  await page.goto(contentAdmin+'&tab=home');
+  await page.locator('[name="home[reviews][status]"]').selectOption('published');
+  await Promise.all([page.waitForNavigation(),page.locator('input[type=submit]').click()]);
   await page.setViewportSize({width:390,height:844});await page.goto(contentAdmin+'&tab=team');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'content dashboard fits mobile viewport');
   await page.goto(contentAdmin+'&tab=transfer');

@@ -1,0 +1,204 @@
+PASS Package: clean installation and activation from ZIPs; mail disabled; no MU dependencies or demo business data.
+PASS Package browser: Actual WP page: adc-workspace
+PASS Package browser: No fatal output: adc-workspace
+PASS Package browser: Exactly one sidebar entry: adc-contact
+PASS Package browser: Exactly one sidebar entry: adc-social-channels
+PASS Package browser: Exactly one sidebar entry: adc-platform-setup
+PASS Package browser: Exactly one sidebar entry: adc-transfers
+PASS Package browser: Retired sidebar links removed
+PASS Package browser: There is a single workspace home, without the old WordPress dashboard shortcut
+PASS Package browser: Core dashboard bookmark redirects to the workspace before menu access validation
+PASS Package browser: Actual home contains area cards without repeated module links
+PASS Package browser: Area navigation uses its intended directional glyph
+PASS Package browser: Actual WP page: adc-workspace&lang=ar
+PASS Package browser: No fatal output: adc-workspace
+PASS Package browser: adc-workspace: ar/1440 has no page overflow
+PASS Package browser: adc-workspace: actual core direction is ar
+PASS Package browser: adc-workspace: actual core menu CSS loaded
+PASS Package browser: adc-workspace: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-area-settings&lang=ar
+PASS Package browser: No fatal output: adc-area-settings
+PASS Package browser: adc-area-settings: ar/1440 has no page overflow
+PASS Package browser: adc-area-settings: actual core direction is ar
+PASS Package browser: adc-area-settings: actual core menu CSS loaded
+PASS Package browser: adc-area-settings: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-contact&lang=ar
+PASS Package browser: No fatal output: adc-contact
+PASS Package browser: adc-contact: ar/1440 has no page overflow
+PASS Package browser: adc-contact: actual core direction is ar
+PASS Package browser: adc-contact: actual core menu CSS loaded
+PASS Package browser: adc-contact: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-social-channels&lang=ar
+PASS Package browser: No fatal output: adc-social-channels
+PASS Package browser: adc-social-channels: ar/1440 has no page overflow
+PASS Package browser: adc-social-channels: actual core direction is ar
+PASS Package browser: adc-social-channels: actual core menu CSS loaded
+PASS Package browser: adc-social-channels: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-editorial-setup&lang=ar
+PASS Package browser: No fatal output: adc-editorial-setup
+PASS Package browser: adc-editorial-setup: ar/1440 has no page overflow
+PASS Package browser: adc-editorial-setup: actual core direction is ar
+PASS Package browser: adc-editorial-setup: actual core menu CSS loaded
+PASS Package browser: adc-editorial-setup: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-transfers&lang=ar
+PASS Package browser: No fatal output: adc-transfers
+PASS Package browser: adc-transfers: ar/1440 has no page overflow
+PASS Package browser: adc-transfers: actual core direction is ar
+PASS Package browser: adc-transfers: actual core menu CSS loaded
+PASS Package browser: adc-transfers: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-brand-colors&lang=ar
+PASS Package browser: No fatal output: adc-brand-colors
+PASS Package browser: adc-brand-colors: ar/1440 has no page overflow
+PASS Package browser: adc-brand-colors: actual core direction is ar
+PASS Package browser: adc-brand-colors: actual core menu CSS loaded
+PASS Package browser: adc-brand-colors: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-workspace&lang=ar
+PASS Package browser: No fatal output: adc-workspace
+PASS Package browser: adc-workspace: ar/390 has no page overflow
+PASS Package browser: adc-workspace: actual core direction is ar
+PASS Package browser: adc-workspace: actual core menu CSS loaded
+PASS Package browser: adc-workspace: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-area-settings&lang=ar
+PASS Package browser: No fatal output: adc-area-settings
+PASS Package browser: adc-area-settings: ar/390 has no page overflow
+PASS Package browser: adc-area-settings: actual core direction is ar
+PASS Package browser: adc-area-settings: actual core menu CSS loaded
+PASS Package browser: adc-area-settings: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-contact&lang=ar
+PASS Package browser: No fatal output: adc-contact
+PASS Package browser: adc-contact: ar/390 has no page overflow
+PASS Package browser: adc-contact: actual core direction is ar
+PASS Package browser: adc-contact: actual core menu CSS loaded
+PASS Package browser: adc-contact: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-social-channels&lang=ar
+PASS Package browser: No fatal output: adc-social-channels
+PASS Package browser: adc-social-channels: ar/390 has no page overflow
+PASS Package browser: adc-social-channels: actual core direction is ar
+PASS Package browser: adc-social-channels: actual core menu CSS loaded
+PASS Package browser: adc-social-channels: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-editorial-setup&lang=ar
+PASS Package browser: No fatal output: adc-editorial-setup
+PASS Package browser: adc-editorial-setup: ar/390 has no page overflow
+PASS Package browser: adc-editorial-setup: actual core direction is ar
+PASS Package browser: adc-editorial-setup: actual core menu CSS loaded
+PASS Package browser: adc-editorial-setup: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-transfers&lang=ar
+PASS Package browser: No fatal output: adc-transfers
+PASS Package browser: adc-transfers: ar/390 has no page overflow
+PASS Package browser: adc-transfers: actual core direction is ar
+PASS Package browser: adc-transfers: actual core menu CSS loaded
+PASS Package browser: adc-transfers: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-brand-colors&lang=ar
+PASS Package browser: No fatal output: adc-brand-colors
+PASS Package browser: adc-brand-colors: ar/390 has no page overflow
+PASS Package browser: adc-brand-colors: actual core direction is ar
+PASS Package browser: adc-brand-colors: actual core menu CSS loaded
+PASS Package browser: adc-brand-colors: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-workspace&lang=en
+PASS Package browser: No fatal output: adc-workspace
+PASS Package browser: adc-workspace: en/1440 has no page overflow
+PASS Package browser: adc-workspace: actual core direction is en
+PASS Package browser: adc-workspace: actual core menu CSS loaded
+PASS Package browser: adc-workspace: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-area-settings&lang=en
+PASS Package browser: No fatal output: adc-area-settings
+PASS Package browser: adc-area-settings: en/1440 has no page overflow
+PASS Package browser: adc-area-settings: actual core direction is en
+PASS Package browser: adc-area-settings: actual core menu CSS loaded
+PASS Package browser: adc-area-settings: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-contact&lang=en
+PASS Package browser: No fatal output: adc-contact
+PASS Package browser: adc-contact: en/1440 has no page overflow
+PASS Package browser: adc-contact: actual core direction is en
+PASS Package browser: adc-contact: actual core menu CSS loaded
+PASS Package browser: adc-contact: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-social-channels&lang=en
+PASS Package browser: No fatal output: adc-social-channels
+PASS Package browser: adc-social-channels: en/1440 has no page overflow
+PASS Package browser: adc-social-channels: actual core direction is en
+PASS Package browser: adc-social-channels: actual core menu CSS loaded
+PASS Package browser: adc-social-channels: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-editorial-setup&lang=en
+PASS Package browser: No fatal output: adc-editorial-setup
+PASS Package browser: adc-editorial-setup: en/1440 has no page overflow
+PASS Package browser: adc-editorial-setup: actual core direction is en
+PASS Package browser: adc-editorial-setup: actual core menu CSS loaded
+PASS Package browser: adc-editorial-setup: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-transfers&lang=en
+PASS Package browser: No fatal output: adc-transfers
+PASS Package browser: adc-transfers: en/1440 has no page overflow
+PASS Package browser: adc-transfers: actual core direction is en
+PASS Package browser: adc-transfers: actual core menu CSS loaded
+PASS Package browser: adc-transfers: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-brand-colors&lang=en
+PASS Package browser: No fatal output: adc-brand-colors
+PASS Package browser: adc-brand-colors: en/1440 has no page overflow
+PASS Package browser: adc-brand-colors: actual core direction is en
+PASS Package browser: adc-brand-colors: actual core menu CSS loaded
+PASS Package browser: adc-brand-colors: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-workspace&lang=en
+PASS Package browser: No fatal output: adc-workspace
+PASS Package browser: adc-workspace: en/390 has no page overflow
+PASS Package browser: adc-workspace: actual core direction is en
+PASS Package browser: adc-workspace: actual core menu CSS loaded
+PASS Package browser: adc-workspace: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-area-settings&lang=en
+PASS Package browser: No fatal output: adc-area-settings
+PASS Package browser: adc-area-settings: en/390 has no page overflow
+PASS Package browser: adc-area-settings: actual core direction is en
+PASS Package browser: adc-area-settings: actual core menu CSS loaded
+PASS Package browser: adc-area-settings: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-contact&lang=en
+PASS Package browser: No fatal output: adc-contact
+PASS Package browser: adc-contact: en/390 has no page overflow
+PASS Package browser: adc-contact: actual core direction is en
+PASS Package browser: adc-contact: actual core menu CSS loaded
+PASS Package browser: adc-contact: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-social-channels&lang=en
+PASS Package browser: No fatal output: adc-social-channels
+PASS Package browser: adc-social-channels: en/390 has no page overflow
+PASS Package browser: adc-social-channels: actual core direction is en
+PASS Package browser: adc-social-channels: actual core menu CSS loaded
+PASS Package browser: adc-social-channels: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-editorial-setup&lang=en
+PASS Package browser: No fatal output: adc-editorial-setup
+PASS Package browser: adc-editorial-setup: en/390 has no page overflow
+PASS Package browser: adc-editorial-setup: actual core direction is en
+PASS Package browser: adc-editorial-setup: actual core menu CSS loaded
+PASS Package browser: adc-editorial-setup: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-transfers&lang=en
+PASS Package browser: No fatal output: adc-transfers
+PASS Package browser: adc-transfers: en/390 has no page overflow
+PASS Package browser: adc-transfers: actual core direction is en
+PASS Package browser: adc-transfers: actual core menu CSS loaded
+PASS Package browser: adc-transfers: canonical stylesheet loaded
+PASS Package browser: Actual WP page: adc-brand-colors&lang=en
+PASS Package browser: No fatal output: adc-brand-colors
+PASS Package browser: adc-brand-colors: en/390 has no page overflow
+PASS Package browser: adc-brand-colors: actual core direction is en
+PASS Package browser: adc-brand-colors: actual core menu CSS loaded
+PASS Package browser: adc-brand-colors: canonical stylesheet loaded
+PASS Package browser: Core menu bootstrap redirects retired URL to adc-contact
+PASS Package browser: Core menu bootstrap redirects retired URL to adc-settings
+PASS Package browser: Core menu bootstrap redirects retired URL to adc-editorial-setup
+PASS Package browser: Core menu bootstrap redirects retired URL to adc-transfers
+PASS Package browser: Actual WP page: adc-workspace
+PASS Package browser: No fatal output: adc-workspace
+PASS Package browser: Actual dashboard appearance switches to dark
+PASS Package browser: Dark area navigation has readable text contrast
+PASS Package browser: Actual WP page: adc-contact
+PASS Package browser: No fatal output: adc-contact
+PASS Package browser: Packaged contact form saves and returns to canonical owner
+PASS Package browser: Actual WP page: adc-workspace
+PASS Package browser: No fatal output: adc-workspace
+PASS Package browser: Actual dealership sales role reaches its operational workspace
+PASS Package browser: Actual sales sidebar omits settings owners
+PASS Package browser: Sales WordPress dashboard bookmark also uses the canonical workspace
+PASS Package browser: Core menu access denies sales: adc-contact
+PASS Package browser: Core menu access denies sales: adc-social-channels
+PASS Package browser: Core menu access denies sales: adc-platform-setup
+PASS Package browser: Core menu access denies sales: adc-transfers
+PASS Package browser: No browser script errors: 
+Admin package browser passed (200 checks).
+PASS Package: extracted files match manifests and clean WordPress runs on the two ZIPs only.
+Disposable package database and extracted files removed. Source database was not contacted.

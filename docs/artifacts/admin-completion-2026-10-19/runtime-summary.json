@@ -1,0 +1,102 @@
+﻿{
+    "note": "SHORTINIT read-only aggregates; no plugin bootstrap, user impersonation or writes.",
+    "observed_at_utc": "2026-10-19T13:15:55+00:00",
+    "settings": {
+        "adc_purchase_policy": {
+            "present": false,
+            "enabled": false
+        },
+        "adc_seller_name": {
+            "present": true,
+            "enabled": true
+        },
+        "adc_seller_address": {
+            "present": false,
+            "enabled": false
+        },
+        "adc_seller_tax_number": {
+            "present": false,
+            "enabled": false
+        },
+        "adc_privacy_retention_days": {
+            "present": true,
+            "enabled": false,
+            "value": "0"
+        },
+        "adc_jobs_mode": {
+            "present": false,
+            "enabled": false,
+            "value": null
+        },
+        "adc_followup_email_enabled": {
+            "present": false,
+            "enabled": false
+        },
+        "adc_portal_settings": {
+            "present": true,
+            "enabled": true,
+            "entry_count": 2
+        },
+        "adc_integration_enabled_events": {
+            "present": false,
+            "enabled": false
+        },
+        "adc_chat_branch_mapping": {
+            "present": true,
+            "enabled": true,
+            "entry_count": 2
+        },
+        "adc_finance_calculator_v1": {
+            "present": false,
+            "enabled": false
+        },
+        "adc_product_mail_dashboard": {
+            "present": true,
+            "enabled": true
+        }
+    },
+    "counts": {
+        "branches": 4,
+        "vehicles": 1,
+        "customers": 2,
+        "leads": 4,
+        "quotations": 0,
+        "reservations": 0,
+        "sales": 0,
+        "deliveries": 0,
+        "suppliers": 23,
+        "purchase_orders": 0,
+        "outbox": 25,
+        "portal_threads": 5,
+        "portal_documents": 0,
+        "followup_notifications": 0,
+        "onyx_stock": 523,
+        "onyx_documents": 0,
+        "release_evidence": 0
+    },
+    "states": {
+        "vehicles": [
+            {
+                "state": "received",
+                "total": "1"
+            }
+        ],
+        "outbox": [
+            {
+                "state": "completed",
+                "total": "25"
+            }
+        ],
+        "sales": [],
+        "purchase_orders": []
+    },
+    "cron_next_utc": {
+        "adc_scan_followups": "2026-10-19T13:19:10+00:00",
+        "adc_expire_reservations": "2026-10-19T13:20:29+00:00",
+        "adc_process_outbox": "2026-10-19T13:20:29+00:00",
+        "adc_prune_request_limits": "2026-10-19T13:50:29+00:00",
+        "adc_verification_prune": "2026-10-19T17:00:45+00:00",
+        "adc_privacy_retention": "2026-10-19T17:50:29+00:00",
+        "adc_access_maintenance": "2026-10-20T10:18:58+00:00"
+    }
+}

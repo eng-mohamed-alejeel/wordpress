@@ -1,0 +1,854 @@
+﻿{
+    "note": "Source navigation contract; no WordPress bootstrap, no permissions filtering or browser execution.",
+    "groups": [
+        {
+            "id": "customers",
+            "title": "العملاء والمبيعات",
+            "icon": "dashicons-groups",
+            "items": [
+                {
+                    "slug": "adc-conversations",
+                    "path": "admin.php?page=adc-conversations",
+                    "title": "محادثات العملاء",
+                    "description": "",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "manage_options",
+                        "adc_view_conversations"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Portal\\PortalAdmin",
+                        "conversations"
+                    ]
+                },
+                {
+                    "slug": "adc-portal-operations",
+                    "path": "admin.php?page=adc-portal-operations",
+                    "title": "تشغيل بوابة العميل",
+                    "description": "",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "manage_options",
+                        "adc_publish_customer_documents"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Portal\\PortalOperations",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-customer-reviews",
+                    "path": "admin.php?page=adc-customer-reviews",
+                    "title": "تقييمات العملاء",
+                    "description": "",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "manage_options",
+                        "adc_moderate_reviews"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Portal\\PortalAdmin",
+                        "reviews"
+                    ]
+                },
+                {
+                    "slug": "adc-crm",
+                    "path": "admin.php?page=adc-crm",
+                    "title": "فرص العملاء",
+                    "description": "متابعة العملاء والمراحل والأنشطة.",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "adc_view_own_leads",
+                        "adc_view_branch_leads"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\OperationsPages",
+                        "render_leads"
+                    ]
+                },
+                {
+                    "slug": "car-dealer-messages",
+                    "path": "admin.php?page=car-dealer-messages",
+                    "title": "رسائل العملاء",
+                    "description": "طلبات التواصل والبيع ضمن نطاقك.",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "adc_view_own_leads",
+                        "adc_view_branch_leads"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\EngagementPages",
+                        "render_messages"
+                    ]
+                },
+                {
+                    "slug": "car-dealer-bookings",
+                    "path": "admin.php?page=car-dealer-bookings",
+                    "title": "حجوزات تجربة القيادة",
+                    "description": "مواعيد تجربة القيادة وتحديثاتها.",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "adc_view_own_leads",
+                        "adc_view_branch_leads"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\EngagementPages",
+                        "render_bookings"
+                    ]
+                },
+                {
+                    "slug": "adc-quotes",
+                    "path": "admin.php?page=adc-quotes",
+                    "title": "عروض أسعار العملاء",
+                    "description": "إنشاء ومراجعة عروض الأسعار المسموح بها.",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "manage_options",
+                        "adc_view_own_leads",
+                        "adc_view_branch_leads",
+                        "adc_view_finance"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\QuotePages",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-sales-journey",
+                    "path": "admin.php?page=adc-sales-journey",
+                    "title": "دورة المبيعات",
+                    "description": "",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "manage_options",
+                        "adc_view_own_leads",
+                        "adc_view_branch_leads",
+                        "adc_view_finance"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\SalesJourneyPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-customer-workspace",
+                    "path": "admin.php?page=adc-customer-workspace",
+                    "title": "ملف العميل",
+                    "description": "",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "manage_options",
+                        "adc_view_own_leads",
+                        "adc_view_branch_leads",
+                        "adc_view_finance"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\CustomerWorkspacePage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-follow-ups",
+                    "path": "admin.php?page=adc-follow-ups",
+                    "title": "المتابعات والتنبيهات",
+                    "description": "",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "adc_view_workspace"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\FollowUpPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-customer-identities",
+                    "path": "admin.php?page=adc-customer-identities",
+                    "title": "مراجعة ملفات العملاء",
+                    "description": "",
+                    "icon": "dashicons-groups",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\CustomerIdentityPage",
+                        "render"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "inventory",
+            "title": "المخزون",
+            "icon": "dashicons-car",
+            "items": [
+                {
+                    "slug": "adc-onyx",
+                    "path": "admin.php?page=adc-onyx",
+                    "title": "مخزون أونكس",
+                    "description": "",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\OnyxInventoryPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-inventory",
+                    "path": "admin.php?page=adc-inventory",
+                    "title": "إدارة السيارات",
+                    "description": "مخزون أونكس واستكمال بيانات السيارات وحالاتها حسب الفرع.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "adc_view_inventory"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\OperationsPages",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-inventory-identity",
+                    "path": "admin.php?page=adc-inventory-identity",
+                    "title": "الاستلام والفحص وحركة المواقع",
+                    "description": "الاستلام والفحص والموقع وهوية المركبة.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "adc_manage_inventory"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\InventoryIdentityPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-vehicle-vin",
+                    "path": "admin.php?page=adc-vehicle-vin",
+                    "title": "تصحيح رقم الهيكل VIN",
+                    "description": "",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "adc_change_vehicle_vin"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\InventoryIdentityPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-vehicle-specifications",
+                    "path": "admin.php?page=adc-vehicle-specifications",
+                    "title": "مواصفات المركبات",
+                    "description": "الخصائص الفنية المقيدة للمركبات.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "adc_manage_inventory"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\VehicleSpecificationsPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-transfers",
+                    "path": "admin.php?page=adc-transfers",
+                    "title": "إنشاء طلب نقل",
+                    "description": "إنشاء طلب نقل لمركبة متاحة إلى فرع آخر.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "adc_transfer_inventory"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\OperationsPages",
+                        "render_transfers"
+                    ]
+                },
+                {
+                    "slug": "adc-transfer-queue",
+                    "path": "admin.php?page=adc-transfer-queue",
+                    "title": "متابعة نقل المركبات",
+                    "description": "اعتماد وإرسال واستلام النقل بين الفروع.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "adc_transfer_inventory"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\TransferPages",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-vehicle-issues",
+                    "path": "admin.php?page=adc-vehicle-issues",
+                    "title": "الاحتجاز والصيانة",
+                    "description": "فتح ومعالجة حالات الاحتجاز والصيانة.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "adc_manage_inventory"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\VehicleIssuePage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-vehicle-returns",
+                    "path": "admin.php?page=adc-vehicle-returns",
+                    "title": "مرتجعات المركبات",
+                    "description": "معالجة المركبات المرتجعة وفق سير العمل.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "adc_process_returns"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\VehicleReturnPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "edit.php?post_type=car",
+                    "path": "edit.php?post_type=car",
+                    "title": "صفحات السيارات",
+                    "description": "إدارة صفحات السيارات التحريرية.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "edit_cars"
+                    ],
+                    "callback": ""
+                },
+                {
+                    "slug": "edit-tags.php?taxonomy=car_brand&post_type=car",
+                    "path": "edit-tags.php?taxonomy=car_brand&post_type=car",
+                    "title": "ماركات السيارات",
+                    "description": "إدارة ماركات السيارات في كتالوج الموقع.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "manage_car_brands"
+                    ],
+                    "callback": ""
+                },
+                {
+                    "slug": "edit-tags.php?taxonomy=car_category&post_type=car",
+                    "path": "edit-tags.php?taxonomy=car_category&post_type=car",
+                    "title": "فئات السيارات",
+                    "description": "إدارة فئات السيارات في كتالوج الموقع.",
+                    "icon": "dashicons-car",
+                    "capabilities": [
+                        "manage_car_categories"
+                    ],
+                    "callback": ""
+                }
+            ]
+        },
+        {
+            "id": "purchasing",
+            "title": "المشتريات",
+            "icon": "dashicons-store",
+            "items": [
+                {
+                    "slug": "adc-purchase-orders",
+                    "path": "admin.php?page=adc-purchase-orders",
+                    "title": "Purchase orders",
+                    "description": "",
+                    "icon": "dashicons-store",
+                    "capabilities": [
+                        "adc_view_purchase_orders"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\PurchaseOrderPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-suppliers",
+                    "path": "admin.php?page=adc-suppliers",
+                    "title": "الموردون",
+                    "description": "دليل الموردين وبياناتهم المقيدة.",
+                    "icon": "dashicons-store",
+                    "capabilities": [
+                        "adc_view_suppliers"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\SupplierPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-vehicle-acquisition",
+                    "path": "admin.php?page=adc-vehicle-acquisition",
+                    "title": "اقتناء المركبات وتكاليفها",
+                    "description": "التكاليف والمراجع ومستندات الاقتناء.",
+                    "icon": "dashicons-store",
+                    "capabilities": [
+                        "adc_view_vehicle_costs"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\VehicleAcquisitionPage",
+                        "render"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "approvals",
+            "title": "الاعتمادات",
+            "icon": "dashicons-yes-alt",
+            "items": [
+                {
+                    "slug": "adc-approvals",
+                    "path": "admin.php?page=adc-approvals",
+                    "title": "اعتماد الخصومات والمبيعات",
+                    "description": "الخصومات واعتماد المبيعات والإلغاءات.",
+                    "icon": "dashicons-yes-alt",
+                    "capabilities": [
+                        "adc_review_discounts",
+                        "adc_approve_sales"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\WorkflowPages",
+                        "approvals"
+                    ]
+                },
+                {
+                    "slug": "adc-sale-cancellations",
+                    "path": "admin.php?page=adc-sale-cancellations",
+                    "title": "إلغاء المبيعات",
+                    "description": "",
+                    "icon": "dashicons-yes-alt",
+                    "capabilities": [
+                        "adc_cancel_sales"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\SaleCancellationPage",
+                        "render"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "finance",
+            "title": "المالية",
+            "icon": "dashicons-money-alt",
+            "items": [
+                {
+                    "slug": "adc-finance",
+                    "path": "admin.php?page=adc-finance",
+                    "title": "طلبات التمويل",
+                    "description": "طلبات التمويل وقراراتها ومراجعها.",
+                    "icon": "dashicons-money-alt",
+                    "capabilities": [
+                        "adc_view_finance",
+                        "adc_manage_finance"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\WorkflowPages",
+                        "finance"
+                    ]
+                },
+                {
+                    "slug": "adc-payments",
+                    "path": "admin.php?page=adc-payments",
+                    "title": "تأكيدات السداد",
+                    "description": "مراجعة دفعات المبيعات والعربون.",
+                    "icon": "dashicons-money-alt",
+                    "capabilities": [
+                        "adc_view_finance"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\PaymentPages",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-refunds",
+                    "path": "admin.php?page=adc-refunds",
+                    "title": "المبالغ المستردة",
+                    "description": "طلبات الاسترداد وقراراتها.",
+                    "icon": "dashicons-money-alt",
+                    "capabilities": [
+                        "adc_view_finance"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\RefundPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-financial-export",
+                    "path": "admin.php?page=adc-financial-export",
+                    "title": "التصدير المالي",
+                    "description": "",
+                    "icon": "dashicons-money-alt",
+                    "capabilities": [
+                        "adc_view_finance"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\FinancialExportPage",
+                        "render"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "delivery",
+            "title": "التسليم",
+            "icon": "dashicons-clipboard",
+            "items": [
+                {
+                    "slug": "adc-delivery",
+                    "path": "admin.php?page=adc-delivery",
+                    "title": "تجهيز وتسليم المركبات",
+                    "description": "التجهيز والمستندات والمطابقة والإطلاق.",
+                    "icon": "dashicons-clipboard",
+                    "capabilities": [
+                        "adc_approve_delivery",
+                        "adc_confirm_vehicle_vin"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\WorkflowPages",
+                        "delivery"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "content",
+            "title": "محتوى الموقع",
+            "icon": "dashicons-admin-page",
+            "items": [
+                {
+                    "slug": "adc-site-content",
+                    "path": "admin.php?page=adc-site-content",
+                    "title": "إدارة المحتوى وجاهزية الموقع",
+                    "description": "",
+                    "icon": "dashicons-admin-page",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\SiteContentPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "edit.php?post_type=car_offer",
+                    "path": "edit.php?post_type=car_offer",
+                    "title": "العروض الترويجية",
+                    "description": "إدارة محتوى عروض السيارات.",
+                    "icon": "dashicons-admin-page",
+                    "capabilities": [
+                        "edit_car_offers"
+                    ],
+                    "callback": ""
+                },
+                {
+                    "slug": "edit.php?post_type=page",
+                    "path": "edit.php?post_type=page",
+                    "title": "صفحات الموقع",
+                    "description": "",
+                    "icon": "dashicons-admin-page",
+                    "capabilities": [
+                        "edit_pages"
+                    ],
+                    "callback": ""
+                },
+                {
+                    "slug": "upload.php",
+                    "path": "upload.php",
+                    "title": "مكتبة الوسائط",
+                    "description": "",
+                    "icon": "dashicons-admin-page",
+                    "capabilities": [
+                        "upload_files"
+                    ],
+                    "callback": ""
+                },
+                {
+                    "slug": "customize.php",
+                    "path": "customize.php",
+                    "title": "مظهر الموقع وبيانات التواصل",
+                    "description": "",
+                    "icon": "dashicons-admin-page",
+                    "capabilities": [
+                        "customize"
+                    ],
+                    "callback": ""
+                },
+                {
+                    "slug": "adc-editorial-setup",
+                    "path": "admin.php?page=adc-editorial-setup",
+                    "title": "إعداد صفحات الموقع",
+                    "description": "مراجعة الصفحات التعريفية وإنشاء المسودات المفقودة صراحة.",
+                    "icon": "dashicons-admin-page",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\EditorialSetupPage",
+                        "render"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "marketing",
+            "title": "التسويق",
+            "icon": "dashicons-megaphone",
+            "items": [
+                {
+                    "slug": "car-dealer-subscribers",
+                    "path": "admin.php?page=car-dealer-subscribers",
+                    "title": "مشتركو النشرة البريدية",
+                    "description": "إدارة المشتركين والحملات البريدية ونتائج الإرسال.",
+                    "icon": "dashicons-megaphone",
+                    "capabilities": [
+                        "adc_view_marketing_subscribers"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\EngagementPages",
+                        "render_subscribers"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "reports",
+            "title": "التقارير",
+            "icon": "dashicons-chart-bar",
+            "items": [
+                {
+                    "slug": "adc-operational-reports",
+                    "path": "admin.php?page=adc-operational-reports",
+                    "title": "التقارير التشغيلية",
+                    "description": "مؤشرات مجمعة ضمن نطاق الصلاحية.",
+                    "icon": "dashicons-chart-bar",
+                    "capabilities": [
+                        "adc_view_reports"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\OperationalReportPage",
+                        "render"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "settings",
+            "title": "إعدادات المنصة",
+            "icon": "dashicons-admin-settings",
+            "items": [
+                {
+                    "slug": "options-general.php?page=adc-platform-setup",
+                    "path": "options-general.php?page=adc-platform-setup",
+                    "title": "إعداد الهوية والبريد والنشر",
+                    "description": "",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": ""
+                },
+                {
+                    "slug": "customize.php?autofocus[panel]=adc_brand_palette",
+                    "path": "customize.php?autofocus[panel]=adc_brand_palette",
+                    "title": "الهوية والألوان",
+                    "description": "",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": ""
+                },
+                {
+                    "slug": "adc-release-evidence",
+                    "path": "admin.php?page=adc-release-evidence",
+                    "title": "Release evidence",
+                    "description": "",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\ReleaseEvidencePage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-settings",
+                    "path": "admin.php?page=adc-settings",
+                    "title": "سياسات وإعدادات المنصة",
+                    "description": "الفروع والسياسات والإعدادات المركزية.",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\SettingsPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-reference",
+                    "path": "admin.php?page=adc-reference",
+                    "title": "العلامات التجارية والمواقع",
+                    "description": "",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\ReferencePage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-finance-calculator",
+                    "path": "admin.php?page=adc-finance-calculator",
+                    "title": "إعدادات حاسبة التمويل",
+                    "description": "",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\FinanceCalculatorPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-catalog-cutover",
+                    "path": "admin.php?page=adc-catalog-cutover",
+                    "title": "مطابقة الكتالوج",
+                    "description": "",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\CatalogCutoverPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-stored-translations",
+                    "path": "admin.php?page=adc-stored-translations",
+                    "title": "ترجمات البيانات",
+                    "description": "Original text / Approved translation",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\StoredTranslationsPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "users.php",
+                    "path": "users.php",
+                    "title": "المستخدمون والصلاحيات",
+                    "description": "حسابات الموظفين والأدوار والتعيينات.",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "list_users"
+                    ],
+                    "callback": ""
+                },
+                {
+                    "slug": "adc-roles",
+                    "path": "admin.php?page=adc-roles",
+                    "title": "Roles and permissions",
+                    "description": "",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\RoleManager",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-access-review",
+                    "path": "admin.php?page=adc-access-review",
+                    "title": "Account access review",
+                    "description": "",
+                    "icon": "dashicons-admin-settings",
+                    "capabilities": [
+                        "manage_options"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\AccessReviewPage",
+                        "render"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "audit",
+            "title": "الرقابة والتكاملات",
+            "icon": "dashicons-visibility",
+            "items": [
+                {
+                    "slug": "adc-audit",
+                    "path": "admin.php?page=adc-audit",
+                    "title": "سجل التدقيق",
+                    "description": "الأحداث الإدارية والتشغيلية للقراءة.",
+                    "icon": "dashicons-visibility",
+                    "capabilities": [
+                        "adc_view_audit"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\AuditPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-public-security",
+                    "path": "admin.php?page=adc-public-security",
+                    "title": "أمن الواجهة العامة",
+                    "description": "",
+                    "icon": "dashicons-visibility",
+                    "capabilities": [
+                        "adc_view_audit"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\SecurityPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-integrations",
+                    "path": "admin.php?page=adc-integrations",
+                    "title": "جاهزية التكاملات",
+                    "description": "",
+                    "icon": "dashicons-visibility",
+                    "capabilities": [
+                        "adc_view_integrations"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\IntegrationPage",
+                        "render"
+                    ]
+                },
+                {
+                    "slug": "adc-outbox",
+                    "path": "admin.php?page=adc-outbox",
+                    "title": "مراقبة المهام",
+                    "description": "",
+                    "icon": "dashicons-visibility",
+                    "capabilities": [
+                        "adc_view_outbox"
+                    ],
+                    "callback": [
+                        "AutoDealership\\Admin\\OutboxPage",
+                        "render"
+                    ]
+                }
+            ]
+        }
+    ]
+}

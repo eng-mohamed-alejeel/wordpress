@@ -32,7 +32,7 @@ final class SettingsPage {
 		return array(
 			'pricing' => array( 'التسعير والضرائب', array( 'vat_rate_bps', 'vat_percent', 'sales_manager_discount_limit', 'general_manager_discount_limit', 'pricing_fee_amount', 'promotion_code', 'promotion_type', 'promotion_value', 'promotion_starts_at', 'promotion_ends_at', 'seller_name', 'seller_tax_number', 'seller_phone', 'seller_address' ) ),
 			'reservations' => array( 'الحجز والعربون', array( 'reservation_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'reservation_refund_hours' ) ),
-			'branches' => array( 'الفروع', array( 'default_branch_id' ) ),
+			'branches' => array( 'فروع التشغيل', array( 'default_branch_id' ) ),
 			'delivery' => array( 'سياسة التسليم', array( 'delivery_required_documents' ) ),
 			'privacy' => array( 'الاحتفاظ بالبيانات', array( 'privacy_retention_days' ) ),
 			'catalog' => array( 'مصدر الكتالوج', array( 'public_catalog_mode' ) ),
@@ -67,7 +67,6 @@ final class SettingsPage {
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'إعدادات منصة المعرض', 'auto-dealership-core' ); ?></h1>
-			<p><a href="<?php echo esc_url(admin_url('admin.php?page=adc-conversations')); ?>"><?php echo esc_html(\AutoDealership\Portal\PortalAccess::t('إعدادات حساب العميل والمحادثات وإشعارات البريد','Customer portal, conversations and email notification settings')); ?></a></p>
 			<p><?php esc_html_e( 'القيم المالية بالريال السعودي. راجع إعدادات الضرائب وسياسات الحجز والخصومات مع مسؤول الشركة قبل التشغيل.', 'auto-dealership-core' ); ?></p>
 			<?php if ( isset( $_GET['updated'] ) ) : ?><div class="notice notice-success"><p><?php esc_html_e( 'تم حفظ الإعدادات.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>
 			<?php if ( isset( $_GET['error'] ) ) : ?><div class="notice notice-error"><p><?php esc_html_e( 'تعذر حفظ الإعدادات وتوثيقها؛ أُعيدت القيم السابقة.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>

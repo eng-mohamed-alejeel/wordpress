@@ -1,0 +1,7 @@
+﻿{
+    "scope": "Literal forms and registrations in src; dynamic WorkflowPages/ReferencePage registrations evaluated offline without WordPress bootstrap. Not an end-to-end action test.",
+    "literal_form_actions": 77,
+    "literal_post_handlers": 77,
+    "additional_dynamic_handlers_verified": 12,
+    "forms_without_resolved_handler": []
+}

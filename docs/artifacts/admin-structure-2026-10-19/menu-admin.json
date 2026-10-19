@@ -1,0 +1,494 @@
+[
+  {
+    "title": "Workspace",
+    "href": "admin.php?page=adc-workspace"
+  },
+  {
+    "title": "Leads and sales",
+    "href": "admin.php?page=adc-area-customers"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-customers"
+  },
+  {
+    "title": "Customer conversations",
+    "href": "admin.php?page=adc-conversations"
+  },
+  {
+    "title": "Customer portal operations",
+    "href": "admin.php?page=adc-portal-operations"
+  },
+  {
+    "title": "Customer reviews",
+    "href": "admin.php?page=adc-customer-reviews"
+  },
+  {
+    "title": "CRM Leads",
+    "href": "admin.php?page=adc-crm"
+  },
+  {
+    "title": "Customer messages",
+    "href": "admin.php?page=car-dealer-messages"
+  },
+  {
+    "title": "Test-drive bookings",
+    "href": "admin.php?page=car-dealer-bookings"
+  },
+  {
+    "title": "Customer quotations",
+    "href": "admin.php?page=adc-quotes"
+  },
+  {
+    "title": "Sales journey",
+    "href": "admin.php?page=adc-sales-journey"
+  },
+  {
+    "title": "Customer workspace",
+    "href": "admin.php?page=adc-customer-workspace"
+  },
+  {
+    "title": "Follow-ups and alerts",
+    "href": "admin.php?page=adc-follow-ups"
+  },
+  {
+    "title": "Review customer records",
+    "href": "admin.php?page=adc-customer-identities"
+  },
+  {
+    "title": "Inventory",
+    "href": "admin.php?page=adc-area-inventory"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-inventory"
+  },
+  {
+    "title": "Onyx inventory",
+    "href": "admin.php?page=adc-onyx"
+  },
+  {
+    "title": "Vehicle management",
+    "href": "admin.php?page=adc-inventory"
+  },
+  {
+    "title": "Intake, inspections and locations",
+    "href": "admin.php?page=adc-inventory-identity"
+  },
+  {
+    "title": "VIN corrections",
+    "href": "admin.php?page=adc-vehicle-vin"
+  },
+  {
+    "title": "Vehicle specifications",
+    "href": "admin.php?page=adc-vehicle-specifications"
+  },
+  {
+    "title": "Vehicle transfers between branches",
+    "href": "admin.php?page=adc-transfers"
+  },
+  {
+    "title": "Holds and maintenance",
+    "href": "admin.php?page=adc-vehicle-issues"
+  },
+  {
+    "title": "Vehicle returns",
+    "href": "admin.php?page=adc-vehicle-returns"
+  },
+  {
+    "title": "Website vehicles",
+    "href": "admin.php?page=adc-car-publishing"
+  },
+  {
+    "title": "Brands",
+    "href": "admin.php?page=adc-car-brands"
+  },
+  {
+    "title": "Vehicle categories",
+    "href": "admin.php?page=adc-car-categories"
+  },
+  {
+    "title": "Vehicle colors",
+    "href": "admin.php?page=adc-vehicle-colors"
+  },
+  {
+    "title": "Specification options",
+    "href": "admin.php?page=adc-vehicle-specifications"
+  },
+  {
+    "title": "Purchasing",
+    "href": "admin.php?page=adc-area-purchasing"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-purchasing"
+  },
+  {
+    "title": "Purchase orders",
+    "href": "admin.php?page=adc-purchase-orders"
+  },
+  {
+    "title": "suppliers",
+    "href": "admin.php?page=adc-suppliers"
+  },
+  {
+    "title": "Vehicle acquisition and costs",
+    "href": "admin.php?page=adc-vehicle-acquisition"
+  },
+  {
+    "title": "Approvals",
+    "href": "admin.php?page=adc-area-approvals"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-approvals"
+  },
+  {
+    "title": "Discount and sale approvals",
+    "href": "admin.php?page=adc-approvals"
+  },
+  {
+    "title": "Cancel sales",
+    "href": "admin.php?page=adc-sale-cancellations"
+  },
+  {
+    "title": "Financial operations",
+    "href": "admin.php?page=adc-area-finance"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-finance"
+  },
+  {
+    "title": "Onyx financial documents",
+    "href": "admin.php?page=adc-onyx-documents"
+  },
+  {
+    "title": "finance_requests",
+    "href": "admin.php?page=adc-finance"
+  },
+  {
+    "title": "Payment confirmations",
+    "href": "admin.php?page=adc-payments"
+  },
+  {
+    "title": "Refunds",
+    "href": "admin.php?page=adc-refunds"
+  },
+  {
+    "title": "Financial export",
+    "href": "admin.php?page=adc-financial-export"
+  },
+  {
+    "title": "Delivery",
+    "href": "admin.php?page=adc-area-delivery"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-delivery"
+  },
+  {
+    "title": "Vehicle preparation and delivery",
+    "href": "admin.php?page=adc-delivery"
+  },
+  {
+    "title": "Website content",
+    "href": "admin.php?page=adc-area-content"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-content"
+  },
+  {
+    "title": "Homepage and section content",
+    "href": "admin.php?page=adc-site-content"
+  },
+  {
+    "title": "Website page setup",
+    "href": "admin.php?page=adc-editorial-setup"
+  },
+  {
+    "title": "Website offers",
+    "href": "admin.php?page=adc-offer-publishing"
+  },
+  {
+    "title": "Marketing",
+    "href": "admin.php?page=adc-area-marketing"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-marketing"
+  },
+  {
+    "title": "Newsletter subscribers",
+    "href": "admin.php?page=car-dealer-subscribers"
+  },
+  {
+    "title": "Reports",
+    "href": "admin.php?page=adc-area-reports"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-reports"
+  },
+  {
+    "title": "Operational reports",
+    "href": "admin.php?page=adc-operational-reports"
+  },
+  {
+    "title": "Platform settings",
+    "href": "admin.php?page=adc-area-settings"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-settings"
+  },
+  {
+    "title": "Identity, email and platform readiness",
+    "href": "admin.php?page=adc-platform-setup"
+  },
+  {
+    "title": "Public contact details",
+    "href": "admin.php?page=adc-contact"
+  },
+  {
+    "title": "Social accounts",
+    "href": "admin.php?page=adc-social-channels"
+  },
+  {
+    "title": "Public branches and maps",
+    "href": "admin.php?page=adc-branch-locations"
+  },
+  {
+    "title": "Release evidence",
+    "href": "admin.php?page=adc-release-evidence"
+  },
+  {
+    "title": "Platform policies and settings",
+    "href": "admin.php?page=adc-settings"
+  },
+  {
+    "title": "Vehicle profit margin",
+    "href": "admin.php?page=adc-profit-margin"
+  },
+  {
+    "title": "Operational brands and locations",
+    "href": "admin.php?page=adc-reference"
+  },
+  {
+    "title": "Finance calculator settings",
+    "href": "admin.php?page=adc-finance-calculator"
+  },
+  {
+    "title": "Catalog matching",
+    "href": "admin.php?page=adc-catalog-cutover"
+  },
+  {
+    "title": "Data translations",
+    "href": "admin.php?page=adc-stored-translations"
+  },
+  {
+    "title": "Roles and permissions",
+    "href": "admin.php?page=adc-roles"
+  },
+  {
+    "title": "Account access review",
+    "href": "admin.php?page=adc-access-review"
+  },
+  {
+    "title": "Audit and integrations",
+    "href": "admin.php?page=adc-area-audit"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-audit"
+  },
+  {
+    "title": "Audit Log",
+    "href": "admin.php?page=adc-audit"
+  },
+  {
+    "title": "Public API security",
+    "href": "admin.php?page=adc-public-security"
+  },
+  {
+    "title": "Integration readiness",
+    "href": "admin.php?page=adc-integrations"
+  },
+  {
+    "title": "Job monitoring",
+    "href": "admin.php?page=adc-outbox"
+  },
+  {
+    "title": "Posts",
+    "href": "edit.php"
+  },
+  {
+    "title": "All Posts",
+    "href": "edit.php"
+  },
+  {
+    "title": "Add Post",
+    "href": "post-new.php"
+  },
+  {
+    "title": "Categories",
+    "href": "edit-tags.php?taxonomy=category"
+  },
+  {
+    "title": "Tags",
+    "href": "edit-tags.php?taxonomy=post_tag"
+  },
+  {
+    "title": "Media",
+    "href": "upload.php"
+  },
+  {
+    "title": "Library",
+    "href": "upload.php"
+  },
+  {
+    "title": "Add Media File",
+    "href": "media-new.php"
+  },
+  {
+    "title": "Pages",
+    "href": "edit.php?post_type=page"
+  },
+  {
+    "title": "All Pages",
+    "href": "edit.php?post_type=page"
+  },
+  {
+    "title": "Add Page",
+    "href": "post-new.php?post_type=page"
+  },
+  {
+    "title": "Comments 00 Comments in moderation",
+    "href": "edit-comments.php"
+  },
+  {
+    "title": "Appearance",
+    "href": "themes.php"
+  },
+  {
+    "title": "Themes 0",
+    "href": "themes.php"
+  },
+  {
+    "title": "Patterns",
+    "href": "site-editor.php?p=/pattern"
+  },
+  {
+    "title": "Customize",
+    "href": "customize.php?return=%2Fwp-admin%2Fadmin.php%3Fpage%3Dadc-workspace"
+  },
+  {
+    "title": "Fonts",
+    "href": "font-library.php"
+  },
+  {
+    "title": "Menus",
+    "href": "nav-menus.php"
+  },
+  {
+    "title": "Theme File Editor",
+    "href": "theme-editor.php"
+  },
+  {
+    "title": "Plugins 0",
+    "href": "plugins.php"
+  },
+  {
+    "title": "Installed Plugins",
+    "href": "plugins.php"
+  },
+  {
+    "title": "Add Plugin",
+    "href": "plugin-install.php"
+  },
+  {
+    "title": "Plugin File Editor",
+    "href": "plugin-editor.php"
+  },
+  {
+    "title": "Users",
+    "href": "users.php"
+  },
+  {
+    "title": "All Users",
+    "href": "users.php"
+  },
+  {
+    "title": "Add User",
+    "href": "user-new.php"
+  },
+  {
+    "title": "Profile",
+    "href": "profile.php"
+  },
+  {
+    "title": "Tools",
+    "href": "tools.php"
+  },
+  {
+    "title": "Available Tools",
+    "href": "tools.php"
+  },
+  {
+    "title": "Import",
+    "href": "import.php"
+  },
+  {
+    "title": "Export",
+    "href": "export.php"
+  },
+  {
+    "title": "Site Health 0",
+    "href": "site-health.php"
+  },
+  {
+    "title": "Export Personal Data",
+    "href": "export-personal-data.php"
+  },
+  {
+    "title": "Erase Personal Data",
+    "href": "erase-personal-data.php"
+  },
+  {
+    "title": "Settings",
+    "href": "options-general.php"
+  },
+  {
+    "title": "General",
+    "href": "options-general.php"
+  },
+  {
+    "title": "Connectors",
+    "href": "options-connectors.php"
+  },
+  {
+    "title": "Writing",
+    "href": "options-writing.php"
+  },
+  {
+    "title": "Reading",
+    "href": "options-reading.php"
+  },
+  {
+    "title": "Discussion",
+    "href": "options-discussion.php"
+  },
+  {
+    "title": "Media",
+    "href": "options-media.php"
+  },
+  {
+    "title": "Permalinks",
+    "href": "options-permalink.php"
+  },
+  {
+    "title": "Privacy",
+    "href": "options-privacy.php"
+  }
+]

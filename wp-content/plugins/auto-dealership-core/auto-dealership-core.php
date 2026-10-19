@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.61.2
+ * Version: 1.63.1
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.61.2' );
+define( 'ADC_VERSION', '1.63.1' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -193,7 +193,10 @@ require_once ADC_PATH . 'src/Admin/OutboxPage.php';
 require_once ADC_PATH . 'src/Admin/IntegrationPage.php';
 require_once ADC_PATH . 'src/Admin/SecurityPage.php';
 require_once ADC_PATH . 'src/Admin/Navigation.php';
+require_once ADC_PATH . 'src/Admin/AdminStructure.php';
 require_once ADC_PATH . 'src/Admin/WorkspacePage.php';
+require_once ADC_PATH . 'src/Admin/WorkspaceOverview.php';
+require_once ADC_PATH . 'src/Admin/WorkspaceOverviewView.php';
 require_once ADC_PATH . 'src/Admin/UserPermissions.php';
 require_once ADC_PATH . 'src/Admin/RoleManager.php';
 require_once ADC_PATH . 'src/Security/AccessPolicy.php';
@@ -453,6 +456,7 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OutboxPage', 'boot'
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\IntegrationPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SecurityPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\Navigation', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AdminStructure', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\WorkspacePage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\EditorialSetupPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OperationsPages', 'boot' ) );

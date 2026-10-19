@@ -1,0 +1,50 @@
+[
+  {
+    "title": "Workspace",
+    "href": "admin.php?page=adc-workspace"
+  },
+  {
+    "title": "Leads and sales",
+    "href": "admin.php?page=adc-area-customers"
+  },
+  {
+    "title": "Overview",
+    "href": "admin.php?page=adc-area-customers"
+  },
+  {
+    "title": "Customer conversations",
+    "href": "admin.php?page=adc-conversations"
+  },
+  {
+    "title": "CRM Leads",
+    "href": "admin.php?page=adc-crm"
+  },
+  {
+    "title": "Customer messages",
+    "href": "admin.php?page=car-dealer-messages"
+  },
+  {
+    "title": "Test-drive bookings",
+    "href": "admin.php?page=car-dealer-bookings"
+  },
+  {
+    "title": "Customer quotations",
+    "href": "admin.php?page=adc-quotes"
+  },
+  {
+    "title": "Sales journey",
+    "href": "admin.php?page=adc-sales-journey"
+  },
+  {
+    "title": "Customer workspace",
+    "href": "admin.php?page=adc-customer-workspace"
+  },
+  {
+    "title": "Follow-ups and alerts",
+    "href": "admin.php?page=adc-follow-ups"
+  },
+  {
+    "title": "Profile",
+    "href": "profile.php"
+  }
+]

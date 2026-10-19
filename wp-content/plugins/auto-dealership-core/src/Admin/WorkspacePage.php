@@ -77,9 +77,18 @@ final class WorkspacePage {
 			</div>
 
 			<?php \AutoDealership\Portal\StaffPresence::control('workspace'); ?>
+			<?php if ( ! $area_allowed ) { WorkspaceOverviewView::render(); } ?>
+			<?php if ( ! $area_allowed ) : ?><section class="adc-area-directory" aria-label="<?php echo esc_attr( \AutoDealership\Core\ProductSetup::t( 'أقسام الإدارة', 'Administration areas' ) ); ?>"><?php endif; ?>
 			<?php foreach ( $groups as $group ) : ?>
 				<?php $items = array_values( array_filter( $group['items'], static fn( array $item ): bool => self::allowed( $item ) ) ); ?>
 				<?php if ( ! $items ) { continue; } ?>
+                <?php if ( ! $area_allowed ) : ?>
+                    <a class="adc-area-card" href="<?php echo esc_url( admin_url( 'admin.php?page=adc-area-' . $group['id'] ) ); ?>">
+                        <span class="dashicons <?php echo esc_attr( $group['icon'] ); ?>" aria-hidden="true"></span>
+                        <span><strong><?php echo esc_html( $group['title'] ); ?></strong><small><?php echo esc_html( \AutoDealership\Core\ProductSetup::t( 'فتح القسم', 'Open area' ) ); ?></small></span>
+                        <span aria-hidden="true">&#8250;</span>
+                    </a>
+                    <?php continue; endif; ?>
 				<section class="adc-workspace-section">
 					<?php if ( ! $area_allowed ) : ?><h2><?php echo esc_html( $group['title'] ); ?></h2><?php endif; ?>
 					<?php
@@ -109,6 +118,7 @@ final class WorkspacePage {
 					<?php endforeach; ?>
 				</section>
 			<?php endforeach; ?>
+            <?php if ( ! $area_allowed ) : ?></section><?php endif; ?>
 		</div>
 		<?php
 	}

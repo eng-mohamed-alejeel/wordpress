@@ -80,7 +80,7 @@ final class BranchLocations {
 		check_admin_referer('adc_branch_locations');
 		$result = self::save(wp_unslash($_POST['branches'] ?? array()), sanitize_text_field(wp_unslash($_POST['revision'] ?? '')));
 		set_transient('adc_branch_notice_' . get_current_user_id(), array('ok'=>!is_wp_error($result), 'text'=>is_wp_error($result) ? $result->get_error_message() : self::t('تم حفظ الفروع والمواقع.', 'Branches and locations saved.')), MINUTE_IN_SECONDS);
-		wp_safe_redirect(admin_url('options-general.php?page=adc-branch-locations')); exit;
+		wp_safe_redirect(admin_url('admin.php?page=adc-branch-locations')); exit;
 	}
 	private static function row(array $row, string $index): void {
 		echo '<fieldset class="adc-branch-editor" style="background:#fff;border:1px solid #c3c4c7;padding:20px;margin:16px 0"><legend><strong>' . esc_html(self::t('بيانات الفرع', 'Branch details')) . '</strong></legend><input type="hidden" name="branches[' . esc_attr($index) . '][id]" value="' . esc_attr($row['id'] ?? '') . '">';
@@ -90,7 +90,7 @@ final class BranchLocations {
 		echo '<p><label><input type="checkbox" name="branches[' . esc_attr($index) . '][active]" value="1" ' . checked(!empty($row['active']),true,false) . '> ' . esc_html(self::t('إظهار الفرع في صفحة تواصل معنا','Show branch on the contact page')) . '</label></p><p><button type="button" class="button" data-branch-up>' . esc_html(self::t('تحريك لأعلى','Move up')) . '</button> <button type="button" class="button" data-branch-down>' . esc_html(self::t('تحريك لأسفل','Move down')) . '</button> <button type="button" class="button-link-delete" data-branch-remove>' . esc_html(self::t('إزالة الفرع','Remove branch')) . '</button></p></fieldset>';
 	}
 	public static function admin(): void {
-		if (!current_user_can('manage_options')) { wp_die('Forbidden'); }
+		if (!current_user_can('manage_options')) { wp_die('Forbidden', '', array('response'=>403)); }
 		wp_enqueue_script('adc-branch-editor', plugins_url('assets/js/branch-locations-admin.js', ADC_FILE), array(), ADC_VERSION, true);
 		echo '<div class="wrap"><h1>' . esc_html(self::t('الفروع والمواقع','Branches and locations')) . '</h1>';
 		$notice = get_transient('adc_branch_notice_' . get_current_user_id()); delete_transient('adc_branch_notice_' . get_current_user_id());

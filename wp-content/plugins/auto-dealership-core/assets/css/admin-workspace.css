@@ -2,6 +2,34 @@
 	max-width: 1440px;
 }
 
+.adc-overview { margin: 24px 0 36px; padding: 24px; border: 1px solid var(--ab-border); border-radius: 14px; background: var(--ab-surface); }
+.adc-overview-heading, .adc-overview-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; }
+.adc-overview-heading { justify-content: space-between; margin-bottom: 18px; }
+.adc-overview-heading h2 { margin: 0; }
+.adc-overview-heading > span, .adc-overview .description { color: var(--ab-muted); line-height: 1.8; }
+.adc-overview-filters label { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.adc-overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; margin: 20px 0 24px; }
+.adc-overview-metric { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 18px; border: 1px solid var(--ab-border); border-radius: 10px; color: var(--ab-heading); text-decoration: none; background: var(--ab-surface); }
+.adc-overview-metric strong { font-size: 30px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.adc-overview-metric:hover, .adc-overview-metric.is-current { border-color: var(--ab-action); background: var(--ab-soft); color: var(--ab-heading); }
+.adc-overview-metric:focus-visible, .adc-workspace-card:focus-visible { outline: 3px solid var(--ab-action); outline-offset: 3px; }
+.adc-overview-metric.is-current { box-shadow: inset 0 -3px var(--ab-action); }
+.adc-overview-metric small { color: var(--ab-muted); }
+.adc-work-list { scroll-margin-top: 56px; }
+.adc-work-table { overflow-x: auto; }
+.adc-work-table table { width: 100%; min-width: 520px; }
+.adc-work-table:focus-visible { outline: 3px solid var(--ab-action); outline-offset: 2px; }
+.adc-work-table-hint { display: none; }
+.adc-overview-empty { padding: 20px; background: var(--ab-soft); border-radius: 8px; }
+.adc-overview-pagination { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+@media (max-width: 600px) {
+	.adc-overview { padding: 16px; }
+	.adc-overview-filters { align-items: stretch; flex-direction: column; }
+	.adc-overview-filters label { justify-content: space-between; }
+	.adc-overview-filters select { max-width: 100%; }
+	.adc-work-table-hint { display: block; color: var(--ab-muted); }
+}
+
 .adc-workspace-hero {
 	display: flex;
 	align-items: center;

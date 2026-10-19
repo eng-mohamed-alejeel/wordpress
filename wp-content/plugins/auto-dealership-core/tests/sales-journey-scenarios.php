@@ -70,7 +70,7 @@ $html=$render(SalesJourneyPage::class,array('quote_id'=>$q['id']));$check(str_co
 $sale=SalesService::create_sale($q['id'],$reservation['id']);$check(is_array($sale),'Start sale through existing transactional service');
 $check(is_wp_error(SalesService::create_sale($q['id'],$reservation['id'])),'Repeated sale submission cannot create another sale');
 $html=$render(CustomerWorkspacePage::class,array('customer_id'=>$customer,'quotations_paged'=>2));$check(str_contains($html,'Journey customer')&&str_contains($html,$q['quote_number'])&&!str_contains($html,'Receipt reference'),'Customer workspace renders authorized linked records');
-$html=$render(FollowUpPage::class,array());$check(str_contains($html,'Journey customer'),'Sales follow-up queue includes own overdue lead');
+$html=$render(\AutoDealership\Admin\WorkspaceOverviewView::class,array('workspace_task'=>'overdue'));$check(str_contains($html,'Journey customer'),'Moved sales follow-up queue includes own overdue lead');
 $html=$render(SalesJourneyPage::class,array('section'=>'reservations'));$check(str_contains($html,\AutoDealership\Core\Localization::label('converted_to_sale')),'Commercial reservation queue renders converted status');
 $html=$render(SalesJourneyPage::class,array('section'=>'reservations','reservation_id'=>$reservation['id']));$check(str_contains($html,'quote_id='),'Reservation details link to matching authorized quotations');
 $html=$render(QuotePages::class,array('search'=>$q['quote_number']));$check(str_contains($html,$q['quote_number']),'Actual quote list supports search');
@@ -82,7 +82,7 @@ $user->add_cap('adc_create_quotes',false);wp_set_current_user(0);wp_set_current_
 $check('adc_forbidden'===SalesService::create_quote($customer,$v['id'],$valid)->get_error_code(),'Revoking quote capability denies service despite reservation grant');
 wp_set_current_user($other);$check(is_wp_error(QuoteHistory::versions($q['id'])),'Other branch cannot read quote details');
 $html=$render(CustomerWorkspacePage::class,array());$check(!str_contains($html,'Journey customer'),'Other branch customer list excludes customer');
-$html=$render(FollowUpPage::class,array());$check(!str_contains($html,'Journey customer'),'Other branch backlog excludes lead');
+$html=$render(\AutoDealership\Admin\WorkspaceOverviewView::class,array('workspace_task'=>'overdue'));$check(!str_contains($html,'Journey customer'),'Moved other-branch backlog excludes lead');
 wp_set_current_user($finance);$html=$render(CustomerWorkspacePage::class,array('customer_id'=>$customer));$check(str_contains($html,'Journey customer'),'Finance customer workspace loads payment query without SQL errors');
 $html=$render(SalesJourneyPage::class,array('section'=>'reservations','reservation_id'=>$reservation['id']));$check(str_contains($html,'سجل الاسترداد'),'Finance reservation detail loads receipt and refund histories');
 $prospect=$insert('customers',array('full_name'=>'Prospect without financial relationship','created_at'=>$now,'updated_at'=>$now));$insert('leads',array('customer_id'=>$prospect,'branch_id'=>$branch['id'],'owner_user_id'=>$sales,'lost_reason'=>'','created_at'=>$now,'updated_at'=>$now));

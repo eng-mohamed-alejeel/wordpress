@@ -194,12 +194,12 @@ wp_set_current_user( 0 ); $check( is_wp_error( Product::save_mail( $mail ) ), 'S
 update_option( 'car_dealer_public_setup_version', 1 ); delete_option( 'adc_product_profile' );
 $check( ! Product::legacy(), 'Theme-first installations do not inherit the old company identity' );
 update_option( 'blogname', 'أوتو براندز' );
-$check( Product::legacy() && 'AUTO BRANDS' === Product::brand( 'en' ), 'Existing installation retains legacy branding until explicitly configured' );
+$check( Product::legacy() && wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) === Product::brand( 'en' ), 'Unconfigured legacy identity preserves the existing WordPress name without inventing an English translation' );
 update_option( 'blogdescription', 'Existing editorial description to preserve' );
 $_GET['section'] = 'identity'; ob_start(); Product::render(); $legacy_ui = ob_get_clean(); unset( $_GET['section'] );
 $check( str_contains( $legacy_ui, 'Existing editorial description to preserve' ) && ! Product::profile(), 'Legacy setup pre-fills current descriptions without changing the profile' );
 $paths = array(); foreach ( \AutoDealership\Admin\Navigation::groups() as $group ) { foreach ( $group['items'] as $item ) { $paths[] = $item['path']; } }
-$check( in_array( 'options-general.php?page=adc-platform-setup', $paths, true ), 'Setup remains discoverable in the platform dashboard navigation' );
+$check( in_array( 'admin.php?page=adc-platform-setup', $paths, true ), 'Setup remains discoverable through its canonical dashboard navigation' );
 $before_users=$wpdb->get_results("SELECT * FROM {$wpdb->users} ORDER BY ID",ARRAY_A);$before_usermeta=$wpdb->get_results("SELECT * FROM {$wpdb->usermeta} ORDER BY umeta_id",ARRAY_A);
 $wpdb->query("ALTER TABLE {$wpdb->users} ENGINE=MyISAM");$wpdb->query("ALTER TABLE {$wpdb->usermeta} ENGINE=MyISAM");update_option('adc_product_storage_prepared','1');delete_transient('adc_product_storage_retry');Product::prepare_storage();
 $check('2'===get_option('adc_product_storage_prepared') && !\AutoDealership\Inventory\OnyxModelDrafts::storage_issues(),'Upgrading storage preparation also converts legacy user tables needed for registration');

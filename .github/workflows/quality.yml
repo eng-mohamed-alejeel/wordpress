@@ -36,6 +36,7 @@ jobs:
         run: |
           php wp-content/plugins/auto-dealership-core/tests/money.php
           php wp-content/plugins/auto-dealership-core/tests/pricing-policy.php
+          php wp-content/plugins/auto-dealership-core/tests/dashboard-settings.php
           php wp-content/plugins/auto-dealership-core/tests/branch-scope.php
           php wp-content/plugins/auto-dealership-core/tests/authentication-guard.php
           php wp-content/plugins/auto-dealership-core/tests/newsletter-language.php
@@ -45,3 +46,33 @@ jobs:
         run: |
           npm install --prefix .tmp/intelephense-ci --ignore-scripts --no-audit --no-fund intelephense@1.18.5
           ADC_INTELEPHENSE_SERVER="$PWD/.tmp/intelephense-ci/node_modules/intelephense/lib/intelephense.js" node tools/check-intelephense.cjs
+
+  workspace:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: '1'
+        ports:
+          - 33369:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v6.1.0
+        with:
+          persist-credentials: false
+      - name: Prepare isolated PHP integration environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, mbstring, dom, xml, zip, gd
+          coverage: none
+          tools: none
+      - name: Scoped workspace and canonical navigation acceptance
+        env:
+          ADC_WORKSPACE_ONLY: '1'
+        run: php wp-content/plugins/auto-dealership-core/tests/database-runner.php --isolated 33369

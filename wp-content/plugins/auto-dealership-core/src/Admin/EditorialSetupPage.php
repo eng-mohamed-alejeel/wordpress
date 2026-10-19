@@ -69,6 +69,7 @@ final class EditorialSetupPage {
 			<?php elseif ( $rows ) : ?>
 				<p><strong><?php esc_html_e( 'كل الصفحات المعرفة موجودة، ولم تُجرَ عليها أي تعديلات.', 'auto-dealership-core' ); ?></strong></p>
 			<?php endif; ?>
+		<?php \AutoDealership\Core\ProductSetup::render_page_tools(); ?>
 		</div>
 		<?php
 	}

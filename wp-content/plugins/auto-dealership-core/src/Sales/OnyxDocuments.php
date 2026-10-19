@@ -14,7 +14,7 @@ final class OnyxDocuments {
 	public const MAX_BYTES=5242880;
 	private static function text(string $ar,string $en): string {return \AutoDealership\Core\Localization::language()==='en'?$en:$ar;}
 	public static function boot(): void {
-		add_action('admin_menu',static function():void{if(self::can_read()){add_submenu_page('adc-quotes',self::text('مستندات أونكس المالية','Onyx financial documents'),self::text('مستندات أونكس المالية','Onyx financial documents'),'read','adc-onyx-documents',array(self::class,'render'));}});
+		// Navigation owns menu registration; the historical page slug stays valid.
 		add_action('admin_post_adc_onyx_document',array(self::class,'submit'));
 		add_action('admin_post_adc_download_onyx_document',array(self::class,'download'));
 	}
@@ -60,12 +60,49 @@ final class OnyxDocuments {
 		$row=$wpdb->get_row($wpdb->prepare('SELECT checksum,file_bytes,total_amount,tax_amount FROM '.Schema::table('onyx_documents')." WHERE sale_id=%d AND document_kind='invoice' AND reference=%s FOR UPDATE",$sale_id,strtoupper(trim($reference))),ARRAY_A);
 		return $row&&(int)$row['total_amount']===$total&&(int)$row['tax_amount']===$tax&&hash_equals($row['checksum'],hash('sha256',$row['file_bytes']));
 	}
+	/** Accessible sales index; never requires guessing a sale identifier. */
+	public static function sales_page( int $page = 1, string $search = '' ) {
+		global $wpdb;
+		if ( ! self::can_read() ) { return new \WP_Error( 'adc_document_forbidden' ); }
+		list( $scope, $args ) = BranchScope::predicate( 'v.branch_id' );
+		$search = mb_substr( sanitize_text_field( $search ), 0, 100 );
+		if ( '' !== $search ) {
+			$scope .= ' AND (c.full_name LIKE %s OR v.stock_number LIKE %s OR s.invoice_reference LIKE %s)';
+			$like = '%' . $wpdb->esc_like( $search ) . '%'; $args = array_merge( $args, array( $like, $like, $like ) );
+		}
+		$from = Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=s.customer_id';
+		$sql = "SELECT COUNT(*) FROM $from WHERE $scope";
+		$total = (int) $wpdb->get_var( $args ? $wpdb->prepare( $sql, $args ) : $sql );
+		if ( $wpdb->last_error ) { return new \WP_Error( 'adc_document_list_unavailable' ); }
+		$pages = max( 1, (int) ceil( $total / 20 ) ); $page = min( $pages, max( 1, $page ) );
+		$sql = 'SELECT s.id,s.status,s.created_at,c.full_name,v.stock_number,(SELECT COUNT(*) FROM ' . Schema::table( 'onyx_documents' ) . " doc WHERE doc.sale_id=s.id) documents FROM $from WHERE $scope ORDER BY s.id DESC LIMIT %d OFFSET %d";
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $args, array( 20, ( $page - 1 ) * 20 ) ) ), ARRAY_A ) ?: array();
+		return $wpdb->last_error ? new \WP_Error( 'adc_document_list_unavailable' ) : compact( 'rows','total','page','pages','search' );
+	}
+
+	private static function render_sales(): void {
+		$search = isset( $_GET['document_search'] ) && is_string( $_GET['document_search'] ) ? wp_unslash( $_GET['document_search'] ) : '';
+		$data = self::sales_page( absint( $_GET['document_page'] ?? 1 ), $search );
+		echo '<h2>' . esc_html( self::text( 'اختيار البيع', 'Select a sale' ) ) . '</h2>';
+		if ( is_wp_error( $data ) ) { echo '<p role="alert">' . esc_html( self::text( 'تعذر تحميل المبيعات. أعد المحاولة.', 'Could not load sales. Try again.' ) ) . '</p>'; return; }
+		echo '<form method="get"><input type="hidden" name="page" value="adc-onyx-documents"><label>' . esc_html( self::text( 'بحث العميل أو رقم المخزون أو مرجع الفاتورة', 'Search customer, stock number or invoice reference' ) ) . ' <input type="search" name="document_search" maxlength="100" value="' . esc_attr( $data['search'] ) . '"></label> <button class="button">' . esc_html( self::text( 'بحث', 'Search' ) ) . '</button></form><p>' . esc_html( self::text( 'إجمالي المبيعات ضمن نطاقك: ', 'Sales within your scope: ' ) . number_format_i18n( $data['total'] ) ) . '</p>';
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html( self::text( 'البيع', 'Sale' ) ) . '</th><th>' . esc_html( self::text( 'العميل / رقم المخزون', 'Customer / stock number' ) ) . '</th><th>' . esc_html( self::text( 'الحالة', 'Status' ) ) . '</th><th>' . esc_html( self::text( 'المستندات', 'Documents' ) ) . '</th><th>' . esc_html( self::text( 'المتابعة', 'Follow up' ) ) . '</th></tr></thead><tbody>';
+		foreach ( $data['rows'] as $row ) {
+			$url = add_query_arg( array( 'page'=>'adc-onyx-documents', 'sale_id'=>(int) $row['id'], 'document_search'=>$data['search'], 'document_page'=>$data['page'] ), admin_url( 'admin.php' ) );
+			echo '<tr><td>#' . absint( $row['id'] ) . '</td><td>' . esc_html( $row['full_name'] . ' / ' . $row['stock_number'] ) . '</td><td>' . esc_html( \AutoDealership\Core\Localization::label( $row['status'] ) ) . '</td><td>' . absint( $row['documents'] ) . '</td><td><a class="button" href="' . esc_url( $url ) . '">' . esc_html( self::text( 'فتح المستندات', 'Open documents' ) ) . '</a></td></tr>';
+		}
+		if ( ! $data['rows'] ) { echo '<tr><td colspan="5">' . esc_html( self::text( 'لا توجد مبيعات مطابقة ضمن صلاحياتك.', 'No matching sales within your permissions.' ) ) . '</td></tr>'; }
+		echo '</tbody></table>';
+		if ( $data['pages'] > 1 ) { $base = add_query_arg( array( 'page'=>'adc-onyx-documents', 'document_search'=>$data['search'], 'document_page'=>999999999 ), admin_url( 'admin.php' ) ); echo '<nav aria-label="' . esc_attr( self::text( 'صفحات المبيعات', 'Sales pages' ) ) . '">' . wp_kses_post( paginate_links( array( 'base'=>str_replace( '999999999', '%#%', $base ), 'format'=>'', 'current'=>$data['page'], 'total'=>$data['pages'] ) ) ) . '</nav>'; }
+	}
+
 	public static function render(): void {
 		global $wpdb;
 		$id=absint($_GET['sale_id']??0);
 		if(!self::can_read()){wp_die('Forbidden','',array('response'=>403));}
 		echo '<div class="wrap"><h1>'.esc_html(self::text('مستندات أونكس المالية','Onyx financial documents')).'</h1><p>'.esc_html(self::text('أونكس مصدر الإصدار. ارفع نسخة PDF الأصلية بعد مطابقة العميل والمركبة والمبالغ. ربط مستند لا يسجّل دفعة أو استردادًا.','Onyx is the issuer. Upload the original PDF after verifying the customer, vehicle and amounts. Linking a document does not record a payment or refund.')).'</p>';
-		if(!$id){echo '<form method="get"><input type="hidden" name="page" value="adc-onyx-documents"><label>'.esc_html(self::text('رقم البيع','Sale ID')).' <input type="number" min="1" required name="sale_id"></label><button class="button">'.esc_html(self::text('فتح','Open')).'</button></form></div>';return;}
+		if(!$id){self::render_sales();echo '</div>';return;}
+		echo '<p><a class="button" href="'.esc_url(remove_query_arg(array('sale_id','error'))).'">'.esc_html(self::text('العودة إلى قائمة المبيعات','Back to sales')).'</a></p>';
 		$sale=self::sale($id);if(!$sale){wp_die('Sale unavailable','',array('response'=>404));}
 		if(isset($_GET['error'])){echo '<p role="alert">'.esc_html(self::text('تعذر حفظ المستند: ','Unable to save document: ').sanitize_key($_GET['error'])).'</p>';}
 		$rows=$wpdb->get_results($wpdb->prepare('SELECT id,document_kind,reference,document_date,checksum FROM '.Schema::table('onyx_documents').' WHERE sale_id=%d ORDER BY id DESC',$id),ARRAY_A)?:array();

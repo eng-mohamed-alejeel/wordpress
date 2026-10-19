@@ -1,6 +1,13 @@
 <?php
 /** CLI-only tests in a fresh database. Source WordPress is booted with SHORTINIT for credentials only. */
 if ( PHP_SAPI !== 'cli' ) { exit; }
+$verification_plugin_file = __DIR__ . '/../auto-dealership-core.php';
+if ( getenv( 'ADC_BASELINE_PLUGIN_FILE' ) ) {
+	$baseline_file = realpath( getenv( 'ADC_BASELINE_PLUGIN_FILE' ) );
+	$baseline_root = realpath( dirname( __DIR__, 4 ) . '/.tmp' );
+	if ( ! $baseline_file || ! $baseline_root || basename( $baseline_file ) !== 'auto-dealership-core.php' || ! str_starts_with( str_replace( '\\', '/', $baseline_file ), str_replace( '\\', '/', $baseline_root ) . '/' ) ) { throw new RuntimeException( 'Baseline plugin must be an extracted runtime under the workspace .tmp directory.' ); }
+	$verification_plugin_file = $baseline_file;
+}
 if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	$connection = json_decode( stream_get_contents( STDIN ), true );
 	if ( ! is_array( $connection ) || ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', $connection['database'] ?? '' ) || ( $connection['database'] ?? '' ) === ( $connection['source_database'] ?? '' ) ) {
@@ -47,7 +54,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	require ABSPATH . 'wp-settings.php';
 	add_filter( 'pre_wp_mail', '__return_true' );
 	if ( in_array( $scenario, array( 'portal_ensure','portal_send','portal_change','portal_review','portal_read','portal_withdraw','email_confirm', 'reserve', 'finance_attempt', 'migrate', 'crm_intake', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase', 'outbox', 'rate_limit', 'purchase_create' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
-		require __DIR__ . '/../auto-dealership-core.php';
+		require $verification_plugin_file;
 		wp_set_current_user( $actor );
 		global $wpdb;
 		$wpdb->suppress_errors( true );
@@ -97,7 +104,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$install = wp_install( 'Isolated verification', 'verify_admin', 'verify@example.invalid', false, '', wp_generate_password( 32, true, true ) );
 	wp_set_current_user( (int) $install['user_id'] );
-	require __DIR__ . '/../auto-dealership-core.php';
+	require $verification_plugin_file;
 	// The isolated worker loads the plugin after wp-settings.php has already fired
 	// plugins_loaded and init. Boot those runtime integrations explicitly here.
 	\AutoDealership\Leads\LegacyCrmBridge::boot();
@@ -111,6 +118,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
 	if ( '1' === getenv( 'ADC_AUTH_ONLY' ) ) { require __DIR__ . '/authentication-scenarios.php'; exit; }
+	if ( '1' === getenv( 'ADC_WORKSPACE_ONLY' ) ) { require __DIR__ . '/workspace-overview-scenarios.php'; exit; }
 	require __DIR__.'/onyx-document-fixture.php';
 	if ( '1' === getenv( 'ADC_JOBS_ONLY' ) ) { require __DIR__ . '/job-runtime-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_PORTAL_ONLY' ) ) { require __DIR__ . '/portal-scenarios.php'; exit; }

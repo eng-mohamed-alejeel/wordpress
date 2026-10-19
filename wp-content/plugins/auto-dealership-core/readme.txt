@@ -1,11 +1,17 @@
 === Auto Dealership Core ===
 Requires at least: 6.7
 Requires PHP: 8.0
-Stable tag: 1.61.2
+Stable tag: 1.63.1
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The Car Dealer theme is a presentation adapter for this plugin.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
+
+Version 1.63.1 restores customer-name search, responsible-owner information and customer workspace links in the consolidated follow-up queue. Search and paging retain the same permission-scoped count predicates. Operational branch metadata remains independently loadable and uses the shared UI translation catalog. No schema migration is required.
+
+Version 1.63.0 consolidates administration into canonical editors for policies, contact, social accounts, identity and pages. The home shows daily work and compact area navigation, transfers share one searchable paginated center, and readiness combines specialist sources without duplicating editors. Retired GET destinations redirect; nonce-protected POST operations and shared stored data remain compatible. No schema migration is required.
+
+Version 1.62.0 adds a permission- and branch-scoped operational overview with matching paginated work queues, local-day lead periods, independent-review filters, distinct loading errors and bilingual responsive views. Profit margin and Onyx documents share the canonical navigation/card contract. Onyx documents now open a searchable scoped sales index; existing page slugs and direct record URLs are preserved. No schema migration is required.
 
 Version 1.61.2 isolates authentication quotas by account and address, with canonical username/email aliases and generous network safety ceilings. Registration has independent per-email/address and network quotas. Blocked narrow attempts cannot drain the shared network allowance. No schema migration is required.
 

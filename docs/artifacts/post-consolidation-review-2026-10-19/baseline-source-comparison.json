@@ -1,0 +1,13 @@
+{
+  "baseline": "1.62.0-20261019-165626",
+  "current": "working source after consolidation review",
+  "literal_admin_post_handlers_before": 79,
+  "literal_admin_post_handlers_after": 79,
+  "removed_literal_handlers": [],
+  "added_literal_handlers": [],
+  "compared_business_source_files": 77,
+  "unchanged_business_source_files": 77,
+  "different_business_source_files": [],
+  "schema_source_unchanged": true,
+  "note": "Static inventory detects literal action registrations only; dynamic registrations and callback authorization are verified separately by runtime tests."
+}

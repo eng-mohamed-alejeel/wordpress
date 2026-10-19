@@ -144,11 +144,30 @@ if ( '/wp-admin/admin-post.php' === $request_path ) {
 	http_response_code( 400 );
 	exit;
 }
-if ( '/wp-admin/admin.php' === $request_path ) {
+if ( in_array( $request_path, array( '/wp-admin/admin.php', '/wp-admin/options-general.php' ), true ) ) {
 	if ( ! is_user_logged_in() ) { http_response_code( 401 ); exit; }
 	require_once ABSPATH . 'wp-admin/includes/admin.php';
+	$GLOBALS['pagenow'] = basename( $request_path );
+	\AutoDealership\Admin\AdminStructure::redirect();
 	$renderers = array( 'adc-sales-journey'=>\AutoDealership\Admin\SalesJourneyPage::class, 'adc-customer-workspace'=>\AutoDealership\Admin\CustomerWorkspacePage::class, 'adc-follow-ups'=>\AutoDealership\Admin\FollowUpPage::class, 'adc-purchase-orders'=>\AutoDealership\Admin\PurchaseOrderPage::class, 'adc-release-evidence'=>\AutoDealership\Admin\ReleaseEvidencePage::class );
 	$page = sanitize_key( $_GET['page'] ?? '' );
+	$workspace_renderers = array(
+		'adc-workspace'=>array( \AutoDealership\Admin\WorkspacePage::class, 'render' ),
+		'adc-onyx-documents'=>array( \AutoDealership\Sales\OnyxDocuments::class, 'render' ),
+		'adc-profit-margin'=>array( \AutoDealership\Admin\ProfitMarginPage::class, 'render' ),
+		'adc-approvals'=>array( \AutoDealership\Admin\WorkflowPages::class, 'approvals' ),
+		'adc-finance'=>array( \AutoDealership\Admin\WorkflowPages::class, 'finance' ),
+		'adc-payments'=>array( \AutoDealership\Admin\PaymentPages::class, 'render' ),
+		'adc-platform-setup'=>array( \AutoDealership\Core\ProductSetup::class, 'render' ),
+		'adc-contact'=>array( \AutoDealership\Core\ProductSetup::class, 'render_contact' ),
+		'adc-social-channels'=>array( \AutoDealership\Core\SocialChannels::class, 'admin' ),
+		'adc-branch-locations'=>array( \AutoDealership\Core\BranchLocations::class, 'admin' ),
+		'adc-editorial-setup'=>array( \AutoDealership\Admin\EditorialSetupPage::class, 'render' ),
+		'adc-transfers'=>array( \AutoDealership\Admin\TransferPages::class, 'render' ),
+		'adc-site-content'=>array( \AutoDealership\Admin\SiteContentPage::class, 'render' ),
+	);
+	if ( str_starts_with( $page, 'adc-area-' ) ) { \AutoDealership\Admin\WorkspacePage::render(); exit; }
+	if ( isset( $workspace_renderers[$page] ) ) { call_user_func( $workspace_renderers[$page] ); exit; }
 	if ( ! isset( $renderers[$page] ) ) { http_response_code( 404 ); exit; }
 	$renderers[$page]::render(); exit;
 }

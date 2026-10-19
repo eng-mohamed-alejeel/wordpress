@@ -1,0 +1,303 @@
+{
+  "release": "1.63.0",
+  "groups": 11,
+  "destinations": 59,
+  "method": "Source definitions; runtime menus are recorded separately for administrator and sales roles.",
+  "items": [
+    {
+      "group": "customers",
+      "slug": "adc-conversations",
+      "definition": "array( 'adc-conversations', 'محادثات العملاء', array('manage_options','adc_view_conversations'), \\AutoDealership\\Portal\\PortalAdmin::class, 'conversations' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-portal-operations",
+      "definition": "array( 'adc-portal-operations', 'تشغيل بوابة العميل', array('manage_options','adc_publish_customer_documents'), \\AutoDealership\\Portal\\PortalOperations::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-customer-reviews",
+      "definition": "array( 'adc-customer-reviews', 'تقييمات العملاء', array('manage_options','adc_moderate_reviews'), \\AutoDealership\\Portal\\PortalAdmin::class, 'reviews' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-crm",
+      "definition": "array( 'adc-crm', 'فرص العملاء', $leads, OperationsPages::class, 'render_leads' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "car-dealer-messages",
+      "definition": "array( 'car-dealer-messages', 'رسائل العملاء', $leads, EngagementPages::class, 'render_messages' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "car-dealer-bookings",
+      "definition": "array( 'car-dealer-bookings', 'حجوزات تجربة القيادة', $leads, EngagementPages::class, 'render_bookings' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-quotes",
+      "definition": "array( 'adc-quotes', 'عروض أسعار العملاء', array( 'manage_options', 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_finance' ), QuotePages::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-sales-journey",
+      "definition": "array( 'adc-sales-journey', 'دورة المبيعات', array( 'manage_options', 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_finance' ), SalesJourneyPage::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-customer-workspace",
+      "definition": "array( 'adc-customer-workspace', 'ملف العميل', array( 'manage_options', 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_finance' ), CustomerWorkspacePage::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-follow-ups",
+      "definition": "array( 'adc-follow-ups', 'المتابعات والتنبيهات', 'adc_view_workspace', FollowUpPage::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-customer-identities",
+      "definition": "array( 'adc-customer-identities', 'مراجعة ملفات العملاء', 'manage_options', CustomerIdentityPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-onyx",
+      "definition": "array( 'adc-onyx', 'مخزون أونكس', 'manage_options', OnyxInventoryPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-inventory",
+      "definition": "array( 'adc-inventory', 'إدارة السيارات', 'adc_view_inventory', OperationsPages::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-inventory-identity",
+      "definition": "array( 'adc-inventory-identity', 'الاستلام والفحص وحركة المواقع', 'adc_manage_inventory', InventoryIdentityPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-vehicle-vin",
+      "definition": "array( 'adc-vehicle-vin', 'تصحيح رقم الهيكل VIN', 'adc_change_vehicle_vin', InventoryIdentityPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-vehicle-specifications",
+      "definition": "array( 'adc-vehicle-specifications', 'مواصفات المركبات', 'adc_manage_inventory', VehicleSpecificationsPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-transfers",
+      "definition": "array( 'adc-transfers', \\AutoDealership\\Core\\ProductSetup::t( 'نقل المركبات بين الفروع', 'Vehicle transfers between branches' ), 'adc_transfer_inventory', TransferPages::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-vehicle-issues",
+      "definition": "array( 'adc-vehicle-issues', 'الاحتجاز والصيانة', 'adc_manage_inventory', VehicleIssuePage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-vehicle-returns",
+      "definition": "array( 'adc-vehicle-returns', 'مرتجعات المركبات', 'adc_process_returns', VehicleReturnPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "edit.php?post_type=car",
+      "definition": "array( 'edit.php?post_type=car', 'صفحات السيارات', 'edit_cars' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "edit-tags.php?taxonomy=car_brand&post_type=car",
+      "definition": "array( 'edit-tags.php?taxonomy=car_brand&post_type=car', 'ماركات السيارات', 'manage_car_brands' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "edit-tags.php?taxonomy=car_category&post_type=car",
+      "definition": "array( 'edit-tags.php?taxonomy=car_category&post_type=car', 'فئات السيارات', 'manage_car_categories' ),"
+    },
+    {
+      "group": "purchasing",
+      "slug": "adc-purchase-orders",
+      "definition": "array( 'adc-purchase-orders', 'Purchase orders', 'adc_view_purchase_orders', PurchaseOrderPage::class, 'render' ),"
+    },
+    {
+      "group": "purchasing",
+      "slug": "adc-suppliers",
+      "definition": "array( 'adc-suppliers', 'الموردون', 'adc_view_suppliers', SupplierPage::class, 'render' ),"
+    },
+    {
+      "group": "purchasing",
+      "slug": "adc-vehicle-acquisition",
+      "definition": "array( 'adc-vehicle-acquisition', 'اقتناء المركبات وتكاليفها', 'adc_view_vehicle_costs', VehicleAcquisitionPage::class, 'render' ),"
+    },
+    {
+      "group": "approvals",
+      "slug": "adc-approvals",
+      "definition": "array( 'adc-approvals', 'اعتماد الخصومات والمبيعات', array( 'adc_review_discounts', 'adc_approve_sales' ), WorkflowPages::class, 'approvals' ),"
+    },
+    {
+      "group": "approvals",
+      "slug": "adc-sale-cancellations",
+      "definition": "array( 'adc-sale-cancellations', 'إلغاء المبيعات', 'adc_cancel_sales', SaleCancellationPage::class, 'render' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-onyx-documents",
+      "definition": "array( 'adc-onyx-documents', \\AutoDealership\\Core\\ProductSetup::t( 'مستندات أونكس المالية', 'Onyx financial documents' ), array( 'manage_options', 'adc_view_finance', 'adc_approve_sales' ), \\AutoDealership\\Sales\\OnyxDocuments::class, 'render' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-finance",
+      "definition": "array( 'adc-finance', 'طلبات التمويل', array( 'adc_view_finance', 'adc_manage_finance' ), WorkflowPages::class, 'finance' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-payments",
+      "definition": "array( 'adc-payments', 'تأكيدات السداد', 'adc_view_finance', PaymentPages::class, 'render' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-refunds",
+      "definition": "array( 'adc-refunds', 'المبالغ المستردة', 'adc_view_finance', RefundPage::class, 'render' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-financial-export",
+      "definition": "array( 'adc-financial-export', 'التصدير المالي', 'adc_view_finance', FinancialExportPage::class, 'render' ),"
+    },
+    {
+      "group": "delivery",
+      "slug": "adc-delivery",
+      "definition": "array( 'adc-delivery', 'تجهيز وتسليم المركبات', array( 'adc_approve_delivery', 'adc_confirm_vehicle_vin' ), WorkflowPages::class, 'delivery' ),"
+    },
+    {
+      "group": "content",
+      "slug": "adc-site-content",
+      "definition": "array( 'adc-site-content', \\AutoDealership\\Core\\ProductSetup::t( 'محتوى الصفحة الرئيسية والأقسام', 'Homepage and section content' ), 'manage_options', SiteContentPage::class, 'render' ),"
+    },
+    {
+      "group": "content",
+      "slug": "edit.php?post_type=car_offer",
+      "definition": "array( 'edit.php?post_type=car_offer', 'العروض الترويجية', 'edit_car_offers' ),"
+    },
+    {
+      "group": "content",
+      "slug": "edit.php?post_type=page",
+      "definition": "array( 'edit.php?post_type=page', 'صفحات الموقع', 'edit_pages' ),"
+    },
+    {
+      "group": "content",
+      "slug": "upload.php",
+      "definition": "array( 'upload.php', 'مكتبة الوسائط', 'upload_files' ),"
+    },
+    {
+      "group": "content",
+      "slug": "adc-editorial-setup",
+      "definition": "array( 'adc-editorial-setup', 'إعداد صفحات الموقع', 'manage_options', EditorialSetupPage::class, 'render' ),"
+    },
+    {
+      "group": "marketing",
+      "slug": "car-dealer-subscribers",
+      "definition": "array( 'car-dealer-subscribers', 'مشتركو النشرة البريدية', 'adc_view_marketing_subscribers', EngagementPages::class, 'render_subscribers' ),"
+    },
+    {
+      "group": "reports",
+      "slug": "adc-operational-reports",
+      "definition": "array( 'adc-operational-reports', 'التقارير التشغيلية', 'adc_view_reports', OperationalReportPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-platform-setup",
+      "definition": "array( 'adc-platform-setup', \\AutoDealership\\Core\\ProductSetup::t( 'الهوية والبريد وجاهزية المنصة', 'Identity, email and platform readiness' ), 'manage_options', \\AutoDealership\\Core\\ProductSetup::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-contact",
+      "definition": "array( 'adc-contact', \\AutoDealership\\Core\\ProductSetup::t( 'بيانات التواصل العامة', 'Public contact details' ), 'manage_options', \\AutoDealership\\Core\\ProductSetup::class, 'render_contact' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-social-channels",
+      "definition": "array( 'adc-social-channels', \\AutoDealership\\Core\\ProductSetup::t( 'حسابات التواصل الاجتماعي', 'Social accounts' ), 'manage_options', \\AutoDealership\\Core\\SocialChannels::class, 'admin' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-branch-locations",
+      "definition": "array( 'adc-branch-locations', \\AutoDealership\\Core\\ProductSetup::t( 'فروع الموقع والخرائط', 'Public branches and maps' ), 'manage_options', \\AutoDealership\\Core\\BranchLocations::class, 'admin' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "customize.php?autofocus[panel]=adc_brand_palette",
+      "definition": "array( 'customize.php?autofocus[panel]=adc_brand_palette', \\AutoDealership\\Core\\ProductSetup::t( 'الهوية والألوان', 'Brand and colors' ), 'manage_options' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-release-evidence",
+      "definition": "array( 'adc-release-evidence', 'Release evidence', 'manage_options', ReleaseEvidencePage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-settings",
+      "definition": "array( 'adc-settings', 'سياسات وإعدادات المنصة', 'manage_options', SettingsPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-profit-margin",
+      "definition": "array( 'adc-profit-margin', \\AutoDealership\\Core\\ProductSetup::t( 'هامش ربح السيارات', 'Vehicle profit margin' ), 'manage_options', ProfitMarginPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-reference",
+      "definition": "array( 'adc-reference', \\AutoDealership\\Core\\ProductSetup::t( 'العلامات والمواقع التشغيلية', 'Operational brands and locations' ), 'manage_options', ReferencePage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-finance-calculator",
+      "definition": "array( 'adc-finance-calculator', 'إعدادات حاسبة التمويل', 'manage_options', FinanceCalculatorPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-catalog-cutover",
+      "definition": "array( 'adc-catalog-cutover', 'مطابقة الكتالوج', 'manage_options', CatalogCutoverPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-stored-translations",
+      "definition": "array( 'adc-stored-translations', 'ترجمات البيانات', 'manage_options', StoredTranslationsPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "users.php",
+      "definition": "array( 'users.php', \\AutoDealership\\Core\\ProductSetup::t( 'حسابات الموظفين', 'Staff accounts' ), 'list_users' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-roles",
+      "definition": "array( 'adc-roles', 'Roles and permissions', 'manage_options', RoleManager::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-access-review",
+      "definition": "array( 'adc-access-review', 'Account access review', 'manage_options', AccessReviewPage::class, 'render' ),"
+    },
+    {
+      "group": "audit",
+      "slug": "adc-audit",
+      "definition": "array( 'adc-audit', 'سجل التدقيق', 'adc_view_audit', AuditPage::class, 'render' ),"
+    },
+    {
+      "group": "audit",
+      "slug": "adc-public-security",
+      "definition": "array( 'adc-public-security', 'أمن الواجهة العامة', 'adc_view_audit', SecurityPage::class, 'render' ),"
+    },
+    {
+      "group": "audit",
+      "slug": "adc-integrations",
+      "definition": "array( 'adc-integrations', 'جاهزية التكاملات', 'adc_view_integrations', IntegrationPage::class, 'render' ),"
+    },
+    {
+      "group": "audit",
+      "slug": "adc-outbox",
+      "definition": "array( 'adc-outbox', 'مراقبة المهام', 'adc_view_outbox', OutboxPage::class, 'render' ),"
+    }
+  ]
+}

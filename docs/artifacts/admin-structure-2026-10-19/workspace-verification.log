@@ -1,0 +1,3 @@
+PASS: 52 real browser workspace checks (Arabic/English, 1440/390px).
+PASS: 101 isolated workspace overview checks; maximum observed snapshot queries: 27.
+Disposable test database removed. Source database was not contacted.

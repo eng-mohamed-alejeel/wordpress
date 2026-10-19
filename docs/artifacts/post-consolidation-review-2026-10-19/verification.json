@@ -1,0 +1,172 @@
+{
+  "version": "1.63.1",
+  "package_directory": ".tmp\\product-release\\1.63.1-20261019-200548",
+  "artifacts": [
+    {
+      "name": "auto-dealership-core-1.63.1.zip",
+      "sha256": "4baf4dc27eb120fb30e792454a682b7fab530e89f7a0dfa4d3c7f01a59d9b8c6",
+      "file_count": 295
+    },
+    {
+      "name": "car-dealer-1.63.1.zip",
+      "sha256": "4bfb8ea19364ce409153531ef33d14c3302d4c63e4b65692e9eea83f979beb1c",
+      "file_count": 68
+    }
+  ],
+  "runtime_zip_source_equality": true,
+  "focused_database_suites": [
+    {
+      "Mode": "ADC_AUTH_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_DASHBOARD_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_SALES_JOURNEY_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_PURCHASING_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_CURRENCY_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_CATALOG_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_PORTAL_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_JOBS_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_NEWSLETTER_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_PRODUCT_ONLY",
+      "Exit": 0
+    },
+    {
+      "Mode": "ADC_WORKSPACE_ONLY",
+      "Exit": 0
+    }
+  ],
+  "workspace": {
+    "database_http_checks": 109,
+    "browser_checks": 60,
+    "max_snapshot_queries": 27,
+    "log": ".tmp/post-review-workspace-final.log"
+  },
+  "sales_journey_checks": 58,
+  "php_syntax": {
+    "files": 243,
+    "errors": 0
+  },
+  "javascript_syntax": {
+    "files": 87,
+    "errors": 0
+  },
+  "intelephense": {
+    "files": 272,
+    "owned_errors": 0,
+    "other_diagnostics": 100
+  },
+  "css_build_check": "passed",
+  "public_gettext_copy_check": "passed",
+  "database_schema_unchanged": "1.25",
+  "source_database_contacted": false,
+  "hosting_deployed": false,
+  "full_default_suite": {
+    "passed": false,
+    "reason": "Preexisting catalog performance budget failure on both 1.62.0 and 1.63.1",
+    "observed_queries": 66,
+    "budget": 25,
+    "logs": [
+      ".tmp/post-review-full-suite.log",
+      ".tmp/post-review-baseline-full-suite.log"
+    ]
+  },
+  "offline_checks": {
+    "money": 33,
+    "pricing_policy": 16,
+    "dashboard_settings": 113,
+    "branch_scope": 52,
+    "authentication_guard": 46,
+    "newsletter_language": 2,
+    "response_contract": 9
+  },
+  "focused_counts": {
+    "authentication": 34,
+    "dashboard": 35,
+    "sales_journey": 58,
+    "purchasing": 52,
+    "currency_forms": 45,
+    "portal": 171,
+    "jobs": 25,
+    "newsletter": 184,
+    "product_setup_content": 138,
+    "catalog_onyx": {
+      "onyx": 85,
+      "publishing": 61,
+      "names_suppliers": 22,
+      "snapshot": 21,
+      "inventory_workspace": 42,
+      "offers": 24,
+      "profit_margin": 39,
+      "social_persistence": 8
+    }
+  },
+  "extracted_zip_admin_browser": {
+    "passed": true,
+    "checks": 213,
+    "log": "post-review-package-admin-final.log",
+    "roles": [
+      "administrator",
+      "dealership_sales",
+      "dealership_finance",
+      "dealership_inventory",
+      "dealership_general_manager",
+      "dealership_delivery"
+    ]
+  },
+  "public_content_baseline_comparison": {
+    "runtime_unchanged": true,
+    "file": "src/Content/SiteContent.php",
+    "sha256": "4f9bc4e028b34a2fedd5529af80b254f71047022aa1c786f1980cab5bdd99a7b",
+    "baseline": "1.62.0",
+    "test_corrections": "Team is an About collection in both runtimes; homepage scenario tests existing reviews section and restores published status before independent review moderation."
+  },
+  "extracted_zip_general_browser": {
+    "passed": true,
+    "checks": 218,
+    "log": "post-review-package-general-complete.log",
+    "scope": [
+      "frontend",
+      "setup",
+      "public_branches",
+      "editorial",
+      "registration_verification_login",
+      "portal",
+      "favorites",
+      "private_pdf",
+      "live_chat",
+      "accessibility"
+    ]
+  },
+  "favorite_runtime_baseline_comparison": {
+    "file": "src/Portal/CustomerJourney.php",
+    "unchanged": true,
+    "sha256": "51728a79223ec4b809ffba0d603f0b19ce3074ce6bcf7a93c8467751bb3a2874"
+  },
+  "isolated_test_server_shutdown": true,
+  "temporary_test_databases_removed": true
+}

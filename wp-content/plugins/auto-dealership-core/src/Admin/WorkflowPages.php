@@ -56,7 +56,9 @@ final class WorkflowPages {
 			<h2><?php esc_html_e( 'طلبات الخصم', 'auto-dealership-core' ); ?></h2>
 			<?php
 			$discount_sql = 'SELECT d.id,d.requested_amount,d.approval_tier,d.margin_before,d.margin_after,d.reason,d.requester_user_id,q.quote_number,q.base_amount,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM ' . Schema::table( 'discount_requests' ) . ' d INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=d.quotation_id INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=q.customer_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=q.vehicle_id WHERE d.status = \'pending\'' . $scope . ' ORDER BY d.created_at ASC,d.id ASC LIMIT 100';
-			$discounts_page = QueueTable::fetch( $discount_sql, $scope_args, array( 'c.full_name', 'v.stock_number', 'v.vin', 'v.brand', 'v.model', 'q.quote_number', 'd.reason' ) );
+			$discount_args = $scope_args;
+			if ( $id = absint( $_GET['discount_id'] ?? 0 ) ) { $discount_sql = str_replace( ' ORDER BY ', ' AND d.id=%d ORDER BY ', $discount_sql ); $discount_args[] = $id; }
+			$discounts_page = QueueTable::fetch( $discount_sql, $discount_args, array( 'c.full_name', 'v.stock_number', 'v.vin', 'v.brand', 'v.model', 'q.quote_number', 'd.reason' ) );
 			$discounts = $discounts_page['rows'];
 			?>
 			<table class="widefat striped"><thead><tr><th><?php echo esc_html__( 'ID', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'العميل / السيارة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'عرض السعر', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الخصم (ريال)', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'Approval tier', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'Margin before / after', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'السبب', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'القرار', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
@@ -68,7 +70,9 @@ final class WorkflowPages {
 			<h2><?php esc_html_e( 'عمليات البيع بانتظار الاعتماد', 'auto-dealership-core' ); ?></h2>
 			<?php
 			$sales_sql = 'SELECT s.id,s.owner_user_id,q.quote_number,q.final_amount,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=s.quotation_id INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=s.customer_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id WHERE s.status = \'pending_approval\'' . $scope . ' ORDER BY s.created_at ASC,s.id ASC LIMIT 100';
-			$sales_page = QueueTable::fetch( $sales_sql, $scope_args, array( 'c.full_name', 'v.stock_number', 'v.vin', 'v.brand', 'v.model', 'q.quote_number' ) );
+			$sale_args = $scope_args;
+			if ( $id = absint( $_GET['sale_id'] ?? 0 ) ) { $sales_sql = str_replace( ' ORDER BY ', ' AND s.id=%d ORDER BY ', $sales_sql ); $sale_args[] = $id; }
+			$sales_page = QueueTable::fetch( $sales_sql, $sale_args, array( 'c.full_name', 'v.stock_number', 'v.vin', 'v.brand', 'v.model', 'q.quote_number' ) );
 			$sales = $sales_page['rows'];
 			?>
 			<table class="widefat striped"><thead><tr><th><?php echo esc_html__( 'ID', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'العميل / السيارة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'عرض السعر', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الإجمالي (ريال)', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'مرجع الفاتورة', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
@@ -85,7 +89,9 @@ final class WorkflowPages {
 		}
 		list( $scope, $scope_args ) = self::branch_sql();
 		$finance_sql = 'SELECT f.id,f.sale_id,f.attempt_number,f.previous_request_id,f.provider,f.requested_amount,f.down_payment,f.term_months,f.monthly_payment,f.status,f.provider_reference,f.decision_reason,f.requested_by,s.vehicle_id,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM ' . Schema::table( 'finance_requests' ) . ' f INNER JOIN ' . Schema::table( 'sales' ) . ' s ON s.id=f.sale_id INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=s.customer_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id WHERE 1=1' . $scope . ' ORDER BY f.created_at DESC,f.id DESC LIMIT 100';
-		$requests_page = QueueTable::fetch( $finance_sql, $scope_args, array( 'c.full_name', 'v.stock_number', 'v.vin', 'v.brand', 'v.model', 'f.provider', 'f.provider_reference' ) );
+		$finance_args = $scope_args;
+		if ( $id = absint( $_GET['finance_id'] ?? 0 ) ) { $finance_sql = str_replace( ' ORDER BY ', ' AND f.id=%d ORDER BY ', $finance_sql ); $finance_args[] = $id; }
+		$requests_page = QueueTable::fetch( $finance_sql, $finance_args, array( 'c.full_name', 'v.stock_number', 'v.vin', 'v.brand', 'v.model', 'f.provider', 'f.provider_reference' ) );
 			$requests = $requests_page['rows'];
 		$sales = array();
 		if ( current_user_can( 'adc_manage_finance' ) ) {

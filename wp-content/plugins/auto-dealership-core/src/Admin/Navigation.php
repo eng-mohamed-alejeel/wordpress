@@ -24,6 +24,7 @@ final class Navigation {
 	}
 
 	public static function hide_wordpress_menu(): void {
+		if ( current_user_can( 'adc_view_workspace' ) ) { remove_menu_page( 'index.php' ); }
 		if ( self::is_system_admin() ) { return; }
 		foreach ( self::wordpress_pages() as $page ) { remove_menu_page( $page ); }
 	}
@@ -42,7 +43,7 @@ final class Navigation {
 	}
 
 	public static function dashboard_redirect(): void {
-		if ( ! self::is_system_admin() && current_user_can( 'adc_view_workspace' ) ) {
+		if ( ! is_network_admin() && ! is_user_admin() && current_user_can( 'adc_view_workspace' ) ) {
 			wp_safe_redirect( admin_url( 'admin.php?page=adc-workspace' ) );
 			exit;
 		}
@@ -79,8 +80,7 @@ final class Navigation {
 				array( 'adc-inventory-identity', 'الاستلام والفحص وحركة المواقع', 'adc_manage_inventory', InventoryIdentityPage::class, 'render' ),
 				array( 'adc-vehicle-vin', 'تصحيح رقم الهيكل VIN', 'adc_change_vehicle_vin', InventoryIdentityPage::class, 'render' ),
 				array( 'adc-vehicle-specifications', 'مواصفات المركبات', 'adc_manage_inventory', VehicleSpecificationsPage::class, 'render' ),
-				array( 'adc-transfers', 'إنشاء طلب نقل', 'adc_transfer_inventory', OperationsPages::class, 'render_transfers' ),
-				array( 'adc-transfer-queue', 'متابعة نقل المركبات', 'adc_transfer_inventory', TransferPages::class, 'render' ),
+				array( 'adc-transfers', \AutoDealership\Core\ProductSetup::t( 'نقل المركبات بين الفروع', 'Vehicle transfers between branches' ), 'adc_transfer_inventory', TransferPages::class, 'render' ),
 				array( 'adc-vehicle-issues', 'الاحتجاز والصيانة', 'adc_manage_inventory', VehicleIssuePage::class, 'render' ),
 				array( 'adc-vehicle-returns', 'مرتجعات المركبات', 'adc_process_returns', VehicleReturnPage::class, 'render' ),
 				array( 'edit.php?post_type=car', 'صفحات السيارات', 'edit_cars' ),
@@ -97,6 +97,7 @@ final class Navigation {
 				array( 'adc-sale-cancellations', 'إلغاء المبيعات', 'adc_cancel_sales', SaleCancellationPage::class, 'render' ),
 			) ),
 			'finance' => array( 'المالية', 'dashicons-money-alt', array(
+				array( 'adc-onyx-documents', \AutoDealership\Core\ProductSetup::t( 'مستندات أونكس المالية', 'Onyx financial documents' ), array( 'manage_options', 'adc_view_finance', 'adc_approve_sales' ), \AutoDealership\Sales\OnyxDocuments::class, 'render' ),
 				array( 'adc-finance', 'طلبات التمويل', array( 'adc_view_finance', 'adc_manage_finance' ), WorkflowPages::class, 'finance' ),
 				array( 'adc-payments', 'تأكيدات السداد', 'adc_view_finance', PaymentPages::class, 'render' ),
 				array( 'adc-refunds', 'المبالغ المستردة', 'adc_view_finance', RefundPage::class, 'render' ),
@@ -106,11 +107,10 @@ final class Navigation {
 				array( 'adc-delivery', 'تجهيز وتسليم المركبات', array( 'adc_approve_delivery', 'adc_confirm_vehicle_vin' ), WorkflowPages::class, 'delivery' ),
 			) ),
 			'content' => array( 'محتوى الموقع', 'dashicons-admin-page', array(
-				array( 'adc-site-content', 'إدارة المحتوى وجاهزية الموقع', 'manage_options', SiteContentPage::class, 'render' ),
+				array( 'adc-site-content', \AutoDealership\Core\ProductSetup::t( 'محتوى الصفحة الرئيسية والأقسام', 'Homepage and section content' ), 'manage_options', SiteContentPage::class, 'render' ),
 				array( 'edit.php?post_type=car_offer', 'العروض الترويجية', 'edit_car_offers' ),
 				array( 'edit.php?post_type=page', 'صفحات الموقع', 'edit_pages' ),
 				array( 'upload.php', 'مكتبة الوسائط', 'upload_files' ),
-				array( 'customize.php', 'مظهر الموقع وبيانات التواصل', 'customize' ),
 				array( 'adc-editorial-setup', 'إعداد صفحات الموقع', 'manage_options', EditorialSetupPage::class, 'render' ),
 			) ),
 			'marketing' => array( 'التسويق', 'dashicons-megaphone', array(
@@ -120,15 +120,19 @@ final class Navigation {
 				array( 'adc-operational-reports', 'التقارير التشغيلية', 'adc_view_reports', OperationalReportPage::class, 'render' ),
 			) ),
 			'settings' => array( 'إعدادات المنصة', 'dashicons-admin-settings', array(
-				array( 'options-general.php?page=adc-platform-setup', \AutoDealership\Core\ProductSetup::t( 'إعداد الهوية والبريد والنشر', 'Identity, email and launch setup' ), 'manage_options' ),
+				array( 'adc-platform-setup', \AutoDealership\Core\ProductSetup::t( 'الهوية والبريد وجاهزية المنصة', 'Identity, email and platform readiness' ), 'manage_options', \AutoDealership\Core\ProductSetup::class, 'render' ),
+				array( 'adc-contact', \AutoDealership\Core\ProductSetup::t( 'بيانات التواصل العامة', 'Public contact details' ), 'manage_options', \AutoDealership\Core\ProductSetup::class, 'render_contact' ),
+				array( 'adc-social-channels', \AutoDealership\Core\ProductSetup::t( 'حسابات التواصل الاجتماعي', 'Social accounts' ), 'manage_options', \AutoDealership\Core\SocialChannels::class, 'admin' ),
+				array( 'adc-branch-locations', \AutoDealership\Core\ProductSetup::t( 'فروع الموقع والخرائط', 'Public branches and maps' ), 'manage_options', \AutoDealership\Core\BranchLocations::class, 'admin' ),
 				array( 'customize.php?autofocus[panel]=adc_brand_palette', \AutoDealership\Core\ProductSetup::t( 'الهوية والألوان', 'Brand and colors' ), 'manage_options' ),
 				array( 'adc-release-evidence', 'Release evidence', 'manage_options', ReleaseEvidencePage::class, 'render' ),
 				array( 'adc-settings', 'سياسات وإعدادات المنصة', 'manage_options', SettingsPage::class, 'render' ),
-				array( 'adc-reference', 'العلامات التجارية والمواقع', 'manage_options', ReferencePage::class, 'render' ),
+				array( 'adc-profit-margin', \AutoDealership\Core\ProductSetup::t( 'هامش ربح السيارات', 'Vehicle profit margin' ), 'manage_options', ProfitMarginPage::class, 'render' ),
+				array( 'adc-reference', \AutoDealership\Core\ProductSetup::t( 'العلامات والمواقع التشغيلية', 'Operational brands and locations' ), 'manage_options', ReferencePage::class, 'render' ),
 				array( 'adc-finance-calculator', 'إعدادات حاسبة التمويل', 'manage_options', FinanceCalculatorPage::class, 'render' ),
 				array( 'adc-catalog-cutover', 'مطابقة الكتالوج', 'manage_options', CatalogCutoverPage::class, 'render' ),
 				array( 'adc-stored-translations', 'ترجمات البيانات', 'manage_options', StoredTranslationsPage::class, 'render' ),
-				array( 'users.php', 'المستخدمون والصلاحيات', 'list_users' ),
+				array( 'users.php', \AutoDealership\Core\ProductSetup::t( 'حسابات الموظفين', 'Staff accounts' ), 'list_users' ),
 				array( 'adc-roles', 'Roles and permissions', 'manage_options', RoleManager::class, 'render' ),
 				array( 'adc-access-review', 'Account access review', 'manage_options', AccessReviewPage::class, 'render' ),
 			) ),
@@ -154,6 +158,8 @@ final class Navigation {
 
 	private static function descriptions(): array {
 		return array(
+			'admin.php?page=adc-profit-margin' => \AutoDealership\Core\ProductSetup::t( 'إعداد هامش الربح والرسوم دون تعديل المستندات السابقة.', 'Configure profit margins and fees without changing existing documents.' ),
+			'admin.php?page=adc-onyx-documents' => \AutoDealership\Core\ProductSetup::t( 'اختيار البيع ومراجعة وأرشفة مستنداته المالية.', 'Select a sale and review and archive its financial documents.' ),
 			'admin.php?page=adc-crm' => __( 'متابعة العملاء والمراحل والأنشطة.', 'auto-dealership-core' ),
 			'admin.php?page=car-dealer-messages' => __( 'طلبات التواصل والبيع ضمن نطاقك.', 'auto-dealership-core' ),
 			'admin.php?page=car-dealer-bookings' => __( 'مواعيد تجربة القيادة وتحديثاتها.', 'auto-dealership-core' ),
@@ -163,8 +169,7 @@ final class Navigation {
 			'edit-tags.php?taxonomy=car_brand&post_type=car' => __( 'إدارة ماركات السيارات في كتالوج الموقع.', 'auto-dealership-core' ),
 			'edit-tags.php?taxonomy=car_category&post_type=car' => __( 'إدارة فئات السيارات في كتالوج الموقع.', 'auto-dealership-core' ),
 			'edit.php?post_type=car_offer' => __( 'إدارة محتوى عروض السيارات.', 'auto-dealership-core' ),
-			'admin.php?page=adc-transfers' => __( 'إنشاء طلب نقل لمركبة متاحة إلى فرع آخر.', 'auto-dealership-core' ),
-			'admin.php?page=adc-transfer-queue' => __( 'اعتماد وإرسال واستلام النقل بين الفروع.', 'auto-dealership-core' ),
+			'admin.php?page=adc-transfers' => __( 'إنشاء طلب النقل واعتماده وإرساله واستلامه في مكان واحد.', 'auto-dealership-core' ),
 			'admin.php?page=adc-inventory-identity' => __( 'الاستلام والفحص والموقع وهوية المركبة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-vehicle-specifications' => __( 'الخصائص الفنية المقيدة للمركبات.', 'auto-dealership-core' ),
 			'admin.php?page=adc-vehicle-issues' => __( 'فتح ومعالجة حالات الاحتجاز والصيانة.', 'auto-dealership-core' ),
@@ -219,7 +224,7 @@ final class Navigation {
 		// Re-register existing page callbacks under their new parents. WordPress also
 		// retains the original hooks, so old bookmarked admin.php URLs still work.
 		$groups = self::groups();
-		$slugs = array( 'adc-workspace' );
+		$slugs = array( 'adc-workspace', 'adc-transfer-queue', 'adc-brand-colors' );
 		foreach ( $groups as $group ) { foreach ( $group['items'] as $item ) { if ( $item['callback'] ) { $slugs[] = $item['slug']; } } }
 		global $submenu;
 		foreach ( $slugs as $slug ) { remove_menu_page( $slug ); }
@@ -245,6 +250,10 @@ final class Navigation {
 				foreach ( $item['capabilities'] as $candidate ) { if ( current_user_can( $candidate ) ) { $capability = $candidate; break; } }
 				add_submenu_page( $parent, $item['title'], $item['title'], $capability, $item['slug'], $item['callback'] );
 			}
+		}
+		// Color transfer tools remain available from the visual editor, without a second sidebar entry.
+		if ( current_user_can( 'manage_options' ) ) {
+			add_submenu_page( null, \AutoDealership\Core\ProductSetup::t( 'أدوات الهوية اللونية', 'Color identity tools' ), '', 'manage_options', 'adc-brand-colors', array( \AutoDealership\Core\BrandPalette::class, 'render' ) );
 		}
 		// Preserve bookmarked inventory URLs for managers whose inventory action is VIN correction.
 		if ( current_user_can( 'adc_change_vehicle_vin' ) && ! current_user_can( 'adc_manage_inventory' ) && current_user_can( 'adc_view_inventory' ) ) {

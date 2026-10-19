@@ -162,10 +162,11 @@ final class ReservationService {
 		return array( 'id'=>$deposit_id, 'reservation_id'=>(int) $row['reservation_id'], 'status'=>$status );
 	}
 
-	public static function deposit_queue(): array {
+	public static function deposit_queue( int $deposit_id = 0 ): array {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_view_finance' ) && ! current_user_can( 'adc_record_payments' ) && ! current_user_can( 'adc_verify_payments' ) ) { return array(); }
 		list( $scope, $args ) = BranchScope::predicate( 'r.branch_id' );
+		if ( $deposit_id > 0 ) { $scope .= ' AND d.id=%d'; $args[] = $deposit_id; }
 		$sql = 'SELECT d.id,d.reservation_id,d.amount,d.currency,d.source,d.reference,d.status,d.recorded_by,d.decided_by,d.decision_reason,d.created_at,d.decided_at,r.owner_user_id,r.expires_at,v.stock_number FROM ' . Schema::table( 'reservation_deposits' ) . ' d INNER JOIN ' . Schema::table( 'reservations' ) . ' r ON r.id=d.reservation_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=r.vehicle_id WHERE ' . $scope . ' ORDER BY d.id DESC LIMIT 100';
 		return $wpdb->get_results( $args ? $wpdb->prepare( $sql, $args ) : $sql, ARRAY_A ) ?: array();
 	}

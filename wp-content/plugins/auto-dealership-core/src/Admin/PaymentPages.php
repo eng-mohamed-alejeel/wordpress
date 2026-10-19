@@ -29,7 +29,7 @@ final class PaymentPages {
 		$deposit_sql = 'SELECT r.id,r.deposit_required_amount,v.stock_number,v.id translation_vehicle_id,v.brand,v.model FROM ' . Schema::table( 'reservations' ) . ' r INNER JOIN ' . Schema::table( 'vehicles' ) . " v ON v.id=r.vehicle_id WHERE r.status='confirmed' AND r.expires_at>%s AND r.deposit_required_amount>0 AND r.deposit_amount=0 AND NOT EXISTS (SELECT d.id FROM " . Schema::table( 'reservation_deposits' ) . " d WHERE d.reservation_id=r.id AND d.status IN ('pending','verified')) AND " . $scope . ' ORDER BY r.id DESC LIMIT 100';
 		$deposit_args = array_merge( array( current_time( 'mysql', true ) ), $args );
 		$deposit_reservations = current_user_can( 'adc_record_payments' ) ? ( $wpdb->get_results( $wpdb->prepare( $deposit_sql, $deposit_args ), ARRAY_A ) ?: array() ) : array();
-		$deposits = ReservationService::deposit_queue();
+		$deposits = ReservationService::deposit_queue( absint( $_GET['deposit_id'] ?? 0 ) );
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'تأكيدات السداد', 'auto-dealership-core' ); ?></h1>

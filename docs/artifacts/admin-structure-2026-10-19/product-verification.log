@@ -1,0 +1,147 @@
+PASS Product: New installation contains no tenant profile or local brand seed
+PASS Product: No demo rows in vehicles
+PASS Product: No demo rows in onyx_stock
+PASS Product: No demo rows in catalog_models
+PASS Product: No demo rows in customers
+PASS Product: No demo rows in leads
+PASS Product: No demo rows in sales
+PASS Product: Page blueprints contain no local business or address
+PASS Product: Unknown import sections are rejected
+PASS Product: Unapproved settings and secrets are rejected
+PASS Product: Oversized settings import is rejected
+PASS Product: Another product format is rejected
+PASS Product: Invalid timezone is rejected
+PASS Product: Invalid colors are rejected
+PASS Product: Anonymous user cannot change identity
+PASS Product: Anonymous user cannot provision pages
+PASS Product: Identity, contact and policy settings save together
+PASS Product: Saved default language applies without URL override
+PASS Product: Explicit URL language overrides the default
+PASS Product: Arabic switch remains explicit when English is the default
+PASS Product: Product UI follows the tenant brand
+PASS Product: Homepage description is configurable
+PASS Product: Policy uses validated existing business configuration service
+PASS Product: Export excludes secrets and operational records
+PASS Product: Export round-trips through import validation
+PASS Product: Preview never changes stored settings
+PASS Product: Invalid business policy leaves identity unchanged
+PASS Product: Audit failure rolls profile, blog identity and policy back including cached options
+PASS Product: Automatic preparation waits for the product theme
+PASS Product: Administrator visit automatically prepares a product installation
+PASS Product: Automatic preparation assigns useful primary and footer menus
+PASS Product: Default upper menu contains exactly six requested destinations in order: ["cars","about","finance","faq","buying-guide","contact"]
+PASS Product: Clean installation provisions essential pages without the theme
+PASS Product: Legal pages are published automatically
+PASS Product: Created pages include English content and source hashes
+PASS Product: New About page ships with complete bilingual professional content
+PASS Product: Old one-paragraph About default upgrades with an approved matching English version
+PASS Product: Complete bilingual legal sections ship for privacy-policy
+PASS Product: Approved English legal translation ready for privacy-policy
+PASS Product: Complete bilingual legal sections ship for terms
+PASS Product: Approved English legal translation ready for terms
+PASS Product: Complete bilingual legal sections ship for cookie-policy
+PASS Product: Approved English legal translation ready for cookie-policy
+PASS Product: Complete bilingual legal sections ship for reservation-policy
+PASS Product: Approved English legal translation ready for reservation-policy
+PASS Product: Legal defaults never embed development contact details
+PASS Product: Legal contact uses the current tenant settings
+PASS Product: English legal contact uses the separately saved English address
+PASS Product: Arabic legal contact retains the Arabic address
+PASS Product: Missing English address never leaks Arabic into the English policy
+PASS Product: English address participates in portable settings export
+PASS Product: Existing placeholder policies upgrade to full Arabic and approved English
+PASS Product: Customized legal text and English translations survive default upgrades
+PASS Product: Provisioning is idempotent and preserves edited content
+PASS Product: Repeated automatic setup preserves menus and edited pages
+PASS Product: Untouched legacy default upgrades while retaining its original menu for recovery
+PASS Product: Customized legacy menu is never replaced by the default migration
+PASS Product: Upgrade publishes existing legal drafts without replacing edited text
+PASS Product: Upgrade appends missing policy links and preserves custom footer items
+PASS Product: Repeated preparation never duplicates legal menu links
+PASS Product: After initial migration automatic setup respects later admin publication changes
+PASS Product: Platform policies show legal pages with direct admin edit links
+PASS Product: Readiness checks run without external mail or network calls
+PASS Product: Editor catalog includes every supported registered platform component without duplicate entries
+PASS Product: Component blocks cannot execute arbitrary unapproved shortcodes
+PASS Product: Malformed component identifiers cannot inject a second shortcode
+PASS Product: Vehicle count is clamped to the supported public maximum
+PASS Product: Calculator block rejects negative starting prices
+PASS Product: Serialized dynamic blocks render live business identity on the public page
+PASS Product: New tenant starts without another dealership branch locations
+PASS Product: Branch editor rejects non-Google iframe sources
+PASS Product: Branch editor rejects deceptive Google hosts
+PASS Product: Branch directions reject executable URLs
+PASS Product: Duplicate branch IDs are rejected
+PASS Product: Pasted iframe is reduced to its validated URL without event handlers
+PASS Product: Anonymous user cannot save branch locations
+PASS Product: Administrator can save bilingual branch locations
+PASS Product: Stale branch editor cannot overwrite newer changes
+PASS Product: Public English branch cards contain translated text and lazy maps
+PASS Product: Public Arabic branch cards contain Arabic branch details
+PASS Product: Hidden branches do not appear publicly
+PASS Product: Mail header belongs to this tenant
+PASS Product: Mail settings render protected forms without a saved password
+PASS Product: SMTP settings can be saved without sending email
+PASS Product: SMTP secret is encrypted at rest and decrypts only with this site key
+PASS Product: Blank password keeps existing encrypted credentials
+PASS Product: Saved platform mail settings override legacy server constants
+PASS Product: Gmail rejects the invalid 587 and SSL combination without replacing working settings
+php.exe : [AutoBrands mail] failed code=phpmailer_exception
+At line:6 char:28
++ ... T_ONLY='1'; & C:/xampp/php/php.exe wp-content/plugins/auto-dealership ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([AutoBrands mai...ailer_exception:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+PASS Product: SMTP diagnostics retain only safe categories without secret error text
+PASS Product: Mail status distinguishes SMTP acceptance from inbox delivery
+PASS Product: Newsletter diagnostics send one branded copy only to the selected address
+PASS Product: English newsletter diagnostic does not depend on administrator language packs
+PASS Product: Arabic newsletter diagnostic uses the selected language and direction
+PASS Product: Invalid diagnostic language is rejected without sending
+PASS Product: SMTP credentials never enter settings exports
+PASS Product: Saved SMTP secret is never rendered into HTML
+PASS Product: SMTP editing requires administrator permissions
+PASS Product: Theme-first installations do not inherit the old company identity
+PASS Product: Unconfigured legacy identity preserves the existing WordPress name without inventing an English translation
+PASS Product: Legacy setup pre-fills current descriptions without changing the profile
+PASS Product: Setup remains discoverable through its canonical dashboard navigation
+PASS Product: Upgrading storage preparation also converts legacy user tables needed for registration
+PASS Product: Account storage conversion preserves every user and metadata value
+PASS Product: Editorial sections start empty without invented endorsements
+PASS Product: Unknown editorial fields are rejected
+PASS Product: Complete bilingual team entries acquire language approval hashes
+PASS Product: Editing English invalidates its approval while Arabic remains approved
+PASS Product: Duplicate content IDs are rejected
+PASS Product: Nested values cannot bypass editorial validation
+PASS Product: Customer reviews cannot publish without consent
+PASS Product: Manual metrics cannot publish without a dated source
+PASS Product: Documented bilingual manual metrics validate
+PASS Product: Impossible metric review dates are rejected
+PASS Product: Anonymous users cannot save public editorial content
+PASS Product: Anonymous users cannot create private content previews
+PASS Product: Administrator can atomically save complete editorial content
+PASS Product: Stale editorial saves cannot overwrite a newer revision
+PASS Product: Public English team never falls back to Arabic
+PASS Product: Approved reviews and sourced metrics render publicly
+PASS Product: Hiding an entry preserves its data and removes it publicly
+PASS Product: Editorial audit failure rolls back content including cached options
+PASS Product: Homepage hides disabled sections and orders remaining sections after the hero
+PASS Product: Enabled empty homepage sections show an informative state
+PASS Product: Homepage empty states do not introduce team or metric sections
+PASS Product: Unsaved preview returns a private URL without changing stored content
+PASS Product: Preview uses the requesting administrator temporary content
+PASS Product: Anonymous visitors cannot use another user preview token
+PASS Product: Transfer replaces image IDs with portable asset references and excludes secrets
+PASS Product: Exported content validates in the bounded ZIP importer
+PASS Product: Archive traversal and executable files are rejected
+PASS Product: Isolated image fixture can be uploaded
+PASS Product: Portable image hashes and MIME types are verified before import
+PASS Product: Content import creates target-local attachment IDs and remaps references
+PASS Product: Formatting-only editorial changes preserve translation meaning
+PASS Product: Changing a link target requires translation review
+PASS Product: Readiness reports identity, channels, catalog, translations and section states
+PASS Product: JSON content saving requires administrator permission
+PASS Product: JSON saving preserves all 100 entries beyond shared-hosting form field limits
+Product setup passed (138 checks). No real email sent.
+Disposable test database removed. Source database was not contacted.

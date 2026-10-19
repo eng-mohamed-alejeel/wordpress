@@ -1,0 +1,644 @@
+{
+  "method": "Static source inventory, not a rendered WordPress menu. Conditional registrations and dynamic actions require runtime verification. Repeated forms are candidates, not confirmed duplicate workflows.",
+  "central_item_count": 58,
+  "central_items": [
+    {
+      "group": "customers",
+      "slug": "adc-conversations",
+      "line": 64,
+      "source": "array( 'adc-conversations', 'محادثات العملاء', array('manage_options','adc_view_conversations'), \\AutoDealership\\Portal\\PortalAdmin::class, 'conversations' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-portal-operations",
+      "line": 65,
+      "source": "array( 'adc-portal-operations', 'تشغيل بوابة العميل', array('manage_options','adc_publish_customer_documents'), \\AutoDealership\\Portal\\PortalOperations::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-customer-reviews",
+      "line": 66,
+      "source": "array( 'adc-customer-reviews', 'تقييمات العملاء', array('manage_options','adc_moderate_reviews'), \\AutoDealership\\Portal\\PortalAdmin::class, 'reviews' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-crm",
+      "line": 67,
+      "source": "array( 'adc-crm', 'فرص العملاء', $leads, OperationsPages::class, 'render_leads' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "car-dealer-messages",
+      "line": 68,
+      "source": "array( 'car-dealer-messages', 'رسائل العملاء', $leads, EngagementPages::class, 'render_messages' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "car-dealer-bookings",
+      "line": 69,
+      "source": "array( 'car-dealer-bookings', 'حجوزات تجربة القيادة', $leads, EngagementPages::class, 'render_bookings' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-quotes",
+      "line": 70,
+      "source": "array( 'adc-quotes', 'عروض أسعار العملاء', array( 'manage_options', 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_finance' ), QuotePages::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-sales-journey",
+      "line": 71,
+      "source": "array( 'adc-sales-journey', 'دورة المبيعات', array( 'manage_options', 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_finance' ), SalesJourneyPage::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-customer-workspace",
+      "line": 72,
+      "source": "array( 'adc-customer-workspace', 'ملف العميل', array( 'manage_options', 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_finance' ), CustomerWorkspacePage::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-follow-ups",
+      "line": 73,
+      "source": "array( 'adc-follow-ups', 'المتابعات والتنبيهات', 'adc_view_workspace', FollowUpPage::class, 'render' ),"
+    },
+    {
+      "group": "customers",
+      "slug": "adc-customer-identities",
+      "line": 74,
+      "source": "array( 'adc-customer-identities', 'مراجعة ملفات العملاء', 'manage_options', CustomerIdentityPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-onyx",
+      "line": 77,
+      "source": "array( 'adc-onyx', 'مخزون أونكس', 'manage_options', OnyxInventoryPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-inventory",
+      "line": 78,
+      "source": "array( 'adc-inventory', 'إدارة السيارات', 'adc_view_inventory', OperationsPages::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-inventory-identity",
+      "line": 79,
+      "source": "array( 'adc-inventory-identity', 'الاستلام والفحص وحركة المواقع', 'adc_manage_inventory', InventoryIdentityPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-vehicle-vin",
+      "line": 80,
+      "source": "array( 'adc-vehicle-vin', 'تصحيح رقم الهيكل VIN', 'adc_change_vehicle_vin', InventoryIdentityPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-vehicle-specifications",
+      "line": 81,
+      "source": "array( 'adc-vehicle-specifications', 'مواصفات المركبات', 'adc_manage_inventory', VehicleSpecificationsPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-transfers",
+      "line": 82,
+      "source": "array( 'adc-transfers', 'إنشاء طلب نقل', 'adc_transfer_inventory', OperationsPages::class, 'render_transfers' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-transfer-queue",
+      "line": 83,
+      "source": "array( 'adc-transfer-queue', 'متابعة نقل المركبات', 'adc_transfer_inventory', TransferPages::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-vehicle-issues",
+      "line": 84,
+      "source": "array( 'adc-vehicle-issues', 'الاحتجاز والصيانة', 'adc_manage_inventory', VehicleIssuePage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "adc-vehicle-returns",
+      "line": 85,
+      "source": "array( 'adc-vehicle-returns', 'مرتجعات المركبات', 'adc_process_returns', VehicleReturnPage::class, 'render' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "edit.php?post_type=car",
+      "line": 86,
+      "source": "array( 'edit.php?post_type=car', 'صفحات السيارات', 'edit_cars' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "edit-tags.php?taxonomy=car_brand&post_type=car",
+      "line": 87,
+      "source": "array( 'edit-tags.php?taxonomy=car_brand&post_type=car', 'ماركات السيارات', 'manage_car_brands' ),"
+    },
+    {
+      "group": "inventory",
+      "slug": "edit-tags.php?taxonomy=car_category&post_type=car",
+      "line": 88,
+      "source": "array( 'edit-tags.php?taxonomy=car_category&post_type=car', 'فئات السيارات', 'manage_car_categories' ),"
+    },
+    {
+      "group": "purchasing",
+      "slug": "adc-purchase-orders",
+      "line": 91,
+      "source": "array( 'adc-purchase-orders', 'Purchase orders', 'adc_view_purchase_orders', PurchaseOrderPage::class, 'render' ),"
+    },
+    {
+      "group": "purchasing",
+      "slug": "adc-suppliers",
+      "line": 92,
+      "source": "array( 'adc-suppliers', 'الموردون', 'adc_view_suppliers', SupplierPage::class, 'render' ),"
+    },
+    {
+      "group": "purchasing",
+      "slug": "adc-vehicle-acquisition",
+      "line": 93,
+      "source": "array( 'adc-vehicle-acquisition', 'اقتناء المركبات وتكاليفها', 'adc_view_vehicle_costs', VehicleAcquisitionPage::class, 'render' ),"
+    },
+    {
+      "group": "approvals",
+      "slug": "adc-approvals",
+      "line": 96,
+      "source": "array( 'adc-approvals', 'اعتماد الخصومات والمبيعات', array( 'adc_review_discounts', 'adc_approve_sales' ), WorkflowPages::class, 'approvals' ),"
+    },
+    {
+      "group": "approvals",
+      "slug": "adc-sale-cancellations",
+      "line": 97,
+      "source": "array( 'adc-sale-cancellations', 'إلغاء المبيعات', 'adc_cancel_sales', SaleCancellationPage::class, 'render' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-onyx-documents",
+      "line": 100,
+      "source": "array( 'adc-onyx-documents', \\AutoDealership\\Core\\ProductSetup::t( 'مستندات أونكس المالية', 'Onyx financial documents' ), array( 'manage_options', 'adc_view_finance', 'adc_approve_sales' ), \\AutoDealership\\Sales\\OnyxDocuments::class, 'render' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-finance",
+      "line": 101,
+      "source": "array( 'adc-finance', 'طلبات التمويل', array( 'adc_view_finance', 'adc_manage_finance' ), WorkflowPages::class, 'finance' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-payments",
+      "line": 102,
+      "source": "array( 'adc-payments', 'تأكيدات السداد', 'adc_view_finance', PaymentPages::class, 'render' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-refunds",
+      "line": 103,
+      "source": "array( 'adc-refunds', 'المبالغ المستردة', 'adc_view_finance', RefundPage::class, 'render' ),"
+    },
+    {
+      "group": "finance",
+      "slug": "adc-financial-export",
+      "line": 104,
+      "source": "array( 'adc-financial-export', 'التصدير المالي', 'adc_view_finance', FinancialExportPage::class, 'render' ),"
+    },
+    {
+      "group": "delivery",
+      "slug": "adc-delivery",
+      "line": 107,
+      "source": "array( 'adc-delivery', 'تجهيز وتسليم المركبات', array( 'adc_approve_delivery', 'adc_confirm_vehicle_vin' ), WorkflowPages::class, 'delivery' ),"
+    },
+    {
+      "group": "content",
+      "slug": "adc-site-content",
+      "line": 110,
+      "source": "array( 'adc-site-content', 'إدارة المحتوى وجاهزية الموقع', 'manage_options', SiteContentPage::class, 'render' ),"
+    },
+    {
+      "group": "content",
+      "slug": "edit.php?post_type=car_offer",
+      "line": 111,
+      "source": "array( 'edit.php?post_type=car_offer', 'العروض الترويجية', 'edit_car_offers' ),"
+    },
+    {
+      "group": "content",
+      "slug": "edit.php?post_type=page",
+      "line": 112,
+      "source": "array( 'edit.php?post_type=page', 'صفحات الموقع', 'edit_pages' ),"
+    },
+    {
+      "group": "content",
+      "slug": "upload.php",
+      "line": 113,
+      "source": "array( 'upload.php', 'مكتبة الوسائط', 'upload_files' ),"
+    },
+    {
+      "group": "content",
+      "slug": "customize.php",
+      "line": 114,
+      "source": "array( 'customize.php', 'مظهر الموقع وبيانات التواصل', 'customize' ),"
+    },
+    {
+      "group": "content",
+      "slug": "adc-editorial-setup",
+      "line": 115,
+      "source": "array( 'adc-editorial-setup', 'إعداد صفحات الموقع', 'manage_options', EditorialSetupPage::class, 'render' ),"
+    },
+    {
+      "group": "marketing",
+      "slug": "car-dealer-subscribers",
+      "line": 118,
+      "source": "array( 'car-dealer-subscribers', 'مشتركو النشرة البريدية', 'adc_view_marketing_subscribers', EngagementPages::class, 'render_subscribers' ),"
+    },
+    {
+      "group": "reports",
+      "slug": "adc-operational-reports",
+      "line": 121,
+      "source": "array( 'adc-operational-reports', 'التقارير التشغيلية', 'adc_view_reports', OperationalReportPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "options-general.php?page=adc-platform-setup",
+      "line": 124,
+      "source": "array( 'options-general.php?page=adc-platform-setup', \\AutoDealership\\Core\\ProductSetup::t( 'إعداد الهوية والبريد والنشر', 'Identity, email and launch setup' ), 'manage_options' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "customize.php?autofocus[panel]=adc_brand_palette",
+      "line": 125,
+      "source": "array( 'customize.php?autofocus[panel]=adc_brand_palette', \\AutoDealership\\Core\\ProductSetup::t( 'الهوية والألوان', 'Brand and colors' ), 'manage_options' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-release-evidence",
+      "line": 126,
+      "source": "array( 'adc-release-evidence', 'Release evidence', 'manage_options', ReleaseEvidencePage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-settings",
+      "line": 127,
+      "source": "array( 'adc-settings', 'سياسات وإعدادات المنصة', 'manage_options', SettingsPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-profit-margin",
+      "line": 128,
+      "source": "array( 'adc-profit-margin', \\AutoDealership\\Core\\ProductSetup::t( 'هامش ربح السيارات', 'Vehicle profit margin' ), 'manage_options', ProfitMarginPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-reference",
+      "line": 129,
+      "source": "array( 'adc-reference', 'العلامات التجارية والمواقع', 'manage_options', ReferencePage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-finance-calculator",
+      "line": 130,
+      "source": "array( 'adc-finance-calculator', 'إعدادات حاسبة التمويل', 'manage_options', FinanceCalculatorPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-catalog-cutover",
+      "line": 131,
+      "source": "array( 'adc-catalog-cutover', 'مطابقة الكتالوج', 'manage_options', CatalogCutoverPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-stored-translations",
+      "line": 132,
+      "source": "array( 'adc-stored-translations', 'ترجمات البيانات', 'manage_options', StoredTranslationsPage::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "users.php",
+      "line": 133,
+      "source": "array( 'users.php', 'المستخدمون والصلاحيات', 'list_users' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-roles",
+      "line": 134,
+      "source": "array( 'adc-roles', 'Roles and permissions', 'manage_options', RoleManager::class, 'render' ),"
+    },
+    {
+      "group": "settings",
+      "slug": "adc-access-review",
+      "line": 135,
+      "source": "array( 'adc-access-review', 'Account access review', 'manage_options', AccessReviewPage::class, 'render' ),"
+    },
+    {
+      "group": "audit",
+      "slug": "adc-audit",
+      "line": 138,
+      "source": "array( 'adc-audit', 'سجل التدقيق', 'adc_view_audit', AuditPage::class, 'render' ),"
+    },
+    {
+      "group": "audit",
+      "slug": "adc-public-security",
+      "line": 139,
+      "source": "array( 'adc-public-security', 'أمن الواجهة العامة', 'adc_view_audit', SecurityPage::class, 'render' ),"
+    },
+    {
+      "group": "audit",
+      "slug": "adc-integrations",
+      "line": 140,
+      "source": "array( 'adc-integrations', 'جاهزية التكاملات', 'adc_view_integrations', IntegrationPage::class, 'render' ),"
+    },
+    {
+      "group": "audit",
+      "slug": "adc-outbox",
+      "line": 141,
+      "source": "array( 'adc-outbox', 'مراقبة المهام', 'adc_view_outbox', OutboxPage::class, 'render' ),"
+    }
+  ],
+  "menu_registration_lines": [
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/AuditPage.php",
+      "line": 15,
+      "source": "add_menu_page( __( 'Audit Log', 'auto-dealership-core' ), __( 'Audit Log', 'auto-dealership-core' ), 'adc_view_audit', 'adc-audit', array( self::class, 'render' ), 'dashicons-visibility', 59 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/CatalogCutoverPage.php",
+      "line": 16,
+      "source": "add_submenu_page( 'adc-settings', __( 'Catalog cutover', 'auto-dealership-core' ), __( 'Catalog cutover', 'auto-dealership-core' ), 'manage_options', 'adc-catalog-cutover', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/CatalogPublishingPage.php",
+      "line": 27,
+      "source": "add_submenu_page('adc-area-inventory',self::t('سيارات الموقع','Website vehicles'),self::t('سيارات الموقع','Website vehicles'),'edit_cars','adc-car-publishing',array(self::class,'render'));"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/CatalogPublishingPage.php",
+      "line": 28,
+      "source": "add_submenu_page('adc-area-inventory',self::t('الماركات','Brands'),self::t('الماركات','Brands'),'manage_car_brands','adc-car-brands',array(self::class,'terms'));"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/CatalogPublishingPage.php",
+      "line": 29,
+      "source": "add_submenu_page('adc-area-inventory',self::t('تصنيفات السيارات','Vehicle categories'),self::t('تصنيفات السيارات','Vehicle categories'),'manage_car_categories','adc-car-categories',array(self::class,'terms'));"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/CustomerIdentityPage.php",
+      "line": 12,
+      "source": "add_submenu_page("
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/CustomerWorkspacePage.php",
+      "line": 20,
+      "source": "add_action( 'admin_menu', static function (): void { if ( QuoteHistory::can_read() ) { add_submenu_page( 'adc-quotes', self::text( 'ملف العميل', 'Customer workspace' ), self::text( 'ملف العميل', 'Customer workspace' ), 'read', 'adc-customer-workspace', array( self::class, 'render' ) ); } } );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/EditorialSetupPage.php",
+      "line": 16,
+      "source": "add_submenu_page( 'adc-settings', __( 'إعداد صفحات الموقع', 'auto-dealership-core' ), __( 'إعداد صفحات الموقع', 'auto-dealership-core' ), 'manage_options', 'adc-editorial-setup', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/EngagementPages.php",
+      "line": 32,
+      "source": "add_submenu_page( 'adc-workspace', __( 'رسائل العملاء', 'auto-dealership-core' ), __( 'الرسائل', 'auto-dealership-core' ), $capability, 'car-dealer-messages', array( self::class, 'render_messages' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/EngagementPages.php",
+      "line": 33,
+      "source": "add_submenu_page( 'adc-workspace', __( 'حجوزات تجربة القيادة', 'auto-dealership-core' ), __( 'حجوزات التجربة', 'auto-dealership-core' ), $capability, 'car-dealer-bookings', array( self::class, 'render_bookings' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/EngagementPages.php",
+      "line": 36,
+      "source": "add_submenu_page( 'adc-workspace', __( 'اشتراكات النشرة البريدية', 'auto-dealership-core' ), __( 'النشرة البريدية', 'auto-dealership-core' ), 'adc_view_marketing_subscribers', 'car-dealer-subscribers', array( self::class, 'render_subscribers' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/FinanceCalculatorPage.php",
+      "line": 7,
+      "source": "add_action('admin_menu',static function(){add_submenu_page('adc-settings','إدارة حاسبة التمويل','حاسبة التمويل','manage_options','adc-finance-calculator',[self::class,'render']);});"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/FinancialExportPage.php",
+      "line": 10,
+      "source": "public static function menu(): void { add_submenu_page( 'adc-finance', __( 'Financial export', 'auto-dealership-core' ), __( 'Financial export', 'auto-dealership-core' ), 'adc_view_finance', 'adc-financial-export', array( self::class, 'render' ) ); }"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/FollowUpPage.php",
+      "line": 13,
+      "source": "add_action( 'admin_menu', static function (): void { if ( current_user_can( 'adc_view_workspace' ) ) { add_submenu_page( 'adc-workspace', self::text( 'المتابعات والتنبيهات', 'Follow-ups and alerts' ), self::text( 'المتابعات والتنبيهات', 'Follow-ups and alerts' ), 'adc_view_workspace', 'adc-follow-ups', array( self::class, 'render' ) ); } } );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/IntegrationPage.php",
+      "line": 19,
+      "source": "add_submenu_page( 'adc-audit', __( 'جاهزية التكاملات', 'auto-dealership-core' ), __( 'جاهزية التكاملات', 'auto-dealership-core' ), 'adc_view_integrations', 'adc-integrations', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/InventoryIdentityPage.php",
+      "line": 14,
+      "source": "if ( current_user_can( 'adc_manage_inventory' ) || current_user_can( 'adc_change_vehicle_vin' ) ) { add_submenu_page( 'adc-workspace', __( 'Locations and VIN', 'auto-dealership-core' ), __( 'Locations and VIN', 'auto-dealership-core' ), 'adc_view_inventory', 'adc-inventory-identity', array( self::class, 'render' ) ); }"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/Navigation.php",
+      "line": 236,
+      "source": "add_menu_page( __( 'مساحة العمل', 'auto-dealership-core' ), __( 'مساحة العمل', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-workspace', array( WorkspacePage::class, 'render' ), 'dashicons-dashboard', 56 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/Navigation.php",
+      "line": 242,
+      "source": "add_menu_page( $group['title'], $group['title'], 'read', $parent, array( WorkspacePage::class, 'render' ), $group['icon'], 57 + $index / 10 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/Navigation.php",
+      "line": 243,
+      "source": "add_submenu_page( $parent, $group['title'], __( 'نظرة عامة', 'auto-dealership-core' ), 'read', $parent, array( WorkspacePage::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/Navigation.php",
+      "line": 250,
+      "source": "add_submenu_page( $parent, $item['title'], $item['title'], $capability, $item['slug'], $item['callback'] );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/Navigation.php",
+      "line": 255,
+      "source": "add_submenu_page( null, __( 'Locations and VIN', 'auto-dealership-core' ), __( 'Locations and VIN', 'auto-dealership-core' ), 'adc_change_vehicle_vin', 'adc-inventory-identity', array( InventoryIdentityPage::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/OfferPublishingPage.php",
+      "line": 11,
+      "source": "add_action('admin_menu',static function(){add_submenu_page('adc-area-content',self::t('عروض الموقع','Website offers'),self::t('عروض الموقع','Website offers'),'edit_car_offers','adc-offer-publishing',array(self::class,'render'));remove_submenu_page('adc-area-content','edit.php?post_type=car_offer');},110);"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/OperationalReportPage.php",
+      "line": 26,
+      "source": "add_menu_page( __( 'التقارير التشغيلية', 'auto-dealership-core' ), __( 'التقارير التشغيلية', 'auto-dealership-core' ), 'adc_view_reports', 'adc-operational-reports', array( self::class, 'render' ), 'dashicons-chart-bar', 63 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/OperationsPages.php",
+      "line": 28,
+      "source": "add_menu_page( __( 'مساحة عمليات المعرض', 'auto-dealership-core' ), __( 'عمليات المعرض', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-workspace', array( WorkspacePage::class, 'render' ), 'dashicons-car', 57 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/OperationsPages.php",
+      "line": 29,
+      "source": "add_submenu_page( 'adc-workspace', __( 'مساحة العمل', 'auto-dealership-core' ), __( 'مساحة العمل', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-workspace', array( WorkspacePage::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/OperationsPages.php",
+      "line": 32,
+      "source": "add_submenu_page( 'adc-workspace', __( 'إدارة السيارات', 'auto-dealership-core' ), __( 'إدارة السيارات', 'auto-dealership-core' ), 'adc_view_inventory', 'adc-inventory', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/OperationsPages.php",
+      "line": 35,
+      "source": "add_submenu_page( 'adc-workspace', __( 'Branch Transfers', 'auto-dealership-core' ), __( 'Branch Transfers', 'auto-dealership-core' ), 'adc_transfer_inventory', 'adc-transfers', array( self::class, 'render_transfers' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/OperationsPages.php",
+      "line": 38,
+      "source": "add_submenu_page( 'adc-workspace', __( 'CRM Leads', 'auto-dealership-core' ), __( 'CRM Leads', 'auto-dealership-core' ), current_user_can( 'adc_view_branch_leads' ) ? 'adc_view_branch_leads' : 'adc_view_own_leads', 'adc-crm', array( self::class, 'render_leads' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/OutboxPage.php",
+      "line": 16,
+      "source": "add_submenu_page("
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/PaymentPages.php",
+      "line": 14,
+      "source": "add_submenu_page( 'adc-finance', __( 'تأكيدات السداد', 'auto-dealership-core' ), __( 'تأكيدات السداد', 'auto-dealership-core' ), 'adc_view_finance', 'adc-payments', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/PurchaseOrderPage.php",
+      "line": 13,
+      "source": "add_action( 'admin_menu', static function (): void { add_submenu_page( 'adc-workspace', self::t( 'أوامر الشراء', 'Purchase orders' ), self::t( 'أوامر الشراء', 'Purchase orders' ), 'adc_view_purchase_orders', 'adc-purchase-orders', array( self::class, 'render' ) ); } );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/QuotePages.php",
+      "line": 14,
+      "source": "add_menu_page( __( 'عروض الأسعار', 'auto-dealership-core' ), __( 'عروض الأسعار', 'auto-dealership-core' ), 'read', 'adc-quotes', array( self::class, 'render' ), 'dashicons-media-document', 59 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/ReferencePage.php",
+      "line": 14,
+      "source": "public static function menu(): void { add_submenu_page( 'adc-settings', __( 'Brands and locations', 'auto-dealership-core' ), __( 'Brands and locations', 'auto-dealership-core' ), 'manage_options', 'adc-reference', array( self::class, 'render' ) ); }"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/RefundPage.php",
+      "line": 14,
+      "source": "public static function menu(): void { add_submenu_page( 'adc-finance', __( 'Refunds', 'auto-dealership-core' ), __( 'Refunds', 'auto-dealership-core' ), 'adc_view_finance', 'adc-refunds', array( self::class, 'render' ) ); }"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/ReleaseEvidencePage.php",
+      "line": 10,
+      "source": "add_action( 'admin_menu', static function (): void { add_submenu_page( 'adc-workspace', self::t( 'أدلة الإطلاق', 'Release evidence' ), self::t( 'أدلة الإطلاق', 'Release evidence' ), 'manage_options', 'adc-release-evidence', array( self::class, 'render' ) ); } );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/SaleCancellationPage.php",
+      "line": 7,
+      "source": "public static function menu():void{add_submenu_page('adc-approvals',__('Sale cancellations','auto-dealership-core'),__('Sale cancellations','auto-dealership-core'),'adc_cancel_sales','adc-sale-cancellations',array(self::class,'render'));}"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/SalesJourneyPage.php",
+      "line": 19,
+      "source": "add_submenu_page( 'adc-quotes', self::text( 'دورة المبيعات', 'Sales journey' ), self::text( 'دورة المبيعات', 'Sales journey' ), 'read', 'adc-sales-journey', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/SecurityPage.php",
+      "line": 16,
+      "source": "add_submenu_page( 'adc-audit', __( 'Public API Security', 'auto-dealership-core' ), __( 'Public API Security', 'auto-dealership-core' ), 'adc_view_audit', 'adc-public-security', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/SettingsPage.php",
+      "line": 28,
+      "source": "add_menu_page( __( 'Dealership Core', 'auto-dealership-core' ), __( 'Dealership Core', 'auto-dealership-core' ), 'manage_options', 'adc-settings', array( self::class, 'render' ), 'dashicons-admin-multisite', 58 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/StoredTranslationsPage.php",
+      "line": 12,
+      "source": "add_submenu_page( 'adc-settings', __( 'Stored data translations', 'auto-dealership-core' ), __( 'Stored data translations', 'auto-dealership-core' ), 'manage_options', 'adc-stored-translations', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/SupplierPage.php",
+      "line": 17,
+      "source": "add_submenu_page( 'adc-workspace', __( 'Suppliers', 'auto-dealership-core' ), __( 'Suppliers', 'auto-dealership-core' ), 'adc_view_suppliers', 'adc-suppliers', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/TransferPages.php",
+      "line": 21,
+      "source": "add_submenu_page( 'adc-workspace', __( 'Transfer Queue', 'auto-dealership-core' ), __( 'Transfer Queue', 'auto-dealership-core' ), 'adc_transfer_inventory', 'adc-transfer-queue', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/VehicleAcquisitionPage.php",
+      "line": 18,
+      "source": "add_submenu_page( 'adc-workspace', __( 'Vehicle acquisition', 'auto-dealership-core' ), __( 'Vehicle acquisition', 'auto-dealership-core' ), 'adc_view_vehicle_costs', 'adc-vehicle-acquisition', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/VehicleIssuePage.php",
+      "line": 11,
+      "source": "public static function menu():void{add_submenu_page('adc-workspace',__('Holds and maintenance','auto-dealership-core'),__('Holds and maintenance','auto-dealership-core'),'adc_manage_inventory','adc-vehicle-issues',array(self::class,'render'));}"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/VehicleReturnPage.php",
+      "line": 15,
+      "source": "add_submenu_page( 'adc-workspace', __( 'Vehicle returns', 'auto-dealership-core' ), __( 'Vehicle returns', 'auto-dealership-core' ), 'adc_process_returns', 'adc-vehicle-returns', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/VehicleSpecificationsPage.php",
+      "line": 12,
+      "source": "add_submenu_page( 'adc-workspace', __( 'مواصفات المركبات', 'auto-dealership-core' ), __( 'مواصفات المركبات', 'auto-dealership-core' ), 'adc_manage_inventory', 'adc-vehicle-specifications', array( self::class, 'render' ) );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/WorkflowPages.php",
+      "line": 22,
+      "source": "add_menu_page( __( 'Approvals', 'auto-dealership-core' ), __( 'Approvals', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-approvals', array( self::class, 'approvals' ), 'dashicons-yes-alt', 60 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/WorkflowPages.php",
+      "line": 25,
+      "source": "add_menu_page( __( 'Finance', 'auto-dealership-core' ), __( 'Finance', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-finance', array( self::class, 'finance' ), 'dashicons-money-alt', 61 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Admin/WorkflowPages.php",
+      "line": 28,
+      "source": "add_menu_page( __( 'Delivery', 'auto-dealership-core' ), __( 'Delivery', 'auto-dealership-core' ), 'adc_view_workspace', 'adc-delivery', array( self::class, 'delivery' ), 'dashicons-car', 62 );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Core/BranchLocations.php",
+      "line": 13,
+      "source": "add_action('admin_menu', static function(): void { add_submenu_page('options-general.php', self::t('الفروع والمواقع', 'Branches and locations'), self::t('الفروع والمواقع', 'Branches and locations'), 'manage_options', 'adc-branch-locations', array(self::class, 'admin')); });"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Core/BrandPalette.php",
+      "line": 11,
+      "source": "add_action( 'admin_menu', static function (): void { add_submenu_page( 'options-general.php', self::t('أدوات الهوية اللونية','Color identity tools'), self::t('أدوات الهوية اللونية','Color identity tools'), 'manage_options', 'adc-brand-colors', array(self::class,'render') ); } );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Core/ProductSetup.php",
+      "line": 22,
+      "source": "add_action( 'admin_menu', static function (): void { add_submenu_page( 'options-general.php', self::t( 'إعداد المنصة', 'Platform setup' ), self::t( 'إعداد المنصة', 'Platform setup' ), 'manage_options', 'adc-platform-setup', array( self::class, 'render' ) ); } );"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Inventory/VehicleColors.php",
+      "line": 37,
+      "source": "add_action('admin_menu',static function(){add_submenu_page('adc-area-inventory',self::t('ألوان السيارات','Vehicle colors'),self::t('ألوان السيارات','Vehicle colors'),'edit_cars','adc-vehicle-colors',array(self::class,'admin'));},110);"
+    },
+    {
+      "file": "wp-content/plugins/auto-dealership-core/src/Inventory/VehicleTechnicalDetails.php",
+      "line": 124,
+      "source": "add_action('admin_menu',static function(){add_submenu_page('adc-area-inventory',self::t('خيارات مواصفات السيارات','Vehicle specification options'),self::t('خيارات المواصفات','Specification options'),'manage_options','adc-vehicle-specifications',array(self::class,'admin'),111);},111);"
+    }
+  ],
+  "literal_form_actions_in_multiple_files": {
+    "adc_site_content": [
+      {
+        "file": "wp-content/plugins/auto-dealership-core/src/Admin/SiteContentPage.php",
+        "line": 52
+      },
+      {
+        "file": "wp-content/plugins/auto-dealership-core/src/Content/ContentTransfer.php",
+        "line": 73
+      },
+      {
+        "file": "wp-content/plugins/auto-dealership-core/src/Content/ContentTransfer.php",
+        "line": 74
+      }
+    ]
+  },
+  "central_group_count": 11,
+  "literal_form_scan_limitations": "Only literal name=action/value pairs in PHP source; dynamic rendering and operation fields require manual trace. The adc_site_content cross-file match is ContentTransfer rendered inside the content unit, not a second independent save workflow."
+}

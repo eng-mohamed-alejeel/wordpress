@@ -18,21 +18,28 @@ final class TransferPages {
 
 	public static function menu(): void {
 		if ( current_user_can( 'adc_transfer_inventory' ) ) {
-			add_submenu_page( 'adc-workspace', __( 'Transfer Queue', 'auto-dealership-core' ), __( 'Transfer Queue', 'auto-dealership-core' ), 'adc_transfer_inventory', 'adc-transfer-queue', array( self::class, 'render' ) );
+			add_submenu_page( 'adc-workspace', __( 'Transfer Queue', 'auto-dealership-core' ), __( 'Transfer Queue', 'auto-dealership-core' ), 'adc_transfer_inventory', 'adc-transfers', array( self::class, 'render' ) );
 		}
 	}
 
 	public static function render(): void {
 		if ( ! current_user_can( 'adc_transfer_inventory' ) ) { wp_die( esc_html__( 'Transfer permission required.', 'auto-dealership-core' ), '', array( 'response' => 403 ) ); }
+        $section = isset( $_GET['section'] ) && 'new' === $_GET['section'] ? 'new' : 'requests';
+        if ( 'new' === $section ) { OperationsPages::render_transfers(); return; }
 		global $wpdb;
 		list( $source, $source_args ) = \AutoDealership\Security\BranchScope::predicate( 't.from_branch_id' );
 		list( $destination, $destination_args ) = \AutoDealership\Security\BranchScope::predicate( 't.to_branch_id' );
 		$scope = 'WHERE (' . $source . ' OR ' . $destination . ')';
 		$scope_args = array_merge( $source_args, $destination_args );
-		$scope = $scope_args ? $wpdb->prepare( $scope, $scope_args ) : $scope;
-		$rows = $wpdb->get_results( 'SELECT t.*,v.vin,v.id translation_vehicle_id,v.brand,v.model,s.name source_name,d.name destination_name FROM ' . Schema::table( 'vehicle_transfers' ) . ' t INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=t.vehicle_id INNER JOIN ' . Schema::table( 'branches' ) . ' s ON s.id=t.from_branch_id INNER JOIN ' . Schema::table( 'branches' ) . ' d ON d.id=t.to_branch_id ' . $scope . ' ORDER BY t.id DESC LIMIT 200', ARRAY_A ) ?: array();
+		$status = isset( $_GET['status'] ) && is_string( $_GET['status'] ) ? sanitize_key( $_GET['status'] ) : '';
+		$statuses = array( ''=>'All', 'requested'=>'requested', 'approved'=>'approved', 'rejected'=>'rejected', 'dispatched'=>'dispatched', 'received'=>'received' );
+		if ( ! isset( $statuses[$status] ) ) { $status = ''; }
+		if ( $status ) { $scope .= ' AND t.status=%s'; $scope_args[] = $status; }
+		$results = QueueTable::fetch( 'SELECT t.*,v.vin,v.id translation_vehicle_id,v.brand,v.model,s.name source_name,d.name destination_name FROM ' . Schema::table( 'vehicle_transfers' ) . ' t INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=t.vehicle_id INNER JOIN ' . Schema::table( 'branches' ) . ' s ON s.id=t.from_branch_id INNER JOIN ' . Schema::table( 'branches' ) . ' d ON d.id=t.to_branch_id ' . $scope . ' ORDER BY t.id DESC LIMIT 100', $scope_args, array( 'v.vin', 'v.brand', 'v.model', 's.name', 'd.name', 't.reason' ) );
+		$rows = $results['rows'];
 		?>
-		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><h1><?php esc_html_e( 'Transfer Queue', 'auto-dealership-core' ); ?></h1>
+		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><h1><?php echo esc_html( \AutoDealership\Core\ProductSetup::t( 'نقل المركبات بين الفروع', 'Vehicle transfers between branches' ) ); ?></h1><?php self::tabs( 'requests' ); ?>
+		<?php QueueTable::controls( 'adc-transfers', 'requests', array( 'status'=>array( 'label'=>'Status', 'options'=>$statuses ) ) ); ?>
 		<?php if ( isset( $_GET['saved'] ) ) : ?><div class="notice notice-success"><p><?php esc_html_e( 'Transfer step saved.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>
 		<?php if ( isset( $_GET['error'] ) ) : ?><div class="notice notice-error"><p><?php esc_html_e( 'Transfer step failed. Check its status and your branch assignment.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>
 		<table class="widefat striped"><thead><tr><th><?php echo esc_html__( 'ID', 'auto-dealership-core' ); ?></th><th><?php echo esc_html__( 'VIN', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'Vehicle', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'Route', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'Reason', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'Status', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'Action', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
@@ -40,9 +47,13 @@ final class TransferPages {
 		<?php if ( 'requested' === $row['status'] && (int) $row['requested_by'] !== get_current_user_id() && VehicleService::user_can_access_branch( (int) $row['to_branch_id'] ) ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_transfer_decision"><input type="hidden" name="id" value="<?php echo absint( $row['id'] ); ?>"><?php wp_nonce_field( 'adc_transfer_decision_' . (int) $row['id'] ); ?><button class="button button-primary" name="approve" value="1"><?php esc_html_e( 'Approve', 'auto-dealership-core' ); ?></button> <button class="button" name="approve" value="0"><?php esc_html_e( 'Reject', 'auto-dealership-core' ); ?></button></form>
 		<?php elseif ( 'approved' === $row['status'] && (int) $row['requested_by'] === get_current_user_id() ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_transfer_dispatch"><input type="hidden" name="id" value="<?php echo absint( $row['id'] ); ?>"><?php wp_nonce_field( 'adc_transfer_dispatch_' . (int) $row['id'] ); ?><button class="button button-primary"><?php esc_html_e( 'Mark dispatched', 'auto-dealership-core' ); ?></button></form>
 		<?php elseif ( 'dispatched' === $row['status'] && (int) $row['requested_by'] !== get_current_user_id() && (int) $row['dispatched_by'] !== get_current_user_id() && VehicleService::user_can_access_branch( (int) $row['to_branch_id'] ) ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_transfer_receipt"><input type="hidden" name="id" value="<?php echo absint( $row['id'] ); ?>"><?php wp_nonce_field( 'adc_transfer_receipt_' . (int) $row['id'] ); ?><button class="button button-primary"><?php esc_html_e( 'Confirm receipt', 'auto-dealership-core' ); ?></button></form><?php endif; ?></td></tr><?php endforeach; ?>
-		<?php if ( ! $rows ) : ?><tr><td colspan="7"><?php esc_html_e( 'No transfer requests in your branch scope.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?></tbody></table></div>
+		<?php if ( ! $rows ) : ?><tr><td colspan="7"><?php esc_html_e( 'No transfer requests in your branch scope.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?></tbody></table><?php QueueTable::footer( $results, 'adc-transfers', 'requests', array( 'status'=>$status ) ); ?></div>
 		<?php
 	}
+
+    public static function tabs( string $selected ): void {
+        Navigation::tabs( 'adc-transfers', array( 'requests'=>\AutoDealership\Core\ProductSetup::t( 'طلبات النقل', 'Transfer requests' ), 'new'=>\AutoDealership\Core\ProductSetup::t( 'طلب نقل جديد', 'New transfer request' ) ), $selected );
+    }
 
 	public static function decision(): void {
 		$id = absint( $_POST['id'] ?? 0 ); check_admin_referer( 'adc_transfer_decision_' . $id );
@@ -63,7 +74,7 @@ final class TransferPages {
 	 * @param mixed $result
 	 */
 	private static function redirect( $result ): void {
-		wp_safe_redirect( add_query_arg( is_wp_error( $result ) ? 'error' : 'saved', '1', admin_url( 'admin.php?page=adc-transfer-queue' ) ) );
+		wp_safe_redirect( add_query_arg( is_wp_error( $result ) ? 'error' : 'saved', '1', admin_url( 'admin.php?page=adc-transfers' ) ) );
 		exit;
 	}
 }
