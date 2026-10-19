@@ -1,0 +1,30 @@
+<?php
+/** Read-only contracts: specifications, translation, units and option security. */
+if(PHP_SAPI!=='cli'){exit;}define('DISABLE_WP_CRON',true);require dirname(__DIR__,4).'/wp-load.php';
+use AutoDealership\Inventory\VehicleTechnicalDetails as T;
+$checks=0;$check=static function($ok,$message)use(&$checks){if(!$ok){throw new RuntimeException($message);}++$checks;echo "PASS $message\n";};
+$initial_get=$_GET;$fixture=array();$registry=T::defaults();
+$meta_filter=static function($value,$id,$key)use(&$fixture){return $id===142&&T::META===$key?array($fixture):$value;};
+$option_filter=static function()use(&$registry){return $registry;};
+add_filter('get_post_metadata',$meta_filter,10,3);add_filter('pre_option_'.T::OPTION,$option_filter);
+try{
+ foreach(array('fuel'=>12,'transmission'=>9,'body_type'=>17,'usage'=>3,'equipment'=>10)as$field=>$minimum){$check(count($registry[$field])>=$minimum,'Complete '.$field.' option group');foreach($registry[$field]as$row){$check($row['ar']!==''&&$row['en']!==''&&str_contains(T::icon($row['icon']),'<svg'),'Bilingual label and trusted icon: '.$row['en']);}}
+ foreach(array(array('2500','cc',2500),array('2.5','l',2500),array('2.498','l',2498),array('٢٫٥','l',2500),array('','cc',''),array('0','cc',false),array('2.5555','l',false),array('2500','l',false),array('2.5','cc',false),array('1e3','cc',false),array('<script>','l',false))as[$value,$unit,$expected]){$check(T::capacity_cc($value,$unit)===$expected,'Exact unit conversion / rejection: '.$value.' '.$unit);}
+ $base=array('fuel'=>'diesel','transmission'=>'manual','capacity'=>'2.5','capacity_unit'=>'l','speeds'=>'5','body_type'=>'pickup','usage'=>'commercial','equipment'=>'chiller');
+ $form=array('technical_present'=>'1','technical_base'=>$base,'technical_variants'=>array());foreach(T::variants(142)as$key=>$row){$form['technical_variants'][$key]=array_fill_keys(array_keys($base),'');$form['technical_variants'][$key]['capacity_unit']='cc';}
+ $valid=T::validate_input(142,$form);$check(is_array($valid)&&$valid['base']['capacity_cc']===2500,'Valid specifications convert to a canonical capacity');$fixture=$valid;
+ foreach(array('ar','en')as$lang){$_GET['lang']=$lang;$resolved=T::resolved(142);$check($resolved['fuel']['label']===('ar'===$lang?'ديزل':'Diesel'),'Language-specific fuel '.$lang);$check(str_contains($resolved['transmission']['label'],'5'),'Gear count appears with transmission '.$lang);$check(str_contains($resolved['capacity']['label'],'2.5'),'Capacity formatted in both units '.$lang);}
+ $key=array_key_first($form['technical_variants']);if($key){$override=$form;$override['technical_variants'][$key]['fuel']='bev';$fixture=T::validate_input(142,$override);$view=\AutoDealership\Inventory\GroupedModelCatalog::view(142);$row=$view['catalog_model']['options'][0];$row_key=T::variant_key($row);$fixture['variants'][$row_key]['fuel']='bev';$resolved=T::resolved(142,array(),$row);$check($resolved['fuel']['value']==='bev'&&$resolved['capacity']['label']==='','Electric trim overrides base and hides combustion capacity');$other=$row;$other['exterior_color']='Different color';$check(T::variant_key($row)===T::variant_key($other),'Trim specifications remain consistent across colors');$fixture=$valid;}
+ $check(T::validate_input(142,array())===null,'Older forms leave specification metadata unchanged');
+ foreach(array('fuel'=>'forged','capacity'=>array('2500'),'capacity_unit'=>'unknown','speeds'=>'25')as$field=>$bad){$invalid=$form;$invalid['technical_base'][$field]=$bad;$check(is_wp_error(T::validate_input(142,$invalid)),'Reject invalid '.$field);}
+ $invalid=$form;unset($invalid['technical_base']['fuel']);$check(is_wp_error(T::validate_input(142,$invalid)),'Truncated base fields cannot clear values');
+ if($key){$invalid=$form;unset($invalid['technical_variants'][$key]);$check(is_wp_error(T::validate_input(142,$invalid)),'Truncated variant fields cannot clear overrides');}
+ $invalid=$form;$invalid['technical_variants'][str_repeat('0',64)]=$base;$check(is_wp_error(T::validate_input(142,$invalid)),'Forged trim key rejected');
+ $registry['fuel']['diesel']['active']=false;$fixture=array();$check(is_wp_error(T::validate_input(142,$form)),'Disabled option unavailable for a new selection');$fixture=$valid;$check(is_array(T::validate_input(142,$form)),'Disabled option retained by its existing vehicle');
+ $input=T::defaults();foreach($input as&$rows){foreach($rows as&$row){$row['active']=$row['active']?'1':'0';}unset($row);}unset($rows);$new=array('field'=>'fuel','ar'=>'','en'=>'','icon'=>'fuel');
+ $check(is_array(T::validate_options($input,$new)),'Complete translated registry accepted');$new['ar']='طاقة تجريبية';$new['en']='Test energy';$custom=T::validate_options($input,$new);$check(is_array($custom)&&count($custom['fuel'])===13,'Custom bilingual option receives a stable key');
+ $new['en']='';$check(is_wp_error(T::validate_options($input,$new)),'Custom options require both languages');$new['en']='Test energy';$new['icon']='<svg onload=alert(1)>';$check(is_wp_error(T::validate_options($input,$new)),'Untrusted SVG icon rejected');
+ $new=array('field'=>'fuel','ar'=>'ديزل','en'=>'Another diesel','icon'=>'fuel');$check(is_wp_error(T::validate_options($input,$new)),'Duplicate custom option rejected');$new['ar']='';$new['en']='';$partial=$input;unset($partial['fuel']['diesel']);$check(is_wp_error(T::validate_options($partial,$new)),'Partial registry submission cannot delete existing choices');
+ $fixture=array();$resolved=T::resolved(142,array('vehicle'=>array('fuel_type'=>'diesel','transmission'=>'manual','body_type'=>'pickup','engine_size'=>'2500 cc')));$check($resolved['fuel']['value']==='diesel'&&$resolved['capacity']['value']===2500,'Explicit source values and engine units are reused safely');$resolved=T::resolved(142,array('vehicle'=>array('engine_size'=>'2500')));$check($resolved['capacity']['label']==='','Historical engine number without unit is not guessed');
+ echo "Completed $checks technical specification checks without persistent changes.\n";
+}finally{$_GET=$initial_get;remove_filter('get_post_metadata',$meta_filter,10);remove_filter('pre_option_'.T::OPTION,$option_filter);}

@@ -36,6 +36,7 @@
    
    const calc=document.querySelector('[data-loan-calculator] [name="price"]');if(calc){calc.value=option.price?String(option.price/100):'';calc.defaultValue=calc.value;calc.dispatchEvent(new Event('input',{bubbles:true}));}
    document.querySelectorAll('[data-vehicle-spec]').forEach(node=>{node.textContent=({trim:option.trimLabel,year:option.year,price:option.priceText})[node.dataset.vehicleSpec];});
+   document.dispatchEvent(new CustomEvent('adc:vehicle-option',{detail:{technical:option.technical}}));
    bindForms();document.querySelectorAll('.car-single-actions .btn-whatsapp').forEach(link=>{if(!link.dataset.originalHref)link.dataset.originalHref=link.href;const url=new URL(link.dataset.originalHref);url.searchParams.set('text',(url.searchParams.get('text')||'')+'\n'+config.labels.selected+': '+option.color.raw+' · '+option.trimLabel+' · '+option.year);link.href=url.href;});
    if(colorChanged)rebuildPhotos();
   }

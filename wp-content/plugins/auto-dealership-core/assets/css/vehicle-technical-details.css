@@ -1,0 +1,24 @@
+/* Vehicle specifications: compact, semantic, and independent of inventory editing. */
+body.single-car .adc-technical-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.4rem; margin:.25rem 0 0; padding:0; }
+body.single-car .adc-technical-summary > div { min-width:0; display:grid; align-content:start; gap:.2rem; padding:.4rem; border:1px solid var(--ab-on-dark-muted); border-radius:8px; background:rgba(255,255,255,.035); }
+body.single-car .adc-technical-summary dt { display:flex; align-items:center; gap:.3rem; font-size:.7rem; line-height:1.4; color:var(--ab-on-dark-muted); overflow-wrap:anywhere; }
+body.single-car .adc-technical-summary dd { margin:0; font-size:.8rem; line-height:1.4; font-weight:600; color:var(--ab-inverse); overflow-wrap:anywhere; }
+body.single-car .adc-technical-summary [data-technical-icon] { display:flex; flex:0 0 16px; }
+body.single-car .adc-technical-summary svg { display:block; color:var(--ab-inverse); width:16px; height:16px; }
+.adc-technical-summary[hidden],.adc-technical-summary [hidden],.car-specification [data-technical-row][hidden] { display:none!important; }
+.adc-technical-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; margin-block:1rem; }
+.adc-technical-fields label { display:flex; flex-direction:column; gap:.4rem; min-width:0; }
+.adc-technical-fields :is(input,select) { width:100%; max-width:100%; min-width:0; box-sizing:border-box; min-height:38px; }
+.adc-technical-label { display:flex; align-items:center; gap:.4rem; }
+.adc-capacity-input { display:flex; gap:.4rem; }
+.adc-capacity-input input { flex:1; }
+.adc-capacity-input select { width:5rem; flex:0 0 5rem; }
+.adc-technical-variant { border:1px solid #c3c4c7; padding:1rem; margin-block:1rem; border-radius:8px; background:#fff; }
+.adc-technical-variant summary,.adc-technical-options summary { cursor:pointer; font-weight:600; }
+.adc-technical-admin { max-width:1200px; }
+.adc-technical-admin .adc-panel { border:1px solid #c3c4c7; background:#fff; border-radius:8px; padding:1rem; margin-block:1rem; }
+.adc-technical-option-list { display:grid; gap:.75rem; margin-block-start:1rem; }
+.adc-technical-option { display:grid; grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) minmax(8rem,.6fr) minmax(6rem,.4fr); gap:.65rem; align-items:center; padding-block:.65rem; border-block-end:1px solid #dcdcde; }
+.adc-technical-option label { display:flex; flex-direction:column; gap:.3rem; min-width:0; }
+.adc-technical-option :is(input,select) { width:100%; min-width:0; max-width:100%; }
+@media(max-width:600px) { body.single-car .adc-technical-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .adc-technical-fields { grid-template-columns:minmax(0,1fr); } .adc-technical-option { grid-template-columns:24px minmax(0,1fr); } .adc-technical-option label { grid-column:2; } }

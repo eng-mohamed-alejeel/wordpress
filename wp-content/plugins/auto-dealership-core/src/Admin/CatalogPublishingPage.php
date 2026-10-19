@@ -126,6 +126,7 @@ final class CatalogPublishingPage {
 		echo '<label class="adc-field">'.esc_html(self::t('وصف مختصر','Short summary')).'<textarea name="summary" rows="3">'.esc_textarea($post?$post->post_excerpt:'').'</textarea></label><label for="adc_vehicle_description">'.esc_html(self::t('وصف السيارة (اختياري)','Vehicle description (optional)')).'</label>';
 		wp_editor($post?$post->post_content:'','adc_vehicle_description',array('textarea_name'=>'description','textarea_rows'=>8,'media_buttons'=>false,'teeny'=>true,'quicktags'=>false));
 		echo '<label class="adc-field">'.esc_html(self::t('المزايا — سطر لكل ميزة','Features — one per line')).'<textarea name="features" rows="5">'.esc_textarea($id?(is_array(get_post_meta($id,'_car_features',true))?implode("\n",get_post_meta($id,'_car_features',true)):get_post_meta($id,'_car_features',true)):'').'</textarea></label></section>';
+		\AutoDealership\Inventory\VehicleTechnicalDetails::editor($id);
 		$color_editor=$id&&GroupedModelCatalog::is_mapped($id);
 		echo '<section class="adc-panel"><h2>'.esc_html($color_editor?self::t('صور السيارة حسب اللون','Vehicle photos by color'):self::t('صور السيارة','Vehicle photos')).'</h2>';
 		if($color_editor){

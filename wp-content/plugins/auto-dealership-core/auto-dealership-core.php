@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.59.0
+ * Version: 1.60.0
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.59.0' );
+define( 'ADC_VERSION', '1.60.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -134,6 +134,8 @@ require_once ADC_PATH . 'src/Inventory/PublicCatalog.php';
 require_once ADC_PATH . 'src/Inventory/GroupedModelCatalog.php';
 require_once ADC_PATH . 'src/Inventory/VehicleColors.php';
 \AutoDealership\Inventory\VehicleColors::boot();
+require_once ADC_PATH . 'src/Inventory/VehicleTechnicalDetails.php';
+\AutoDealership\Inventory\VehicleTechnicalDetails::boot();
 require_once ADC_PATH . 'src/Inventory/OnyxCatalogNames.php';
 \AutoDealership\Inventory\OnyxCatalogNames::boot();
 \AutoDealership\Inventory\GroupedModelCatalog::boot();

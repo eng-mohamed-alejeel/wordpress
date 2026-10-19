@@ -67,6 +67,7 @@ while ( have_posts() ) :
 					<?php $wa_link = car_dealer_whatsapp_url( $wa_message ); if ( '#' !== $wa_link ) : ?><a class="btn btn-whatsapp" href="<?php echo esc_url( $wa_link ); ?>" target="_blank" rel="noopener"><?php echo car_dealer_whatsapp_icon(); ?><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a><?php endif; ?>
 					<?php if ( function_exists( 'car_dealer_comparison_button' ) ) { car_dealer_comparison_button( $id ); } ?>
 				</div>
+				<?php if ( class_exists( '\AutoDealership\Inventory\VehicleTechnicalDetails' ) ) { \AutoDealership\Inventory\VehicleTechnicalDetails::public_summary( (int) $id, $view ); } ?>
 			</div>
 		</div>
 	</section>
@@ -83,6 +84,7 @@ while ( have_posts() ) :
 			<h2><?php esc_html_e( 'المواصفات', 'car-dealer' ); ?></h2>
 			<?php if ( isset($view['catalog_model']) && class_exists('\AutoDealership\Inventory\VehicleColors') ) { \AutoDealership\Inventory\VehicleColors::render_variant_picker(); } ?>
 			<dl class="car-specification">
+				<?php if ( class_exists( '\AutoDealership\Inventory\VehicleTechnicalDetails' ) ) { \AutoDealership\Inventory\VehicleTechnicalDetails::public_rows( (int) $id, $view ); } ?>
 				<?php foreach ( isset( $view['catalog_model'] ) ? array(
 					car_dealer_text( 'الماركة', 'Brand' ) => car_dealer_catalog_value_label( (string) $brand_name ),
 					car_dealer_text( 'الطراز', 'Model' ) => car_dealer_catalog_value_label( (string) $model ),
@@ -97,10 +99,10 @@ while ( have_posts() ) :
 					__( 'حالة التوفر', 'car-dealer' ) => function_exists( 'car_dealer_inventory_status_label' ) ? car_dealer_inventory_status_label( $status ) : $status,
 					__( 'اللون', 'car-dealer' ) => car_dealer_catalog_value_label( (string) $color ),
 					__( 'اللون الداخلي', 'car-dealer' ) => car_dealer_catalog_value_label( (string) ( $vehicle['interior_color'] ?? '' ) ),
-					__( 'نوع الهيكل', 'car-dealer' ) => $vehicle && function_exists( 'car_dealer_catalog_value_label' ) ? car_dealer_catalog_value_label( (string) ( $vehicle['body_type'] ?? '' ) ) : ( $vehicle['body_type'] ?? '' ),
-					__( 'الوقود', 'car-dealer' ) => function_exists( 'car_dealer_catalog_value_label' ) ? car_dealer_catalog_value_label( (string) $fuel ) : $fuel,
-					__( 'ناقل الحركة', 'car-dealer' ) => car_dealer_catalog_value_label( (string) $transmission ),
-					__( 'المحرك', 'car-dealer' ) => $vehicle['engine_size'] ?? '',
+					__( 'نوع الهيكل', 'car-dealer' ) => class_exists( '\AutoDealership\Inventory\VehicleTechnicalDetails' ) ? '' : car_dealer_catalog_value_label( (string) ( $vehicle['body_type'] ?? '' ) ),
+					__( 'الوقود', 'car-dealer' ) => class_exists( '\AutoDealership\Inventory\VehicleTechnicalDetails' ) ? '' : car_dealer_catalog_value_label( (string) $fuel ),
+					__( 'ناقل الحركة', 'car-dealer' ) => class_exists( '\AutoDealership\Inventory\VehicleTechnicalDetails' ) ? '' : car_dealer_catalog_value_label( (string) $transmission ),
+					__( 'المحرك', 'car-dealer' ) => class_exists( '\AutoDealership\Inventory\VehicleTechnicalDetails' ) ? '' : ( $vehicle['engine_size'] ?? '' ),
 					__( 'نظام الدفع', 'car-dealer' ) => car_dealer_catalog_value_label( (string) ( $vehicle['drivetrain'] ?? '' ) ),
 					__( 'القوة', 'car-dealer' ) => ! empty( $vehicle['horsepower'] ) ? number_format_i18n( $vehicle['horsepower'] ) . ' ' . __( 'HP', 'car-dealer' ) : '',
 					__( 'الأبواب', 'car-dealer' ) => $vehicle['doors'] ?? '',

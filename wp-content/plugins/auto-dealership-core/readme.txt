@@ -1,11 +1,13 @@
 === Auto Dealership Core ===
 Requires at least: 6.7
 Requires PHP: 8.0
-Stable tag: 1.59.0
+Stable tag: 1.60.0
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The Car Dealer theme is a presentation adapter for this plugin.
 
 Audit callers must not pass passwords, tokens, payment card data, or unnecessary customer personal data.
+
+Version 1.60.0 adds bilingual technical specifications, strict engine-capacity units, per-trim editorial overrides, centrally managed options and trusted SVG icons. Imported Onyx data is never modified. No schema migration is required.
 
 Version 1.59.0 adds independent main images and additional photos for each Onyx color, a default display color shared by cards and vehicle pages. Existing ordered color galleries remain compatible.
 
