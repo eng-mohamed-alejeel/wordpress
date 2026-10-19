@@ -61,6 +61,7 @@ if ( '1' === getenv( 'ADC_PRODUCT_ADMIN_ONLY' ) && '/adc-product-admin-fixture' 
 	}
 	header( 'Content-Type: application/json' ); echo '{"created":true}'; exit;
 }
+if('/adc-product-personal-fixture'===$path){require __DIR__.'/personal-account-package-fixture.php';}
 if('/adc-product-portal-fixture'===$path){
 	if(!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
 	wp_set_current_user($config['admin']);$fixture=get_option('adc_test_portal_fixture');

@@ -1,7 +1,7 @@
 === Auto Dealership Core ===
 Requires at least: 6.7
 Requires PHP: 8.0
-Stable tag: 1.63.1
+Stable tag: 1.64.0
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The Car Dealer theme is a presentation adapter for this plugin.
 

@@ -76,3 +76,7 @@ jobs:
         env:
           ADC_WORKSPACE_ONLY: '1'
         run: php wp-content/plugins/auto-dealership-core/tests/database-runner.php --isolated 33369
+      - name: Personal account isolation and portal regression
+        env:
+          ADC_PORTAL_ONLY: '1'
+        run: php wp-content/plugins/auto-dealership-core/tests/database-runner.php --isolated 33369

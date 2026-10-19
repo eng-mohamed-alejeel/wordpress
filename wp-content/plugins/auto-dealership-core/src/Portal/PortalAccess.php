@@ -26,11 +26,17 @@ final class PortalAccess {
 	public static function ready():bool { return Schema::is_ready() && self::settings()['enabled']; }
 	public static function verified():bool { $user=wp_get_current_user();return $user->ID && \AutoDealership\Accounts\EmailVerification::current_account_verified_for($user->user_email); }
 	public static function staff():bool { return current_user_can('manage_options')||current_user_can('adc_view_conversations'); }
+	/** Personal account pages never inherit the operator's customer-data privileges. */
+	public static function personal_request():bool {
+		return !empty($GLOBALS['adc_portal_personal_request']) || 'dashboard'===($_GET['cd_account']??'') || 'personal'===($_REQUEST['portal_scope']??'');
+	}
+	public static function request_scope(bool $staff):void { $GLOBALS['adc_portal_personal_request']=!$staff; }
 	public static function cap(string $cap):bool { return current_user_can('manage_options')||current_user_can($cap); }
 	public static function branch(int $branch):bool { return BranchScope::allows($branch); }
 	public static function can_thread(array $row,bool $write=false):bool {
 		$id=get_current_user_id();if(!$id){return false;}
 		if($id===(int)$row['customer_id']){return !$write||self::verified();}
+		if(self::personal_request()){return false;}
 		if(!self::staff()||!self::branch((int)$row['branch_id'])||($write&&!self::cap('adc_reply_conversations'))){return false;}
 		return current_user_can('manage_options')||((int)$row['owner_id']===$id)||current_user_can('adc_view_branch_leads');
 	}

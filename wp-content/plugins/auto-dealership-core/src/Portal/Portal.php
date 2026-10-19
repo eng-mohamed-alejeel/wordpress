@@ -28,8 +28,9 @@ final class Portal {
 	}
 	public static function field(string $key):string {return isset($_POST[$key])&&is_string($_POST[$key])?wp_unslash($_POST[$key]):'';}
 	public static function submit():void {
-		if(!is_user_logged_in()){wp_die('Forbidden','',array('response'=>403));}check_admin_referer('adc_portal');$operation=self::field('operation');$id=absint(self::field('id'));$section=self::field('section');$result=null;
-		if(!PortalAccess::ready()&&'settings'!==$operation){$result=PortalAccess::error();}
+		if(!is_user_logged_in()){wp_die('Forbidden','',array('response'=>403));}check_admin_referer('adc_portal');PortalAccess::request_scope('1'===self::field('admin')&&(PortalAccess::staff()||PortalAccess::cap('adc_moderate_reviews')));$operation=self::field('operation');$id=absint(self::field('id'));$section=self::field('section');$result=null;
+		if(PortalAccess::personal_request()&&!in_array($operation,array('context','review_context','send','read','review','withdraw','ownership','close','reopen'),true)){$result=PortalAccess::error('adc_portal_forbidden',403);}
+		elseif(!PortalAccess::ready()&&'settings'!==$operation){$result=PortalAccess::error();}
 		elseif('context'===$operation){$result=Conversations::ensure(self::field('kind'),absint(self::field('source')),self::field('subject'),absint(self::field('branch')));$section='messages';if(!is_wp_error($result)){$id=(int)$result;}}
 		elseif('review_context'===$operation){$result=Conversations::ensure(self::field('kind'),absint(self::field('source')));$section='reviews';if(!is_wp_error($result)){$id=(int)$result;if(!Reviews::context($id)){$result=PortalAccess::error('adc_portal_input');}}}
 		elseif('send'===$operation){$result=Conversations::send($id,self::field('body'),self::field('request_key'),'1'===self::field('internal'));$section='messages';}
@@ -65,7 +66,7 @@ final class Portal {
 		\AutoDealership\Accounts\EmailVerification::deliver_committed($payload);return true;
 	}
 	public static function poll():void {
-		check_ajax_referer('adc_portal_poll','nonce');nocache_headers();$id=isset($_GET['id'])&&is_scalar($_GET['id'])?absint($_GET['id']):0;$after=isset($_GET['after'])&&is_scalar($_GET['after'])?absint($_GET['after']):0;
+		check_ajax_referer('adc_portal_poll','nonce');PortalAccess::request_scope('staff'===($_REQUEST['portal_scope']??'')&&PortalAccess::staff());nocache_headers();$id=isset($_GET['id'])&&is_scalar($_GET['id'])?absint($_GET['id']):0;$after=isset($_GET['after'])&&is_scalar($_GET['after'])?absint($_GET['after']):0;
 		$rate=\AutoDealership\Security\PublicRequestGuard::consume('public_read');$result=is_wp_error($rate)?$rate:Conversations::detail($id,$after);
 		if(is_wp_error($result)){wp_send_json_error(array('message'=>$result->get_error_message()),(int)($result->get_error_data()['status']??400));}wp_send_json_success($result);
 	}
@@ -74,7 +75,7 @@ final class Portal {
 	}
 	public static function form(string $operation,string $section,array $fields=array(),bool $admin=false):void {
 		echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'" class="adc-p-form">';wp_nonce_field('adc_portal');
-		foreach(array_merge(array('action'=>'adc_portal','operation'=>$operation,'section'=>$section,'admin'=>$admin?'1':'0','lang'=>PortalAccess::language()),$fields) as $name=>$value){echo '<input type="hidden" name="'.esc_attr($name).'" value="'.esc_attr((string)$value).'">';}
+		foreach(array_merge(array('action'=>'adc_portal','operation'=>$operation,'section'=>$section,'admin'=>$admin?'1':'0','portal_scope'=>$admin?'staff':'personal','lang'=>PortalAccess::language()),$fields) as $name=>$value){echo '<input type="hidden" name="'.esc_attr($name).'" value="'.esc_attr((string)$value).'">';}
 	}
 	public static function notifications():array {global $wpdb;return $wpdb->get_results($wpdb->prepare('SELECT kind,object_id,created_at FROM '.PortalAccess::table('notifications').' WHERE user_id=%d AND read_at IS NULL ORDER BY id DESC LIMIT 10',get_current_user_id()),ARRAY_A)?:array();}
 }

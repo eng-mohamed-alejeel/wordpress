@@ -2,9 +2,13 @@
   'use strict';
   if (!window.adcPortal) return;
   const cfg=window.adcPortal, ar=cfg.lang==='ar';
+  const navigation=document.querySelector('.adc-p-navigation');
+  if(navigation){const mobile=matchMedia('(max-width:900px)'),adapt=()=>{navigation.open=!mobile.matches;};adapt();mobile.addEventListener('change',adapt);}
   const errorText=error=>error instanceof TypeError||error instanceof SyntaxError?cfg.failed:error.message||cfg.failed;
   if(location.hash==='#communication-preferences'&&document.querySelector('.adc-portal')){const url=new URL(location.href);if(url.searchParams.get('portal')!=='preferences'){url.searchParams.set('portal','preferences');url.hash='';location.replace(url);return;}}
   document.querySelectorAll('.adc-portal form.adc-p-form').forEach(form=>{
+    // Profile/preferences belong to their native account handler and redirect as HTML.
+    if(form.elements.action?.value!=='adc_portal')return;
     if(['send','read'].includes(form.elements.operation?.value))return;
     const result=document.createElement('p');result.setAttribute('role','status');result.setAttribute('aria-live','polite');form.append(result);
     form.addEventListener('submit',async event=>{event.preventDefault();const button=form.querySelector('button[type=submit]');if(button.disabled)return;button.disabled=true;result.textContent='';
@@ -36,7 +40,7 @@
   async function poll(manual=false){
     if(busy||document.hidden){schedule();return;}if(more&&!manual){schedule();return;}
     busy=true;try{
-      const url=new URL(cfg.ajax);url.search=new URLSearchParams({action:'adc_portal_poll',nonce:cfg.pollNonce,lang:cfg.lang,id:root.dataset.thread,after:String(after)}).toString();
+      const url=new URL(cfg.ajax);url.search=new URLSearchParams({action:'adc_portal_poll',nonce:cfg.pollNonce,lang:cfg.lang,id:root.dataset.thread,after:String(after),portal_scope:root.closest('.adc-p-admin')?'staff':'personal'}).toString();
       const response=await fetch(url,{credentials:'same-origin',cache:'no-store'}),json=await response.json();if(!response.ok||!json.success)throw new Error(json.data?.message||cfg.failed);
       const data=json.data,nearBottom=history.scrollHeight-history.scrollTop-history.clientHeight<90;let added=0;
       for(const message of data.messages){if(!ids.has(Number(message.id)))added++;addMessage(message);after=Math.max(after,Number(message.id));}

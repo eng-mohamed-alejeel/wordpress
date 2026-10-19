@@ -139,7 +139,7 @@ final class CustomerAccount {
 			}
 			$result = RequestWorkflow::update( $lead_id, array(), true );
 			if ( is_wp_error( $result ) ) { return $result->get_error_message(); }
-			wp_safe_redirect( add_query_arg( 'request_updated', 1, self::account_url() ) );
+			wp_safe_redirect( add_query_arg( array('request_updated'=>1,'portal'=>'bookings'), self::account_url() ) );
 			exit;
 		}
 		if ( 'save_preferences' === $action ) {
@@ -151,7 +151,7 @@ final class CustomerAccount {
 			if ( '' !== $language && ! in_array( $language, array( 'ar', 'en' ), true ) ) { return __( 'تعذر حفظ التفضيلات. اختر أحد الخيارين وحاول مجددًا.', 'auto-dealership-core' ); }
 			$result = CustomerIdentity::update_preferences( '1' === $value, $language );
 			if ( is_wp_error( $result ) ) { return $result->get_error_message(); }
-			wp_safe_redirect( add_query_arg( 'preferences_saved', 1, self::account_url() ) );
+			wp_safe_redirect( add_query_arg( array('preferences_saved'=>1,'portal'=>'preferences'), self::account_url() ) );
 			exit;
 		}
 
@@ -161,7 +161,7 @@ final class CustomerAccount {
 		if ( is_wp_error( $phone ) ) { return __( 'أدخل رقم هاتف صحيحًا بصيغة محلية أو دولية.', 'auto-dealership-core' ); }
 		$result = CustomerIdentity::update_account_profile( $user_id, $name, $phone );
 		if ( is_wp_error( $result ) ) { return $result->get_error_message(); }
-		wp_safe_redirect( add_query_arg( 'saved', 1, self::account_url() ) );
+		wp_safe_redirect( add_query_arg( array('saved'=>1,'portal'=>'profile'), self::account_url() ) );
 		exit;
 	}
 

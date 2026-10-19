@@ -47,7 +47,7 @@ final class LiveChat {
 	}
 	/** Dedicated lightweight status endpoint: no inbox, messages, assignment, or activity history. */
 	public static function status_endpoint():void {
-		check_ajax_referer('adc_live_chat','nonce');nocache_headers();if(!is_user_logged_in()||!PortalAccess::ready()){wp_send_json_error(array(),403);}
+		check_ajax_referer('adc_live_chat','nonce');PortalAccess::request_scope('personal'!==($_REQUEST['portal_scope']??'')&&PortalAccess::staff());nocache_headers();if(!is_user_logged_in()||!PortalAccess::ready()){wp_send_json_error(array(),403);}
 		$rate=\AutoDealership\Security\PublicRequestGuard::consume('portal_presence','account:'.get_current_user_id());if(is_wp_error($rate)){wp_send_json_error(array('message'=>$rate->get_error_message()),429);}
 		$id=isset($_REQUEST['thread'])&&is_scalar($_REQUEST['thread'])?absint($_REQUEST['thread']):0;$row=$id?Conversations::row($id):null;
 		if(!$row||!PortalAccess::can_thread($row)){wp_send_json_error(array(),404);}
@@ -73,14 +73,14 @@ final class LiveChat {
 	/** Called inside the thread transaction. A private, unavailable InnoDB row serializes each adviser independently of WordPress table engines. */
 	public static function assign(int $thread):bool {
 		global $wpdb;$row=Conversations::row($thread,true);if($wpdb->last_error||!$row){return false;}if($row['owner_id']||$row['lead_id']||'closed'===$row['status']){return true;}
-		$candidates=self::available((int)$row['branch_id']);$loads=array();foreach($candidates as $candidate){$loads[$candidate]=(int)$wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM '.PortalAccess::table('threads')." WHERE owner_id=%d AND status<>'closed'",$candidate));}asort($loads,SORT_NUMERIC);
+		$candidates=self::available((int)$row['branch_id']);$loads=array();foreach($candidates as $candidate){if($candidate===(int)$row['customer_id']){continue;}$loads[$candidate]=(int)$wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM '.PortalAccess::table('threads')." WHERE owner_id=%d AND status<>'closed'",$candidate));}asort($loads,SORT_NUMERIC);
 		foreach($loads as $candidate=>$load){if($load>=8){continue;}$locked=$wpdb->query($wpdb->prepare('INSERT INTO '.PortalAccess::table('presence').'(user_id,session_key,thread_id,available,typing_until,seen_at) VALUES(%d,%s,0,0,0,%d) ON DUPLICATE KEY UPDATE seen_at=VALUES(seen_at)',$candidate,hash('sha256','portal-routing-mutex'),time()));if(false===$locked){return false;}if(!self::online($candidate)||!self::eligible($candidate,(int)$row['branch_id'])){continue;}$owned=$wpdb->get_col($wpdb->prepare('SELECT id FROM '.PortalAccess::table('threads')." WHERE owner_id=%d AND status<>'closed' LIMIT 8 FOR UPDATE",$candidate));if($wpdb->last_error){return false;}if(count($owned)>=8){continue;}
 			$changed=$wpdb->query($wpdb->prepare('UPDATE '.PortalAccess::table('threads').' SET owner_id=%d,revision=revision+1 WHERE id=%d AND owner_id=0',$candidate,$thread));if(false===$changed){return false;}if(1===$changed&&!PortalAccess::notify($candidate,'message',$thread,'chat-assigned:'.$thread.':'.$candidate)){return false;}break;
 		}
 		return true;
 	}
 	public static function endpoint():void {
-		if('POST'!==($_SERVER['REQUEST_METHOD']??'')){wp_send_json_error(array(),405);}check_ajax_referer('adc_live_chat','nonce');nocache_headers();
+		if('POST'!==($_SERVER['REQUEST_METHOD']??'')){wp_send_json_error(array(),405);}check_ajax_referer('adc_live_chat','nonce');PortalAccess::request_scope('personal'!==($_REQUEST['portal_scope']??'')&&PortalAccess::staff());nocache_headers();
 		if(!PortalAccess::ready()){wp_send_json_error(array('message'=>PortalAccess::t('المحادثات غير متاحة حاليًا.','Chat is currently unavailable.')),503);}
 		$rate=\AutoDealership\Security\PublicRequestGuard::consume('public_read');if(is_wp_error($rate)){wp_send_json_error(array('message'=>$rate->get_error_message()),429);}
 		$operation=Portal::field('operation');$thread=absint(Portal::field('thread'));$result=true;
@@ -89,7 +89,7 @@ final class LiveChat {
 		elseif('beat'!==$operation){$result=PortalAccess::error('adc_portal_input');}
 		if(!is_wp_error($result)){$result=self::beat($thread,'1'===Portal::field('typing'),'1'===Portal::field('visible'),Portal::field('tab'));}
 		if(is_wp_error($result)){wp_send_json_error(array('message'=>$result->get_error_message()),(int)($result->get_error_data()['status']??400));}
-		$inbox=array();if(PortalAccess::staff()){if(StaffPresence::accepting()){self::queue();}foreach(Conversations::list(1,'',get_current_user_id()) as $item){if(!empty($item['unread'])){$inbox[]=array('id'=>(int)$item['id'],'last'=>(int)$item['last_public_id'],'url'=>admin_url('admin.php?page=adc-conversations&thread='.(int)$item['id']));}if(count($inbox)>=5){break;}}}
+		$inbox=array();if(PortalAccess::staff()&&!PortalAccess::personal_request()){if(StaffPresence::accepting()){self::queue();}foreach(Conversations::list(1,'',get_current_user_id()) as $item){if(!empty($item['unread'])){$inbox[]=array('id'=>(int)$item['id'],'last'=>(int)$item['last_public_id'],'url'=>admin_url('admin.php?page=adc-conversations&thread='.(int)$item['id']));}if(count($inbox)>=5){break;}}}
 		wp_send_json_success(array('available'=>StaffPresence::accepting(),'canReceive'=>StaffPresence::eligible(get_current_user_id()),'thread'=>$thread,'presence'=>$thread?self::presence($thread):null,'inbox'=>$inbox,'redirect'=>$thread?PortalAccess::url('messages',array('thread'=>$thread)):null));
 	}
 	public static function assets():void {
@@ -98,10 +98,10 @@ final class LiveChat {
 		if(StaffPresence::role(get_current_user_id())){wp_enqueue_style('adc-staff-presence',plugins_url('assets/css/staff-presence.css',ADC_FILE),array('adc-live-chat'),ADC_VERSION);}
 		wp_enqueue_script('adc-live-chat',plugins_url('assets/js/customer-presence.js',ADC_FILE),array(),ADC_VERSION,true);
 		wp_enqueue_script('adc-chat-typing',plugins_url('assets/js/customer-typing.js',ADC_FILE),array('adc-live-chat'),ADC_VERSION,true);
-		wp_localize_script('adc-live-chat','adcChat',array('ajax'=>admin_url('admin-ajax.php'),'post'=>admin_url('admin-post.php'),'nonce'=>is_user_logged_in()?wp_create_nonce('adc_live_chat'):'','pollNonce'=>is_user_logged_in()?wp_create_nonce('adc_portal_poll'):'','sendNonce'=>is_user_logged_in()?wp_create_nonce('adc_portal'):'','lang'=>PortalAccess::language(),'logged'=>is_user_logged_in(),'staff'=>PortalAccess::staff(),'available'=>StaffPresence::accepting(),'canReceive'=>StaffPresence::eligible(get_current_user_id()),'account'=>PortalAccess::url('messages')));
+		wp_localize_script('adc-live-chat','adcChat',array('ajax'=>admin_url('admin-ajax.php'),'post'=>admin_url('admin-post.php'),'nonce'=>is_user_logged_in()?wp_create_nonce('adc_live_chat'):'','pollNonce'=>is_user_logged_in()?wp_create_nonce('adc_portal_poll'):'','sendNonce'=>is_user_logged_in()?wp_create_nonce('adc_portal'):'','lang'=>PortalAccess::language(),'logged'=>is_user_logged_in(),'scope'=>PortalAccess::personal_request()?'personal':'staff','staff'=>PortalAccess::staff()&&!PortalAccess::personal_request(),'available'=>StaffPresence::accepting(),'canReceive'=>StaffPresence::eligible(get_current_user_id()),'account'=>PortalAccess::url('messages')));
 	}
 	public static function widget():void {
-		if(!PortalAccess::ready()||is_admin()||PortalAccess::staff()||('messages'===($_GET['portal']??''))){return;}
+		if(!PortalAccess::ready()||is_admin()||PortalAccess::staff()||('dashboard'===($_GET['cd_account']??''))){return;}
 		echo '<aside class="adc-chat" dir="'.('ar'===PortalAccess::language()?'rtl':'ltr').'" aria-label="'.esc_attr(PortalAccess::t('تواصل مع المعرض','Chat with the dealership')).'"><button type="button" class="adc-chat-launch" aria-expanded="false" aria-controls="adc-chat-panel"><span class="adc-chat-dot" aria-hidden="true"></span>'.esc_html(PortalAccess::t('تحدث مع فريقنا','Talk to our team')).'</button><section id="adc-chat-panel" class="adc-chat-panel" hidden><header><h2>'.esc_html(PortalAccess::t('كيف نساعدك؟','How can we help?')).'</h2><button type="button" data-chat-close aria-label="'.esc_attr(PortalAccess::t('إغلاق','Close')).'">×</button></header><p>'.esc_html(PortalAccess::t('اختر الفرع وسنوصلك بأحد موظفيه المتاحين.','Choose a branch and we will connect you with an available adviser.')).'</p><label>'.esc_html(PortalAccess::t('الفرع','Branch')).'<select data-chat-branch>';foreach(PortalAccess::branches() as $branch){echo '<option value="'.(int)$branch['id'].'">'.esc_html($branch['name']).'</option>';}echo '</select></label><p data-chat-status role="status"></p><button type="button" data-chat-start>'.esc_html(PortalAccess::t('بدء المحادثة','Start conversation')).'</button><a href="'.esc_url(PortalAccess::url('messages')).'">'.esc_html(PortalAccess::t('محادثاتي السابقة','My conversations')).'</a></section></aside>';
 	}
 }

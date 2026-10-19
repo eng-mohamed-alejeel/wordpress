@@ -20,6 +20,7 @@ final class Conversations {
 			if(!$original){return PortalAccess::error('adc_portal_forbidden',404);}
 			$lead=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.Schema::table('leads').' WHERE legacy_request_type=%s AND legacy_request_id=%d',$kind,$source),ARRAY_A);
 			if((int)$original['user_id']!==$user){
+				if(PortalAccess::personal_request()){return PortalAccess::error('adc_portal_forbidden',404);}
 				if(!current_user_can('manage_options')&&(!PortalAccess::staff()||!$lead||!\AutoDealership\Security\BranchScope::can_view_lead($lead))){return PortalAccess::error('adc_portal_forbidden',404);}
 			}
 			$user=(int)$original['user_id'];if(!$user){return PortalAccess::error('adc_portal_forbidden',404);}
@@ -44,15 +45,18 @@ final class Conversations {
 		if('general'===$kind&&!LiveChat::assign($id)){$wpdb->query('ROLLBACK');return PortalAccess::error();}
 		if(!Transaction::commit(static fn()=>PortalAccess::audit('context_opened','portal_thread',$id))){return PortalAccess::error();}return $id;
 	}
-	public static function list(int $page=1,string $status='',int $owner=-1,int $branch=0):array {
+	public static function list(int $page=1,string $status='',int $owner=-1,int $branch=0,bool $personal=false,string $search=''):array {
 		global $wpdb;if(!PortalAccess::ready()||!get_current_user_id()){return array();}$where='t.customer_id=%d';$args=array(get_current_user_id());
-		if(PortalAccess::staff()){
+		if(PortalAccess::staff()&&!$personal&&!PortalAccess::personal_request()){
 			list($where,$args)=\AutoDealership\Security\BranchScope::predicate('t.scope_branch');
 			if(!current_user_can('manage_options')&&!current_user_can('adc_view_branch_leads')){$where.=' AND t.scope_owner=%d';$args[]=get_current_user_id();}
 		}
 		if(in_array($status,array('staff','customer','closed'),true)){$where.=' AND t.status=%s';$args[]=$status;}
-		if(PortalAccess::staff()&&$owner>=0){$where.=' AND t.scope_owner=%d';$args[]=$owner;}
-		if(PortalAccess::staff()&&$branch){$where.=' AND t.scope_branch=%d';$args[]=$branch;}
+		if('open'===$status){$where.=" AND t.status<>'closed'";}
+		if('unread'===$status){$where.=' AND EXISTS(SELECT 1 FROM '.PortalAccess::table('messages')." unseen WHERE unseen.thread_id=t.id AND unseen.visibility='public' AND unseen.sender_id<>%d AND unseen.id>COALESCE((SELECT marker.last_id FROM ".PortalAccess::table('reads').' marker WHERE marker.thread_id=t.id AND marker.user_id=%d),0))';$args[]=get_current_user_id();$args[]=get_current_user_id();}
+		if(''!==trim($search)){$where.=' AND (t.subject LIKE %s OR CAST(t.id AS CHAR) LIKE %s)';$like='%'.$wpdb->esc_like(mb_substr(sanitize_text_field($search),0,100)).'%';$args[]=$like;$args[]=$like;}
+		if(!$personal&&!PortalAccess::personal_request()&&PortalAccess::staff()&&$owner>=0){$where.=' AND t.scope_owner=%d';$args[]=$owner;}
+		if(!$personal&&!PortalAccess::personal_request()&&PortalAccess::staff()&&$branch){$where.=' AND t.scope_branch=%d';$args[]=$branch;}
 		$args=array_merge(array(get_current_user_id(),get_current_user_id()),$args,array(max(0,min(10000,$page)-1)*20));
 		$source='(SELECT raw.*,CASE WHEN raw.lead_id=0 THEN raw.branch_id ELSE COALESCE(lead.branch_id,0) END scope_branch,CASE WHEN raw.lead_id=0 THEN raw.owner_id ELSE COALESCE(lead.owner_user_id,0) END scope_owner FROM '.PortalAccess::table('threads').' raw LEFT JOIN '.Schema::table('leads').' lead ON lead.id=raw.lead_id)';
 		return $wpdb->get_results($wpdb->prepare('SELECT t.*,EXISTS(SELECT 1 FROM '.PortalAccess::table('messages')." m WHERE m.thread_id=t.id AND m.visibility='public' AND m.sender_id<>%d AND m.id>COALESCE((SELECT r.last_id FROM ".PortalAccess::table('reads')." r WHERE r.thread_id=t.id AND r.user_id=%d),0)) unread FROM $source t WHERE $where ORDER BY t.updated_at DESC,t.id DESC LIMIT 21 OFFSET %d",$args),ARRAY_A)?:array();
@@ -106,7 +110,7 @@ final class Conversations {
 		if((int)$row['revision']!==$revision){$wpdb->query('ROLLBACK');return PortalAccess::error('adc_portal_stale',409);}
 		$changes=array('revision'=>$revision+1,'updated_at'=>current_time('mysql',true));
 		if('assign'===$operation){
-			$user=get_userdata($owner);if($customer||!PortalAccess::cap('adc_assign_conversations')||($owner&&(!$user||!user_can($user,'adc_reply_conversations')||!\AutoDealership\Security\BranchScope::allows((int)$row['branch_id'],$owner)))){$wpdb->query('ROLLBACK');return PortalAccess::error('adc_portal_forbidden',403);}$changes['owner_id']=$owner;
+			$user=get_userdata($owner);if($customer||($owner&&(int)$row['customer_id']===$owner)||!PortalAccess::cap('adc_assign_conversations')||($owner&&(!$user||!user_can($user,'adc_reply_conversations')||!\AutoDealership\Security\BranchScope::allows((int)$row['branch_id'],$owner)))){$wpdb->query('ROLLBACK');return PortalAccess::error('adc_portal_forbidden',403);}$changes['owner_id']=$owner;
 		}elseif('route'===$operation){
 			if(!current_user_can('manage_options')||$row['lead_id']||'general'!==$row['kind']||!$branch||!\AutoDealership\Security\BranchScope::is_active($branch)){$wpdb->query('ROLLBACK');return PortalAccess::error('adc_portal_forbidden',403);}$changes['branch_id']=$branch;$changes['owner_id']=0;
 		}elseif(in_array($operation,array('close','reopen'),true)){

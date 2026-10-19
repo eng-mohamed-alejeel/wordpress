@@ -7,9 +7,16 @@
 	$cd_legal_links = car_dealer_legal_links();
 	$cd_has_legal = (bool) $cd_legal_links || has_nav_menu( 'footer' );
 	?>
-	<footer id="colophon" class="site-footer">
+	<?php $cd_personal_footer=is_user_logged_in() && 'dashboard'===($_GET['cd_account']??''); ?>
+	<footer id="colophon" class="site-footer<?php echo $cd_personal_footer?' is-account-footer':''; ?>">
 		<div class="container footer-container">
-			<div class="footer-grid footer-grid-no-legal">
+			<?php if($cd_personal_footer): ?><nav class="adc-p-footer-links" aria-label="<?php echo esc_attr(car_dealer_text('روابط الحساب والمساعدة','Account and help links')); ?>">
+				<a href="<?php echo esc_url(car_dealer_site_url()); ?>"><?php echo esc_html(car_dealer_brand_name()); ?></a>
+				<?php if(class_exists('\AutoDealership\Portal\PortalAccess')): ?><a href="<?php echo esc_url(\AutoDealership\Portal\PortalAccess::url('messages')); ?>"><?php echo esc_html(car_dealer_text('المساعدة والتواصل','Help & contact')); ?></a><?php endif; ?>
+				<?php foreach($cd_legal_links as $cd_legal_link): ?><a href="<?php echo esc_url($cd_legal_link['url']); ?>"><?php echo esc_html($cd_legal_link['label']); ?></a><?php endforeach; ?>
+				<?php if(class_exists('\AutoDealership\Portal\PortalAccess')): ?><a href="<?php echo esc_url(\AutoDealership\Portal\PortalAccess::url('preferences')); ?>"><?php echo esc_html(car_dealer_text('تفضيلات التواصل','Communication preferences')); ?></a><?php endif; ?>
+			</nav><?php endif; ?>
+			<?php if(!$cd_personal_footer): ?><div class="footer-grid footer-grid-no-legal">
 				<div class="footer-col footer-brand-col">
 					<div class="footer-brand">
 						<?php if ( has_custom_logo() ) : ?><?php if(class_exists('\AutoDealership\Core\BrandLogo')){echo \AutoDealership\Core\BrandLogo::public_logo('footer');}else{the_custom_logo();} ?><?php else : ?><a href="<?php echo esc_url( car_dealer_site_url() ); ?>"><?php echo esc_html( car_dealer_brand_name() ); ?></a><?php endif; ?>
@@ -42,14 +49,14 @@
 						</div>
 					<?php endif; ?>
 			</div>
-				<div class="footer-bottom"><div class="footer-bottom-content">
+			<?php endif; ?><div class="footer-bottom"><div class="footer-bottom-content">
 				<?php if ( class_exists('\\AutoDealership\\Core\\BrandIdentity') ) : ?><details class="ab-footer-appearance"><summary><?php echo esc_html(car_dealer_text('تفضيلات المظهر','Appearance preferences')); ?></summary><?php \AutoDealership\Core\BrandIdentity::preferences(); ?></details><?php endif; ?>
 				<p class="footer-copyright" dir="<?php echo esc_attr( car_dealer_catalog_direction() ); ?>"><bdi dir="ltr">© <?php echo esc_html( wp_date( 'Y' ) ); ?></bdi> <?php echo esc_html( car_dealer_text( '{legal_name} — جميع الحقوق محفوظة.', '{legal_name} — All rights reserved.' ) ); ?></p>
 			</div></div>
 		</div>
 	</footer>
 </div>
-<?php if ( $cd_whatsapp_url ) : ?>
+<?php if ( $cd_whatsapp_url && !$cd_personal_footer ) : ?>
 	<aside aria-label="<?php echo esc_attr( car_dealer_text( 'التواصل السريع', 'Quick contact' ) ); ?>">
 	<a href="<?php echo esc_url( $cd_whatsapp_url ); ?>" class="ab-float-wa" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr( car_dealer_text( 'تواصل عبر واتساب', 'Contact us on WhatsApp' ) ); ?>">
 		<?php echo car_dealer_whatsapp_icon(); ?>

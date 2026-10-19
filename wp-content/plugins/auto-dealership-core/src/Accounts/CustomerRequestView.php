@@ -17,7 +17,7 @@ final class CustomerRequestView {
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
-	public static function page( string $type, int $page = 1 ) {
+	public static function page( string $type, int $page = 1, array $filters = array() ) {
 		global $wpdb;
 		$user_id = get_current_user_id();
 		if ( ! $user_id || ! in_array( $type, array( 'messages', 'bookings' ), true ) ) {
@@ -35,12 +35,30 @@ final class CustomerRequestView {
 		} else {
 			$fields .= ',r.message,r.lead_type,r.subject';
 		}
-		$args = 'bookings' === $type
-			? array( $user_id, $user_id, self::PER_PAGE + 1, ( $page - 1 ) * self::PER_PAGE )
-			: array( $user_id, self::PER_PAGE + 1, ( $page - 1 ) * self::PER_PAGE );
+		$args = 'bookings' === $type ? array( $user_id, $user_id ) : array( $user_id );
+		$where = '';
+		if ( 'upcoming' === ( $filters['status'] ?? '' ) && 'bookings' === $type ) { $where .= " AND r.status IN ('pending','confirmed') AND CONCAT(r.requested_date,' ',r.requested_time)>=%s"; $args[] = current_time('mysql'); }
+		if ( 'open' === ( $filters['status'] ?? '' ) && 'messages' === $type ) { $where .= " AND r.status IN ('new','read')"; }
+		if ( ! empty( $filters['request'] ) ) { $where .= ' AND r.id=%d'; $args[] = absint( $filters['request'] ); }
+		$statuses = RequestWorkflow::statuses( 'bookings' === $type ? 'booking' : 'message' );
+		if ( isset( $statuses[$filters['status'] ?? ''] ) ) { $where .= ' AND r.status=%s'; $args[] = $filters['status']; }
+		if ( ! empty( $filters['search'] ) ) {
+			$like = '%' . $wpdb->esc_like( mb_substr( sanitize_text_field( $filters['search'] ), 0, 100 ) ) . '%';
+			$where .= ' AND (CAST(r.id AS CHAR) LIKE %s' . ( 'bookings' === $type ? ')' : ' OR r.subject LIKE %s OR r.message LIKE %s)' );
+			$args[] = $like;
+			if ( 'bookings' !== $type ) { $args[] = $like; $args[] = $like; }
+		}
+		foreach ( array( 'from'=>'>=', 'to'=>'<=' ) as $key=>$operator ) {
+			if ( ! empty( $filters[$key] ) && preg_match( '/\A\d{4}-\d{2}-\d{2}\z/', $filters[$key] ) ) {
+				$where .= ' AND ' . ( 'bookings' === $type ? 'r.requested_date' : 'r.created_at' ) . " $operator %s";
+				// Request dates are stored in UTC; date filters refer to the site's local calendar.
+				$args[] = 'bookings' === $type ? $filters[$key] : get_gmt_from_date( $filters[$key] . ( 'from' === $key ? ' 00:00:00' : ' 23:59:59' ) );
+			}
+		}
+		$args[] = self::PER_PAGE + 1; $args[] = ( $page - 1 ) * self::PER_PAGE;
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT $fields FROM $table r WHERE r.user_id=%d ORDER BY r.id DESC LIMIT %d OFFSET %d",
+				"SELECT $fields FROM $table r WHERE r.user_id=%d $where ORDER BY r.id DESC LIMIT %d OFFSET %d",
 				$args
 			),
 			ARRAY_A

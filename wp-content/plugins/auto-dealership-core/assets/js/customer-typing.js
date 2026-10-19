@@ -13,7 +13,7 @@
     const root=conversation();return input&&visible(root)&&document.activeElement===input&&!input.disabled&&!input.closest('[hidden]')&&!!input.value.trim()&&!root.querySelector('[name=internal]')?.checked;
   }
   function payload(root,typing,ttl=0){
-    const data=new FormData();Object.entries({action:'adc_live_status',operation:'typing',nonce:cfg.nonce,thread:root.dataset.thread,tab,seq:++sequence,typing:typing?'1':'0',visible:document.hidden?'0':'1',ttl:Math.max(0,Math.ceil(ttl)),lang:cfg.lang}).forEach(([key,value])=>data.set(key,String(value)));return data;
+    const data=new FormData();Object.entries({action:'adc_live_status',operation:'typing',nonce:cfg.nonce,portal_scope:cfg.scope||'personal',thread:root.dataset.thread,tab,seq:++sequence,typing:typing?'1':'0',visible:document.hidden?'0':'1',ttl:Math.max(0,Math.ceil(ttl)),lang:cfg.lang}).forEach(([key,value])=>data.set(key,String(value)));return data;
   }
   function signal(root,typing,ttl=0,beacon=false){
     if(!root?.dataset.thread)return;
@@ -54,7 +54,7 @@
     const root=conversation();if(!visible(root)||statusBusy||navigator.onLine===false)return;
     statusBusy=true;
     try{
-      const url=new URL(cfg.ajax);url.search=new URLSearchParams({action:'adc_live_status',nonce:cfg.nonce,thread:root.dataset.thread,lang:cfg.lang});
+      const url=new URL(cfg.ajax);url.search=new URLSearchParams({action:'adc_live_status',nonce:cfg.nonce,portal_scope:cfg.scope||'personal',thread:root.dataset.thread,lang:cfg.lang});
       const response=await fetch(url,{credentials:'same-origin',cache:'no-store'}),json=await response.json();
       if(!response.ok||!json.success)throw Error('status unavailable');
       statusFailures=0;if(root===conversation()&&visible(root))render(json.data);

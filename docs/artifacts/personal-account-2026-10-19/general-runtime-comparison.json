@@ -1,0 +1,10 @@
+{
+  "final_package": ".tmp\\product-release\\1.64.0-20261019-205320",
+  "general_regression_package": ".tmp\\product-release\\1.64.0-20261019-205050",
+  "total_runtime_files": 365,
+  "source_zip_manifest_equality": true,
+  "different_runtime_files": [
+    "auto-dealership-core/src/Accounts/CustomerAccount.php"
+  ],
+  "difference_verified": "Only the three account save redirects add an explicit personal section. Final personal browser acceptance covers saves, persistence and reloading for all three roles."
+}

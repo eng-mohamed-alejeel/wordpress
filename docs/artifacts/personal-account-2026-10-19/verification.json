@@ -1,0 +1,85 @@
+{
+  "version": "1.64.0",
+  "local_only": true,
+  "deployed_to_hosting": false,
+  "source_database_contacted": false,
+  "schema_changed": false,
+  "schema_version": "1.25",
+  "package": ".tmp\\product-release\\1.64.0-20261019-205320",
+  "artifacts": [
+    {
+      "name": "auto-dealership-core-1.64.0.zip",
+      "sha256": "64c23c36b6df9af45cf9bc18460e4c141e64b72de31f4c9f38bde55543b78d4c",
+      "file_count": 297
+    },
+    {
+      "name": "car-dealer-1.64.0.zip",
+      "sha256": "61bdcb75b7ae2f4e6938aa646ec8f9208e65c1a6d31c44e7d8dcd1cccc46dcb2",
+      "file_count": 68
+    }
+  ],
+  "runtime_source_manifest_equality": true,
+  "portal_db_checks": 230,
+  "portal_db_passed": true,
+  "summary_query_budget": {
+    "data_queries": 14,
+    "including_uncached_platform_options": 20
+  },
+  "roles_tested": [
+    "customer",
+    "dealership_sales",
+    "administrator",
+    "empty_administrator"
+  ],
+  "php_syntax": {
+    "files": 245,
+    "errors": 0
+  },
+  "javascript_syntax": {
+    "files": 88,
+    "errors": 0
+  },
+  "intelephense": {
+    "files": 274,
+    "owned_errors": 0
+  },
+  "css_build_check": "passed",
+  "public_gettext_copy_check": "passed",
+  "full_default_db_suite": "Not rerun; preexisting catalog budget failure documented in 1.63.1 review.",
+  "status": "complete",
+  "general_runtime_comparison": "general-runtime-comparison.json",
+  "personal_package_browser_checks": 101,
+  "personal_package_browser_passed": true,
+  "general_package_browser": {
+    "passed": true,
+    "checks": 218,
+    "package": ".tmp/product-release/1.64.0-20261019-205050",
+    "log": "account-improvements-browser-general-final.log",
+    "comparison": "general-runtime-comparison.json",
+    "note": "General candidate and final ZIP differ only in three account redirects; the final ZIP personal browser suite covers saves and reload persistence for all roles."
+  },
+  "isolated_test_ports": [
+    33369,
+    33370
+  ],
+  "isolated_test_servers_stopped": true,
+  "temporary_test_databases_removed": true,
+  "dark_counter_text_contrast_ratio": 14.927376692908704,
+  "wcag_personal_overview_serious_critical_violations": 0,
+  "offline_checks": {
+    "money": 33,
+    "pricing_policy": 16,
+    "dashboard_settings": 113,
+    "branch_scope": 52,
+    "authentication_guard": 46,
+    "newsletter_language": 2,
+    "response_contract": 9
+  },
+  "screenshots": [
+    ".tmp/personal-account-en-desktop.png",
+    ".tmp/personal-account-en-mobile.png",
+    ".tmp/personal-account-ar-desktop.png",
+    ".tmp/personal-account-ar-mobile.png",
+    ".tmp/personal-account-dark.png"
+  ]
+}
