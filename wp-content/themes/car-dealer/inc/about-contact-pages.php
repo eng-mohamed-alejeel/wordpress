@@ -458,6 +458,11 @@ car_dealer_register_shortcode_adapter( 'ab_faq_section', 'car_dealer_shortcode_a
    Shortcode: [ab_social_section] - وسائل التواصل الاجتماعي
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_social() {
+	if ( class_exists( '\AutoDealership\Core\SocialChannels' ) ) {
+		$links = \AutoDealership\Core\SocialChannels::render( 'contact' );
+		if ( ! $links ) { return ''; }
+		return '<section class="ab-social-section"><div class="container"><div class="ab-social-inner"><div class="ab-social-content"><h2>' . esc_html( car_dealer_text( 'تابعنا على وسائل التواصل', 'Follow us on social media' ) ) . '</h2><p>' . esc_html( car_dealer_text( 'تابع أحدث السيارات والعروض وأخبار المعرض.', 'Discover our latest vehicles, offers and dealership news.' ) ) . '</p></div>' . $links . '</div></div></section>';
+	}
 	$options = car_dealer_theme_options();
 	$facebook = esc_url( $options['facebook'] ?? '' );
 	$instagram = esc_url( $options['instagram'] ?? '' );

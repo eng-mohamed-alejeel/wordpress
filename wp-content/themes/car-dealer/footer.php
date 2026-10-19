@@ -4,10 +4,6 @@
 	$cd_phone = trim( (string) ( $cd_options['phone'] ?? '' ) );
 	$cd_email = sanitize_email( (string) ( $cd_options['email'] ?? '' ) );
 	$cd_whatsapp_url = function_exists( 'car_dealer_whatsapp_number' ) && car_dealer_whatsapp_number() ? car_dealer_whatsapp_url( car_dealer_text( 'مرحباً، أود الاستفسار عن السيارات المتاحة.', 'Hello, I would like to ask about your available vehicles.' ) ) : '';
-	$cd_social = array_filter( array(
-		'Facebook' => esc_url( (string) ( $cd_options['facebook'] ?? '' ) ),
-		'Instagram' => esc_url( (string) ( $cd_options['instagram'] ?? '' ) ),
-	) );
 	$cd_legal_links = car_dealer_legal_links();
 	$cd_has_legal = (bool) $cd_legal_links || has_nav_menu( 'footer' );
 	?>
@@ -36,7 +32,7 @@
 						<?php if ( $cd_email ) : ?><li><a href="<?php echo esc_url( 'mailto:' . $cd_email ); ?>" dir="ltr"><?php echo esc_html( $cd_email ); ?></a></li><?php endif; ?>
 						<?php if ( $cd_whatsapp_url ) : ?><li><a href="<?php echo esc_url( $cd_whatsapp_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( car_dealer_text( 'راسلنا عبر واتساب', 'Message us on WhatsApp' ) ); ?></a></li><?php endif; ?>
 					</ul>
-					<?php if ( $cd_social ) : ?><div class="footer-social" role="group" aria-label="<?php echo esc_attr( car_dealer_text( 'وسائل التواصل الاجتماعي', 'Social media' ) ); ?>"><?php foreach ( $cd_social as $cd_label => $cd_url ) : ?><a href="<?php echo esc_url( $cd_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html__( $cd_label, 'car-dealer' ); ?></a><?php endforeach; ?></div><?php endif; ?>
+					<?php car_dealer_footer_social_links(); ?>
 				</div>
 					<?php if ( function_exists( 'car_dealer_newsletter_form' ) && function_exists( 'adc_core_owns_marketing_subscription_actions' ) && adc_core_owns_marketing_subscription_actions() ) : ?>
 						<div class="footer-col footer-newsletter">
@@ -56,9 +52,8 @@
 <?php if ( $cd_whatsapp_url ) : ?>
 	<aside aria-label="<?php echo esc_attr( car_dealer_text( 'التواصل السريع', 'Quick contact' ) ); ?>">
 	<a href="<?php echo esc_url( $cd_whatsapp_url ); ?>" class="ab-float-wa" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr( car_dealer_text( 'تواصل عبر واتساب', 'Contact us on WhatsApp' ) ); ?>">
-		<svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true"><path d="M32 4C16.536 4 4 16.536 4 32c0 5.336 1.392 10.36 3.84 14.72L4 60l13.76-3.68A27.84 27.84 0 0032 60c15.464 0 28-12.536 28-28S47.464 4 32 4zm14.08 38.56c-.64 1.28-2.88 2.4-4 2.56-1.12.16-2.56.16-4.16-.48-1.6-.64-3.52-1.44-5.92-2.88-5.12-3.04-8.32-8.16-8.64-8.64-.32-.48-2.56-3.36-2.56-6.4 0-3.04 1.6-4.48 2.24-5.12.64-.64 1.28-.64 1.76-.64h1.28c.48 0 1.12 0 1.6 1.12.48 1.28 1.76 4.32 1.92 4.64.16.32.16.64 0 .96-.16.32-.32.64-.64.96-.32.32-.64.8-.96 1.12-.32.32-.64.64-.32 1.28.32.64 1.6 2.88 3.52 4.8 2.24 2.24 4 3.04 4.64 3.36.64.32 1.12.32 1.44-.16.32-.48 1.6-1.92 2.08-2.56.48-.64.96-.48 1.6-.16.64.32 4 1.92 4.64 2.24.64.32 1.12.48 1.28.8.16.32.16 1.6-.48 2.88z"/></svg>
+		<?php echo car_dealer_whatsapp_icon(); ?>
 		<span class="ab-float-wa-tooltip"><?php echo esc_html( car_dealer_text( 'تواصل معنا', 'Chat with us' ) ); ?></span>
-		<span class="ab-float-wa-pulse" aria-hidden="true"></span>
 	</a>
 	</aside>
 <?php endif; ?>

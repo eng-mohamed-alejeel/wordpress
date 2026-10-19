@@ -128,6 +128,7 @@ function car_dealer_vehicle_placeholder(): string {
 
 /** Fixed local vector shared by WhatsApp calls to action. */
 function car_dealer_whatsapp_icon(): string {
+	if ( class_exists( '\AutoDealership\Core\SocialChannels' ) ) { return \AutoDealership\Core\SocialChannels::icon( 'whatsapp', 'btn-icon btn-icon-whatsapp adc-social-icon' ); }
 	return '<svg class="btn-icon btn-icon-whatsapp" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" focusable="false"><path d="M32 4C16.536 4 4 16.536 4 32c0 5.336 1.392 10.36 3.84 14.72L4 60l13.76-3.68A27.84 27.84 0 0032 60c15.464 0 28-12.536 28-28S47.464 4 32 4zm14.08 38.56c-.64 1.28-2.88 2.4-4 2.56-1.12.16-2.56.16-4.16-.48-1.6-.64-3.52-1.44-5.92-2.88-5.12-3.04-8.32-8.16-8.64-8.64-.32-.48-2.56-3.36-2.56-6.4 0-3.04 1.6-4.48 2.24-5.12.64-.64 1.28-.64 1.76-.64h1.28c.48 0 1.12 0 1.6 1.12.48 1.28 1.76 4.32 1.92 4.64.16.32.16.64 0 .96-.16.32-.32.64-.64.96-.32.32-.64.8-.96 1.12-.32.32-.64.64-.32 1.28.32.64 1.6 2.88 3.52 4.8 2.24 2.24 4 3.04 4.64 3.36.64.32 1.12.32 1.44-.16.32-.48 1.6-1.92 2.08-2.56.48-.64.96-.48 1.6-.16.64.32 4 1.92 4.64 2.24.64.32 1.12.48 1.28.8.16.32.16 1.6-.48 2.88z"/></svg>';
 }
 
@@ -223,6 +224,7 @@ add_filter( 'get_custom_logo', static function ( string $html ): string {
 } );
 
 function car_dealer_footer_social_links(): void {
+	if ( class_exists( '\AutoDealership\Core\SocialChannels' ) ) { echo \AutoDealership\Core\SocialChannels::render( 'footer' ); return; }
 	$options = car_dealer_theme_options();
 	$links = array_filter( array( 'facebook' => $options['facebook'], 'instagram' => $options['instagram'] ) );
 	$phone = preg_replace( '/\D+/', '', (string) $options['whatsapp'] );
@@ -321,6 +323,7 @@ function car_dealer_comparison_button( $car_id ) {
 
 function car_dealer_social_share_buttons() {
 	$share_url = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer_catalog_localized_url( get_permalink() ) : get_permalink();
+	if ( class_exists( '\AutoDealership\Core\SocialChannels' ) ) { echo \AutoDealership\Core\SocialChannels::share( (string) $share_url, get_the_title(), 'car_offer' === get_post_type() ? 'offer' : 'vehicle' ); return; }
 	$url = urlencode( $share_url );
 	$title = urlencode( get_the_title() );
 	?>

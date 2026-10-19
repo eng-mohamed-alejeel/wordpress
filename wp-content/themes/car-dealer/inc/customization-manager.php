@@ -80,18 +80,17 @@ add_action( 'admin_init', 'car_dealer_register_theme_settings' );
 function car_dealer_sanitize_theme_settings( $input ) {
 	$input = is_array( $input ) ? $input : array();
 	$existing = car_dealer_theme_options();
-	return array(
-		'description_en' => sanitize_textarea_field( $input['description_en'] ?? car_dealer_theme_options()['description_en'] ),
-		'primary_color' => sanitize_hex_color( $input['primary_color'] ?? $existing['primary_color'] ) ?: '#0E2A4A',
-		'accent_color' => sanitize_hex_color( $input['accent_color'] ?? $existing['accent_color'] ) ?: '#2563EB',
-		'phone' => sanitize_text_field( $input['phone'] ?? '' ),
-		'email' => sanitize_email( $input['email'] ?? '' ),
-		'address' => sanitize_textarea_field( $input['address'] ?? '' ),
-		'address_en' => sanitize_textarea_field( $input['address_en'] ?? '' ),
-		'facebook' => esc_url_raw( $input['facebook'] ?? '' ),
-		'instagram' => esc_url_raw( $input['instagram'] ?? '' ),
-		'whatsapp' => sanitize_text_field( $input['whatsapp'] ?? '' ),
-	);
+	$clean = $existing;
+	foreach ( array( 'description_en', 'phone', 'email', 'address', 'address_en', 'whatsapp', 'facebook', 'instagram', 'x', 'tiktok', 'snapchat', 'youtube', 'linkedin', 'primary_color', 'accent_color' ) as $key ) {
+		if ( ! array_key_exists( $key, $input ) || ! is_string( $input[$key] ) ) { continue; }
+		$value = $input[$key];
+		if ( in_array( $key, array( 'primary_color', 'accent_color' ), true ) ) { $clean[$key] = sanitize_hex_color( $value ) ?: $existing[$key]; }
+		elseif ( in_array( $key, array( 'facebook', 'instagram', 'x', 'tiktok', 'snapchat', 'youtube', 'linkedin' ), true ) ) { $clean[$key] = esc_url_raw( $value, array( 'http', 'https' ) ); }
+		elseif ( 'email' === $key ) { $clean[$key] = sanitize_email( $value ); }
+		elseif ( in_array( $key, array( 'description_en', 'address', 'address_en' ), true ) ) { $clean[$key] = sanitize_textarea_field( $value ); }
+		else { $clean[$key] = sanitize_text_field( $value ); }
+	}
+	return $clean;
 }
 
 /** Public address selection never changes the raw values used by admin forms. */
@@ -104,6 +103,7 @@ function car_dealer_contact_address() {
 
 function car_dealer_theme_options() {
 	$defaults = array( 'primary_color' => '#0E2A4A', 'accent_color' => '#2563EB', 'phone' => '', 'email' => '', 'address' => '', 'address_en' => '', 'facebook' => '', 'instagram' => '', 'whatsapp' => '' );
+	$defaults = array_merge( $defaults, array_fill_keys( array( 'x', 'tiktok', 'snapchat', 'youtube', 'linkedin' ), '' ) );
 	$defaults['description_en'] = 'Explore available vehicles and contact our team.';
 	return wp_parse_args( get_option( 'car_dealer_theme_settings', array() ), $defaults );
 }

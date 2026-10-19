@@ -24,7 +24,7 @@ $car_id = $offer['car_id'];
 	</div>
 </section>
 <section class="container car-single">
-	<div class="car-description"><?php the_content(); ?></div>
+	<div class="car-description"><?php the_content(); ?><?php if ( function_exists( 'car_dealer_social_share_buttons' ) ) { car_dealer_social_share_buttons(); } ?></div>
 	<div id="offer-lead"><?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $car_id, 'offer_request', __( 'احصل على العرض', 'car-dealer' ), __( 'إرسال الطلب', 'car-dealer' ) ); } ?></div>
 </section>
 <?php endwhile; ?>

@@ -12,7 +12,7 @@ final class ProductSetup {
 	private const MAIL = 'adc_product_mail';
 	private const SECTIONS = array( 'identity', 'appearance', 'policy', 'mail', 'pages', 'readiness' );
 	private const PROFILE_KEYS = array( 'brand_ar', 'brand_en', 'legal_ar', 'legal_en', 'description_ar', 'description_en', 'hero_ar', 'hero_en', 'language', 'timezone' );
-	private const THEME_KEYS = array( 'primary_color', 'accent_color', 'description_en', 'phone', 'email', 'address', 'address_en', 'facebook', 'instagram', 'whatsapp' );
+	private const THEME_KEYS = array( 'primary_color', 'accent_color', 'description_en', 'phone', 'email', 'address', 'address_en', 'facebook', 'instagram', 'whatsapp', 'x', 'tiktok', 'snapchat', 'youtube', 'linkedin' );
 	private const POLICY_KEYS = array( 'vat_percent', 'reservation_hours', 'reservation_refund_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'privacy_retention_days' );
 	private const MAIL_KEYS = array( 'ADC_MAIL_MODE', 'ADC_SMTP_HOST', 'ADC_SMTP_PORT', 'ADC_SMTP_ENCRYPTION', 'ADC_SMTP_USERNAME', 'ADC_SMTP_PASSWORD', 'ADC_MAIL_FROM', 'ADC_MAIL_FROM_NAME' );
 
@@ -138,7 +138,7 @@ final class ProductSetup {
 				$value = (string) $value;
 				if ( in_array( $key, array( 'primary_color', 'accent_color' ), true ) ) {
 					$value = sanitize_hex_color( $value ); if ( ! $value ) { return new \WP_Error( 'adc_setup_color', self::t( 'اختر لونًا صالحًا.', 'Choose a valid color.' ) ); }
-				} elseif ( in_array( $key, array( 'facebook', 'instagram' ), true ) ) {
+				} elseif ( in_array( $key, array( 'facebook', 'instagram', 'x', 'tiktok', 'snapchat', 'youtube', 'linkedin' ), true ) ) {
 					if ( $value && ! wp_http_validate_url( $value ) ) { return new \WP_Error( 'adc_setup_url', self::t( 'أدخل رابطًا عامًا صالحًا.', 'Enter a valid public URL.' ) ); } $value = esc_url_raw( $value );
 				} elseif ( 'email' === $key ) {
 					if ( $value && ! is_email( $value ) ) { return new \WP_Error( 'adc_setup_email', self::t( 'البريد غير صالح.', 'Invalid email address.' ) ); } $value = sanitize_email( $value );
@@ -466,6 +466,7 @@ final class ProductSetup {
 			} elseif ( 'appearance' === $section ) {
 				echo '<tr><th>' . esc_html( self::t( 'الهوية والألوان', 'Brand and colors' ) ) . '</th><td><a class="button button-primary" href="' . esc_url( BrandCustomizer::url() ) . '">' . esc_html( self::t( 'إدارة جميع الألوان والمعاينة المباشرة', 'Manage all colors and live preview' ) ) . '</a></td></tr>';
 				$p = (array) get_option( 'car_dealer_theme_settings', array() ); foreach ( array( 'phone'=>array( 'الهاتف', 'Phone' ), 'email'=>array( 'بريد التواصل', 'Contact email' ), 'address'=>array( 'العنوان بالعربية', 'Address (Arabic)' ), 'address_en'=>array( 'العنوان بالإنجليزية', 'Address (English)' ), 'whatsapp'=>array( 'واتساب مع رمز الدولة', 'WhatsApp with country code' ), 'facebook'=>array( 'فيسبوك', 'Facebook' ), 'instagram'=>array( 'إنستغرام', 'Instagram' ) ) as $key=>$label ) { self::field( $key, self::t( ...$label ), (string) ( $p[$key] ?? ( 'primary_color' === $key ? '#0E2A4A' : ( 'accent_color' === $key ? '#2563EB' : '' ) ) ), str_contains( $key, 'color' ) ? 'color' : ( 'email' === $key ? 'email' : 'text' ) ); }
+				echo '<tr><th>' . esc_html( self::t( 'حسابات التواصل الاجتماعي', 'Social media accounts' ) ) . '</th><td><a class="button" href="' . esc_url( admin_url( 'options-general.php?page=adc-social-channels' ) ) . '">' . esc_html( self::t( 'إدارة المنصات والترتيب والظهور', 'Manage platforms, order and visibility' ) ) . '</a></td></tr>';
 			} elseif ( 'policy' === $section ) {
 				$p = self::export()['settings']['policy']; foreach ( array( 'vat_percent'=>array( 'الضريبة (%)', 'VAT (%)' ), 'reservation_hours'=>array( 'مدة الحجز بالساعات', 'Reservation hours' ), 'reservation_refund_hours'=>array( 'مدة الاسترداد بالساعات', 'Refund hours' ), 'reservation_deposit_type'=>array( 'نوع العربون', 'Deposit type' ), 'reservation_deposit_value'=>array( 'قيمة العربون (ريال) أو النسبة (%)', 'Deposit amount (SAR) or percentage (%)' ), 'privacy_retention_days'=>array( 'الاحتفاظ بالأيام؛ 0 لتعطيل الحذف', 'Retention days; 0 disables erasure' ) ) as $key=>$label ) { self::field( $key, self::t( ...$label ), (string) ( 'reservation_deposit_value' === $key ? $p[$key] / 100 : $p[$key] ), 'text', 'reservation_deposit_type' === $key ? array( 'none'=>self::t( 'بدون عربون', 'No deposit' ), 'fixed'=>self::t( 'مبلغ ثابت', 'Fixed amount' ), 'percentage'=>self::t( 'نسبة مئوية', 'Percentage' ) ) : array() ); }
 			} else {
