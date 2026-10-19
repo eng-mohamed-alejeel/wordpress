@@ -560,3 +560,8 @@ body.single-car .car-single-brand-row .adc-favorite-heart:focus-visible { outlin
 body.single-car .car-single-actions > .cd-compare-button { width: 100%; margin: 0; white-space: normal; }
 body.single-car .car-single-actions { align-items: stretch; }
 body.single-car .car-single-actions > .btn { align-self: stretch; height: auto; }
+body.single-car .car-single-utilities { display: flex; align-items: center; gap: .5rem; flex: 0 0 auto; }
+body.single-car .car-single-edit { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; margin: 0; border: 1px solid var(--ab-on-dark-muted); border-radius: 50%; background: rgba(255,255,255,.04); color: var(--ab-inverse); line-height: 1; text-decoration: none; }
+body.single-car .car-single-edit svg { flex: 0 0 18px; }
+body.single-car .car-single-edit:hover { color: var(--ab-inverse); background: rgba(255,255,255,.12); }
+body.single-car .car-single-edit:focus-visible { outline: 3px solid var(--ab-inverse); outline-offset: 3px; }

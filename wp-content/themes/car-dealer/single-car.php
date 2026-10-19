@@ -37,7 +37,17 @@ while ( have_posts() ) :
 			<div class="car-single-content">
 				<div class="car-single-brand-row">
 				<p class="eyebrow"><?php echo $brand_name ? esc_html( car_dealer_catalog_value_label( (string) $brand_name ) ) : esc_html( car_dealer_brand_name() ); ?></p>
+					<div class="car-single-utilities">
+				<?php if ( current_user_can( 'edit_post', $id ) ) : ?>
+					<?php $car_edit_url = get_edit_post_link( $id, 'raw' ); ?>
+					<?php if ( $car_edit_url ) : ?>
+						<a class="car-single-edit" aria-label="<?php echo esc_attr( car_dealer_text( 'تعديل تفاصيل السيارة', 'Edit vehicle details' ) ); ?>" title="<?php echo esc_attr( car_dealer_text( 'تعديل تفاصيل السيارة', 'Edit vehicle details' ) ); ?>" href="<?php echo esc_url( $car_edit_url ); ?>">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m16 3 5 5L8 21H3v-5L16 3Z"/><path d="m14 5 5 5"/></svg>
+						</a>
+					<?php endif; ?>
+				<?php endif; ?>
 					<?php if ( class_exists( '\AutoDealership\Portal\CustomerJourney' ) ) { \AutoDealership\Portal\CustomerJourney::favorite_button( (int) $id, true ); } ?>
+					</div>
 				</div>
 				<h1><?php the_title(); ?></h1>
 				<?php if ( $price ) : ?><p class="car-single-price"><?php if ( ! empty( $view['price_from'] ) ) { echo esc_html( car_dealer_text( 'يبدأ من ', 'From ' ) ); } echo esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ); ?></p><?php endif; ?>
