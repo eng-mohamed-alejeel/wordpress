@@ -74,6 +74,10 @@ function car_dealer_assets() {
 	if ( is_page( 'about' ) || is_page_template( 'page-about.php' ) || ( is_singular() && has_block( 'auto-dealership/component' ) ) ) { wp_enqueue_style( 'car-dealer-about-modern', $uri . '/assets/css/about-modern.css', array( 'car-dealer-about', 'car-dealer-site-shell' ), filemtime( get_template_directory() . '/assets/css/about-modern.css' ) ); }
 	wp_enqueue_style( 'car-dealer-contact', $uri . '/assets/css/pages/_contact.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_script( 'car-dealer-main-js', $uri . '/assets/js/main.js', array(), filemtime( get_template_directory() . '/assets/js/main.js' ), true );
+	if(is_singular('car')) {
+		wp_enqueue_style('car-dealer-car-dialogs',$uri.'/assets/css/car-dialogs.css',array('car-dealer-site-shell'),filemtime(get_template_directory().'/assets/css/car-dialogs.css'));
+		wp_enqueue_script('car-dealer-car-dialogs',$uri.'/assets/js/car-dialogs.js',array('car-dealer-main-js'),filemtime(get_template_directory().'/assets/js/car-dialogs.js'),true);
+	}
 	
 	// Cookie Consent
 	wp_enqueue_style( 'car-dealer-cookies', $uri . '/assets/css/components/_cookies.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/components/_cookies.css' ) );

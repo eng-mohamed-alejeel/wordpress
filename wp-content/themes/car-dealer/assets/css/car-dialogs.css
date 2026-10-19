@@ -1,0 +1,47 @@
+/* Progressive fallback remains accessible without scripts or dialog support. */
+[data-car-panel] { min-inline-size: 0; border: 1px solid var(--ab-border); border-radius: 1rem; background: var(--ab-surface); }
+[data-car-panel] > summary { cursor: pointer; padding: 1rem; font-weight: 700; color: var(--ab-heading); }
+[data-car-panel] > [data-car-panel-content] { padding: 1rem; }
+html.cd-car-modal-open { overflow: hidden; scrollbar-gutter: stable; }
+.cd-car-dialog {
+  --cd-dialog-gap: clamp(.5rem, 2vw, 1.5rem);
+  --cd-dialog-height: 100vh;
+  position: fixed; inset-inline: 0; inset-block-end: auto;
+  top: calc(var(--cd-dialog-top, 0px) + var(--cd-dialog-height) / 2);
+  transform: translateY(-50%); margin: 0 auto;
+  inline-size: min(40rem, calc(100% - 2 * var(--cd-dialog-gap)));
+  max-inline-size: none; max-block-size: calc(var(--cd-dialog-height) - 2 * var(--cd-dialog-gap));
+  padding: 0; border: 1px solid var(--ab-border); border-radius: 1.25rem;
+  background: var(--ab-surface); color: var(--ab-text); overflow: hidden;
+  box-shadow: 0 24px 80px #0005;
+}
+@supports (height: 100dvh) { .cd-car-dialog { --cd-dialog-height: 100dvh; } }
+.cd-car-dialog[open] { display: flex; flex-direction: column; }
+.cd-car-dialog-wide { inline-size: min(64rem, calc(100% - 2 * var(--cd-dialog-gap))); }
+.cd-car-dialog::backdrop { background: #020a18b8; }
+.cd-car-dialog-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: start; flex: 0 0 auto; padding: clamp(1rem, 2.5vw, 1.5rem); border-block-end: 1px solid var(--ab-border); background: var(--ab-surface); }
+.cd-car-dialog-caption { min-inline-size: 0; overflow-wrap: anywhere; }
+.cd-car-dialog-header h2 { margin: 0 0 .4rem; color: var(--ab-heading); font-size: clamp(1.1rem, 2vw, 1.4rem); line-height: 1.5; }
+.cd-car-dialog-header p { margin: 0; color: var(--ab-muted); font-size: .9rem; line-height: 1.65; }
+.cd-car-dialog-close { inline-size: 44px; block-size: 44px; display: grid; place-items: center; padding: 0; border: 1px solid var(--ab-border); border-radius: .7rem; background: var(--ab-surface); color: var(--ab-heading); cursor: pointer; font-size: 1.8rem; line-height: 1; }
+.cd-car-dialog-close:hover { background: var(--ab-soft); }
+.cd-car-dialog-close:focus-visible { outline: 3px solid var(--ab-action); outline-offset: 2px; }
+.cd-car-dialog-body { min-block-size: 0; min-inline-size: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: clamp(1rem, 2.5vw, 1.5rem); scroll-padding-block: 1rem; }
+.cd-car-dialog-body .cd-ajax-form { padding: 0; margin: 0; border: 0; background: transparent; border-radius: 0; }
+.cd-car-dialog-body .cd-ajax-form > h2 { display: none; }
+.cd-car-dialog-body :is(label,form,fieldset) { min-inline-size: 0; }
+.cd-car-dialog-body :is(input,select,textarea) { max-inline-size: 100%; min-inline-size: 0; box-sizing: border-box; font-size: 1rem; scroll-margin-block: 1rem; }
+.cd-car-dialog-body textarea { max-block-size: min(24rem, 55vh); }
+.cd-car-dialog-body button[type="submit"] { min-block-size: 48px; white-space: normal; }
+.cd-car-dialog-body .cd-profile-form-note { font-size: .9rem; line-height: 1.8; }
+.cd-car-dialog-body :is(.cd-form-status,[data-loan-status]) { margin-block: .8rem 0; line-height: 1.8; overflow-wrap: anywhere; }
+.cd-car-dialog-body :is(.cd-form-status,[data-loan-status]):empty { display: none; }
+.cd-car-dialog-body :is(.cd-form-status,[data-loan-status]):focus { outline: 2px solid var(--ab-action); outline-offset: 4px; border-radius: .25rem; }
+.cd-car-dialog-body .adc-finance-calculator { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.cd-car-dialog-body .adc-finance-calculator > h2 { font-size: 1.1rem; line-height: 1.5; margin: 0 0 .75rem; }
+@media (max-width: 600px) { .cd-car-dialog { border-radius: 1rem; } .cd-car-dialog-header { gap: .6rem; } }
+html:not(.cd-car-interactive) [data-car-panel-content] button[type="submit"] { display: none; }
+.cd-car-noscript-note { grid-column: 1 / -1; padding: 1rem; border: 1px solid var(--ab-border); border-radius: 1rem; line-height: 1.8; }
+.cd-car-dialog-body .cd-ajax-form :is(input:not([type="hidden"]),select,textarea) { width: 100%; min-block-size: var(--ab-field-height, 48px); border: 1px solid var(--ab-field-border, var(--ab-border)); border-radius: var(--ab-field-radius, .65rem); padding: var(--ab-field-padding-block, .7rem) var(--ab-field-padding-inline, .85rem); background: var(--ab-surface); color: var(--ab-text); line-height: 1.5; }
+.cd-car-dialog-body .cd-ajax-form :is(input,select,textarea):focus-visible { outline: 2px solid var(--ab-action); outline-offset: 2px; }
+.cd-car-dialog-body .cd-ajax-form textarea::placeholder { color: var(--ab-muted); opacity: 1; }

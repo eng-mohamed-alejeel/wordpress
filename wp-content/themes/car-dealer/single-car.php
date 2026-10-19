@@ -35,7 +35,10 @@ while ( have_posts() ) :
 				<?php endif; ?>
 			</div>
 			<div class="car-single-content">
+				<div class="car-single-brand-row">
 				<p class="eyebrow"><?php echo $brand_name ? esc_html( car_dealer_catalog_value_label( (string) $brand_name ) ) : esc_html( car_dealer_brand_name() ); ?></p>
+					<?php if ( class_exists( '\AutoDealership\Portal\CustomerJourney' ) ) { \AutoDealership\Portal\CustomerJourney::favorite_button( (int) $id, true ); } ?>
+				</div>
 				<h1><?php the_title(); ?></h1>
 				<?php if ( $price ) : ?><p class="car-single-price"><?php if ( ! empty( $view['price_from'] ) ) { echo esc_html( car_dealer_text( 'يبدأ من ', 'From ' ) ); } echo esc_html( function_exists( 'car_dealer_catalog_format_price' ) ? car_dealer_catalog_format_price( $price ) : car_dealer_format_price( $price ) ); ?></p><?php endif; ?>
 				<?php if ( $price && ! empty( $view['price_label'] ) ) : ?><p class="public-price-inclusions"><?php echo esc_html( $view['price_label'] ); ?></p><?php endif; ?>
@@ -44,10 +47,10 @@ while ( have_posts() ) :
 					<a class="btn btn-primary" href="#request-price"><?php esc_html_e( 'اطلب السعر', 'car-dealer' ); ?></a>
 					<a class="btn btn-outline" href="#book-drive"><?php esc_html_e( 'احجز تجربة قيادة', 'car-dealer' ); ?></a>
 					<a class="btn btn-outline" href="#finance-request"><?php esc_html_e( 'اطلب تمويل', 'car-dealer' ); ?></a>
+					<a class="btn btn-outline" href="#finance-calculator"><?php echo esc_html(car_dealer_text('حاسبة التمويل','Finance calculator')); ?></a>
 					<?php $wa_link = car_dealer_whatsapp_url( $wa_message ); if ( '#' !== $wa_link ) : ?><a class="btn btn-whatsapp" href="<?php echo esc_url( $wa_link ); ?>" target="_blank" rel="noopener"><?php echo car_dealer_whatsapp_icon(); ?><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a><?php endif; ?>
+					<?php if ( function_exists( 'car_dealer_comparison_button' ) ) { car_dealer_comparison_button( $id ); } ?>
 				</div>
-				<?php if ( function_exists( 'car_dealer_comparison_button' ) ) { car_dealer_comparison_button( $id ); } ?>
-				<?php if ( class_exists( '\AutoDealership\Portal\CustomerJourney' ) ) { \AutoDealership\Portal\CustomerJourney::favorite_button( (int) $id ); } ?>
 			</div>
 		</div>
 	</section>
@@ -95,11 +98,19 @@ while ( have_posts() ) :
 		</aside>
 	</article>
 
-	<section class="container cd-single-tools ab-lead-tools" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
-		<div id="request-price"><?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $id, 'price_request', __( 'اطلب السعر', 'car-dealer' ), __( 'إرسال طلب السعر', 'car-dealer' ) ); } ?></div>
-		<div id="book-drive"><?php if ( function_exists( 'car_dealer_booking_form' ) ) { car_dealer_booking_form( $id ); } ?></div>
-		<div id="finance-request"><?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $id, 'finance_request', __( 'اطلب تمويل', 'car-dealer' ), __( 'إرسال طلب التمويل', 'car-dealer' ) ); } ?></div>
-		<?php echo do_shortcode( '[car_dealer_loan_calculator price="' . esc_attr( max( 0, (float) $price ) ) . '"]' ); ?>
+	<section class="container cd-single-tools ab-lead-tools" data-car-dialogs data-car-name="<?php echo esc_attr(get_the_title()); ?>" data-close-label="<?php echo esc_attr(car_dealer_text('إغلاق النافذة','Close dialog')); ?>" dir="<?php echo esc_attr($catalog_direction); ?>" lang="<?php echo esc_attr($catalog_language); ?>">
+		<noscript><p class="cd-car-noscript-note"><?php echo esc_html(car_dealer_text('لإرسال الطلبات أو استخدام الحاسبة، فعّل JavaScript في المتصفح، أو تواصل معنا مباشرة.','To send requests or use the calculator, enable JavaScript in your browser, or contact us directly.')); ?> <?php if(isset($wa_link) && '#'!==$wa_link): ?><a href="<?php echo esc_url($wa_link); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html(car_dealer_text('تواصل واتساب','Contact on WhatsApp')); ?></a><?php endif; ?></p></noscript>
+		<?php foreach(array('request-price'=>car_dealer_text('اطلب السعر','Request price'),'book-drive'=>car_dealer_text('احجز تجربة قيادة','Request a test drive'),'finance-request'=>car_dealer_text('اطلب تمويل','Request financing'),'finance-calculator'=>car_dealer_text('حاسبة التمويل','Finance calculator')) as $panel_id=>$panel_title): ?>
+		<details id="<?php echo esc_attr($panel_id); ?>" data-car-panel data-panel-title="<?php echo esc_attr($panel_title); ?>">
+			<summary><?php echo esc_html($panel_title); ?></summary>
+			<div data-car-panel-content>
+				<?php if('request-price'===$panel_id && function_exists('car_dealer_lead_form')) { car_dealer_lead_form($id,'price_request',__('اطلب السعر','car-dealer'),__('إرسال طلب السعر','car-dealer')); }
+				elseif('book-drive'===$panel_id && function_exists('car_dealer_booking_form')) { car_dealer_booking_form($id); }
+				elseif('finance-request'===$panel_id && function_exists('car_dealer_lead_form')) { car_dealer_lead_form($id,'finance_request',__('اطلب تمويل','car-dealer'),__('إرسال طلب التمويل','car-dealer')); }
+				elseif('finance-calculator'===$panel_id) { echo do_shortcode('[car_dealer_loan_calculator price="'.esc_attr(max(0,(float)$price)).'"]'); } ?>
+			</div>
+		</details>
+		<?php endforeach; ?>
 	</section>
 <?php endwhile; ?>
 <?php get_footer(); ?>

@@ -548,3 +548,15 @@ html[dir="rtl"] .cd-customer-filters select { background-position: left .75rem c
 .post-type-archive-car .archive-content > .car-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 900px) { .post-type-archive-car .archive-content > .car-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .post-type-archive-car .archive-content > .car-grid { grid-template-columns: minmax(0, 1fr); } }
+/* Single-car utility actions share the brand row and the main action grid. */
+body.single-car .car-single-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-width: 0; }
+body.single-car .car-single-brand-row .eyebrow { min-width: 0; overflow-wrap: anywhere; }
+body.single-car .car-single-brand-row .adc-journey-form { margin: 0; padding: 0; border: 0; background: transparent; flex: 0 0 auto; }
+body.single-car .car-single-brand-row .adc-favorite-heart { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 44px; height: 44px; min-width: 44px; padding: 0; margin: 0; border: 1px solid var(--ab-on-dark-muted); border-radius: 50%; background: rgba(255,255,255,.04); color: var(--ab-inverse); line-height: 1; cursor: pointer; text-decoration: none; }
+body.single-car .car-single-brand-row .adc-favorite-heart svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+body.single-car .car-single-brand-row .adc-favorite-heart:hover, body.single-car .car-single-brand-row .adc-favorite-heart[aria-pressed="true"] { color: var(--ab-favorite); background: var(--ab-surface); border-color: var(--ab-favorite); }
+body.single-car .car-single-brand-row .adc-favorite-heart[aria-pressed="true"] svg { fill: currentColor; }
+body.single-car .car-single-brand-row .adc-favorite-heart:focus-visible { outline: 3px solid var(--ab-inverse); outline-offset: 3px; }
+body.single-car .car-single-actions > .cd-compare-button { width: 100%; margin: 0; white-space: normal; }
+body.single-car .car-single-actions { align-items: stretch; }
+body.single-car .car-single-actions > .btn { align-self: stretch; height: auto; }
