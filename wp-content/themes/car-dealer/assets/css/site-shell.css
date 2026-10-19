@@ -599,3 +599,12 @@ body.single-car .car-single-content .car-single-price { margin-block:.1rem 0; }
 body.single-car .car-single-content .public-price-inclusions { margin-block:.15rem .25rem; }
 body.single-car .car-single-content p.car-single-summary { margin-block:.25rem 0; line-height:1.75; }
 body.single-car .car-single-actions { margin-block:.9rem .5rem; }
+/* Reserve two text lines on desktop without limiting longer vehicle names or summaries.
+   Keep actions in the content flow rather than at the bottom of the viewport. */
+body.single-car .car-single-content { min-inline-size:0; }
+body.single-car .car-single-content h1 { overflow-wrap:anywhere; }
+@media (min-width: 901px) {
+  body.single-car .car-single-content { align-self:start; }
+  body.single-car .car-single-content h1 { min-block-size:2.9em; }
+  body.single-car .car-single-content p.car-single-summary { min-block-size:3.5em; }
+}
