@@ -57,9 +57,10 @@ final class PublicCatalog {
 
 		$raw = wp_unslash( $_GET );
 		$filters = self::normalize_filters( is_array( $raw ) ? $raw : array(), true );
+		$filters['per_page'] = 12;
 		$query->set( 'adc_public_catalog', true );
 		$query->set( 'adc_catalog_filters', $filters );
-		$query->set( 'posts_per_page', min( 48, max( 1, absint( get_option( 'posts_per_page', 12 ) ) ) ) );
+		$query->set( 'posts_per_page', 12 );
 		// The catalog owns search in both modes, including header requests using `search`.
 		$query->set( 's', '' );
 		if ( ! self::is_authoritative() && ! GroupedModelCatalog::enabled() ) { return; }

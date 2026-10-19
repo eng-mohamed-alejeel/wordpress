@@ -543,3 +543,8 @@ html[dir="rtl"] .cd-customer-filters select { background-position: left .75rem c
 .catalog-empty h2 { color: var(--ab-heading); font-size: 1.4rem; }
 .catalog-empty-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .8rem; margin-top: 1.2rem; }
 .catalog-empty-actions > a { min-height: 44px; display: inline-flex; align-items: center; }
+
+/* Vehicle archive: twelve results per page, four desktop rows of three. */
+.post-type-archive-car .archive-content > .car-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 900px) { .post-type-archive-car .archive-content > .car-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .post-type-archive-car .archive-content > .car-grid { grid-template-columns: minmax(0, 1fr); } }
