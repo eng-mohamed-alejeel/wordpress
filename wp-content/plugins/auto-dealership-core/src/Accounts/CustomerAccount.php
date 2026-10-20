@@ -84,6 +84,7 @@ final class CustomerAccount {
 	public static function process_request( string $view ): string {
 		self::$verification_required = false;
 		self::$account_exists = false;
+		if(in_array($view,array('lostpassword','resetpass'),true)){return PasswordRecovery::process($view);}
 		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
 			return '';
 		}
@@ -269,7 +270,7 @@ final class CustomerAccount {
 	}
 
 	/** Enforced server-side so the registration policy cannot be bypassed in the browser. */
-	private static function password_is_valid( string $password ): bool {
+	public static function password_is_valid( string $password ): bool {
 		$length = self::length( $password );
 		if ( $length < self::PASSWORD_MIN_LENGTH || $length > self::PASSWORD_MAX_LENGTH || strlen( $password ) > 4096 ) {
 			return false;

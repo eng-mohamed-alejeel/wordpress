@@ -156,7 +156,7 @@
     if (!(panel instanceof HTMLElement) || panel.dataset.passwordPolicyReady === 'true') return;
     var form = panel.closest('form');
     var password = form && form.querySelector('[data-password-policy]');
-    var confirmation = form && form.querySelector('[name="password_confirm"]');
+    var confirmation = form && form.querySelector('[name="password_confirm"], [name="pass2"]');
     if (!password || !confirmation) return;
     panel.dataset.passwordPolicyReady = 'true';
 

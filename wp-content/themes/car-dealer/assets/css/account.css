@@ -120,6 +120,11 @@
   padding: 32px;
 }
 
+.cd-auth-recovery .cd-auth-tabs { margin-block-end: 24px; }
+.cd-auth-recovery .cd-auth-recovery-help { color: var(--cd-color-muted); font-size: 0.875rem; line-height: 1.8; margin-block: -6px 20px; }
+.cd-auth-recovery .cd-account-notice { margin-block: 0 20px; }
+.cd-auth-recovery .cd-auth-footer { margin-block-start: 24px; }
+
 /* ─── موافقة على سياسة الخصوصية ─── */
 .cd-auth-consent {
   display: flex;

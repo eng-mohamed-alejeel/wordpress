@@ -1,0 +1,42 @@
+{
+  "version": "1.65.0",
+  "schema": "1.25.0",
+  "date": "2026-10-20",
+  "recovery_package_browser": {
+    "status": "passed",
+    "checks": 51
+  },
+  "isolated_chat_package_browser": {
+    "status": "passed",
+    "checks": 47,
+    "typing_test_unchanged": true
+  },
+  "general_package_browser": {
+    "status": "timeout",
+    "checks_passed_before_timeout": 205,
+    "test": "portal-typing-browser.cjs",
+    "wait_timeout_ms": 4000
+  },
+  "newsletter_checks": 192,
+  "wordpress_authentication_checks": 34,
+  "offline_authentication_checks": 46,
+  "php_files_linted": 11,
+  "static_files_checked": 277,
+  "owned_static_errors": 0,
+  "other_static_diagnostics": 102,
+  "real_email_sent": false,
+  "source_database_contacted_by_tests": false,
+  "package_directory": ".tmp/product-release/1.65.0-20261020-105039",
+  "packages": [
+    {
+      "component": "auto-dealership-core",
+      "sha256": "8406023b506cfddabc6f397f76a4f7b2e9f6af7564778b1ead14db2b1b9c0394",
+      "source_matched_files": 298
+    },
+    {
+      "component": "car-dealer",
+      "sha256": "c8f915fc03c9ef6bfb5683c71cc91006b623057f3fda916d1edb41ab860ec483",
+      "source_matched_files": 70
+    }
+  ]
+}

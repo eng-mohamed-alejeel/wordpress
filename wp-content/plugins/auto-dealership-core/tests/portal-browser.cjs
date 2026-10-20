@@ -39,7 +39,8 @@ module.exports=async({browser,config,check,errors})=>{
   await page.goto(account('preferences'));const nonce=await page.locator('input[name=_wpnonce]').inputValue();check(!!nonce,'preferences retain their existing protected account form');
   const plain=await browser.newContext({javaScriptEnabled:false});await plain.request.get(config.base+'/adc-product-portal-fixture?key='+config.key);const plainPage=await plain.newPage();await plainPage.goto(account('messages','en','&thread='+fixture.thread));check(await plainPage.locator('.adc-p-message').count()===4&&await plainPage.locator('textarea').count()===1,'conversation and posting form remain available without JavaScript');
   await page.goto(account('reviews'));await page.addScriptTag({path:config.root+'/.tmp/accessibility-tools/node_modules/axe-core/axe.min.js'});const a11y=await page.evaluate(async()=>{const result=await axe.run(document.querySelector('.adc-portal'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}));});check(!a11y.some(v=>['serious','critical'].includes(v.impact)),'portal review forms pass serious/critical WCAG checks: '+JSON.stringify(a11y));
+  // Release completed scenarios before starting the two-session live tests.
+  await plain.close();await other.close();await admin.close();await context.close();await publicPage.close();
   await require('./portal-extensions-browser.cjs')({browser,config,check,errors});
   check(errors.length===0,'portal scripts have no runtime errors: '+errors.join(' | '));
-  await plain.close();await other.close();await admin.close();await context.close();await publicPage.close();
 };

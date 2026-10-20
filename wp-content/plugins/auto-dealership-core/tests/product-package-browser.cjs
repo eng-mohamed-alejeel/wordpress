@@ -7,6 +7,7 @@ let checks = 0;
 const check = (ok, label) => { if (!ok) throw new Error(label); checks++; process.stdout.write(`PASS Package browser: ${label}\n`); };
 (async () => {
   browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+  if(process.env.ADC_PRODUCT_RECOVERY_ONLY==='1'){await require('./password-recovery-browser.cjs')({browser,config,check});process.stdout.write(`Password recovery package browser passed (${checks} checks). No real email sent.\n`);return;}
   if(process.env.ADC_PRODUCT_ADMIN_ONLY==='1'){await require('./admin-structure-package-browser.cjs')({browser,config,check});process.stdout.write(`Admin package browser passed (${checks} checks).\n`);return;}
   if(process.env.ADC_PRODUCT_PERSONAL_ONLY==='1'){const errors=[];await require('./personal-account-browser.cjs')({browser,config,check,errors});check(errors.length===0,'Personal account scripts have no runtime errors: '+errors.join(' | '));process.stdout.write(`Personal account package browser passed (${checks} checks).\n`);return;}
   if(process.env.ADC_PRODUCT_PORTAL_ONLY==='1'){await require('./portal-browser.cjs')({browser,config,check,errors:[]});process.stdout.write(`Portal package browser passed (${checks} checks).\n`);return;}
@@ -257,7 +258,9 @@ const check = (ok, label) => { if (!ok) throw new Error(label); checks++; proces
 	check(welcomeMail.length===1 && welcomeMail[0].status==='retry' && Number(welcomeMail[0].attempts)===1,'verified account opt-in attempts only its welcome with cron disabled');
 	const verifiedMailState=await(await context.request.get(config.base+'/adc-product-mail-state?key='+encodeURIComponent(config.key))).json();check(verifiedMailState.length===2,'verified customer opt-in queues no redundant confirmation');
   await registerContext.close();
+  await context.close();
   await require('./portal-browser.cjs')({browser,config,check,errors});
+  await require('./password-recovery-browser.cjs')({browser,config,check});
   check(errors.length === 0, 'packaged frontend and setup have no JavaScript errors: ' + errors.join(' | '));
   process.stdout.write(`Product package browser passed (${checks} checks). No real email sent.\n`);
 })().catch(error => { process.stderr.write(error.stack + '\n'); process.exitCode = 1; }).finally(async () => { if (browser) await browser.close(); });

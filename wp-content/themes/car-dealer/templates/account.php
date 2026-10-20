@@ -5,6 +5,9 @@ $core_available = function_exists( 'adc_customer_account_process' ) && function_
 $catalog_url = car_dealer_archive_url( 'car' );
 $activation_notice = 'login'===$view && class_exists('\\AutoDealership\\Accounts\\EmailVerification') ? \AutoDealership\Accounts\EmailVerification::consume_login_notice() : '';
 get_header();
+if(in_array($view,array('lostpassword','resetpass'),true)&&$core_available&&class_exists('\\AutoDealership\\Accounts\\PasswordRecovery')){
+	include __DIR__.'/account-recovery.php';get_footer();return;
+}
 if('dashboard'===$view && is_user_logged_in() && class_exists('\\AutoDealership\\Portal\\PortalView') && \AutoDealership\Portal\PortalAccess::ready()) {
 	\AutoDealership\Portal\PortalView::render();get_footer();return;
 }
@@ -25,6 +28,7 @@ ob_start();
 <section class="cd-auth-card" data-auth-switch>
 <div class="cd-auth-intro"><span><?php echo esc_html__( 'أهلاً بك في', 'car-dealer' ); ?> <?php echo esc_html( car_dealer_brand_name() ); ?></span><h1 data-login-title="<?php echo esc_attr__( 'سعداء بعودتك', 'car-dealer' ); ?>" data-register-title="<?php echo esc_attr__( 'ابدأ رحلتك معنا', 'car-dealer' ); ?>" aria-live="polite"><?php echo $register ? esc_html__( 'ابدأ رحلتك معنا', 'car-dealer' ) : esc_html__( 'سعداء بعودتك', 'car-dealer' ); ?></h1><p><?php echo esc_html__( 'حساب واحد لمتابعة طلباتك وحجوزات تجربة القيادة والتواصل مع المعرض.', 'car-dealer' ); ?></p><?php if ( $catalog_url ) : ?><a href="<?php echo esc_url( $catalog_url ); ?>"><?php echo esc_html__( 'استكشف السيارات ←', 'car-dealer' ); ?></a><?php endif; ?></div>
 <div class="cd-auth-form"><nav class="cd-auth-tabs" aria-label="<?php echo esc_attr( car_dealer_text( 'الحساب', 'Account' ) ); ?>"><a <?php echo ! $register ? 'aria-current="page"' : ''; ?> href="<?php echo esc_url( car_dealer_account_url( 'login' ) ); ?>"><?php echo esc_html__( 'تسجيل الدخول', 'car-dealer' ); ?></a><a <?php echo $register ? 'aria-current="page"' : ''; ?> href="<?php echo esc_url( car_dealer_account_url( 'register' ) ); ?>"><?php echo esc_html__( 'إنشاء حساب', 'car-dealer' ); ?></a></nav>
+<?php if('login'===$view&&isset($_GET['password_reset'])): ?><p class="cd-account-notice is-success" role="status"><?php echo esc_html(car_dealer_text('تم تغيير كلمة المرور. سجّل الدخول باستخدام كلمة المرور الجديدة.','Your password has been changed. Sign in with your new password.')); ?></p><?php endif; ?>
 <?php if($activation_notice): ?><div class="cd-account-notice is-success adc-activation-notice" role="status" aria-live="polite" data-success-notice><span class="adc-activation-icon" aria-hidden="true">✓</span><div><strong><?php echo esc_html('verified'===$activation_notice?car_dealer_text('تم تأكيد الحساب','Your account is confirmed'):car_dealer_text('حسابك مفعّل بالفعل','Your account is already active')); ?></strong><p><?php echo esc_html(car_dealer_text('يمكنك الآن تسجيل الدخول باستخدام بريدك الإلكتروني وكلمة المرور.','You can now sign in with your email address and password.')); ?></p></div></div><?php endif; ?>
 <?php foreach ( array( 'login', 'register' ) as $form_view ) : $register = 'register' === $form_view; ?>
 <form data-auth-view="<?php echo esc_attr( $form_view ); ?>" <?php echo $form_view !== $view ? 'hidden' : ''; ?> method="post" action="<?php echo esc_url( car_dealer_account_url( $form_view ) ); ?>">
@@ -39,29 +43,7 @@ ob_start();
 <?php endif; ?>
 <label><?php echo esc_html__( 'كلمة المرور', 'car-dealer' ); ?><input <?php echo $register ? 'id="cd-register-password" data-password-policy minlength="12" maxlength="128" aria-describedby="cd-password-requirements cd-password-strength"' : ''; ?> name="password" type="password" autocomplete="<?php echo $register ? 'new-password' : 'current-password'; ?>" required></label>
 <?php if ( $register ) : ?>
-<section class="cd-password-policy" data-password-policy-panel aria-labelledby="cd-password-policy-title">
-  <div class="cd-password-policy-head">
-    <strong id="cd-password-policy-title"><?php echo esc_html( car_dealer_text( 'شروط كلمة المرور', 'Password requirements' ) ); ?></strong>
-    <button class="cd-password-generate" type="button" data-password-generate>
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M18.36 5.64l-2.12 2.12M7.76 16.24l-2.12 2.12"/><path d="m9.5 14.5 5-5 2 2-5 5-2-2Z"/></svg>
-      <span><?php echo esc_html( car_dealer_text( 'إنشاء كلمة قوية', 'Generate strong password' ) ); ?></span>
-    </button>
-  </div>
-  <ul id="cd-password-requirements" class="cd-password-requirements">
-    <li data-password-rule="length"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'من 12 إلى 128 حرفًا', '12 to 128 characters' ) ); ?></li>
-    <li data-password-rule="uppercase"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'حرف إنجليزي كبير واحد على الأقل (A–Z)', 'At least one uppercase English letter (A–Z)' ) ); ?></li>
-    <li data-password-rule="lowercase"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'حرف إنجليزي صغير واحد على الأقل (a–z)', 'At least one lowercase English letter (a–z)' ) ); ?></li>
-    <li data-password-rule="number"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'رقم واحد على الأقل', 'At least one number' ) ); ?></li>
-    <li data-password-rule="symbol"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'رمز خاص واحد على الأقل، مثل ! أو @', 'At least one symbol, such as ! or @' ) ); ?></li>
-    <li data-password-rule="ascii"><span aria-hidden="true"></span><?php echo esc_html( car_dealer_text( 'أحرف إنجليزية وأرقام ورموز فقط، دون مسافات', 'English letters, numbers, and symbols only; no spaces' ) ); ?></li>
-  </ul>
-  <div class="cd-password-meter" data-password-meter data-level="0" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-  <p id="cd-password-strength" class="cd-password-strength" aria-live="polite"><span><?php echo esc_html( car_dealer_text( 'قوة كلمة المرور:', 'Password strength:' ) ); ?></span> <strong data-password-strength-label><?php echo esc_html( car_dealer_text( 'لم تُكتب بعد', 'Not entered yet' ) ); ?></strong></p>
-  <div class="cd-password-generated-actions">
-    <button type="button" class="cd-password-copy" data-password-copy hidden><?php echo esc_html( car_dealer_text( 'نسخ كلمة المرور', 'Copy password' ) ); ?></button>
-    <span class="cd-password-status" data-password-status role="status" aria-live="polite"></span>
-  </div>
-</section>
+<?php include __DIR__.'/account-password-policy.php'; ?>
 <label><?php echo esc_html__( 'تأكيد كلمة المرور', 'car-dealer' ); ?><input id="cd-register-password-confirm" name="password_confirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" aria-describedby="cd-password-confirm-status" required></label>
 <small id="cd-password-confirm-status" class="cd-password-confirm-status" data-password-confirm-status aria-live="polite"></small>
 <label class="cd-auth-consent">

@@ -16,6 +16,9 @@ add_filter( 'retrieve_password_notification_email', static function ( array $ema
 	$brand = class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::brand( $ar ? 'ar' : 'en' ) : wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
 	$url = network_site_url( 'wp-login.php?action=rp&key=' . rawurlencode( $key ) . '&login=' . rawurlencode( $login ), 'login' );
 	$url = add_query_arg( 'wp_lang', $locale, $url );
+	if(class_exists('\\AutoDealership\\Accounts\\PasswordRecovery')&&\AutoDealership\Accounts\PasswordRecovery::enabled()){
+		$url=add_query_arg(array('key'=>$key,'login'=>$login),\AutoDealership\Accounts\PasswordRecovery::url('resetpass','',$ar?'ar':'en'));
+	}
 	$palette = \AutoDealership\Core\BrandPalette::email_colors();
 	$navy = $palette['mail-header'];
 	$blue = $palette['mail-action'];

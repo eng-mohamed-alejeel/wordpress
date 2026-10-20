@@ -32,6 +32,8 @@ $table_prefix = 'test_';
 require ABSPATH . 'wp-includes/plugin.php';
 add_filter( 'pre_wp_mail', '__return_false', PHP_INT_MAX );
 require ABSPATH . 'wp-settings.php';
+require __DIR__.'/password-recovery-package-fixture.php';
+if('/wp-login.php'===$path){do_action('login_init');http_response_code(404);exit;}
 if ( '/adc-product-session' === $path ) {
 	if ( ! hash_equals( $config['token'], (string) ( $_GET['key'] ?? '' ) ) ) { http_response_code( 403 ); exit; }
 	$session_user = 'staff' === ( $_GET['actor'] ?? '' ) ? (int) get_option( 'adc_test_admin_staff', 0 ) : $config['admin'];

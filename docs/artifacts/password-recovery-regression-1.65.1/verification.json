@@ -1,0 +1,37 @@
+{
+  "version": "1.65.1",
+  "baseline_commit": "e968a2bf89e291ab2bed74d38aa49f10603cfc12",
+  "date": "2026-10-20",
+  "schema": "1.25.0",
+  "schema_changed": false,
+  "deleted_tracked_files": [],
+  "registration_password_component_preserved": true,
+  "package_browser_checks": 282,
+  "personal_account_browser_checks": 101,
+  "recovery_browser_checks": 61,
+  "portal_database_checks": 230,
+  "newsletter_checks": 192,
+  "wordpress_authentication_checks": 34,
+  "offline_authentication_checks": 46,
+  "php_files_linted": 11,
+  "static_files_checked": 277,
+  "owned_static_errors": 0,
+  "other_static_diagnostics": 102,
+  "typing_assertions_and_timeout_unchanged": true,
+  "general_suite_timeout_reproduced_in_final_run": false,
+  "real_email_sent": false,
+  "source_database_contacted_by_tests": false,
+  "package_directory": ".tmp/product-release/1.65.1-20261020-110355",
+  "packages": [
+    {
+      "component": "auto-dealership-core",
+      "sha256": "110b7531996501c509cf23124d80a6ff30e7344c6bc26984b88dc80e4ddd9484",
+      "source_matched_files": 298
+    },
+    {
+      "component": "car-dealer",
+      "sha256": "ce44d43414ff7c8f6333680afbee3f8e67b26edd0b89d9f2c77c9ef1b7d5c9ee",
+      "source_matched_files": 70
+    }
+  ]
+}
