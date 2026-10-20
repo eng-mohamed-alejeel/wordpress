@@ -56,6 +56,7 @@ try {
 	adc_check( $currency_rejected, 'Invalid monetary form precision cannot reach business services.' );
 } finally { remove_filter( 'wp_die_handler', $currency_die_handler ); $_POST = array(); }
 $currency_privacy = new ReflectionMethod( AutoDealership\Privacy\PrivacyTools::class, 'export_value' );
+if ( PHP_VERSION_ID < 80100 ) { $currency_privacy->setAccessible( true ); }
 adc_check( '1234.56 SAR' === $currency_privacy->invoke( null, 'amount', '123456' ) && '123456' === $currency_privacy->invoke( null, 'id', '123456' ), 'Privacy export converts money while preserving identifiers.' );
 require __DIR__ . '/currency-lifecycle.php';
 echo "Completed $checks currency integration checks.\n";

@@ -24,5 +24,6 @@ adc_check( 123 === $formatted['id'] && '-1.23' === $formatted['margin_before_sar
 $form = Money::form_values( array( 'purchase_cost'=>'','total_cost'=>'12.34','supplier_id'=>123 ), array( 'purchase_cost','total_cost','wholesale_price' ), array( 'purchase_cost' ) );
 adc_check( '' === $form['purchase_cost'] && 1234 === $form['total_cost'] && ! isset( $form['wholesale_price'] ) && 123 === $form['supplier_id'], 'Partial cost forms preserve unknowns and omitted fields.' );
 $csv_method = new ReflectionMethod( AutoDealership\Reports\FinancialExport::class, 'csv' );
+if ( PHP_VERSION_ID < 80100 ) { $csv_method->setAccessible( true ); }
 $csv = $csv_method->invoke( null, array( array( 'sale_id'=>1,'status'=>'approved','branch_id'=>1,'stock_number'=>'=FORMULA','quote_number'=>'Q-1','final_amount'=>123456,'currency'=>'SAR','invoice_reference'=>'I-1','created_at'=>'2026-10-07','verified_amount'=>'123456' ) ) );
 adc_check( str_contains( $csv, 'final_amount_sar' ) && str_contains( $csv, 'verified_amount_sar' ) && str_contains( $csv, '1234.56' ) && ! str_contains( $csv, '123456' ) && str_contains( $csv, "'=FORMULA" ), 'CSV exports exact SAR values with explicit units and formula protection.' );

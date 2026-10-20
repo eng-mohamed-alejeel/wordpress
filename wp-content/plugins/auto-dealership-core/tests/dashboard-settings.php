@@ -28,16 +28,17 @@ namespace {
  require dirname(__DIR__).'/src/Core/ConfigurationService.php';
  require dirname(__DIR__).'/src/Admin/SettingsPage.php';
  use AutoDealership\Core\ConfigurationService as Config;
- $reflection = new \ReflectionMethod(Config::class, 'values');
- $options = array_replace($reflection->invoke(null), array(
-  'adc_vat_rate_bps'=>1500, 'adc_pricing_fee_amount'=>4321,
-  'adc_promotion_type'=>'fixed', 'adc_promotion_code'=>'season', 'adc_promotion_value'=>2345,
-  'adc_promotion_starts_at'=>'2026-10-01','adc_promotion_ends_at'=>'2026-12-01',
-  'adc_reservation_hours'=>36, 'adc_reservation_deposit_type'=>'percentage', 'adc_reservation_deposit_value'=>1500,
-  'adc_sales_manager_discount_limit'=>20000,'adc_general_manager_discount_limit'=>40000,
-  'adc_seller_name'=>'Preserved seller','adc_seller_tax_number'=>'123','adc_seller_phone'=>'555','adc_seller_address'=>'Address',
-  'adc_default_branch_id'=>3,'adc_privacy_retention_days'=>365,'adc_delivery_required_documents'=>array('invoice','insurance'),
+ // Initialize through the public contract; do not depend on private defaults via Reflection.
+ $seed = Config::update(array(
+  'vat_rate_bps'=>1500, 'pricing_fee_amount'=>4321,
+  'promotion_type'=>'fixed', 'promotion_code'=>'season', 'promotion_value'=>2345,
+  'promotion_starts_at'=>'2026-10-01','promotion_ends_at'=>'2026-12-01',
+  'reservation_hours'=>36, 'reservation_deposit_type'=>'percentage', 'reservation_deposit_value'=>1500,
+  'sales_manager_discount_limit'=>20000,'general_manager_discount_limit'=>40000,
+  'seller_name'=>'Preserved seller','seller_tax_number'=>'123','seller_phone'=>'555','seller_address'=>'Address',
+  'default_branch_id'=>3,'privacy_retention_days'=>365,'delivery_required_documents'=>array('invoice','insurance'),
  ));
+ check(is_array($seed) && true === $seed['updated'], 'Public settings fixture initializes successfully');
  $cases = array('pricing'=>array('vat_rate_bps'=>1000),'reservations'=>array('reservation_hours'=>48),'branches'=>array('default_branch_id'=>0),'delivery'=>array('delivery_required_documents'=>array()),'privacy'=>array('privacy_retention_days'=>90),'catalog'=>array('public_catalog_mode'=>'authoritative'));
  foreach ($cases as $section=>$input) {
   $before=$options;
@@ -46,6 +47,7 @@ namespace {
   $fields=\AutoDealership\Admin\SettingsPage::sections()[$section][1];
   $result=Config::update_section($input,$fields);
   check(!($result instanceof WP_Error), "$section section saves");
+  foreach($input as $key=>$value) { if(in_array($key,$fields,true))check($options['adc_'.$key]===$value,"$section updates $key"); }
   foreach($before as $key=>$value) { if(!in_array(substr($key,4),$fields,true))check($options[$key]===$value,"$section preserves $key"); }
  }
  $before=$options; \AutoDealership\Audit\AuditLog::$fail=true;
