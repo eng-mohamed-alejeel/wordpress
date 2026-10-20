@@ -1,0 +1,23 @@
+{
+  "version": "1.64.1",
+  "schema": "1.25.0",
+  "newsletter_checks": 192,
+  "wordpress_authentication_checks": 34,
+  "offline_authentication_checks": 46,
+  "package_browser_checks": 221,
+  "owned_static_errors": 0,
+  "real_email_sent": false,
+  "source_database_contacted_by_tests": false,
+  "packages": [
+    {
+      "component": "auto-dealership-core",
+      "sha256": "d3ec31bad2adf19ff8381839c512dfca0363b3f6f3aee0f4d03a0337d49441ee",
+      "source_matched_files": 297
+    },
+    {
+      "component": "car-dealer",
+      "sha256": "e3f06cb9548b65bea4165312cead33f105200eac7f26490c0d0cb26f0d37e12d",
+      "source_matched_files": 68
+    }
+  ]
+}

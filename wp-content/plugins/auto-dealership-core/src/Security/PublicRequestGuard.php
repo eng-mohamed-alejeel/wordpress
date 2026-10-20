@@ -17,6 +17,7 @@ final class PublicRequestGuard {
 		'account_register'=> array( 'limit'=>5, 'window'=>3600 ),
 		'registration_network'=> array( 'limit'=>100, 'window'=>3600 ),
 		'email_verification'=> array( 'limit'=>20, 'window'=>900 ),
+		'verification_network'=> array( 'limit'=>300, 'window'=>900 ),
 		'email_send'=> array( 'limit'=>5, 'window'=>3600 ),
 		'portal_message'=> array( 'limit'=>30, 'window'=>900 ),
 		'portal_context'=> array( 'limit'=>10, 'window'=>900 ),

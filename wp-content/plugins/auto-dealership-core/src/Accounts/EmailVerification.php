@@ -152,6 +152,13 @@ final class EmailVerification {
 		$context = implode( '|', array( 'adc-email-v1', $row['purpose'], $row['subject_id'], $row['email_hash'], $row['selector'], $row['generation'], $row['expires_at'], $row['consent_key'] ) );
 		return rtrim( strtr( base64_encode( hash_hmac( 'sha256', $context, wp_salt( 'secure_auth' ), true ) ), '+/', '-_' ), '=' );
 	}
+	/** Configuration check only; public DNS reachability must be verified on the host. */
+	public static function public_link_origin(): bool {
+		$host=strtolower((string)wp_parse_url(home_url('/'),PHP_URL_HOST));
+		if('https'!==wp_parse_url(home_url('/'),PHP_URL_SCHEME)||!$host||!str_contains($host,'.')||preg_match('/(?:^|\.)(?:localhost|local|test|invalid|internal)\z/',$host)){return false;}
+		$ip=trim($host,'[]');
+		return !filter_var($ip,FILTER_VALIDATE_IP)||false!==filter_var($ip,FILTER_VALIDATE_IP,FILTER_FLAG_NO_PRIV_RANGE|FILTER_FLAG_NO_RES_RANGE);
+	}
 	public static function page_url( string $purpose = 'account', string $language = '' ): string {
 		return add_query_arg( array( 'adc_verify'=>1, 'purpose'=>'newsletter' === $purpose ? 'newsletter' : 'account', 'lang'=>NewsletterService::language( $language ?: \AutoDealership\Core\Localization::language() ) ), home_url( '/' ) );
 	}
@@ -237,6 +244,7 @@ final class EmailVerification {
 		$email = strtolower( $email );
 		if ( 'account' === $purpose ) {
 			$user = $wpdb->get_row( $wpdb->prepare( "SELECT ID,user_email FROM {$wpdb->users} WHERE user_email=%s LIMIT 1 FOR UPDATE", $email ), ARRAY_A );
+			if($wpdb->last_error){$wpdb->query('ROLLBACK');return self::error('adc_verification_storage');}
 			$eligible = $user && get_user_meta( $user['ID'], 'adc_email_verification_status', true ) && self::blocked( (int) $user['ID'] );
 			$id = (int) ( $user['ID'] ?? 0 ); $locale = (string) get_user_meta( $id, 'adc_preferred_language', true ); $key = '';
 			if($report_state && $user && !self::blocked($id)) { $wpdb->query('ROLLBACK'); return array('status'=>'already_verified','locale'=>$locale); }
@@ -297,15 +305,19 @@ final class EmailVerification {
 		$body='<p>'.esc_html(self::t('افتح أحدث رابط وصل إلى بريدك لإتمام التأكيد بأمان.','Open the latest link sent to your email to complete verification securely.')).'</p>';
 		$generic=self::t('تم استلام طلبك. إذا كان البريد ينتظر التأكيد وضمن حدود الإرسال، فسيصلك رابط جديد. تحقق من صندوق الوارد والبريد غير المرغوب فيه. إذا كان حسابك مفعّلًا، يمكنك تسجيل الدخول مباشرة.','Your request has been received. If the email is awaiting verification and within sending limits, a new link will be sent. Check your inbox and spam folder. If your account is already active, you can sign in directly.');
 		if(isset($_GET['requested'])){$title=self::t('تحقق من بريدك الإلكتروني','Check your email');$body='<p role="status">'.esc_html($generic).'</p>';}
+		if(!self::public_link_origin()){$body.='<p role="note">'.esc_html(self::t('هذا الموقع يعمل بعنوان محلي أو دون HTTPS. قد لا تفتح روابط التأكيد على جهاز آخر. يلزم ضبط عنوان الموقع العام الآمن عند النشر.','This site uses a local address or lacks HTTPS. Verification links may not open on another device. Configure the public HTTPS site address when deploying.')).'</p>';}
 		if($posted){
-			$rate=PublicRequestGuard::consume('email_verification');$valid=wp_verify_nonce(self::field('_wpnonce'),'adc_email_verify');$operation=self::field('operation');
+			$operation=self::field('operation');
+			$rate=PublicRequestGuard::consume('verification_network');
+			if(!is_wp_error($rate)){$subject=in_array($operation,array('resend','change_email'),true)?self::email_hash(strtolower(trim(self::field('email')))):'';$rate=PublicRequestGuard::consume('email_verification',$subject);}
+			$valid=wp_verify_nonce(self::field('_wpnonce'),'adc_email_verify');
 			if(!$valid||is_wp_error($rate)){
 				status_header(is_wp_error($rate)?(int)($rate->get_error_data()['status']??503):403);
 				if(is_wp_error($rate)&&'adc_rate_limited'===$rate->get_error_code()){header('Retry-After: '.(int)($rate->get_error_data()['retry_after']??60));}
 				$body='<p role="alert">'.esc_html(self::t('تعذر إتمام الطلب الآن. حدّث الصفحة أو حاول لاحقًا.','Unable to complete the request now. Refresh the page or try again later.')).'</p>';
 			}elseif(in_array($operation,array('resend','change_email'),true)){
 				$email=trim(self::field('email'));
-				$result=is_email($email)&&strlen($email)<=100?VerificationExperience::reserve_resend($purpose):new \WP_Error('adc_email_invalid');
+				$result=is_email($email)&&strlen($email)<=100?VerificationExperience::reserve_resend($purpose,$email):new \WP_Error('adc_email_invalid');
 				if(!is_wp_error($result)){$result='change_email'===$operation&&'account'===$purpose?VerificationExperience::change_email($email):self::request($purpose,$email);}
 				if(is_wp_error($result)){
 					$code=$result->get_error_code();$wait=in_array($code,array('adc_verification_throttled','adc_rate_limited'),true);

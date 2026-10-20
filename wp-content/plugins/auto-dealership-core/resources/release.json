@@ -2,7 +2,7 @@
   "format": 1,
   "product": "auto-dealership",
   "component": "plugin",
-  "version": "1.64.0",
+  "version": "1.64.1",
   "contract": 1,
   "requires_php": "8.0",
   "requires_wp": "6.7",

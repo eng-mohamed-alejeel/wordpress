@@ -1,6 +1,7 @@
 <?php
 /** Additional security scenarios in the disposable newsletter database. */
 use AutoDealership\Accounts\EmailVerification as Verification;
+use AutoDealership\Accounts\CustomerAccount;
 use AutoDealership\Leads\NewsletterService as VerificationNewsletter;
 use AutoDealership\Database\Transaction;
 
@@ -76,7 +77,7 @@ $check( is_wp_error( $default_registration ) && 'adc_registration_route' === $de
 $before = count( $captured );
 $_POST = array( 'display_name'=>'Duplicate request', 'email'=>'account-security@example.invalid', 'password'=>'StrongPass123!test', 'password_confirm'=>'StrongPass123!test', 'privacy_consent'=>'1', 'phone'=>'+966505555553' );
 $duplicate = $register->invoke( null );
-$check( $duplicate === $security_account && count( $captured ) === $before && wp_check_password( 'NewStrongPass123!', get_userdata( $security_account )->user_pass ), 'Repeated registration neither overwrites credentials nor reveals registration through a different success flow' );
+$check( is_wp_error($duplicate) && 'adc_account_exists'===$duplicate->get_error_code() && CustomerAccount::account_exists() && count( $captured ) === $before && wp_check_password( 'NewStrongPass123!', get_userdata( $security_account )->user_pass ), 'Repeated registration reports an existing account without sending mail or overwriting credentials' );
 $wpdb->update( Verification::table(), array( 'created_at'=>'2000-01-01 00:00:00' ), array( 'id'=>$account_challenge['id'] ) );
 add_filter( 'send_email_change_email', '__return_false' );
 wp_update_user( array( 'ID'=>$security_account, 'user_email'=>'account-security-new@example.invalid' ) );

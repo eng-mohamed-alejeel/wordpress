@@ -16,6 +16,14 @@ final class CustomerAccount {
 	private const PASSWORD_MIN_LENGTH = 12;
 	private const PASSWORD_MAX_LENGTH = 128;
 	private static bool $verification_required = false;
+	private static bool $account_exists = false;
+
+	public static function account_exists(): bool { return self::$account_exists; }
+
+	private static function existing_account(): \WP_Error {
+		self::$account_exists = true;
+		return self::error( 'adc_account_exists', EmailVerification::t( 'هذا البريد الإلكتروني مسجّل بالفعل. يمكنك تسجيل الدخول أو استعادة كلمة المرور. إذا لم تؤكد بريدك بعد، اطلب رابط تفعيل جديدًا.', 'This email address is already registered. Sign in or reset your password. If you have not confirmed your email yet, request a new activation link.' ) );
+	}
 
 	/** Only expose the resend action after authentication reports a pending account. */
 	public static function verification_required(): bool {
@@ -75,6 +83,7 @@ final class CustomerAccount {
 	/** Processes the existing account form contract and returns a localized error. */
 	public static function process_request( string $view ): string {
 		self::$verification_required = false;
+		self::$account_exists = false;
 		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
 			return '';
 		}
@@ -180,6 +189,7 @@ final class CustomerAccount {
 		if ( '' === $name || self::length( $name ) > 250 || ! is_email( $email ) || strlen( $email ) > 100 ) {
 			return self::error( 'adc_account_invalid', __( 'أدخل اسمًا وبريدًا إلكترونيًا صحيحين.', 'auto-dealership-core' ) );
 		}
+		if ( email_exists( $email ) ) { return self::existing_account(); }
 		if ( ! self::password_is_valid( $password ) ) {
 			return self::error( 'adc_account_weak_password', __( 'استخدم من 12 إلى 128 محرفًا من الأحرف الإنجليزية والأرقام والرموز. يجب تضمين حرف إنجليزي كبير وحرف إنجليزي صغير ورقم ورمز خاص، دون مسافات.', 'auto-dealership-core' ) );
 		}
@@ -194,7 +204,7 @@ final class CustomerAccount {
 			return self::error( 'adc_account_unavailable', __( 'تعذر استخدام هذا البريد. جرّب تسجيل الدخول أو استعادة كلمة المرور.', 'auto-dealership-core' ) );
 		}
 		$existing_account = email_exists( $email );
-		if ( $existing_account ) { EmailVerification::request( 'account', $email ); return (int) $existing_account; }
+		if ( $existing_account ) { return self::existing_account(); }
 		foreach ( array( $wpdb->users, $wpdb->usermeta ) as $table ) {
 			$status=$wpdb->get_row($wpdb->prepare('SHOW TABLE STATUS LIKE %s',$wpdb->esc_like($table)),ARRAY_A);
 			if ( $wpdb->last_error || !$status || $status['Name']!==$table || 'innodb'!==strtolower((string)$status['Engine']) ) {
@@ -207,7 +217,7 @@ final class CustomerAccount {
 		$existing = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM {$wpdb->users} WHERE user_email=%s LIMIT 1 FOR UPDATE", $email ) );
 		if ( $wpdb->last_error || $existing ) {
 			$wpdb->query( 'ROLLBACK' );
-			if ( $existing ) { EmailVerification::request( 'account', $email ); return (int) $existing; }
+			if ( $existing ) { return self::existing_account(); }
 			return self::error( 'adc_account_unavailable', __( 'تعذر استخدام هذا البريد. جرّب تسجيل الدخول أو استعادة كلمة المرور.', 'auto-dealership-core' ) );
 		}
 		$user_id = wp_insert_user(
@@ -221,6 +231,7 @@ final class CustomerAccount {
 		);
 		if ( is_wp_error( $user_id ) ) {
 			$wpdb->query( 'ROLLBACK' );
+			if ( 'existing_user_email' === $user_id->get_error_code() ) { return self::existing_account(); }
 			return self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) );
 		}
 		$meta = CustomerIdentity::without_profile_sync( static fn() => update_user_meta( $user_id, 'car_dealer_phone', $phone ) );
@@ -236,7 +247,7 @@ final class CustomerAccount {
 		$mail_event = get_user_meta( $user_id, 'adc_email_verification_status', true ) === 'pending' ? EmailVerification::issue( 'account', (int) $user_id, $email, $language ) : new \WP_Error( 'adc_verification_storage' );
 		if ( is_wp_error( $mail_event ) ) {
 			$wpdb->query( 'ROLLBACK' ); clean_user_cache( $user_id );
-			if ( 'adc_verification_throttled' === $mail_event->get_error_code() ) { return 0; }
+			if ( 'adc_verification_throttled' === $mail_event->get_error_code() ) { return self::error( 'adc_verification_throttled', EmailVerification::t( 'تعذر إنشاء الحساب بسبب حد الإرسال. انتظر قليلًا ثم حاول مجددًا.', 'The account could not be created because the sending limit was reached. Please wait and try again.' ) ); }
 			return self::error( 'adc_account_unavailable', __( 'تعذر إنشاء الحساب. حاول مجددًا أو تواصل مع المعرض.', 'auto-dealership-core' ) );
 		}
 		$committed = Transaction::commit( static fn() => AuditLog::record( 'customer.account_registered', 'user', $user_id, '', null, array( 'role'=>'car_dealer_customer', 'privacy_consent'=>true ) ) );

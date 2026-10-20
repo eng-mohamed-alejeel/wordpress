@@ -90,7 +90,7 @@ if('/adc-product-mail-state'===$path) {
 if('/wp-admin/admin-ajax.php'===$path){$action=sanitize_key($_REQUEST['action']??'');do_action((is_user_logged_in()?'wp_ajax_':'wp_ajax_nopriv_').$action);http_response_code(400);exit;}
 if('/adc-product-confirmation-fixture'===$path) {
 	if(!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
-	if(isset($_GET['clear_wait'])){$key=new ReflectionMethod(\AutoDealership\Accounts\VerificationExperience::class,'cooldown_key');$key->setAccessible(true);delete_transient($key->invoke(null,'account'));}
+	if(isset($_GET['clear_wait'])){$key=new ReflectionMethod(\AutoDealership\Accounts\VerificationExperience::class,'cooldown_key');$key->setAccessible(true);delete_transient($key->invoke(null,'account','package-verification@example.invalid'));}
 	$user=get_user_by('email','package-verification@example.invalid');global $wpdb;
 	$row=$user?$wpdb->get_row($wpdb->prepare('SELECT * FROM '.\AutoDealership\Accounts\EmailVerification::table()." WHERE purpose='account' AND subject_id=%d",$user->ID),ARRAY_A):null;
 	if(!$row){http_response_code(404);exit;}$method=new ReflectionMethod(\AutoDealership\Accounts\EmailVerification::class,'proof');$method->setAccessible(true);

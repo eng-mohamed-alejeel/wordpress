@@ -320,6 +320,7 @@ final class ProductSetup {
 			self::t( 'مخطط قاعدة البيانات', 'Database schema' )=>Schema::is_ready(),
 			self::t( 'دعم استيراد المخزون الآمن', 'Transactional inventory storage' )=>\AutoDealership\Inventory\OnyxModelDrafts::transactional_tables(),
 			self::t( 'اتصال HTTPS', 'HTTPS' )=>'https' === wp_parse_url( home_url(), PHP_URL_SCHEME ),
+			self::t( 'عنوان عام آمن لروابط تأكيد البريد واستعادة الحساب', 'Public HTTPS address for verification and account recovery links' )=>\AutoDealership\Accounts\EmailVerification::public_link_origin(),
 			self::t( 'SMTP حقيقي مهيّأ', 'Real SMTP configured' )=>'smtp' === ( $mail['mode'] ?? '' ) && ! empty( $mail['valid'] ),
 			self::t( 'الصفحات الأساسية', 'Essential pages' )=>$pages,
 			self::t( 'الصفحات القانونية منشورة', 'Legal pages published' )=>$legal,

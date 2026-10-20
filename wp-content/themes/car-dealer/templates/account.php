@@ -12,6 +12,13 @@ ob_start();
 ?>
 <div class="container cd-account" dir="<?php echo esc_attr( car_dealer_catalog_direction() ); ?>" lang="<?php echo esc_attr( car_dealer_catalog_language() ); ?>">
 <?php if ( $error && $core_available ) : ?><div class="cd-account-notice is-error" role="alert"><?php echo esc_html( $error ); ?><?php if ( 'login' === $view && \AutoDealership\Accounts\CustomerAccount::verification_required() ) : ?> <a href="<?php echo esc_url( \AutoDealership\Accounts\EmailVerification::page_url( 'account' ) ); ?>"><?php echo esc_html( car_dealer_text( 'إعادة إرسال رابط التفعيل', 'Resend activation link' ) ); ?></a><?php endif; ?></div><?php endif; ?>
+<?php if ( $error && $core_available && method_exists( '\\AutoDealership\\Accounts\\CustomerAccount', 'account_exists' ) && \AutoDealership\Accounts\CustomerAccount::account_exists() ) : ?>
+<nav class="cd-account-actions" aria-label="<?php echo esc_attr( car_dealer_text( 'استعادة الوصول إلى الحساب', 'Recover account access' ) ); ?>">
+<a class="btn btn-primary" href="<?php echo esc_url( car_dealer_account_url( 'login' ) ); ?>"><?php echo esc_html( car_dealer_text( 'تسجيل الدخول', 'Sign in' ) ); ?></a>
+<a class="btn" href="<?php echo esc_url( wp_lostpassword_url( car_dealer_account_url( 'login' ) ) ); ?>"><?php echo esc_html( car_dealer_text( 'استعادة كلمة المرور', 'Reset password' ) ); ?></a>
+<a class="btn" href="<?php echo esc_url( \AutoDealership\Accounts\EmailVerification::page_url( 'account' ) ); ?>"><?php echo esc_html( car_dealer_text( 'طلب رابط تفعيل جديد', 'Request a new activation link' ) ); ?></a>
+</nav>
+<?php endif; ?>
 <?php if ( ! $core_available ) : ?>
 <section class="cd-account-panel"><h1><?php esc_html_e( 'الحساب غير متاح حاليًا', 'car-dealer' ); ?></h1><p><?php esc_html_e( 'خدمة المعرض غير متاحة. يرجى المحاولة لاحقًا.', 'car-dealer' ); ?></p></section>
 <?php elseif ( 'dashboard' !== $view ) : $register = 'register' === $view; ?>
