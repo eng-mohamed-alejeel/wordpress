@@ -18,7 +18,13 @@ final class PurchaseOrderPage {
 		wp_nonce_field( 'adc_purchase_order_' . $op . '_' . $id );
 	}
 	private static function field( string $name, string $label, string $type = 'text', string $value = '' ): void { echo '<p><label>' . esc_html( $label ) . ' <input required name="' . esc_attr( $name ) . '" type="' . esc_attr( $type ) . '" value="' . esc_attr( $value ) . '"></label></p>'; }
+	public static function validate_request(): void {
+		if ( ! current_user_can( 'adc_view_purchase_orders' ) ) { wp_die( '', '', array( 'response'=>403 ) ); }
+		$id = absint( $_GET['id'] ?? 0 );
+		if ( $id && is_wp_error( PurchaseOrderService::get( $id ) ) ) { wp_die( '', '', array( 'response'=>404 ) ); }
+	}
 	public static function render(): void {
+		self::validate_request();
 		global $wpdb;
 		if ( ! current_user_can( 'adc_view_purchase_orders' ) ) { wp_die( '', '', array( 'response'=>403 ) ); }
 		echo '<div class="wrap" dir="' . ( 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl' ) . '"><h1>' . esc_html( self::t( 'أوامر الشراء', 'Purchase orders' ) ) . '</h1><p>' . esc_html( self::t( 'لكل أمر مركبة محددة. الاستلام التجاري يسجل التكلفة؛ الاستلام الفعلي والفحص يتمان في إدارة المخزون.', 'Each order covers one identified vehicle. Commercial receipt records costs; physical intake and inspection continue in inventory.' ) ) . '</p>';

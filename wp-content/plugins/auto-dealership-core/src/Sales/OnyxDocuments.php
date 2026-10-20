@@ -19,6 +19,12 @@ final class OnyxDocuments {
 		add_action('admin_post_adc_download_onyx_document',array(self::class,'download'));
 	}
 	private static function can_read(): bool {return current_user_can('manage_options')||current_user_can('adc_view_finance')||current_user_can('adc_approve_sales');}
+	/** Reject inaccessible records before WordPress emits the admin page header. */
+	public static function validate_request(): void {
+		if(!self::can_read()){wp_die('Forbidden','',array('response'=>403));}
+		$id=absint($_GET['sale_id']??0);
+		if($id && !self::sale($id)){wp_die('Sale unavailable','',array('response'=>404));}
+	}
 	private static function sale(int $id,bool $lock=false) {
 		global $wpdb;
 		if(!self::can_read()){return null;}
@@ -97,6 +103,7 @@ final class OnyxDocuments {
 	}
 
 	public static function render(): void {
+		self::validate_request();
 		global $wpdb;
 		$id=absint($_GET['sale_id']??0);
 		if(!self::can_read()){wp_die('Forbidden','',array('response'=>403));}

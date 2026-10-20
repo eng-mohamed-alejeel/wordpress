@@ -3,11 +3,17 @@
 if(PHP_SAPI!=='cli'||!preg_match('/\Aadc_verify_[a-f0-9]{16}\z/',DB_NAME)){exit(1);}
 update_option('active_plugins',array('auto-dealership-core/auto-dealership-core.php'));
 update_user_meta($admin,'locale','ar');update_user_meta($sales,'locale','en_US');
+$foreign_document=\AutoDealership\Sales\OnyxDocuments::attach($sb,'invoice','FOREIGN-DOCUMENT-SECRET',gmdate('Y-m-d'),100000,0,"%PDF-1.4\nFOREIGN_DOCUMENT_BYTES_SECRET",true);
+$check(is_array($foreign_document),'Create a foreign-branch document to verify actual archive isolation');
+$document_table=\AutoDealership\Database\Schema::table('onyx_documents');
+$document_before=$wpdb->get_row($wpdb->prepare("SELECT * FROM $document_table WHERE id=%d",$foreign_document['id']),ARRAY_A);
+$foreign_sale_before=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.\AutoDealership\Database\Schema::table('sales').' WHERE id=%d',$sb),ARRAY_A);
 $socket=stream_socket_server('tcp://127.0.0.1:0',$errno,$errstr);if(!$socket){throw new RuntimeException('HTTP socket unavailable');}$address=stream_socket_get_name($socket,false);fclose($socket);
 $log=tempnam(sys_get_temp_dir(),'adc-workspace-http-');$env=getenv();$env['ADC_HTTP_TEST_CONFIG']=ADC_TEST_HTTP_CONFIG;$env['ADC_THEME_TEST']='1';
-$process=proc_open(array(PHP_BINARY,'-S',$address,__DIR__.'/http-router.php'),array(0=>array('pipe','r'),1=>array('file',$log,'a'),2=>array('file',$log,'a')),$pipes,ABSPATH,$env,array('bypass_shell'=>true));
+$process=proc_open(array(PHP_BINARY,'-d','output_buffering=0','-S',$address,__DIR__.'/http-router.php'),array(0=>array('pipe','r'),1=>array('file',$log,'a'),2=>array('file',$log,'a')),$pipes,ABSPATH,$env,array('bypass_shell'=>true));
 if(!is_resource($process)){throw new RuntimeException('Cannot start workspace test server');}fclose($pipes[0]);
 $key=hash('sha256',ADC_TEST_HTTP_CONFIG.'|session');$base='http://'.$address;
+$http_completed=false;
 try{
  for($i=0;$i<50;$i++){$ready=@stream_socket_client('tcp://'.$address,$errno,$errstr,0.1);if($ready){fclose($ready);break;}usleep(100000);}
  $get=static function($path,$cookie='')use($base){$body=file_get_contents($base.$path,false,stream_context_create(array('http'=>array('ignore_errors'=>true,'timeout'=>15,'header'=>$cookie?'Cookie: '.$cookie:''))));$headers=$http_response_header??array();return array($body,$headers);};
@@ -22,7 +28,11 @@ try{
  list($html,$headers)=$get('/wp-admin/admin.php?page=adc-onyx-documents&sale_id='.$sa,$finance_cookie);$check(str_contains($headers[0]??'','200')&&str_contains($html,'Back to sales')&&!str_contains($html,'name="action" value="adc_onyx_document"'),'Finance reviewer can read the archive without acquiring upload permission');
  list($html,$headers)=$get('/wp-admin/admin.php?page=adc-onyx-documents&sale_id='.$sa,$admin_cookie);$check(str_contains($headers[0]??'','200')&&str_contains($html,'name="action" value="adc_onyx_document"'),'Administrator can open the existing document upload form');
  list($html,$headers)=$get('/wp-admin/admin.php?page=adc-profit-margin',$sales_cookie);$check(str_contains($headers[0]??'','403'),'Direct margin URL is forbidden to sales');
- list($html,$headers)=$get('/wp-admin/admin.php?page=adc-onyx-documents&sale_id='.$sb,$finance_cookie);$check(str_contains($headers[0]??'','404'),'Direct foreign-sale document URL is denied');
+ list($html,$headers)=$get('/wp-admin/admin.php?page=adc-onyx-documents&sale_id='.$sb,$finance_cookie);$check(str_contains($headers[0]??'','404'),'Direct foreign-sale document URL is denied; received '.($headers[0]??'no HTTP status'));
+ $check(!str_contains($html,'FOREIGN_CUSTOMER_SECRET')&&!str_contains($html,'FOREIGN-DOCUMENT-SECRET')&&!str_contains($html,'FOREIGN_DOCUMENT_BYTES_SECRET')&&!str_contains($html,'name="action" value="adc_onyx_document"')&&!str_contains($html,'Back to sales'),'Denied document response contains no foreign data, sale page or upload form');
+ $check($document_before===$wpdb->get_row($wpdb->prepare("SELECT * FROM $document_table WHERE id=%d",$foreign_document['id']),ARRAY_A)&&$foreign_sale_before===$wpdb->get_row($wpdb->prepare('SELECT * FROM '.\AutoDealership\Database\Schema::table('sales').' WHERE id=%d',$sb),ARRAY_A),'Denied document GET leaves the document bytes, metadata and sale unchanged');
+ list($html,$headers)=$get('/wp-admin/admin.php?page=adc-onyx-documents&sale_id='.$sb,$admin_cookie);$check(str_contains($headers[0]??'','200')&&str_contains($html,'FOREIGN-DOCUMENT-SECRET'),'Administrator retains authorized access to the same archived document');
+ list($html,$headers)=$get('/wp-admin/admin.php?page=adc-onyx-documents&sale_id=2147483647',$finance_cookie);$check(str_contains($headers[0]??'','404'),'Nonexistent sale uses the same not-found response');
  list($html)=$get('/wp-admin/admin.php?page=adc-approvals&section=discounts&discount_id='.$discount_ids[0],$admin_cookie);$dom=new DOMDocument();@$dom->loadHTML($html);$check((new DOMXPath($dom))->query('//table/tbody/tr')->length===1,'Discount drill-down selects a single scoped request');
  list($html)=$get('/wp-admin/admin.php?page=adc-finance&finance_id='.$finance_id,$finance_cookie);$check(str_contains($html,'Synthetic provider')&&!str_contains($html,'Own decision excluded'),'Finance drill-down selects the requested record');
  list($html)=$get('/wp-admin/admin.php?page=adc-payments&deposit_id='.$deposit,$finance_cookie);$check(str_contains($html,'OV-D-1'),'Deposit drill-down selects the requested deposit');
@@ -59,4 +69,5 @@ try{
   $browser=proc_open(array('node',__DIR__.'/browser-workspace-overview.cjs'),array(0=>array('pipe','r'),1=>STDOUT,2=>STDERR),$bp,ABSPATH,null,array('bypass_shell'=>true));
   fwrite($bp[0],wp_json_encode(array('base'=>$base,'key'=>$key,'admin'=>$admin,'sales'=>$sales,'root'=>ABSPATH)));fclose($bp[0]);$check(proc_close($browser)===0,'Real browser Arabic/English desktop/mobile workspace checks pass');
  }
-}finally{proc_terminate($process);proc_close($process);if(is_file($log)){unlink($log);}}
+ $http_completed=true;
+}finally{proc_terminate($process);proc_close($process);if(is_file($log)){if($http_completed){unlink($log);}else{fwrite(STDERR,"Workspace HTTP failure log: $log\n");}}}

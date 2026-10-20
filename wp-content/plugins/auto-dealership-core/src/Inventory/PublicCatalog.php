@@ -194,18 +194,20 @@ final class PublicCatalog {
 			_prime_post_caches( $post_ids, true, true );
 		}
 
-		foreach ( $items as &$item ) {
-			$item = self::cast_item( $item );
-			$post_id = $item['public_post_id'];
-			$item['price_breakdown'] = \AutoDealership\Pricing\PublicVehiclePrice::public_breakdown(\AutoDealership\Pricing\PublicVehiclePrice::calculate((int)$item['retail_price'], $post_id));
-			$item['retail_price'] = $item['price_breakdown']['final_amount'];
-			$item['title'] = get_the_title( $post_id );
-			$item['url'] = get_permalink( $post_id );
-			$item['image'] = get_the_post_thumbnail_url( $post_id, 'large' ) ?: '';
-			unset( $item['public_post_id'] );
-		}
-		unset( $item );
-		return $items;
+		return GroupedModelCatalog::with_mappings( $post_ids, static function () use ( $items ): array {
+			foreach ( $items as &$item ) {
+				$item = self::cast_item( $item );
+				$post_id = $item['public_post_id'];
+				$item['price_breakdown'] = \AutoDealership\Pricing\PublicVehiclePrice::public_breakdown(\AutoDealership\Pricing\PublicVehiclePrice::calculate((int)$item['retail_price'], $post_id));
+				$item['retail_price'] = $item['price_breakdown']['final_amount'];
+				$item['title'] = get_the_title( $post_id );
+				$item['url'] = get_permalink( $post_id );
+				$item['image'] = get_the_post_thumbnail_url( $post_id, 'large' ) ?: '';
+				unset( $item['public_post_id'] );
+			}
+			unset( $item );
+			return $items;
+		} );
 	}
 
 	public static function catalog_total( array $raw_filters = array() ): int {

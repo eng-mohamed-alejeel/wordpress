@@ -7,6 +7,25 @@ defined('ABSPATH')||exit;
 
 /** One editorial page per brand/model/trim/year; physical identifiers never enter its public read model. */
 final class GroupedModelCatalog {
+	/** Mapping snapshots exist only while a bounded catalog page is assembled. */
+	private static array $mapping_snapshot = array();
+
+	public static function with_mappings(array $post_ids, callable $callback): array {
+		global $wpdb;
+		$previous = self::$mapping_snapshot;
+		try {
+			$ids = array_values(array_unique(array_filter(array_map('absint', $post_ids))));
+			if ($ids && get_option('adc_db_version') === Schema::VERSION) {
+				$mapped = $wpdb->get_col($wpdb->prepare('SELECT public_post_id FROM '.Schema::table('catalog_models').' WHERE public_post_id IN ('.implode(',', array_fill(0, count($ids), '%d')).')', $ids));
+				if (!$wpdb->last_error) {
+					self::$mapping_snapshot = array_replace($previous, array_fill_keys($ids, false), array_fill_keys(array_map('intval', $mapped), true));
+				}
+			}
+			return $callback();
+		} finally {
+			self::$mapping_snapshot = $previous;
+		}
+	}
 	public static function boot(): void {
 		$enqueue = static function(): void {
 			$screen = function_exists('get_current_screen') ? get_current_screen() : null;
@@ -26,7 +45,9 @@ final class GroupedModelCatalog {
 	}
 	public static function is_mapped(int $post_id): bool {
 		global $wpdb;
-		return get_option('adc_db_version') === Schema::VERSION && (bool)$wpdb->get_var($wpdb->prepare('SELECT id FROM '.Schema::table('catalog_models').' WHERE public_post_id=%d', $post_id));
+		if (get_option('adc_db_version') !== Schema::VERSION) { return false; }
+		if (array_key_exists($post_id, self::$mapping_snapshot)) { return self::$mapping_snapshot[$post_id]; }
+		return (bool)$wpdb->get_var($wpdb->prepare('SELECT id FROM '.Schema::table('catalog_models').' WHERE public_post_id=%d', $post_id));
 	}
 	public static function query(array $filters):\WP_Query{return new \WP_Query(array('post_type'=>'car','post_status'=>'publish','posts_per_page'=>$filters['per_page']??12,'paged'=>$filters['page']??1,'adc_public_catalog'=>true,'adc_catalog_filters'=>$filters));}
 	public static function catalog(array $filters):array{$query=self::query($filters);$items=array();foreach($query->posts as$post){$view=self::view((int)$post->ID);if($view){$items[]=array('id'=>(int)$post->ID,'public_post_id'=>(int)$post->ID,'brand'=>$view['brand_name'],'model'=>$view['model'],'model_year'=>$view['year'],'retail_price'=>$view['price']!==''?Money::from_sar($view['price']):0,'currency'=>'SAR','status'=>'available','colors'=>$view['catalog_model']['colors'],'variants'=>$view['catalog_model']['variants'],'url'=>get_permalink($post));}}return $items;}

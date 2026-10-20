@@ -7,6 +7,7 @@ use AutoDealership\Inventory\PublicCatalog;
 
 $performance_posts = array();
 $performance_vehicles = array();
+$performance_mapping_id = 0;
 $performance_table = Schema::table( 'vehicles' );
 $performance_now = current_time( 'mysql', true );
 $performance_home_sentinel = '__adc_missing_home__';
@@ -61,7 +62,31 @@ try {
 		return preg_match( '/\bFROM\s+([^\s]+)/i', $query, $match ) ? $match[1] : strtoupper( strtok( ltrim( $query ), " \t\r\n" ) );
 	}, $performance_queries ) );
 	adc_check( $query_count <= 25 && $elapsed < 3.0 && in_array( 'Performance Brand', $options['brand'], true ), sprintf( 'Cold catalog page, total and filter options stay within local budgets (%d queries, %.3f seconds; %s).', $query_count, $elapsed, wp_json_encode( $query_sources ) ) );
+	foreach ( array( 12, 24, 48 ) as $page_size ) {
+		$query_start = (int) $wpdb->num_queries;
+		$bounded = PublicCatalog::catalog( array_merge( $performance_filters, array( 'per_page'=>$page_size ) ) );
+		adc_check( $bounded === array_slice( $page_one, 0, $page_size ) && $wpdb->num_queries - $query_start <= 25, "Catalog page size $page_size preserves every public field within the query budget." );
+	}
+
+	// Cache positive and negative mappings only for this read, including failed reads.
+	$mapped_post = $performance_posts[0]; $unmapped_post = $performance_posts[1];
+	$performance_mapping_id = $wpdb->insert( Schema::table('catalog_models'), array('model_key'=>hash('sha256','performance-mapping'),'brand'=>'Performance Brand','model'=>'Mapping fixture','public_post_id'=>$mapped_post,'created_at'=>$performance_now) ) ? (int)$wpdb->insert_id : 0;
+	adc_check( $performance_mapping_id > 0, 'Create a disposable positive mapping fixture.' );
+	$query_start = (int)$wpdb->num_queries;
+	$mapping_results = \AutoDealership\Inventory\GroupedModelCatalog::with_mappings( array($mapped_post,$unmapped_post), static function() use($mapped_post,$unmapped_post): array {
+		return array(\AutoDealership\Inventory\GroupedModelCatalog::is_mapped($mapped_post),\AutoDealership\Inventory\GroupedModelCatalog::is_mapped($unmapped_post),\AutoDealership\Inventory\GroupedModelCatalog::is_mapped($unmapped_post));
+	} );
+	adc_check( array(true,false,false) === $mapping_results && 1 === $wpdb->num_queries - $query_start, 'One batch query caches both mapped and unmapped posts.' );
+	try {
+		\AutoDealership\Inventory\GroupedModelCatalog::with_mappings( array($mapped_post), static function(): array { throw new RuntimeException('mapping fixture exception'); } );
+		adc_check( false, 'Mapping exception must propagate.' );
+	} catch ( RuntimeException $exception ) {
+		adc_check( 'mapping fixture exception' === $exception->getMessage(), 'Mapping callback exceptions are not swallowed.' );
+	}
+	$wpdb->delete( Schema::table('catalog_models'), array('id'=>$performance_mapping_id) ); $performance_mapping_id = 0;
+	adc_check( !\AutoDealership\Inventory\GroupedModelCatalog::is_mapped($mapped_post), 'Mapping snapshot is discarded after callbacks and exceptions; later edits are visible.' );
 } finally {
+	if ( $performance_mapping_id ) { $wpdb->delete( Schema::table('catalog_models'), array('id'=>$performance_mapping_id) ); }
 	if ( $performance_vehicles ) {
 		$wpdb->query( "DELETE FROM $performance_table WHERE id IN (" . implode( ',', array_map( 'absint', $performance_vehicles ) ) . ')' );
 	}

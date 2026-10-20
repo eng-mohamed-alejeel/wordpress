@@ -49,6 +49,10 @@ jobs:
 
   workspace:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.0', '8.2']
     services:
       mariadb:
         image: mariadb:10.11
@@ -68,8 +72,8 @@ jobs:
       - name: Prepare isolated PHP integration environment
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
-          extensions: mysqli, mbstring, dom, xml, zip, gd
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, mbstring, dom, xml, zip, gd, curl
           coverage: none
           tools: none
       - name: Scoped workspace and canonical navigation acceptance
@@ -79,4 +83,6 @@ jobs:
       - name: Personal account isolation and portal regression
         env:
           ADC_PORTAL_ONLY: '1'
+        run: php wp-content/plugins/auto-dealership-core/tests/database-runner.php --isolated 33369
+      - name: Full isolated plugin regression including catalog query budgets
         run: php wp-content/plugins/auto-dealership-core/tests/database-runner.php --isolated 33369

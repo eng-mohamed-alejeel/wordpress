@@ -248,7 +248,13 @@ final class Navigation {
 				if ( ! $item['callback'] && ! in_array( $item['slug'], array( 'edit.php?post_type=car', 'edit.php?post_type=car_offer' ), true ) && ! str_starts_with( $item['slug'], 'edit-tags.php?' ) ) { continue; }
 				$capability = 'read';
 				foreach ( $item['capabilities'] as $candidate ) { if ( current_user_can( $candidate ) ) { $capability = $candidate; break; } }
-				add_submenu_page( $parent, $item['title'], $item['title'], $capability, $item['slug'], $item['callback'] );
+				$hook = add_submenu_page( $parent, $item['title'], $item['title'], $capability, $item['slug'], $item['callback'] );
+				if ( $hook && 'adc-onyx-documents' === $item['slug'] ) {
+					add_action( 'load-' . $hook, array( \AutoDealership\Sales\OnyxDocuments::class, 'validate_request' ) );
+				}
+				if ( $hook && 'adc-purchase-orders' === $item['slug'] ) {
+					add_action( 'load-' . $hook, array( PurchaseOrderPage::class, 'validate_request' ) );
+				}
 			}
 		}
 		// Color transfer tools remain available from the visual editor, without a second sidebar entry.
