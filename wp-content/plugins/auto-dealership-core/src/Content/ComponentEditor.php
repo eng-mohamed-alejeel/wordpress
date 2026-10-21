@@ -21,6 +21,7 @@ final class ComponentEditor {
 			'adc_metrics'=>array('الإحصاءات الموثقة','Documented metrics','about','أرقام من النظام أو إحصاءات يدوية موثقة بمصدر وتاريخ.','System figures or manual metrics with a dated source.'),
 			'adc_brand_name'=>array('اسم المنشأة','Business name','identity','اسم المنشأة من إعدادات المنصة، حسب لغة الزائر.','Business name from platform settings, in the visitor’s language.'),
 			'adc_legal_name'=>array('الاسم القانوني','Legal name','identity','الاسم القانوني من إعدادات المنصة، أو اسم المنشأة عند تركه فارغًا.','Legal name from platform settings, falling back to the business name.'),
+			'adc_country'=>array('الدولة','Country','identity','الدولة الصريحة من إعدادات المنصة حسب لغة الزائر.','The explicit country from platform settings, in the visitor’s language.'),
 			'adc_about_logo'=>array('شعار الموقع','Site logo','identity','الشعار المحفوظ في تخصيص الموقع.','Logo selected in site customization.'),
 			'adc_legal_contact'=>array('بيانات التواصل القانونية','Legal contact details','identity','اسم المنشأة والعنوان والبريد والهاتف بالنسخة المناسبة للغة.','Business name, address, email and phone in the selected language.'),
 			'car_dealer_cars'=>array('شبكة السيارات','Vehicle grid','vehicles','سيارات متاحة من الكتالوج مع إمكانية تحديد العدد.','Vehicles from the public catalog, with an adjustable count.'),

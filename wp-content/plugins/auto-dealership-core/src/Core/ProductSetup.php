@@ -11,7 +11,7 @@ final class ProductSetup {
 	private const PROFILE = 'adc_product_profile';
 	private const MAIL = 'adc_product_mail';
 	private const SECTIONS = array( 'identity', 'appearance', 'policy', 'mail', 'pages', 'readiness' );
-	private const PROFILE_KEYS = array( 'brand_ar', 'brand_en', 'legal_ar', 'legal_en', 'description_ar', 'description_en', 'hero_ar', 'hero_en', 'language', 'timezone' );
+	private const PROFILE_KEYS = array( 'brand_ar', 'brand_en', 'legal_ar', 'legal_en', 'country_ar', 'country_en', 'description_ar', 'description_en', 'hero_ar', 'hero_en', 'language', 'timezone' );
 	private const THEME_KEYS = array( 'primary_color', 'accent_color', 'description_en', 'phone', 'email', 'address', 'address_en', 'facebook', 'instagram', 'whatsapp', 'x', 'tiktok', 'snapchat', 'youtube', 'linkedin' );
 	private const POLICY_KEYS = array( 'vat_percent', 'reservation_hours', 'reservation_refund_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'privacy_retention_days' );
 	private const MAIL_KEYS = array( 'ADC_MAIL_MODE', 'ADC_SMTP_HOST', 'ADC_SMTP_PORT', 'ADC_SMTP_ENCRYPTION', 'ADC_SMTP_USERNAME', 'ADC_SMTP_PASSWORD', 'ADC_MAIL_FROM', 'ADC_MAIL_FROM_NAME' );
@@ -35,6 +35,7 @@ final class ProductSetup {
 		} );
 		add_shortcode( 'adc_brand_name', static fn(): string => esc_html( self::brand( Localization::language() ) ) );
 		add_shortcode( 'adc_legal_name', static fn(): string => esc_html( self::legal_name( Localization::language() ) ) );
+		add_shortcode( 'adc_country', static fn(): string => esc_html( self::country( Localization::language() ) ) );
 		add_shortcode( 'adc_legal_contact', array( self::class, 'legal_contact' ) );
 	}
 
@@ -72,6 +73,13 @@ final class ProductSetup {
 		$p = self::profile(); $lang = 'en' === $lang ? 'en' : 'ar';
 		return trim( (string) ( $p['legal_' . $lang] ?? '' ) ) ?: self::brand( $lang );
 	}
+	public static function country( string $lang = 'ar' ): string {
+		$p = self::profile(); $lang = 'en' === $lang ? 'en' : 'ar';
+		foreach ( array( 'country_' . $lang, 'country_' . ( 'en' === $lang ? 'ar' : 'en' ) ) as $key ) {
+			if ( isset( $p[$key] ) && '' !== trim( (string) $p[$key] ) ) { return wp_specialchars_decode( (string) $p[$key], ENT_QUOTES ); }
+		}
+		return '';
+	}
 	/** Plain text tokens only. Callers escape for their output context. */
 	public static function template( string $text, string $lang ): string {
 		return strtr( $text, array( '{site_name}' => self::brand( $lang ), '{legal_name}' => self::legal_name( $lang ) ) );
@@ -89,7 +97,7 @@ final class ProductSetup {
 	/** Review editable legacy page copy without touching URLs or historical records. */
 	private static function identity_review(): void {
 		echo '<h2>' . esc_html( self::t( 'معاينة الهوية', 'Identity preview' ) ) . '</h2><p><bdi>' . esc_html( self::brand( 'ar' ) ) . '</bdi> · <bdi dir="ltr">' . esc_html( self::brand( 'en' ) ) . '</bdi></p>';
-		echo '<p>' . esc_html( self::t( 'في محرر الصفحات استخدم [adc_brand_name] أو [adc_legal_name]. في حقول نصوص الصفحة الرئيسية استخدم {site_name} أو {legal_name}. لا تتغير الروابط وبيانات التواصل والمستندات الصادرة سابقًا.', 'In the page editor use [adc_brand_name] or [adc_legal_name]. In homepage copy fields use {site_name} or {legal_name}. URLs, contact details and previously issued documents remain unchanged.' ) ) . '</p>';
+		echo '<p>' . esc_html( self::t( 'في محرر الصفحات استخدم [adc_brand_name] أو [adc_legal_name] أو [adc_country]. في حقول نصوص الصفحة الرئيسية استخدم {site_name} أو {legal_name}. لا تتغير الروابط وبيانات التواصل والمستندات الصادرة سابقًا.', 'In the page editor use [adc_brand_name], [adc_legal_name] or [adc_country]. In homepage copy fields use {site_name} or {legal_name}. URLs, contact details and previously issued documents remain unchanged.' ) ) . '</p>';
 		$pages = get_posts( array( 'post_type'=>'page', 'post_status'=>array( 'publish', 'draft', 'private' ), 'numberposts'=>200, 'orderby'=>'ID', 'order'=>'ASC' ) );
 		$matches = array();
 		foreach ( $pages as $page ) {
@@ -109,7 +117,7 @@ final class ProductSetup {
 	}
 	private static function profile_defaults(): array {
 		$appearance = (array) get_option( 'car_dealer_theme_settings', array() );
-		return array( 'brand_ar'=>self::brand(), 'brand_en'=>self::brand( 'en' ), 'description_ar'=>(string) get_option( 'blogdescription', '' ), 'description_en'=>(string) ( $appearance['description_en'] ?? '' ), 'hero_ar'=>self::hero_description( 'ar' ), 'hero_en'=>self::hero_description( 'en' ), 'language'=>'ar', 'timezone'=>wp_timezone_string() );
+		return array( 'brand_ar'=>self::brand(), 'brand_en'=>self::brand( 'en' ), 'country_ar'=>'', 'country_en'=>'', 'description_ar'=>(string) get_option( 'blogdescription', '' ), 'description_en'=>(string) ( $appearance['description_en'] ?? '' ), 'hero_ar'=>self::hero_description( 'ar' ), 'hero_en'=>self::hero_description( 'en' ), 'language'=>'ar', 'timezone'=>wp_timezone_string() );
 	}
 
 	public static function mail_setting( string $name, string $default ): string {
@@ -477,7 +485,8 @@ final class ProductSetup {
 			self::form( $section ); echo '<table class="form-table" role="presentation">';
 			if ( 'identity' === $section ) {
 				$p = array_replace( self::profile_defaults(), self::profile() ); $fields = array( 'brand_ar'=>array( 'اسم المنشأة بالعربية', 'Business name (Arabic)' ), 'brand_en'=>array( 'اسم المنشأة بالإنجليزية', 'Business name (English)' ), 'legal_ar'=>array( 'الاسم القانوني بالعربية (اختياري)', 'Legal name (Arabic, optional)' ), 'legal_en'=>array( 'الاسم القانوني بالإنجليزية (اختياري)', 'Legal name (English, optional)' ), 'description_ar'=>array( 'وصف الموقع بالعربية', 'Site description (Arabic)' ), 'description_en'=>array( 'وصف الموقع بالإنجليزية', 'Site description (English)' ), 'hero_ar'=>array( 'وصف الواجهة بالعربية', 'Homepage description (Arabic)' ), 'hero_en'=>array( 'وصف الواجهة بالإنجليزية', 'Homepage description (English)' ), 'language'=>array( 'اللغة الافتراضية', 'Default language' ), 'timezone'=>array( 'المنطقة الزمنية، مثل Asia/Riyadh', 'Timezone, e.g. Asia/Riyadh' ) );
-				foreach ( $fields as $key=>$label ) { $default = 'brand_ar' === $key ? self::brand() : ( 'brand_en' === $key ? self::brand( 'en' ) : ( 'timezone' === $key ? wp_timezone_string() : ( 'language' === $key ? 'ar' : '' ) ) ); self::field( $key, self::t( ...$label ), (string) ( $p[$key] ?? $default ), 'text', 'language' === $key ? array( 'ar'=>'العربية', 'en'=>'English' ) : ( 'timezone' === $key ? array_combine( timezone_identifiers_list(), timezone_identifiers_list() ) : array() ) ); }
+				$fields['country_ar'] = array( 'الدولة بالعربية', 'Country (Arabic)' ); $fields['country_en'] = array( 'الدولة بالإنجليزية', 'Country (English)' );
+				foreach ( $fields as $key=>$label ) { $default = 'brand_ar' === $key ? self::brand() : ( 'brand_en' === $key ? self::brand( 'en' ) : ( 'country_ar' === $key ? self::country( 'ar' ) : ( 'country_en' === $key ? self::country( 'en' ) : ( 'timezone' === $key ? wp_timezone_string() : ( 'language' === $key ? 'ar' : '' ) ) ) ) ); self::field( $key, self::t( ...$label ), (string) ( $p[$key] ?? $default ), 'text', 'language' === $key ? array( 'ar'=>'العربية', 'en'=>'English' ) : ( 'timezone' === $key ? array_combine( timezone_identifiers_list(), timezone_identifiers_list() ) : array() ) ); }
 			} elseif ( 'appearance' === $section ) {
                 $p = (array) get_option( 'car_dealer_theme_settings', array() );
                 foreach ( array( 'phone'=>array( 'الهاتف', 'Phone' ), 'email'=>array( 'بريد التواصل', 'Contact email' ), 'address'=>array( 'العنوان بالعربية', 'Address (Arabic)' ), 'address_en'=>array( 'العنوان بالإنجليزية', 'Address (English)' ) ) as $key=>$label ) {
