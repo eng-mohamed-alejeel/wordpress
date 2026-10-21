@@ -167,13 +167,18 @@ final class SiteContent {
 			'latest'=>['ستظهر أحدث السيارات هنا فور إضافتها ونشرها. يسعد فريقنا مساعدتك في معرفة الخيارات المتاحة حاليًا.','New arrivals will appear here as they are published. Our team will be happy to help you explore the options currently available.'],
 			'offers'=>['لا توجد عروض منشورة حاليًا. استعرض السيارات المتاحة أو تواصل مع فريقنا لمعرفة الخيارات المناسبة لك.','There are no published offers at the moment. Browse available vehicles or contact our team to discuss your options.'],
 			'demand'=>['نجهّز اختيارات هذا القسم بعناية. يمكنك الآن استعراض الكتالوج ومقارنة السيارات بحسب احتياجك.','We are preparing the selections for this section. Explore the catalog and compare vehicles that suit your needs.'],
-			'reviews'=>['لم تُنشر آراء العملاء في هذا القسم بعد. يسعدنا الاستماع إلى تجربتك عبر صفحة التواصل.','No customer reviews have been published here yet. We welcome your feedback through our contact page.']
+			'reviews'=>['لم تُنشر آراء العملاء في هذا القسم بعد. يسعدنا أن تشاركنا تجربتك من حسابك.','No customer reviews have been published here yet. Share your experience from your account.']
 		];
 		if(!isset($messages[$key])) { return ''; }
 		$ids=['featured'=>'featured-vehicles','latest'=>'latest-vehicles','offers'=>'current-offers','demand'=>'selected-vehicles','reviews'=>'customer-reviews'];
 		$title=self::home_text($key,'title',self::t(...self::home_definitions()[$key]));
 		$html='<section id="'.esc_attr($ids[$key]).'" class="ab-section adc-home-empty-section adc-home-empty-'.esc_attr($key).'"><div class="container"><h2>'.esc_html($title).'</h2><div class="adc-home-empty"><span class="adc-home-empty-symbol" aria-hidden="true">'.('reviews'===$key?'❝':'◇').'</span><p>'.esc_html(self::t(...$messages[$key])).'</p>';
-		$page=get_page_by_path('contact'); if($page && 'publish'===$page->post_status) { $url=add_query_arg('lang',Localization::language(),get_permalink($page)); $html.='<a class="btn btn-primary" href="'.esc_url($url).'">'.esc_html(self::t('تواصل مع فريقنا','Contact our team')).'</a>'; }
+		if ('reviews' === $key) {
+			$url = is_user_logged_in() ? \AutoDealership\Portal\PortalAccess::url('reviews') : add_query_arg(array('cd_account'=>'login','portal_return'=>'reviews','lang'=>Localization::language()), home_url('/'));
+			$html .= '<a class="btn btn-primary" href="'.esc_url($url).'">'.esc_html(self::t('أضف تقييمك','Add your review')).'</a>';
+		} else {
+			$page=get_page_by_path('contact'); if($page && 'publish'===$page->post_status) { $url=add_query_arg('lang',Localization::language(),get_permalink($page)); $html.='<a class="btn btn-primary" href="'.esc_url($url).'">'.esc_html(self::t('تواصل مع فريقنا','Contact our team')).'</a>'; }
+		}
 		return $html.'</div></div></section>';
 	}
 	public static function home_layout(string $html,string $key,array $settings): string {

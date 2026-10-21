@@ -69,7 +69,7 @@ final class Reviews {
 	}
 	public static function content_rows(array $existing,string $lang):array {
 		$seen=array();foreach($existing as $row){$seen[hash('sha256',trim($row['name_'.$lang]).'|'.trim($row['text_'.$lang]).'|'.(int)$row['rating'])]=true;}
-		foreach(self::public_rows(48) as $row){$key=hash('sha256',trim($row['display_name']).'|'.trim($row['body']).'|'.(int)$row['rating']);if(isset($seen[$key])){continue;}$seen[$key]=true;$existing[]=array('id'=>'customer-review-'.$row['id'],'status'=>'published','order'=>-(int)$row['id'],'name_'.$lang=>$row['display_name'],'text_'.$lang=>$row['body'],'rating'=>$row['rating'],'image'=>0,'source'=>PortalAccess::t('رأي عميل من الموقع','Website customer review'),'original_language'=>$row['locale']);}return $existing;
+		foreach(self::public_rows(48) as $row){$key=hash('sha256',trim($row['display_name']).'|'.trim($row['body']).'|'.(int)$row['rating']);if(isset($seen[$key])){continue;}$seen[$key]=true;$existing[]=array('id'=>'customer-review-'.$row['id'],'status'=>'published','order'=>-(int)$row['id'],'name_'.$lang=>$row['display_name'],'text_'.$lang=>$row['body'],'rating'=>$row['rating'],'image'=>0,'source'=>PortalAccess::t('عميل مميز','Valued customer'),'original_language'=>$row['locale']);}return $existing;
 	}
 	public static function purge():void {
 		foreach(array('w3tc_flush_all','car_dealer_clear_public_page_cache') as $function){if(is_callable($function)){$function();}}
