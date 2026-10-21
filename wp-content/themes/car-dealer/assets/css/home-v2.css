@@ -27,8 +27,10 @@ body.admin-bar .ab-hero-v2 { --ab-hero-offset: 114px; }
 .ab-hero-v2 .ab-hero-eyebrow { margin: 0; }
 .ab-hero-v2 .ab-hero-desc { margin: 0; }
 .ab-hero-v2 .ab-actions { margin-top: 1.25rem; }
-.ab-hero-v2 .ab-hero-stats { margin-top: 1.25rem; padding-top: 1rem; }
 .ab-hero-v2 .ab-hero-panel { min-width: 0; }
+.ab-hero-v2 .ab-panel-options { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem .6rem; margin-block: .35rem .5rem; padding-block-start: .85rem; border-block-start: 1px solid color-mix(in srgb, var(--ab-hero-text) 22%, transparent); }
+.site .ab-hero-v2 .ab-panel-options strong { color: var(--ab-hero-text); font-size: 1.75rem; font-weight: 800; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.site .ab-hero-v2 .ab-panel-options span { color: var(--ab-hero-text); font-size: .875rem; line-height: 1.6; }
 #primary .ab-section[id] { scroll-margin-block-start: max(0px, calc(var(--ab-header-obstruction, 82px) + 1rem - var(--ab-header-scroll-padding, 0px))); }
 
 .ab-hero-v2::before {
@@ -218,15 +220,13 @@ body.admin-bar .ab-hero-v2 { --ab-hero-offset: 114px; }
   .ab-hero-v2 .ab-actions { display: flex; gap: .5rem; margin-top: 1rem; }
   .ab-hero-v2 .ab-actions > .btn { flex: 1 1 calc(50% - .5rem); min-width: min(100%, 8.5em); min-height: 48px; padding: .6rem .4rem; font-size: .875rem; line-height: 1.5; white-space: normal; gap: .35rem; justify-content: center; }
   .ab-hero-v2 .ab-actions .btn-icon { width: 18px; height: 18px; }
-  .ab-hero-v2 .ab-hero-stats { margin-top: 1rem; padding-top: .75rem; }
-  .ab-hero-v2 .ab-stat { display: flex; align-items: baseline; gap: .5rem; text-align: start; }
-  .ab-hero-v2 .ab-stat strong { font-size: 1.75rem; }
-  .ab-hero-v2 .ab-stat span { margin: 0; }
   .ab-hero-v2 .ab-hero-panel { padding: .9rem 1rem; }
   .ab-hero-v2 .ab-hero-panel-inner { grid-template-columns: minmax(0, 1fr) auto; gap: .2rem .75rem; }
   .ab-hero-v2 .ab-hero-panel-inner > :not(a) { grid-column: 1; }
   .ab-hero-v2 .ab-hero-panel .ab-panel-number { font-size: 2.25rem; }
-  .ab-hero-v2 .ab-hero-panel-inner > a { grid-column: 2; grid-row: 1 / 4; align-self: center; min-height: 44px; }
+  .ab-hero-v2 .ab-panel-options { margin-block: .4rem 0; padding-block-start: .55rem; gap: .2rem .4rem; }
+  .site .ab-hero-v2 .ab-panel-options strong { font-size: 1.375rem; }
+  .ab-hero-v2 .ab-hero-panel-inner > a { grid-column: 2; grid-row: 1 / 5; align-self: center; min-height: 44px; }
   .ab-hero-v2 .ab-hero-scroll-hint { margin-bottom: 3.5rem; }
 }
 

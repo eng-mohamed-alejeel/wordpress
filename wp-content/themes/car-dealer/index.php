@@ -49,13 +49,15 @@ foreach(array('featured'=>'featured-vehicles','why'=>'why-auto-brands','latest'=
 					<?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?>
 				</a><?php endif; ?>
 			</div>
-			<?php if ( $catalog_car_count > 0 ) : ?><div class="ab-hero-stats"><div class="ab-stat"><strong><?php echo esc_html( number_format_i18n( $catalog_car_count ) ); ?></strong><span><?php echo esc_html( car_dealer_text( 'خيارًا من السيارات', $catalog_car_count === 1 ? 'Vehicle option' : 'Vehicle options' ) ); ?></span></div></div><?php endif; ?>
 		</div>
-		<?php if ( $total_cars > 0 ) : ?><div class="ab-hero-panel">
+		<?php if ( $total_cars > 0 || $catalog_car_count > 0 ) : ?><div class="ab-hero-panel">
 			<div class="ab-hero-panel-inner">
+				<?php if ( $total_cars > 0 ) : ?>
 				<span class="ab-panel-label"><?php echo esc_html( $total_cars > 50 ? car_dealer_text( 'أكثر من', 'More than' ) : car_dealer_text( 'اختر سيارتك', 'Choose your vehicle' ) ); ?></span>
 				<strong class="ab-panel-number"><?php echo esc_html( number_format_i18n( $car_count_step ) ); ?></strong>
 				<small class="ab-panel-sub"><?php echo esc_html( car_dealer_text( 'سيارة متاحة', $total_cars === 1 ? 'Available vehicle' : 'Available vehicles' ) ); ?></small>
+				<?php endif; ?>
+				<?php if ( $catalog_car_count > 0 ) : ?><div class="ab-panel-options"><strong><?php echo esc_html( number_format_i18n( $catalog_car_count ) ); ?></strong><span><?php echo esc_html( car_dealer_text( 'خيارًا من السيارات', $catalog_car_count === 1 ? 'Vehicle option' : 'Vehicle options' ) ); ?></span></div><?php endif; ?>
 				<?php if ( $catalog_url ) : ?><a class="btn btn-primary btn-sm" href="<?php echo esc_url( $catalog_url ); ?>"><?php esc_html_e( 'تصفح الآن', 'car-dealer' ); ?></a><?php endif; ?>
 			</div>
 		</div><?php endif; ?>
