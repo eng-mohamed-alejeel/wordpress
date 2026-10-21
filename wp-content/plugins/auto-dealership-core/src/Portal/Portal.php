@@ -4,6 +4,7 @@ defined('ABSPATH') || exit;
 
 final class Portal {
 	public static function boot():void {
+		add_action('template_redirect',array(AccountDashboard::class,'validate_request'),4);
 		LiveChat::boot();CustomerJourney::boot();PortalOperations::boot();
 		add_action('wp_enqueue_scripts',array(LiveChat::class,'assets'));
 		add_action('admin_enqueue_scripts',static function(){if(PortalAccess::staff()){LiveChat::assets();}});
@@ -23,6 +24,9 @@ final class Portal {
 	public static function assets():void {
 		if(!isset($_GET['cd_account'])&&!in_array($_GET['page']??'',array('adc-conversations','adc-customer-reviews','adc-portal-operations'),true)){return;}
 		wp_enqueue_style('adc-customer-portal',plugins_url('assets/css/customer-portal.css',ADC_FILE),array(),ADC_VERSION);
+		if('dashboard'===($_GET['cd_account']??'')){
+			wp_enqueue_style('adc-account-work',plugins_url('assets/css/account-work.css',ADC_FILE),array('adc-customer-portal'),(string)filemtime(ADC_PATH.'assets/css/account-work.css'));
+		}
 		wp_enqueue_script('adc-customer-portal',plugins_url('assets/js/customer-portal.js',ADC_FILE),array(),ADC_VERSION,true);
 		wp_localize_script('adc-customer-portal','adcPortal',array('ajax'=>admin_url('admin-ajax.php'),'action'=>admin_url('admin-post.php'),'nonce'=>wp_create_nonce('adc_portal'),'pollNonce'=>wp_create_nonce('adc_portal_poll'),'lang'=>PortalAccess::language(),'saved'=>PortalAccess::t('تم الحفظ بنجاح.','Saved successfully.'),'failed'=>PortalAccess::t('تعذر الاتصال. احتفظنا بالنص لتتمكن من المحاولة مجددًا.','Connection failed. Your text is preserved so you can retry.'),'more'=>PortalAccess::t('تحميل المزيد من الرسائل','Load more messages'),'new'=>PortalAccess::t('رسائل جديدة','New messages')));
 	}

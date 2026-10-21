@@ -108,6 +108,7 @@ ob_start();WorkspaceOverviewView::render();$searched_html=ob_get_clean();
 $check(str_contains($searched_html,'workspace_search=Overview')&&str_contains($searched_html,'name="workspace_search"')&&str_contains($searched_html,'customer_id='.$c),'Search persists in navigation and customer workspace links remain available');
 foreach(array('FOREIGN_CUSTOMER_SECRET',"' OR 1=1 --",'Overview%_')as$needle){$_GET=array('workspace_task'=>'overdue','workspace_search'=>$needle);$result=Overview::snapshot();$check(0===$result['queues']['overdue']['count']&&!$result['rows'],'Follow-up search preserves branch/owner restrictions and literal matching: '.$needle);}
 wp_set_current_user($admin);$_GET=array();
+require __DIR__.'/account-work-scenarios.php';
 require __DIR__.'/admin-structure-scenarios.php';
 require __DIR__.'/workspace-overview-http.php';
 echo "PASS: $checks isolated workspace overview checks; maximum observed snapshot queries: $query_count.\n";

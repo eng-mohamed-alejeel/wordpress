@@ -5,8 +5,8 @@ defined('ABSPATH') || exit;
 /** Whitelisted personal GET filters. No actor or ownership parameter is accepted. */
 final class AccountFilters {
     public static function context():string {
-        $html='<div class="adc-p-account-context"><span>'.esc_html(PortalAccess::t('هذه مساحتك الشخصية؛ تعرض السجلات المرتبطة بحسابك فقط.','Your personal space shows only records linked to your account.')).'</span>';
-        if(current_user_can('adc_view_workspace')){$html.='<a href="'.esc_url(admin_url('admin.php?page=adc-workspace')).'">'.esc_html(PortalAccess::t('الانتقال إلى لوحة العمل','Open work dashboard')).'</a>';}
+        $html='<div class="adc-p-account-context"><span>'.esc_html((AccountDashboard::has_work_capability(wp_get_current_user())?PortalAccess::t('إعدادات بيانات حسابك وأمانه ومظهره. أعمالك اليومية متاحة في لوحة العمل.','Manage your account details, security, and appearance here. Daily tasks are available in your work dashboard.'):PortalAccess::t('هذه مساحتك الشخصية؛ تعرض السجلات المرتبطة بحسابك فقط.','Your personal space shows only records linked to your account.'))).'</span>';
+        if(AccountDashboard::available()){$html.='<a href="'.esc_url(AccountDashboard::url()).'">'.esc_html(PortalAccess::t('الانتقال إلى لوحة العمل','Open work dashboard')).'</a>';}
         return $html.'</div>';
     }
     public static function values(array $statuses=array()):array {

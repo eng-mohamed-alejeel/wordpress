@@ -35,12 +35,14 @@ foreach($paActors as $actor){
         $check(\AutoDealership\Accounts\CustomerRequestView::page('messages',1,array('request'=>$otherFixture['request']))['items']===array(),'direct request filter preserves ownership');
         $_GET['portal']='purchases';$_GET['sale']=(string)$otherFixture['sid'];ob_start();PortalView::render();$html=ob_get_clean();$check(!str_contains($html,$otherFixture['marker']),'direct purchase filter preserves ownership');unset($_GET['sale']);
     }
-    $_GET['portal']='overview';ob_start();PortalView::render();$html=ob_get_clean();$check(str_contains($html,'Read messages')&&str_contains($html,'adc-p-nav-count')&&str_contains($html,$own['marker']),'personal overview displays actionable own records and unread badge');
+    $_GET['portal']='overview';ob_start();PortalView::render();$html=ob_get_clean();
+    if($actor===$paActors[0]){$check(str_contains($html,'Read messages')&&str_contains($html,'adc-p-nav-count')&&str_contains($html,$own['marker']),'customer overview displays actionable own records and unread badge');}
+    else{$check(str_contains($html,'My account settings')&&str_contains($html,'name="display_name"')&&!str_contains($html,$own['marker'])&&!str_contains($html,'adc-p-stat')&&!str_contains($html,'adc-p-nav-count'),'staff/admin settings omit customer records and counters');}
     $check(Chat::read($own['thread'],(int)Chat::row($own['thread'])['last_public_id'])===true&&AccountOverview::snapshot()['counts']['messages']===0&&Chat::list(1,'unread',-1,0,true)===array(),'reading own conversation updates summary and filtered list consistently');
 }
 $empty=$make('personal_empty_admin','administrator',0,true);wp_set_current_user($empty);$_GET=array('cd_account'=>'dashboard','portal'=>'overview','lang'=>'en');Access::request_scope(false);$snapshot=AccountOverview::snapshot();
 $check(!$snapshot['errors']&&array_sum($snapshot['counts'])===0&&$snapshot['events']===array(),'administrator with no personal records has a genuinely empty account');
-ob_start();PortalView::render();$html=ob_get_clean();$check(str_contains($html,'Browse cars')&&!str_contains($html,'ACCOUNT_ONLY_'),'empty elevated account offers next actions without tenant data');
+ob_start();PortalView::render();$html=ob_get_clean();$check(str_contains($html,'My account settings')&&!str_contains($html,'Browse cars')&&!str_contains($html,'ACCOUNT_ONLY_'),'empty elevated account shows settings without customer next actions or tenant data');
 $fault=static fn($sql)=>str_contains($sql,'SELECT COUNT(*) amount FROM '.$wpdb->prefix.'car_dealer_messages')?'SELECT missing_account_column FROM '.$wpdb->prefix.'car_dealer_messages':$sql;
 $previousErrors=$wpdb->suppress_errors(true);add_filter('query',$fault);try{$snapshot=AccountOverview::snapshot();}finally{remove_filter('query',$fault);$wpdb->suppress_errors($previousErrors);}
 $check(null===$snapshot['counts']['requests']&&isset($snapshot['errors']['requests'])&&0===$snapshot['counts']['documents'],'query failure is unknown, never a successful zero, and other widgets remain independent');

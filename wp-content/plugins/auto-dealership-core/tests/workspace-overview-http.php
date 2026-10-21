@@ -19,6 +19,10 @@ try{
  $get=static function($path,$cookie='')use($base){$body=file_get_contents($base.$path,false,stream_context_create(array('http'=>array('ignore_errors'=>true,'timeout'=>15,'header'=>$cookie?'Cookie: '.$cookie:''))));$headers=$http_response_header??array();return array($body,$headers);};
  $session=static function($user)use($get,$key){list($body,$headers)=$get('/adc-test-session?'.http_build_query(array('key'=>$key,'user_id'=>$user)));$cookies=array();foreach($headers as$header){if(preg_match('/^Set-Cookie:\s*([^;]+)/i',$header,$match)){$cookies[]=$match[1];}}return implode('; ',$cookies);};
  $sales_cookie=$session($sales);$finance_cookie=$session($finance);$admin_cookie=$session($admin);
+ foreach(array('workspace_branch='.$b['id'],'workspace_branch[]=1')as$filter){
+  list($html,$headers)=$get('/?cd_account=dashboard&account_context=work&'.$filter,$sales_cookie);
+  $check(str_contains($headers[0]??'','403')&&!str_contains($html,'FOREIGN_CUSTOMER_SECRET')&&!str_contains($html,'adc-work-indicator'),'Frontend branch denial occurs before output and reveals no work records: '.$filter);
+ }
  list($html,$headers)=$get('/wp-admin/admin.php?page=adc-workspace&workspace_task=overdue',$sales_cookie);
  $check(str_contains($headers[0]??'','200')&&str_contains($html,'Operational overview')&&!str_contains($html,'FOREIGN_CUSTOMER_SECRET'),'HTTP sales workspace renders scoped English overview');
  $check(!str_contains($html,'Payments awaiting your review')&&!str_contains($html,'page=adc-profit-margin'),'HTTP sales page omits financial work and margin settings');

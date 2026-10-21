@@ -8,7 +8,10 @@ get_header();
 if(in_array($view,array('lostpassword','resetpass'),true)&&$core_available&&class_exists('\\AutoDealership\\Accounts\\PasswordRecovery')){
 	include __DIR__.'/account-recovery.php';get_footer();return;
 }
-if('dashboard'===$view && is_user_logged_in() && class_exists('\\AutoDealership\\Portal\\PortalView') && \AutoDealership\Portal\PortalAccess::ready()) {
+if('dashboard'===$view && is_user_logged_in() && class_exists('\\AutoDealership\\Portal\\AccountDashboard') && \AutoDealership\Portal\AccountDashboard::work()) {
+	\AutoDealership\Portal\WorkDashboardView::render();get_footer();return;
+}
+if('dashboard'===$view && is_user_logged_in() && class_exists('\\AutoDealership\\Portal\\PortalView') && (\AutoDealership\Portal\PortalAccess::ready() || (class_exists('\\AutoDealership\\Portal\\AccountDashboard') && \AutoDealership\Portal\AccountDashboard::has_work_capability(wp_get_current_user())))) {
 	\AutoDealership\Portal\PortalView::render();get_footer();return;
 }
 ob_start();

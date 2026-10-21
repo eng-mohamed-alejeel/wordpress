@@ -15,6 +15,7 @@ const check = (ok, label) => { if (!ok) throw new Error(label); checks++; proces
     check(font.headers()['x-adc-test-php']===config.php_version, 'HTTP runtime matches the PHP CLI version being tested');
   } finally { await assets.close(); }
   if(process.env.ADC_PRODUCT_RECOVERY_ONLY==='1'){await require('./password-recovery-browser.cjs')({browser,config,check});process.stdout.write(`Password recovery package browser passed (${checks} checks). No real email sent.\n`);return;}
+  if(process.env.ADC_PRODUCT_SETTINGS_ONLY==='1'){await require('./account-settings-browser.cjs')({browser,config,check});process.stdout.write(`Account settings package browser passed (${checks} checks).\n`);return;}
   if(process.env.ADC_PRODUCT_ADMIN_ONLY==='1'){await require('./admin-structure-package-browser.cjs')({browser,config,check});process.stdout.write(`Admin package browser passed (${checks} checks).\n`);return;}
   if(process.env.ADC_PRODUCT_PERSONAL_ONLY==='1'){const errors=[];await require('./personal-account-browser.cjs')({browser,config,check,errors});check(errors.length===0,'Personal account scripts have no runtime errors: '+errors.join(' | '));process.stdout.write(`Personal account package browser passed (${checks} checks).\n`);return;}
   if(process.env.ADC_PRODUCT_PORTAL_ONLY==='1'){await require('./portal-browser.cjs')({browser,config,check,errors:[]});process.stdout.write(`Portal package browser passed (${checks} checks).\n`);return;}

@@ -234,7 +234,7 @@ require_once ADC_PATH . 'src/API/ResponseContract.php';
 require_once ADC_PATH . 'src/API/OpenApiSpecification.php';
 require_once ADC_PATH . 'src/API/CurrencyContract.php';
 require_once ADC_PATH . 'src/API/Routes.php';
-foreach ( array('PortalAccess','Conversations','Reviews','PortalMail','PortalPrivacy','AccountOverview','AccountFilters','PortalView','PortalAdmin','PortalMigration','StaffPresence','LiveChat','CustomerJourney','PortalOperations','Portal') as $portal_class ) {
+foreach ( array('PortalAccess','Conversations','Reviews','PortalMail','PortalPrivacy','AccountOverview','AccountDashboard','WorkDashboard','WorkDashboardView','AccountFilters','PortalView','PortalAdmin','PortalMigration','StaffPresence','LiveChat','CustomerJourney','PortalOperations','Portal') as $portal_class ) {
 	require_once ADC_PATH . 'src/Portal/' . $portal_class . '.php';
 }
 \AutoDealership\Portal\Portal::boot();

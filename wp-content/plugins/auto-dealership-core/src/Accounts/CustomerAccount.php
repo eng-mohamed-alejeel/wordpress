@@ -50,6 +50,7 @@ final class CustomerAccount {
 	/** Whether a customer-only account should use the public account workspace. */
 	public static function should_redirect_admin( \WP_User $user ): bool {
 		return (bool) array_intersect( array( 'car_dealer_customer', 'subscriber' ), (array) $user->roles )
+			&& ! ( class_exists( '\\AutoDealership\\Portal\\AccountDashboard' ) && \AutoDealership\Portal\AccountDashboard::has_work_capability( $user ) )
 			&& ! user_can( $user, 'edit_posts' )
 			&& ! user_can( $user, 'adc_view_conversations' )
 			&& ! user_can( $user, 'adc_moderate_reviews' )
