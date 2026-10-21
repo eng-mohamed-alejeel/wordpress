@@ -302,7 +302,7 @@ body.admin-bar .ab-hero-v2 { --ab-hero-offset: 114px; }
 #latest-vehicles .car-image img,
 #latest-vehicles .car-image-placeholder { inline-size: 100%; block-size: 100%; }
 #latest-vehicles .car-image-placeholder svg { max-inline-size: 75%; max-block-size: 150px; }
-#latest-vehicles .car-details { flex: 1 1 auto; display: flex; flex-direction: column; }
+#latest-vehicles .car-details { flex: 1 1 auto; min-width: 0; }
 #latest-vehicles .car-card-actions { margin-block-start: auto; }
 
 /* Keep sparse rows at their normal card width; empty tracks stay empty. */

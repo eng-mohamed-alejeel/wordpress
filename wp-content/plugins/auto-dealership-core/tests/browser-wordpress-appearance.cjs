@@ -56,6 +56,8 @@ async function chooseAppearance(page, appearance) {
                     const preview = page.frames().find(f => f.url().includes('customize_changeset_uuid'));
                     if (preview) {
                         await preview.waitForFunction(value => document.documentElement.dataset.abTheme === value, appearance);
+                        await preview.waitForSelector('main');
+                        await preview.waitForLoadState('load');
                         report.push({ route: 'customizer/preview-frame', mode: appearance, ...await axe(preview) });
                     }
                 }
@@ -64,7 +66,8 @@ async function chooseAppearance(page, appearance) {
                 console.log(`${route} ${appearance}: ${report.at(-1).violations.map(v => v.id + '(' + v.nodes.length + ')').join(', ') || 'PASS'}`);
             }
             if (customizer) {
-                for (const section of ['title_tagline', 'car_dealer_appearance', 'car_dealer_contact']) {
+                assert.equal(await page.evaluate(() => !!wp.customize.section('car_dealer_appearance')), false, 'Plugin brand palette owns colours without the retired theme section');
+                for (const section of ['title_tagline', 'car_dealer_contact']) {
                     await page.evaluate(id => wp.customize.section(id).expand(), section);
                     await page.waitForTimeout(500);
                     for (const appearance of ['light', 'dark']) {
@@ -72,14 +75,6 @@ async function chooseAppearance(page, appearance) {
                         await page.waitForTimeout(800);
                         report.push({ route: 'customizer/' + section, mode: appearance, ...await scan(page) });
                         await page.screenshot({ path: path.join(output, section + '-' + appearance + '.png') });
-                    }
-                    if (section === 'car_dealer_appearance') {
-                        await page.locator('#customize-control-car_dealer_theme_settings-primary_color .wp-color-result').click();
-                        for (const appearance of ['light', 'dark']) {
-                            await mode(page, appearance);
-                            report.push({ route: 'color-picker', mode: appearance, ...await scan(page) });
-                            await page.screenshot({ path: path.join(output, 'color-picker-' + appearance + '.png') });
-                        }
                     }
                     if (section === 'title_tagline') {
                         await page.locator('#customize-control-custom_logo .upload-button').click();

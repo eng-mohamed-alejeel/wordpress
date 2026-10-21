@@ -1,6 +1,6 @@
 <?php
 /** Synthetic fixtures only, loaded by the guarded loopback/isolated-database router. */
-if(PHP_SAPI!=='cli-server'||!preg_match('/\Aadc_verify_[a-f0-9]{16}\z/',DB_NAME)){exit(1);}
+if((PHP_SAPI!=='cli-server'&&!(PHP_SAPI==='apache2handler'&&getenv('ADC_PRODUCT_TEST_APACHE')==='1'))||!preg_match('/\Aadc_verify_[a-f0-9]{16}\z/',DB_NAME)){exit(1);}
 if(get_option('adc_test_recovery_enabled',false)){
 	remove_all_filters('pre_wp_mail');
 	add_filter('pre_wp_mail',static function($result,$mail){

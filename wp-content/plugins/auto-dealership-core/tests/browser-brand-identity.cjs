@@ -166,7 +166,7 @@ const auditTextContrast = require('./browser-color-audit.cjs');
             await pause(350); // Native login links animate color when switching themes.
             report.push(await state());
             contrasts.push(await audit());
-            check(await evaluate("document.querySelectorAll('[data-ab-toggle]').length===1"), mode + ' login has appearance control');
+            check(await evaluate("document.querySelectorAll('.site-header [data-ab-toggle]').length===1 && document.querySelectorAll('.site-footer [data-ab-toggle]').length===1"), mode + ' login has appearance control');
         }
         const authFile=path.resolve(__dirname,'../../../../.tmp/dashboard-browser-session.json');
         assert.ok(fs.existsSync(authFile), 'Prepare the temporary local dashboard session before running this acceptance suite.');

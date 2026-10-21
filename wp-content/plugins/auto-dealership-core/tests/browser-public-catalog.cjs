@@ -10,6 +10,10 @@ const assert = require('node:assert/strict');
     const input = JSON.parse(fs.readFileSync(0, 'utf8'));
     assert.match(input.origin, /^http:\/\/127\.0\.0\.1:[0-9]+$/);
     assert.ok(Number.isInteger(input.car_id) && input.car_id > 0, 'A mapped catalog post is required.');
+    const font=await fetch(input.origin+'/wp-content/plugins/auto-dealership-core/assets/fonts/tajawal/Tajawal-Regular.ttf',{redirect:'manual'});
+    assert.equal(font.status,200,'Catalog fixture serves bundled fonts without a WordPress redirect');
+    assert.match(font.headers.get('content-type') || '',/^font\//,'Catalog fixture declares a font media type');
+    await font.arrayBuffer();
     const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'adc-catalog-browser-'));
     const browser = spawn(process.env.ADC_BROWSER || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', [
         '--headless=new', '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=0',
@@ -80,7 +84,7 @@ const assert = require('node:assert/strict');
             await call('Page.navigate', { url: input.origin + url });
             await wait(`document.readyState === 'complete' && !!document.querySelector(${JSON.stringify(selector)})`, selector);
         };
-        const artifacts = path.resolve(__dirname, '../../../../docs/artifacts/catalog');
+        const artifacts = path.resolve(process.env.ADC_TEST_ARTIFACT_DIR || path.join(__dirname, '../../../../.tmp/catalog-acceptance'));
         fs.mkdirSync(artifacts, { recursive: true });
 
         await navigate('/?post_type=car', '.ab-filter-authoritative');
@@ -131,7 +135,7 @@ const assert = require('node:assert/strict');
 		await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
 		await navigate('/?post_type=car&lang=en', '.ab-filter-authoritative');
 		check(await evaluate("document.documentElement.lang === 'en' && document.documentElement.dir === 'ltr' && getComputedStyle(document.documentElement).direction === 'ltr' && document.querySelector('.archive-content').lang === 'en'"), 'English catalog declares English and renders LTR at the document and content levels.');
-		const englishArchiveCopy = await evaluate("(() => ({ heading: document.querySelector('.archive-hero h1')?.textContent.trim() || '', search: document.querySelector('[name=search]')?.labels?.[0]?.innerText.trim() || '', count: document.querySelector('.catalog-result-count')?.innerText.trim() || '' }))()");
+		const englishArchiveCopy = await evaluate("(() => ({ heading: document.querySelector('.archive-hero h1')?.textContent.trim() || '', search: document.querySelector('.ab-filter-authoritative [name=search]')?.getAttribute('aria-label') || document.querySelector('.ab-filter-authoritative [name=search]')?.labels?.[0]?.textContent.trim() || '', count: document.querySelector('.catalog-result-count')?.innerText.trim() || '' }))()");
 		check(englishArchiveCopy.heading.includes('Browse '+input.brand_name+' Vehicles') && englishArchiveCopy.search.includes('Search') && englishArchiveCopy.count.includes('available option'), `English archive heading, filters and result announcement are translated (${JSON.stringify(englishArchiveCopy)}).`);
 		check(await evaluate("document.querySelector('.catalog-language-switch [lang=en]').getAttribute('aria-current') === 'page' && new URL(document.querySelector('.catalog-language-switch [lang=ar]').href).searchParams.get('lang') === null"), 'Catalog language switch exposes the active language and a clean Arabic URL.');
 		check(await evaluate("document.querySelector('.car-price').textContent.startsWith('SAR ') && new URL(document.querySelector('.car-title a').href).searchParams.get('lang') === 'en' && !/[\u0600-\u06ff]/.test(document.querySelector('.archive-content').innerText)"), 'English cards retain language links, format SAR and contain no Arabic interface copy.');
@@ -141,7 +145,8 @@ const assert = require('node:assert/strict');
 
 		await navigate('/?post_type=car&p=' + input.car_id + '&lang=en', '.car-single');
 		check(await evaluate("document.querySelector('.car-single').lang === 'en' && document.querySelector('.car-single').dir === 'ltr' && document.querySelector('.car-single-price').textContent.startsWith('SAR ') && document.querySelector('.car-single-actions').innerText.includes('Request price')"), 'English vehicle detail renders LTR with translated actions and SAR price.');
-		check(await evaluate("document.querySelector('.car-specification').innerText.includes('Model') && document.querySelector('.car-specification').innerText.includes('Hybrid') && document.querySelector('.car-specification').innerText.includes('SUV') && document.querySelector('.cd-booking-form h2').innerText.includes('Book a test drive')"), 'English detail specifications and lead forms use translated public copy.');
+		const englishDetailCopy = await evaluate("({specifications:document.querySelector('.car-specification').innerText,booking:document.querySelector('.cd-booking-form h2').textContent.trim()})");
+		check(englishDetailCopy.specifications.includes('Model') && englishDetailCopy.specifications.includes('Hybrid') && englishDetailCopy.specifications.includes('SUV') && englishDetailCopy.booking.includes('Book a test drive'), 'English detail specifications and lead forms use translated public copy: '+JSON.stringify(englishDetailCopy));
 		await evaluate("(() => { const form=document.querySelector('.cd-lead-form'); form.elements.name.value='English Catalog Visitor'; form.elements.email.value='catalog-en@example.test'; form.elements.phone.value='+966500000321'; if(form.elements.privacy_consent)form.elements.privacy_consent.checked=true; form.requestSubmit(); })()");
 		await wait("document.querySelector('.cd-lead-form .cd-form-status').innerText.includes('request has been received')", 'English catalog lead response');
 		check(await evaluate("document.querySelector('.cd-lead-form .cd-form-status').innerText.includes('successfully')"), 'English catalog lead submission returns a localized success message.');
@@ -166,7 +171,8 @@ const assert = require('node:assert/strict');
 			const screenshot = await call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
 			fs.writeFileSync(path.join(artifacts, `catalog-en-${width}.png`), Buffer.from(screenshot.data, 'base64'));
 		}
-		const timing = await evaluate("(() => { const nav=performance.getEntriesByType('navigation')[0]; return { duration: nav.duration, dom: nav.domContentLoadedEventEnd, resources: performance.getEntriesByType('resource').filter(entry => entry.name.startsWith(location.origin)).length }; })()");
+		// Polling and form interactions after load are not part of the navigation resource budget.
+		const timing = await evaluate("(() => { const nav=performance.getEntriesByType('navigation')[0]; return { duration: nav.duration, dom: nav.domContentLoadedEventEnd, resources: performance.getEntriesByType('resource').filter(entry => entry.name.startsWith(location.origin) && entry.startTime <= nav.loadEventEnd).length }; })()");
 		check(timing.duration < 5000 && timing.dom < 4000 && timing.resources <= 40, `Synthetic English catalog meets local navigation budgets (${Math.round(timing.duration)}ms load, ${timing.resources} local resources).`);
         check(errors.length === 0, `No uncaught catalog JavaScript errors: ${errors.join(';')}`);
         check(badAssets.length === 0, `Catalog CSS and JavaScript assets load successfully: ${badAssets.join(';')}`);

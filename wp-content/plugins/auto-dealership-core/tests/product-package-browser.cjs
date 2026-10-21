@@ -7,6 +7,13 @@ let checks = 0;
 const check = (ok, label) => { if (!ok) throw new Error(label); checks++; process.stdout.write(`PASS Package browser: ${label}\n`); };
 (async () => {
   browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+  const assets = await browser.newContext();
+  try {
+    const font = await assets.request.get(config.base + '/wp-content/plugins/auto-dealership-core/assets/fonts/tajawal/Tajawal-Regular.ttf', {maxRedirects:0});
+    const fontBytes = await font.body();
+    check(font.status()===200 && (font.headers()['content-type'] || '').startsWith('font/ttf') && fontBytes.length>1000, 'bundled fonts are served directly with their correct media type: '+JSON.stringify({status:font.status(),type:font.headers()['content-type'],bytes:fontBytes.length,...(font.status()!==200 ? {response:fontBytes.toString('utf8').slice(0,500)} : {})}));
+    check(font.headers()['x-adc-test-php']===config.php_version, 'HTTP runtime matches the PHP CLI version being tested');
+  } finally { await assets.close(); }
   if(process.env.ADC_PRODUCT_RECOVERY_ONLY==='1'){await require('./password-recovery-browser.cjs')({browser,config,check});process.stdout.write(`Password recovery package browser passed (${checks} checks). No real email sent.\n`);return;}
   if(process.env.ADC_PRODUCT_ADMIN_ONLY==='1'){await require('./admin-structure-package-browser.cjs')({browser,config,check});process.stdout.write(`Admin package browser passed (${checks} checks).\n`);return;}
   if(process.env.ADC_PRODUCT_PERSONAL_ONLY==='1'){const errors=[];await require('./personal-account-browser.cjs')({browser,config,check,errors});check(errors.length===0,'Personal account scripts have no runtime errors: '+errors.join(' | '));process.stdout.write(`Personal account package browser passed (${checks} checks).\n`);return;}

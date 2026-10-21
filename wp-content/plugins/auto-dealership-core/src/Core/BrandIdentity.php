@@ -9,7 +9,7 @@ final class BrandIdentity {
         foreach ( array( 'wp_enqueue_scripts', 'admin_enqueue_scripts', 'login_enqueue_scripts' ) as $hook ) {
             add_action( $hook, static function (): void {
                 self::tokens();
-                wp_enqueue_style( 'autobrands-palette', plugins_url( 'assets/css/brand-palette.css', ADC_FILE ), array( 'autobrands-ui' ), ADC_VERSION );
+                wp_enqueue_style( 'autobrands-palette', plugins_url( 'assets/css/brand-palette.css', ADC_FILE ), array( 'autobrands-ui' ), (string) filemtime( ADC_PATH . 'assets/css/brand-palette.css' ) );
             }, 999 );
         }
         foreach ( array( 'wp_enqueue_scripts', 'admin_enqueue_scripts', 'login_enqueue_scripts', 'customize_controls_enqueue_scripts' ) as $hook ) {

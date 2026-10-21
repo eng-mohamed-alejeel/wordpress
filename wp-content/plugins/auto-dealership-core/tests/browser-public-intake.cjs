@@ -44,24 +44,30 @@ const assert = require('node:assert/strict');
         const source = fs.readFileSync(path.join(__dirname, '../assets/js/public-intake.js'), 'utf8');
         const result = await call('Runtime.evaluate', {
             returnByValue: true,
-            expression: `(() => {
+            awaitPromise: true,
+            expression: `(async () => {
                 document.body.innerHTML = '<form class="cd-ajax-form" data-action="car_dealer_contact"><input name="message" value="first"><input name="nonce" value="nonce-1"></form><form class="cd-ajax-form" data-action="car_dealer_booking"><input name="date" value="2030-01-01"></form><form id="unrelated"></form>';
+                const seen = [];
+                window.adcPublicIntake = {ajaxUrl: 'https://fixture.invalid/intake', nonce: 'fixture'};
+                window.fetch = async (url, options) => {
+                    if (url !== window.adcPublicIntake.ajaxUrl) throw new Error('Unexpected fixture request');
+                    seen.push(options.body.get('idempotency_key'));
+                    return {json: async () => ({success:false,data:{message:'Synthetic retry response'}})};
+                };
                 ${source}
                 const forms = document.querySelectorAll('form');
-                const seen = [];
-                document.addEventListener('submit', event => { event.preventDefault(); seen.push(new FormData(event.target).get('idempotency_key')); });
-                const submit = form => { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); return seen.at(-1); };
-                const first = submit(forms[0]);
-                const retry = submit(forms[0]);
+                const submit = async form => { const count=seen.length; form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await new Promise(resolve=>setTimeout(resolve,0)); return seen.length>count ? seen.at(-1) : null; };
+                const first = await submit(forms[0]);
+                const retry = await submit(forms[0]);
                 forms[0].elements.nonce.value = 'nonce-2';
-                const nonceRetry = submit(forms[0]);
+                const nonceRetry = await submit(forms[0]);
                 forms[0].elements.message.value = 'changed';
-                const changed = submit(forms[0]);
+                const changed = await submit(forms[0]);
                 forms[0].reset();
                 const resetCleared = !forms[0].querySelector('[name="idempotency_key"]');
-                const reset = submit(forms[0]);
-                const booking = submit(forms[1]);
-                const unrelated = submit(forms[2]);
+                const reset = await submit(forms[0]);
+                const booking = await submit(forms[1]);
+                const unrelated = await submit(forms[2]);
                 return { first, retry, nonceRetry, changed, resetCleared, reset, booking, unrelated, fields: forms[0].querySelectorAll('[name="idempotency_key"]').length };
             })()`
         });
@@ -69,7 +75,7 @@ const assert = require('node:assert/strict');
         const value = result.result.value;
         let checks = 0;
         const check = (condition, message) => { assert.ok(condition, message); ++checks; console.log(`PASS: ${message}`); };
-        check(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value.first), 'Capture handler provides a UUID v4 before bubble FormData serialization.');
+        check(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value.first), 'Capture handler includes a UUID v4 in outgoing FormData.');
         check(value.first === value.retry, 'Unchanged form retry retains its request key.');
         check(value.first === value.nonceRetry, 'Refreshing a nonce does not duplicate the request key.');
         check(value.changed !== value.first, 'Changed form content receives a fresh request key.');

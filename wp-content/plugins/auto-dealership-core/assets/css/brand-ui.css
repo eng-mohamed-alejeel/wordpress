@@ -73,7 +73,7 @@
 .site .ab-hero-eyebrow { background: var(--ab-brand-navy); }
 .site .ab-hero-desc { color: var(--ab-inverse); }
 .adc-admin-shell .adc-workspace-hero { background: linear-gradient(120deg, var(--ab-brand-navy), var(--ab-brand-blue)); }
-.adc-admin-shell.adc-admin .wrap .adc-workspace-hero :is(h1, p, span) { color: var(--ab-inverse); }
+.adc-admin-shell.adc-admin .wrap .adc-workspace-hero > div > :is(h1, p, span) { color: var(--ab-inverse); }
 .adc-admin-native .welcome-panel .welcome-panel-close { color: var(--ab-link); }
 /* Short component flourishes finish promptly; the homepage hero keeps its ambient motion. */
 .site :is(.ab-float-wa-pulse, .ab-cta-icon, .ab-feature-icon) { animation-duration: 2s; animation-delay: 0s; animation-iteration-count: 1; }

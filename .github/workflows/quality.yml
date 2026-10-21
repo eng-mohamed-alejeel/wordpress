@@ -41,6 +41,8 @@ jobs:
           php wp-content/plugins/auto-dealership-core/tests/authentication-guard.php
           php wp-content/plugins/auto-dealership-core/tests/newsletter-language.php
           php wp-content/plugins/auto-dealership-core/tests/response-contract.php
+          php wp-content/plugins/auto-dealership-core/tests/localization.php
+          php tools/check-ui-localization.php
       - name: Pinned Intelephense analysis of owned code
         if: matrix.php == '8.2'
         run: |
@@ -73,7 +75,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mysqli, mbstring, dom, xml, zip, gd, curl
+          extensions: mysqli, mbstring, dom, xml, zip, gd, curl, fileinfo
           coverage: none
           tools: none
       - name: Scoped workspace and canonical navigation acceptance

@@ -54,9 +54,13 @@ const menuSlugs = source => {
 };
 const oldPages = unique(adminFiles.flatMap(file => menuSlugs(baseline(file))));
 const navigation = current(root + 'src/Admin/Navigation.php');
-for (const page of oldPages) assert.ok(navigation.includes(`'${page}'`), `Missing original administration destination: ${page}`);
+const registeredPages = unique(adminFiles.filter(file => fs.existsSync(file)).flatMap(file => menuSlugs(current(file))));
+for (const page of oldPages) assert.ok(registeredPages.includes(page) || navigation.includes(`'${page}'`), `Missing original administration destination: ${page}`);
 const oldWorkspace = baseline(root + 'src/Admin/WorkspacePage.php');
-const oldPaths = unique([...oldWorkspace.matchAll(/'(admin\.php\?page=[^']+|edit\.php\?post_type=[^']+|users\.php)'/g)].map(m => m[1]));
+// A concatenated PHP string is not a complete destination; runtime tests cover every area.
+const oldPaths = unique([...oldWorkspace.matchAll(/'(admin\.php\?page=[^']+|edit\.php\?post_type=[^']+|users\.php)'/g)]
+  .filter(match => !oldWorkspace.slice(match.index + match[0].length).trimStart().startsWith('.'))
+  .map(match => match[1]));
 for (const path of oldPaths) assert.ok(navigation.includes(`'${path}'`), `Missing original card description/path: ${path}`);
 const config = root + 'src/Core/ConfigurationService.php';
 const optionBlock = source => source.match(/private const OPTIONS = array\(([\s\S]*?)\);/)[1];

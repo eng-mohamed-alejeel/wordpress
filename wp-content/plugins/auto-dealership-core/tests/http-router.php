@@ -6,17 +6,21 @@ if ( ! is_array( $config ) || ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', $co
 $theme_test = '1' === getenv( 'ADC_THEME_TEST' );
 if ( $theme_test ) {
 	$asset = (string) parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH );
-	if ( 'twentytwentyfive' === getenv( 'ADC_THEME_SLUG' ) && preg_match( '#\A/wp-content/themes/twentytwentyfive/(.+\.(?:css|js|svg|png|jpg|jpeg|webp|woff2?))\z#i', $asset, $match ) ) {
+	if ( 'twentytwentyfive' === getenv( 'ADC_THEME_SLUG' ) && preg_match( '#\A/wp-content/themes/twentytwentyfive/(.+\.(?:css|js|svg|png|jpg|jpeg|webp|woff2?|ttf|otf))\z#i', $asset, $match ) ) {
 		$theme_root = realpath( __DIR__ . '/isolated-content/themes/twentytwentyfive' );
 		$file = realpath( __DIR__ . '/isolated-content/themes/twentytwentyfive/' . $match[1] );
 		if ( ! $theme_root || ! $file || ! str_starts_with( $file, $theme_root . DIRECTORY_SEPARATOR ) || ! is_file( $file ) ) { http_response_code( 404 ); exit; }
 		$extension = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
-		$types = array( 'css'=>'text/css', 'js'=>'text/javascript', 'svg'=>'image/svg+xml', 'png'=>'image/png', 'jpg'=>'image/jpeg', 'jpeg'=>'image/jpeg', 'webp'=>'image/webp', 'woff'=>'font/woff', 'woff2'=>'font/woff2' );
+		$types = array( 'css'=>'text/css', 'js'=>'text/javascript', 'svg'=>'image/svg+xml', 'png'=>'image/png', 'jpg'=>'image/jpeg', 'jpeg'=>'image/jpeg', 'webp'=>'image/webp', 'woff'=>'font/woff', 'woff2'=>'font/woff2', 'ttf'=>'font/ttf', 'otf'=>'font/otf' );
 		header( 'Content-Type: ' . $types[$extension] ); readfile( $file ); exit;
 	}
-	if ( preg_match( '#\A/(?:wp-content/(?:themes/car-dealer|plugins/auto-dealership-core/assets)/|wp-includes/).+\.(?:css|js|svg|png|jpg|jpeg|webp|woff2?)\z#i', $asset ) ) {
+	if ( preg_match( '#\A/(?:wp-content/(?:themes/car-dealer|plugins/auto-dealership-core/assets)/|wp-includes/).+\.(?:css|js|svg|png|jpg|jpeg|webp|woff2?|ttf|otf)\z#i', $asset ) ) {
 		$root = realpath( dirname( __DIR__, 4 ) ); $file = realpath( $root . $asset );
-		if ( $file && str_starts_with( $file, $root . DIRECTORY_SEPARATOR ) && is_file( $file ) ) { return false; }
+		if ( $file && str_starts_with( $file, $root . DIRECTORY_SEPARATOR ) && is_file( $file ) ) {
+			$extension = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+			if ( in_array( $extension, array( 'ttf', 'otf' ), true ) ) { header( 'Content-Type: font/' . $extension ); readfile( $file ); exit; }
+			return false;
+		}
 		http_response_code( 404 ); exit;
 	}
 }
@@ -73,6 +77,8 @@ if ( '1' === getenv( 'ADC_CURRENCY_BROWSER' ) && '/adc-test-currency' === $reque
 	require_once ABSPATH . 'wp-admin/includes/template.php';
 	$views = array( 'inventory'=>array( \AutoDealership\Admin\OperationsPages::class,'render' ), 'settings'=>array( \AutoDealership\Admin\SettingsPage::class,'render' ), 'payments'=>array( \AutoDealership\Admin\PaymentPages::class,'render' ), 'refunds'=>array( \AutoDealership\Admin\RefundPage::class,'render' ), 'acquisition'=>array( \AutoDealership\Admin\VehicleAcquisitionPage::class,'render' ), 'finance'=>array( \AutoDealership\Admin\WorkflowPages::class,'finance' ) );
 	$view = $views[$_GET['view'] ?? ''] ?? null;
+	// These fixtures create operational vehicles, independently of the Onyx stock list.
+	if ( 'inventory' === ( $_GET['view'] ?? '' ) ) { $_GET['legacy'] = '1'; }
 	if ( ! $view ) { http_response_code( 404 ); exit; }
 	$lang = \AutoDealership\Core\Localization::language();
 	header( 'Content-Type: text/html; charset=utf-8' );

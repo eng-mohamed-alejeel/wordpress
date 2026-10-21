@@ -16,6 +16,11 @@
 .site-footer :is(h2,h3,h4,strong,.footer-title,.site-title){color:var(--ab-footer-text)}
 .site-footer :is(p,small,.footer-bottom){color:var(--ab-footer-muted)}
 .site-footer a,.site-footer a:hover{color:var(--ab-footer-link)}
+.site .ab-inventory-cta{background:linear-gradient(120deg,var(--ab-hero),var(--ab-hero-end));color:var(--ab-hero-text)}
+.site .ab-inventory-cta h2{color:var(--ab-hero-text)}
+.site .ab-inventory-cta p{color:var(--ab-hero-muted);opacity:1}
+.site .ab-inventory-cta .btn-outline{background:transparent;color:var(--ab-hero-text);border-color:var(--ab-hero-text)}
+.site .ab-inventory-cta .btn-outline:hover{background:var(--ab-hero-text);color:var(--ab-hero);border-color:var(--ab-hero-text)}
 .site .btn-primary{background:var(--ab-primary);border-color:var(--ab-primary);color:var(--ab-on-primary)}
 .site .btn-primary:hover{background:var(--ab-primary-hover);border-color:var(--ab-primary-hover);color:var(--ab-on-primary)}
 :root[data-ab-theme="dark"] .site .btn-primary{border-color:var(--ab-primary)}
@@ -25,6 +30,7 @@
 .site :is(.ab-hero,.archive-hero,.ab-car-hero){color:var(--ab-hero-text)}
 .site :is(.ab-hero,.archive-hero,.ab-car-hero) h1{color:var(--ab-hero-text)}
 .site :is(.ab-hero,.archive-hero,.ab-car-hero) p,.site .ab-hero-desc{color:var(--ab-hero-muted)}
+.site .ab-hero p.ab-hero-desc{color:var(--ab-hero-text)}
 .site .ab-hero .ab-hero-scroll-hint{color:var(--ab-hero-text)}
 .site .ab-hero :is(.ab-hero-stats,.ab-hero-panel){color:var(--ab-hero-text)}
 .site .ab-hero :is(.ab-stat strong,.ab-panel-number,.ab-hero-panel strong){color:var(--ab-hero-text)}
@@ -69,6 +75,6 @@
 .adc-admin-shell #adminmenu :is(.wp-has-current-submenu>a,li.current>a){background:var(--ab-action);color:var(--ab-on-action)}
 .adc-admin-shell #adminmenu :is(.wp-has-current-submenu>a,li.current>a) .wp-menu-image:before{color:var(--ab-on-action)}
 .adc-admin-shell .adc-workspace-hero{background:linear-gradient(120deg,var(--ab-hero),var(--ab-hero-end))}
-.adc-admin-shell.adc-admin .wrap .adc-workspace-hero :is(h1,p,span){color:var(--ab-hero-text)}
+.adc-admin-shell.adc-admin .wrap .adc-workspace-hero > div > :is(h1,p,span){color:var(--ab-hero-text)}
 .has-autobrands-text-color{color:var(--ab-text)}.has-autobrands-background-color{color:var(--ab-bg)}.has-autobrands-white-color{color:var(--ab-surface)}
 .has-autobrands-text-background-color{background-color:var(--ab-text)}.has-autobrands-background-background-color{background-color:var(--ab-bg)}.has-autobrands-white-background-color{background-color:var(--ab-surface)}

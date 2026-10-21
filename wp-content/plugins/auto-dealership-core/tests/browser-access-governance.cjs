@@ -52,7 +52,7 @@ const { spawn } = require('node:child_process');
         });
         socket.onmessage = event => {
             const data = JSON.parse(event.data);
-            if (data.method === 'Runtime.exceptionThrown') errors.push(data.params.exceptionDetails.text);
+            if (data.method === 'Runtime.exceptionThrown') errors.push(data.params.exceptionDetails.exception?.description || data.params.exceptionDetails.text);
             if (data.method === 'Network.responseReceived' && data.params.response.status >= 400 && ['Stylesheet', 'Script'].includes(data.params.type)) badAssets.push(data.params.response.url);
             if (data.method === 'Fetch.requestPaused') {
                 const request = data.params;
@@ -135,7 +135,7 @@ const { spawn } = require('node:child_process');
         check(await evaluate('!!document.querySelector(".widefat")'),'Account review dashboard renders');
         await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
         check(await evaluate('document.documentElement.scrollWidth<=innerWidth+2'),'Account review fits mobile viewport');
-        check(errors.length===0,'No browser runtime exceptions');
+        check(errors.length===0,'No browser runtime exceptions: '+errors.join('; '));
         check(badAssets.length===0,'No failed browser assets');
         console.log('Access governance browser: '+passed+' checks passed.');
     } finally { if(socket)socket.close(); browser.kill(); }

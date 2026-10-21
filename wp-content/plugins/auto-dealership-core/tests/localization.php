@@ -10,6 +10,11 @@ function wp_doing_ajax() { return $GLOBALS['test_ajax']; }
 function get_user_locale() { return $GLOBALS['test_locale']; }
 function sanitize_key( $value ) { return preg_replace( '/[^a-z0-9_-]/', '', strtolower( $value ) ); }
 function wp_unslash( $value ) { return $value; }
+function get_option( $name, $default = false ) {
+	$options = array( 'blogname'=>'Fixture Motors', 'adc_product_profile'=>array( 'brand_ar'=>'معرض الاختبار', 'brand_en'=>'Fixture Motors' ) );
+	return $options[$name] ?? $default;
+}
+function wp_specialchars_decode( $value, $flags = ENT_NOQUOTES ) { return htmlspecialchars_decode( $value, $flags ); }
 function add_filter( $hook, $callback, $priority = 10, $args = 1 ) { $GLOBALS['test_filters'][$hook][$priority][] = $callback; }
 function add_action( $hook, $callback ) { $GLOBALS['test_actions'][$hook][] = $callback; }
 function add_submenu_page( $parent, $page_title, $menu_title, $capability, $slug, $callback ) {
@@ -26,6 +31,7 @@ function __( $text, $domain = '' ) {
 }
 require dirname( __DIR__ ) . '/src/Inventory/CatalogPresentation.php';
 require dirname( __DIR__ ) . '/src/Core/Localization.php';
+require dirname( __DIR__ ) . '/src/Core/ProductSetup.php';
 require dirname( __DIR__, 3 ) . '/themes/car-dealer/inc/public-catalog.php';
 require dirname( __DIR__, 3 ) . '/themes/car-dealer/inc/localization.php';
 \AutoDealership\Core\Localization::boot();
@@ -40,6 +46,7 @@ $GLOBALS['test_admin'] = true;
 foreach ( $GLOBALS['test_actions']['admin_menu'] as $callback ) { $callback(); }
 check( array( 'مراجعة ملفات العملاء', 'مراجعة ملفات العملاء' ) === $GLOBALS['test_menus']['adc-customer-identities'], 'Customer review page and menu titles use Arabic admin locale' );
 check( 'التمويل' === __( 'Finance', 'auto-dealership-core' ), 'English source labels translate in Arabic admin' );
+check( 'معرض الاختبار' === __( '{site_name}', 'auto-dealership-core' ), 'Real product identity dependency resolves Arabic translation tokens' );
 check( 'قيد الانتظار' === \AutoDealership\Core\Localization::label( 'pending' ), 'Stored workflow keys have Arabic display labels' );
 check( 'قيد الفحص' === __( 'inspection', 'auto-dealership-core' ), 'Literal option keys have Arabic display labels' );
 check( 'في الطريق' === \AutoDealership\Core\Localization::label( 'in_transit' ), 'Transfer status has Arabic display copy' );
@@ -48,6 +55,7 @@ foreach ( $GLOBALS['test_actions']['admin_menu'] as $callback ) { $callback(); }
 check( array( 'Review customer records', 'Review customer records' ) === $GLOBALS['test_menus']['adc-customer-identities'], 'Customer review page and menu titles use English admin locale' );
 check( 'Quotations' === __( 'عروض الأسعار', 'auto-dealership-core' ), 'Admin follows user locale independently of public query language' );
 check( 'Pending' === \AutoDealership\Core\Localization::label( 'pending' ), 'Workflow labels have readable English copy' );
+check( 'Fixture Motors' === __( '{site_name}', 'auto-dealership-core' ), 'Real product identity dependency resolves English translation tokens' );
 check( 'Inspection' === __( 'inspection', 'auto-dealership-core' ), 'English options do not expose lowercase internal keys' );
 check( 'Partially refunded' === \AutoDealership\Core\Localization::label( 'partially_refunded' ), 'Financial status has readable English display copy' );
 check( 'Save settings' === __( 'حفظ الإعدادات', 'car-dealer' ), 'Theme settings follow English admin locale' );

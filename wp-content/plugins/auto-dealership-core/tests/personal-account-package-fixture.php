@@ -2,7 +2,7 @@
 /** Included only by the guarded loopback package router, never shipped. */
 use AutoDealership\Portal\{PortalAccess as A,Conversations as C};
 use AutoDealership\Database\Schema as S;
-if(PHP_SAPI!=='cli-server'||!preg_match('/\Aadc_verify_[a-f0-9]{16}\z/',DB_NAME)||!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
+if((PHP_SAPI!=='cli-server'&&!(PHP_SAPI==='apache2handler'&&getenv('ADC_PRODUCT_TEST_APACHE')==='1'))||!preg_match('/\Aadc_verify_[a-f0-9]{16}\z/',DB_NAME)||!hash_equals($config['token'],(string)($_GET['key']??''))){http_response_code(403);exit;}
 global $wpdb;wp_set_current_user($config['admin']);$fixture=get_option('adc_test_personal_fixture');
 if(!$fixture){
     $branch=\AutoDealership\Branches\BranchService::create(array('code'=>'PERSONAL_BROWSER','name'=>'Personal browser branch'))['id'];$fixture=array();$now=current_time('mysql',true);

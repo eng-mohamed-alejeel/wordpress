@@ -27,19 +27,32 @@ foreach ( $roles as $role => $caps ) {
     foreach ( array( 'ar', 'en_US' ) as $locale ) {
         $user->locale = $locale;
         $expected = array();
+        $areas = array();
         foreach ( Navigation::groups() as $group ) {
-            foreach ( $group['items'] as $item ) {
-                if ( Navigation::allowed( $item ) ) { $expected[] = admin_url( $item['path'] ); }
+            $items = array_values( array_filter( $group['items'], array( Navigation::class, 'allowed' ) ) );
+            if ( $items ) {
+                $areas[$group['id']] = $items;
+                $expected[] = admin_url( 'admin.php?page=adc-area-' . $group['id'] );
             }
         }
-        ob_start();
-        WorkspacePage::render();
-        $html = ob_get_clean();
-        preg_match_all( '/<a class="adc-workspace-card" href="([^"]+)"/', $html, $matches );
+        $_GET['page'] = 'adc-workspace';
+        ob_start(); WorkspacePage::render(); $html = ob_get_clean();
+        preg_match_all( '/<a class="adc-area-card" href="([^"]+)"/', $html, $matches );
         $actual = array_map( static fn( string $url ): string => html_entity_decode( $url, ENT_QUOTES, 'UTF-8' ), $matches[1] );
         sort( $expected ); sort( $actual );
-        if ( $expected !== $actual || count( $actual ) !== count( array_unique( $actual ) ) ) {
-            throw new RuntimeException( 'Missing, duplicate or unauthorized workspace cards: ' . $role . '/' . $locale );
+        if ( $expected !== $actual || count( $actual ) !== count( array_unique( $actual ) ) || str_contains( $html, 'class="adc-workspace-card"' ) ) {
+            throw new RuntimeException( 'Missing, duplicate or unauthorized workspace areas: ' . $role . '/' . $locale );
+        }
+        foreach ( $areas as $area => $items ) {
+            $_GET['page'] = 'adc-area-' . $area;
+            ob_start(); WorkspacePage::render(); $area_html = ob_get_clean();
+            preg_match_all( '/<a class="adc-workspace-card" href="([^"]+)"/', $area_html, $links );
+            $area_actual = array_map( static fn( string $url ): string => html_entity_decode( $url, ENT_QUOTES, 'UTF-8' ), $links[1] );
+            $area_expected = array_map( static fn( array $item ): string => html_entity_decode( esc_url( admin_url( $item['path'] ) ), ENT_QUOTES, 'UTF-8' ), $items );
+            sort( $area_actual ); sort( $area_expected );
+            if ( $area_actual !== $area_expected || count( $area_actual ) !== count( array_unique( $area_actual ) ) ) {
+                throw new RuntimeException( 'Missing, duplicate or unauthorized area destinations: ' . $area . '/' . $role . '/' . $locale . ' ' . wp_json_encode( array( 'expected'=>$area_expected, 'actual'=>$area_actual ) ) );
+            }
         }
         ++$total;
         echo 'PASS ' . $role . '/' . $locale . ': ' . count( $actual ) . " matching workspace destinations.\n";

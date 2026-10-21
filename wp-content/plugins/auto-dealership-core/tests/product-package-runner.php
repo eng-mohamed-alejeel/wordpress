@@ -1,6 +1,9 @@
 <?php
 /** Fresh WordPress installation using ZIP contents only, on a dedicated empty test server. */
 if ( PHP_SAPI !== 'cli' ) { exit( 1 ); }
+foreach ( array( 'mysqli', 'mbstring', 'dom', 'zip', 'gd', 'curl', 'fileinfo' ) as $extension ) {
+	if ( ! extension_loaded( $extension ) ) { fwrite( STDERR, 'Package acceptance requires PHP extension: ' . $extension . PHP_EOL ); exit( 2 ); }
+}
 $root = dirname( __DIR__, 4 );
 if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	$config = json_decode( (string) file_get_contents( $argv[2] ), true );
@@ -36,7 +39,7 @@ foreach ( $db->query( 'SHOW DATABASES' )->fetch_all() as $row ) { if ( ! in_arra
 $manifest = json_decode( file_get_contents( $package . '/manifest.json' ), true );
 if ( ! is_array( $manifest ) || empty( $manifest['artifacts'] ) ) { throw new RuntimeException( 'Invalid package manifest.' ); }
 $directory = sys_get_temp_dir() . '/adc-product-' . bin2hex( random_bytes( 12 ) ); mkdir( $directory, 0700 ); mkdir( $directory . '/content', 0700 );
-$database = 'adc_verify_' . bin2hex( random_bytes( 8 ) ); $server = null;
+$database = 'adc_verify_' . bin2hex( random_bytes( 8 ) ); $server = null; $server_input = null;
 $remove = static function ( string $dir ) use ( &$remove, $directory ): void {
 	$real = realpath( $dir ); $base = realpath( $directory );
 	if ( ! $real || ! $base || ( $real !== $base && ! str_starts_with( $real, $base . DIRECTORY_SEPARATOR ) ) || is_link( $dir ) ) { throw new RuntimeException( 'Unsafe cleanup target.' ); }
@@ -58,14 +61,24 @@ try {
 	$worker = proc_open( array( PHP_BINARY, __FILE__, '--worker', $configFile ), array( 0=>array( 'pipe','r' ), 1=>STDOUT, 2=>STDERR ), $pipes ); fclose( $pipes[0] ); if ( 0 !== proc_close( $worker ) ) { throw new RuntimeException( 'Package installation failed.' ); }
 	$socket = stream_socket_server( 'tcp://127.0.0.1:0' ); $address = stream_socket_get_name( $socket, false ); fclose( $socket ); $httpPort = (int) substr( $address, strrpos( $address, ':' ) + 1 );
 	$environment = getenv(); $environment['ADC_PRODUCT_TEST_CONFIG'] = $configFile;
-	$server = proc_open( array( PHP_BINARY, '-S', '127.0.0.1:' . $httpPort, __DIR__ . '/product-package-router.php' ), array( 0=>array( 'pipe','r' ), 1=>array( 'file',$directory . '/http.log','a' ), 2=>array( 'file',$directory . '/http.log','a' ) ), $pipes, $root, $environment ); fclose( $pipes[0] );
-	for ( $i=0; $i<50; ++$i ) { $probe = @fsockopen( '127.0.0.1', $httpPort, $errno, $errstr, 0.1 ); if ( $probe ) { fclose( $probe ); break; } usleep( 100000 ); }
+	$server_command = getenv( 'ADC_PRODUCT_APACHE_ROOT' ) ? array( 'node', __DIR__ . '/isolated-apache.cjs', (string) $httpPort, $configFile, PHP_BINARY ) : array( PHP_BINARY, '-S', '127.0.0.1:' . $httpPort, __DIR__ . '/product-package-router.php' );
+	$server = proc_open( $server_command, array( 0=>array( 'pipe','r' ), 1=>array( 'file',$directory . '/http.log','a' ), 2=>array( 'file',$directory . '/http.log','a' ) ), $pipes, $root, $environment );
+	if ( ! is_resource( $server ) ) { throw new RuntimeException( 'Package HTTP server failed to start.' ); }
+	if ( getenv( 'ADC_PRODUCT_APACHE_ROOT' ) ) { $server_input = $pipes[0]; } else { fclose( $pipes[0] ); }
+	$server_ready = false;
+	for ( $i=0; $i<50; ++$i ) { $probe = @fsockopen( '127.0.0.1', $httpPort, $errno, $errstr, 0.1 ); if ( $probe ) { fclose( $probe ); $server_ready = true; break; } usleep( 100000 ); }
+	if ( ! $server_ready ) { throw new RuntimeException( 'Package HTTP server did not become ready: ' . file_get_contents( $directory . '/http.log' ) ); }
 	$browser = proc_open( array( 'node', __DIR__ . '/product-package-browser.cjs' ), array( 0=>array( 'pipe','r' ), 1=>STDOUT, 2=>STDERR ), $pipes, $root );
-	fwrite( $pipes[0], json_encode( array( 'root'=>$root, 'base'=>'http://127.0.0.1:' . $httpPort, 'key'=>$config['token'] ) ) ); fclose( $pipes[0] );
-	if ( 0 !== proc_close( $browser ) ) { echo file_get_contents( $directory . '/http.log' ); throw new RuntimeException( 'Package browser acceptance failed.' ); }
+	fwrite( $pipes[0], json_encode( array( 'root'=>$root, 'base'=>'http://127.0.0.1:' . $httpPort, 'key'=>$config['token'], 'php_version'=>PHP_VERSION ) ) ); fclose( $pipes[0] );
+	if ( 0 !== proc_close( $browser ) ) {
+		echo file_get_contents( $directory . '/http.log' );
+		if ( is_file( $directory . '/apache-error.log' ) ) { echo file_get_contents( $directory . '/apache-error.log' ); }
+		throw new RuntimeException( 'Package browser acceptance failed.' );
+	}
 	echo "PASS Package: extracted files match manifests and clean WordPress runs on the two ZIPs only.\n";
 } finally {
-	if ( is_resource( $server ) ) { proc_terminate( $server ); proc_close( $server ); }
+	if ( is_resource( $server_input ) ) { fclose( $server_input ); }
+	if ( is_resource( $server ) ) { if ( ! getenv( 'ADC_PRODUCT_APACHE_ROOT' ) ) { proc_terminate( $server ); } proc_close( $server ); }
 	$db->query( "DROP DATABASE IF EXISTS `$database`" ); $db->close(); $remove( $directory );
 	echo "Disposable package database and extracted files removed. Source database was not contacted.\n";
 }

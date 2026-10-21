@@ -90,7 +90,7 @@ const { spawn } = require('node:child_process');
         for(const language of ['ar','en']) {
           await visit('/offers/?lang='+language);
           check(await evaluate('document.documentElement.dir === '+JSON.stringify(language==='en'?'ltr':'rtl')),'Offer archive direction '+language);
-          check(await evaluate('document.querySelector("h1").textContent.includes('+JSON.stringify(language==='en'?'AUTO BRANDS Offers':'عروض أوتو براندز')+')'),'Offer archive heading '+language);
+          check(await evaluate('document.querySelector(".archive-hero h1").textContent.trim() === '+JSON.stringify(language==='en'?'Explore ':'اكتشف ')+' + document.querySelector(".archive-hero .eyebrow").textContent.trim()'),'Offer archive heading '+language);
         }
         await visit('/');
         const main=await (await fetch(root+'/wp-content/themes/car-dealer/assets/js/main.js')).text();

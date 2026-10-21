@@ -88,6 +88,11 @@ final class VehicleTechnicalDetails {
 		foreach($definitions as$field=>$options){$value=$row[$field]??'';$raw=$source[$field]??'';$option=$options[$value]??null;
 			if(!$option&&''!==$raw){foreach($options as$key=>$candidate){$original=$defaults[$field][$key]??array('ar'=>'','en'=>'');if(in_array(self::normalize($raw),array(self::normalize($key),self::normalize($candidate['ar']),self::normalize($candidate['en']),self::normalize($original['ar']),self::normalize($original['en'])),true)){$option=$candidate;$value=$key;break;}}}
 			$label=$option?('en'===Localization::language()?$option['en']:$option['ar']):$raw;
+			// Historical broad fuel keys are display labels, not a claim of a specific HEV/BEV technology.
+			if ( ! $option && 'fuel' === $field ) {
+				$legacy = array( 'gasoline'=>array( 'بنزين', 'Gasoline' ), 'hybrid'=>array( 'هجين', 'Hybrid' ), 'electric'=>array( 'كهربائي', 'Electric' ) );
+				if ( isset( $legacy[$raw] ) ) { $label = $legacy[$raw]['en' === Localization::language() ? 1 : 0]; }
+			}
 			$out[$field]=array('value'=>$value,'label'=>$label,'icon'=>$option['icon']??self::default_icon($field));
 		}
 		$cc=$row['capacity_cc']??'';

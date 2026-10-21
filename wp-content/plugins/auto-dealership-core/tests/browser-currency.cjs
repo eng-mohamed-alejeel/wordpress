@@ -85,7 +85,7 @@ const assert = require('node:assert/strict');
             await call('Page.navigate', { url: input.origin + url });
             await wait(`document.readyState === 'complete' && !!document.querySelector(${JSON.stringify(selector)})`, selector);
         };
-        const artifacts = path.resolve(__dirname, '../../../../docs/artifacts/currency');
+        const artifacts = path.resolve(process.env.ADC_TEST_ARTIFACT_DIR || path.join(__dirname, '../../../../.tmp/currency-acceptance'));
         fs.mkdirSync(artifacts, { recursive: true });
 
 

@@ -71,9 +71,12 @@ function car_dealer_assets() {
 	wp_enqueue_style( 'car-dealer-home-v2', $uri . '/assets/css/home-v2.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/home-v2.css' ) );
 	wp_enqueue_style( 'car-dealer-floating', $uri . '/assets/css/floating-buttons.css', array( 'car-dealer-main' ), $version );
 	wp_enqueue_style( 'car-dealer-site-shell', $uri . '/assets/css/site-shell.css', array( 'car-dealer-floating' ), filemtime( get_template_directory() . '/assets/css/site-shell.css' ) );
-	wp_enqueue_style( 'car-dealer-about', $uri . '/assets/css/pages/_about.css', array( 'car-dealer-main' ), $version );
+	// Keep optional editorial components available, without loading their page-only
+	// decoration for vehicle pages that have no editorial content at all.
+	$empty_vehicle_description = is_singular( 'car' ) && '' === trim( (string) get_post_field( 'post_content', get_queried_object_id() ) );
+	if ( ! $empty_vehicle_description ) { wp_enqueue_style( 'car-dealer-about', $uri . '/assets/css/pages/_about.css', array( 'car-dealer-main' ), $version ); }
 	if ( is_page( 'about' ) || is_page_template( 'page-about.php' ) || ( is_singular() && has_block( 'auto-dealership/component' ) ) ) { wp_enqueue_style( 'car-dealer-about-modern', $uri . '/assets/css/about-modern.css', array( 'car-dealer-about', 'car-dealer-site-shell' ), filemtime( get_template_directory() . '/assets/css/about-modern.css' ) ); }
-	wp_enqueue_style( 'car-dealer-contact', $uri . '/assets/css/pages/_contact.css', array( 'car-dealer-main' ), $version );
+	if ( ! $empty_vehicle_description ) { wp_enqueue_style( 'car-dealer-contact', $uri . '/assets/css/pages/_contact.css', array( 'car-dealer-main' ), $version ); }
 	wp_enqueue_script( 'car-dealer-main-js', $uri . '/assets/js/main.js', array(), filemtime( get_template_directory() . '/assets/js/main.js' ), true );
 	if(is_singular('car')) {
 		wp_enqueue_style('car-dealer-car-dialogs',$uri.'/assets/css/car-dialogs.css',array('car-dealer-site-shell'),filemtime(get_template_directory().'/assets/css/car-dialogs.css'));

@@ -60,6 +60,7 @@
 	<aside aria-label="<?php echo esc_attr( car_dealer_text( 'التواصل السريع', 'Quick contact' ) ); ?>">
 	<a href="<?php echo esc_url( $cd_whatsapp_url ); ?>" class="ab-float-wa" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr( car_dealer_text( 'تواصل عبر واتساب', 'Contact us on WhatsApp' ) ); ?>">
 		<?php echo car_dealer_whatsapp_icon(); ?>
+		<span class="ab-float-wa-pulse"></span>
 		<span class="ab-float-wa-tooltip"><?php echo esc_html( car_dealer_text( 'تواصل معنا', 'Chat with us' ) ); ?></span>
 	</a>
 	</aside>

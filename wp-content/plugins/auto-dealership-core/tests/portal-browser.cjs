@@ -1,7 +1,10 @@
 /* Runs against isolated, extracted ZIP packages only. No production credentials. */
 module.exports=async({browser,config,check,errors})=>{
   const context=await browser.newContext(),page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
-  const fixture=await(await context.request.get(config.base+'/adc-product-portal-fixture?key='+config.key)).json();
+  const fixtureResponse=await context.request.get(config.base+'/adc-product-portal-fixture?key='+config.key);
+  const fixtureBody=await fixtureResponse.text();
+  if(fixtureResponse.status()!==200||!fixtureBody.startsWith('{'))throw Error('Portal fixture failed: '+JSON.stringify({status:fixtureResponse.status(),url:fixtureResponse.url(),headers:fixtureResponse.headers(),body:fixtureBody.slice(0,1000)}));
+  const fixture=JSON.parse(fixtureBody);
   if(process.env.ADC_PRODUCT_LIVE_ONLY==='1'){await context.close();return require('./portal-extensions-browser.cjs')({browser,config,check,errors});}
   const account=(section,lang='en',extra='')=>config.base+'/?cd_account=dashboard&portal='+section+'&lang='+lang+extra;
   const signedOut=await browser.newContext(),login=await signedOut.newPage();await login.goto(account('messages','en','&thread='+fixture.thread));check(login.url().includes('portal_return=messages')&&login.url().includes('portal_thread='+fixture.thread),'notification destination is retained on the sign-in page');const loginForm=login.locator('form[data-auth-view=login]');await loginForm.locator('[name=login]').fill('portal_qa_customer');await loginForm.locator('[name=password]').fill('PortalBrowserPass123!');await Promise.all([login.waitForNavigation(),loginForm.locator('button[type=submit]').click()]);check(await login.locator('[data-thread="'+fixture.thread+'"]').count()===1,'signing in returns to the authorized notification conversation');await signedOut.close();

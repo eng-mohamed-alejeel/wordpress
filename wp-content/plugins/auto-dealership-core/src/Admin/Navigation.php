@@ -249,6 +249,9 @@ final class Navigation {
 				$capability = 'read';
 				foreach ( $item['capabilities'] as $candidate ) { if ( current_user_can( $candidate ) ) { $capability = $candidate; break; } }
 				$hook = add_submenu_page( $parent, $item['title'], $item['title'], $capability, $item['slug'], $item['callback'] );
+				if ( $hook && 'adc-customer-workspace' === $item['slug'] ) {
+					add_action( 'load-' . $hook, array( CustomerWorkspacePage::class, 'validate_request' ) );
+				}
 				if ( $hook && 'adc-onyx-documents' === $item['slug'] ) {
 					add_action( 'load-' . $hook, array( \AutoDealership\Sales\OnyxDocuments::class, 'validate_request' ) );
 				}

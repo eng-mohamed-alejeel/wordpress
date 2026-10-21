@@ -67,6 +67,18 @@
   line-height: 1.6;
 }
 
+/* The banner can be rendered inside the dark footer, but owns a surface of its own. */
+.cd-cookie-banner .cd-cookie-content h2,
+.cd-cookie-banner .cd-cookie-content p,
+.cd-cookie-banner .cd-cookie-btn-settings,
+.cd-cookie-banner .cd-cookie-btn-secondary {
+  color: var(--ab-text);
+}
+
+.cd-cookie-banner .cd-cookie-btn-settings {
+  background: var(--ab-surface);
+}
+
 .cd-cookie-actions {
   display: flex;
   gap: var(--cd-spacing-sm);
@@ -336,3 +348,14 @@
 /* Both modes inherit semantic tokens; an explicit choice overrides the device. */
 .cd-cookie-toggle-slider { border: 1px solid var(--ab-control-border); }
 .cd-cookie-toggle input:focus-visible + .cd-cookie-toggle-slider { outline: 3px solid var(--ab-focus); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cd-cookie-banner,
+  .cd-cookie-banner.cd-cookie-visible,
+  .cd-cookie-settings,
+  .cd-cookie-overlay,
+  .cd-cookie-btn {
+    animation: none;
+    transition: none;
+  }
+}

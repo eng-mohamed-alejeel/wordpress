@@ -29,6 +29,10 @@ const { output, launch, mode, axe } = require('./accessibility-browser.cjs');
                   for (const appearance of ['light', 'dark']) {
                     await mode(page, appearance);
                     const result = await axe(page);
+                    if (result.violations.length) result.display = await page.evaluate(() => {
+                        const root=document.documentElement, body=getComputedStyle(document.body);
+                        return {theme:root.dataset.abTheme,preference:root.dataset.abPreference,background:body.backgroundColor,color:body.color,heading:getComputedStyle(document.querySelector('h1')||document.body).color};
+                    });
                     report.push({ route, language, width, mode: appearance, ...result });
                     fs.writeFileSync(path.join(output, process.env.ADC_A11Y_ADMIN === '1' ? 'axe-admin.json' : 'axe-public.json'), JSON.stringify(report, null, 2));
                     console.log(`${route} ${language} ${width} ${appearance}: ${result.violations.map(v => v.id + '(' + v.nodes.length + ')').join(', ') || 'PASS'}`);

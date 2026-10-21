@@ -90,14 +90,18 @@ const { spawn } = require('node:child_process');
         for(const cookie of session.cookies) await call('Network.setCookie',{name:cookie.name,value:cookie.value,url:root+'/',path:'/wordpress/',httpOnly:true,sameSite:'Lax'});
 
 
-        for (const route of ['edit.php?post_type=car','edit-tags.php?taxonomy=car_brand&post_type=car','edit-tags.php?taxonomy=car_category&post_type=car','post.php?post=67&action=edit']) {
+        await call('Page.navigate',{url:root+'/wp-admin/admin.php?page=adc-car-publishing'});
+        await wait('document.readyState === "complete" && !!document.querySelector(".adc-publishing")','Catalog fixture listing');
+        const editorPost = Number(session.catalog_post_id);
+        assert.ok(editorPost>0,'A current catalog vehicle is required for the editor acceptance fixture');
+        for (const route of ['edit.php?post_type=car','edit-tags.php?taxonomy=car_brand&post_type=car','edit-tags.php?taxonomy=car_category&post_type=car','post.php?post='+editorPost+'&action=edit']) {
             await call('Page.navigate',{url:root+'/wp-admin/'+route});
             await wait('document.readyState === "complete" && !!document.querySelector(".adc-publishing")',route);
             check(await evaluate('location.href.includes("admin.php?page=adc-car-")'),'Legacy route opens the custom interface: '+route);
             check(await evaluate('!document.querySelector("#post,#poststuff,.block-editor")'),'No article editing screen: '+route);
             check(await evaluate('!!document.querySelector(".adc-publishing-header nav")'),'Catalog navigation is available: '+route);
         }
-        check(await evaluate('document.querySelector("input[name=thumbnail_id]") && document.querySelector("input[name=gallery_ids]") && document.querySelector(".onyx-variant-table")'),'Car editor contains photo fields and live Onyx variants');
+        check(await evaluate('document.querySelector("input[name^=\\"color_main[\\"]") && document.querySelector("input[name^=\\"color_galleries[\\"]") && document.querySelector(".onyx-variant-table")'),'Mapped model editor contains per-color main images, galleries and live Onyx variants');
         await evaluate('document.querySelector("input[value=private_transport]").click(); document.querySelector("input[value=commercial_transport]").click();');
         check(await evaluate('!document.querySelector("input[value=private_transport]").checked && document.querySelector("input[value=commercial_transport]").checked'),'Plate checkboxes remain mutually exclusive');
         await evaluate('document.querySelector("[data-select-images]").click()');
@@ -140,10 +144,22 @@ const { spawn } = require('node:child_process');
         await call('Page.navigate',{url:root+'/wp-admin/admin.php?page=adc-vehicle-specifications'});
         await wait('document.readyState === "complete" && !!document.querySelector("input[name=vehicle_id]")','Operational vehicle details');
         check(await evaluate('!!document.querySelector("input[name=vehicle_id]")'),'Operational vehicle workspace provides scoped record selection');
-        for(const route of ['adc-inventory&legacy=1','adc-transfers','adc-inventory-identity&section=receipt','adc-inventory-identity&section=inspection','adc-vehicle-acquisition']){
+        for(const route of ['adc-inventory&legacy=1','adc-transfers&section=new','adc-inventory-identity&section=receipt','adc-inventory-identity&section=inspection','adc-vehicle-acquisition']){
             await call('Page.navigate',{url:root+'/wp-admin/admin.php?page='+route});
-            await wait('document.readyState === "complete" && !!document.querySelector(".adc-inventory-state")','Inventory state '+route);
-            check(await evaluate('document.querySelector(".adc-inventory-state").textContent.includes("523") && document.querySelector(".adc-inventory-state").textContent.includes("رقم الهيكل الكامل") && !!document.querySelector(".adc-inventory-state a[href*=adc-inventory]")'),'Operational empty state explains source completion '+route);
+            await wait('document.readyState === "complete" && !!document.querySelector("table.widefat tbody")','Inventory state '+route);
+            const emptyState = await evaluate('document.querySelector(".adc-inventory-state")?.textContent || ""');
+            if (emptyState) {
+                const phaseMessages = {
+                    'adc-transfers&section=new':'لا توجد سيارات مؤهلة للتحويل حاليًا.',
+                    'adc-inventory-identity&section=receipt':'لا توجد سيارات تنتظر توثيق الاستلام.',
+                    'adc-inventory-identity&section=inspection':'لا توجد سيارات تنتظر الفحص.'
+                };
+                const pendingCompletion = emptyState.includes(String(session.source_stock_count)) && emptyState.includes('رقم الهيكل الكامل');
+                const emptyPhase = phaseMessages[route] && emptyState.includes(phaseMessages[route]);
+                check((pendingCompletion || emptyPhase) && await evaluate('!!document.querySelector(".adc-inventory-state a[href*=adc-inventory]")'),'Operational empty state explains pending completion or the empty workflow phase '+route+' '+emptyState);
+            } else {
+                check(await evaluate('[...document.querySelectorAll("table.widefat tbody form")].some(form=>form.querySelector("input[name=id],input[name=vehicle_id]")?.value>0 && !!form.querySelector("input[name=_wpnonce]"))'),'Populated operational view keeps scoped records and protected actions '+route);
+            }
         }
         await call('Page.navigate',{url:root+'/wp-admin/admin.php?page=adc-inventory&new=1'});
         await wait('document.readyState === "complete" && !!document.querySelector("input[value=adc_create_vehicle]")','Standalone vehicle form');

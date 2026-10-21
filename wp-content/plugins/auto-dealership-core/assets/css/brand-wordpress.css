@@ -94,3 +94,19 @@ body :is(#customize-controls, .media-modal, .media-frame) :is(.notice, .notifica
 @media (forced-colors: active) {
   body :is(#customize-controls, .media-modal, .media-frame) :focus-visible { outline-color: Highlight; }
 }
+
+/* Menu links and notices keep their own surface when native core styles apply. */
+body .media-menu .media-menu-item {
+  background-color: var(--ab-surface);
+  color: var(--ab-text);
+}
+body .media-menu .media-menu-item:is(:hover, :focus, .active) {
+  background-color: var(--ab-soft);
+  color: var(--ab-link);
+}
+body .media-frame .media-router .media-menu-item.active {
+  background: var(--ab-soft);
+  color: var(--ab-text);
+  border-color: var(--ab-border);
+}
+body.wp-admin .notice p { color: var(--ab-text); }

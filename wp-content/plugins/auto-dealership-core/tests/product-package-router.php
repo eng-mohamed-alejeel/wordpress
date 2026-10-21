@@ -1,17 +1,23 @@
 <?php
 /** Loopback test server for extracted distributable packages; never loads source wp-config. */
-if ( PHP_SAPI !== 'cli-server' ) { http_response_code( 404 ); exit; }
+if ( PHP_SAPI !== 'cli-server' && ! ( 'apache2handler' === PHP_SAPI && '1' === getenv( 'ADC_PRODUCT_TEST_APACHE' ) ) ) { http_response_code( 404 ); exit; }
 $file = (string) getenv( 'ADC_PRODUCT_TEST_CONFIG' );
 $config = json_decode( (string) @file_get_contents( $file ), true );
 if ( ! is_array( $config ) || ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', $config['database'] ?? '' ) || ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true ) ) { http_response_code( 503 ); exit; }
+header( 'X-ADC-Test-PHP: ' . PHP_VERSION );
 $path = (string) parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+if ( 'apache2handler' === PHP_SAPI ) {
+	// The internal router alias must never become WordPress's public script URL.
+	$_SERVER['SCRIPT_NAME'] = '/index.php';
+	$_SERVER['PHP_SELF'] = '/index.php';
+}
 $root = realpath( dirname( __DIR__, 4 ) );
-if ( preg_match( '#\A/(?:wp-content|wp-includes|wp-admin)/.+\.(css|js|svg|png|jpe?g|webp|woff2?)\z#i', $path, $match ) ) {
+if ( preg_match( '#\A/(?:wp-content|wp-includes|wp-admin)/.+\.(css|js|svg|png|jpe?g|webp|woff2?|ttf|otf|ico)\z#i', $path, $match ) ) {
 	$base = str_starts_with( $path, '/wp-content/' ) ? $config['content'] : $root;
 	$relative = str_starts_with( $path, '/wp-content/' ) ? substr( $path, strlen( '/wp-content' ) ) : $path;
 	$asset = realpath( $base . $relative );
 	if ( ! $asset || ! str_starts_with( $asset, realpath( $base ) . DIRECTORY_SEPARATOR ) || ! is_file( $asset ) ) { http_response_code( 404 ); exit; }
-	$types = array( 'css'=>'text/css', 'js'=>'application/javascript', 'svg'=>'image/svg+xml', 'woff2'=>'font/woff2', 'woff'=>'font/woff', 'png'=>'image/png', 'jpg'=>'image/jpeg', 'jpeg'=>'image/jpeg', 'webp'=>'image/webp' );
+	$types = array( 'css'=>'text/css', 'js'=>'application/javascript', 'svg'=>'image/svg+xml', 'woff2'=>'font/woff2', 'woff'=>'font/woff', 'ttf'=>'font/ttf', 'otf'=>'font/otf', 'ico'=>'image/x-icon', 'png'=>'image/png', 'jpg'=>'image/jpeg', 'jpeg'=>'image/jpeg', 'webp'=>'image/webp' );
 	header( 'Content-Type: ' . $types[strtolower( $match[1] )] ); readfile( $asset ); exit;
 }
 define( 'ABSPATH', $root . '/' );

@@ -10,6 +10,8 @@ async function pixelAudit(page) {
     await page.evaluate(async () => { await document.fonts.ready; window.scrollTo(0, 0); });
     const samples = await page.evaluate(() => {
         const result = [], walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
+        const colorContext=canvas.getContext('2d',{willReadFrequently:true});
         let node;
         while ((node = walker.nextNode())) {
             const element = node.parentElement;
@@ -39,33 +41,49 @@ async function pixelAudit(page) {
                 return {x:left+scrollX,y:top+scrollY,width:right-left,height:bottom-top};
             }).filter(r=>r.width>2&&r.height>2&&r.x+r.width>0&&r.x<innerWidth);
             if (!rects.length) continue;
-            const rgb = style.color.match(/[\d.]+/g).map(Number);
+            colorContext.clearRect(0,0,1,1);
+            colorContext.fillStyle=style.webkitTextFillColor || style.color;
+            colorContext.fillRect(0,0,1,1);
+            const rgba=Array.from(colorContext.getImageData(0,0,1,1).data);
             const size = parseFloat(style.fontSize), weight = parseFloat(style.fontWeight) || 400;
-            result.push({ text: node.textContent.trim().slice(0, 100), selector: element.tagName.toLowerCase() + (element.id ? '#' + element.id : '.' + [...element.classList].join('.')), color: rgb.slice(0, 3), alpha: (rgb[3] ?? 1) * opacity, required: size >= 24 || (size >= 18.6667 && weight >= 700) ? 3 : 4.5, complex, rects });
+            result.push({ text: node.textContent.trim().slice(0, 100), selector: element.tagName.toLowerCase() + (element.id ? '#' + element.id : '.' + [...element.classList].join('.')), color: rgba.slice(0, 3), alpha: rgba[3] / 255 * opacity, required: size >= 24 || (size >= 18.6667 && weight >= 700) ? 3 : 4.5, complex, floating:!!element.closest('.ab-float-wa,.ab-back-top,.adc-chat,.adc-chat-incoming'), rects });
         }
         return result;
     });
-    // Floating controls are audited separately; they are not the underlying text background.
-    const hide = await page.addStyleTag({ content: '* { -webkit-text-fill-color: transparent !important; text-shadow: none !important; caret-color: transparent !important; } .ab-float-wa, .ab-back-top { visibility: hidden !important; }' });
-    let screenshot;
-    try { screenshot = PNG.sync.read(await page.screenshot({ fullPage: true, animations: 'disabled' })); }
-    finally { await hide.evaluate(el => el.remove()); }
+    // Audit floating text against its own viewport, and underlying text without those overlays.
+    const hide = await page.addStyleTag({ content: '* { -webkit-text-fill-color: transparent !important; text-shadow: none !important; caret-color: transparent !important; }' });
+    let screenshot, floatingScreenshot, hideFloating;
+    try {
+        floatingScreenshot=PNG.sync.read(await page.screenshot({scale:'css',animations:'disabled'}));
+        hideFloating=await page.addStyleTag({content:'.ab-float-wa,.ab-back-top,.adc-chat,.adc-chat-incoming { visibility:hidden !important; }'});
+        // Tall Chromium captures can repeat the first texture beyond 16,384px.
+        // Bounded document clips preserve the original viewport and page coordinates.
+        const size = await page.evaluate(() => ({width:Math.max(innerWidth,document.documentElement.scrollWidth,document.body.scrollWidth),height:Math.max(document.documentElement.scrollHeight,document.body.scrollHeight)}));
+        screenshot = new PNG({width:size.width,height:size.height});
+        for (let y=0;y<size.height;y+=4096) {
+            const height=Math.min(4096,size.height-y);
+            const tile=PNG.sync.read(await page.screenshot({fullPage:true,clip:{x:0,y,width:size.width,height},scale:'css',animations:'disabled'}));
+            PNG.bitblt(tile,screenshot,0,0,tile.width,tile.height,0,y);
+        }
+    }
+    finally { if(hideFloating)await hideFloating.evaluate(el=>el.remove());await hide.evaluate(el => el.remove()); }
     let pixels = 0;
     const measurements = samples.map(sample => {
+        const image=sample.floating?floatingScreenshot:screenshot;
         let minimum = Infinity, worst;
         for (const rect of sample.rects) {
             // Every pixel inside the text's layout rectangle, excluding the one-pixel edge.
-            for (let y = Math.max(0, Math.ceil(rect.y) + 1); y < Math.min(screenshot.height, Math.floor(rect.y + rect.height) - 1); y++) {
-                for (let x = Math.max(0, Math.ceil(rect.x) + 1); x < Math.min(screenshot.width, Math.floor(rect.x + rect.width) - 1); x++) {
-                    const i = (y * screenshot.width + x) * 4;
-                    const bg = Array.from(screenshot.data.subarray(i, i + 3));
+            for (let y = Math.max(0, Math.ceil(rect.y) + 1); y < Math.min(image.height, Math.floor(rect.y + rect.height) - 1); y++) {
+                for (let x = Math.max(0, Math.ceil(rect.x) + 1); x < Math.min(image.width, Math.floor(rect.x + rect.width) - 1); x++) {
+                    const i = (y * image.width + x) * 4;
+                    const bg = Array.from(image.data.subarray(i, i + 3));
                     const fg = sample.color.map((c, index) => c * sample.alpha + bg[index] * (1 - sample.alpha));
                     const ratio = contrast(fg, bg); pixels++;
                     if (ratio < minimum) { minimum = ratio; worst = { x, y, background: bg }; }
                 }
             }
         }
-        return { text: sample.text, selector: sample.selector, required: sample.required, complex: sample.complex, color: sample.color, alpha: sample.alpha, minimum, worst };
+        return { text: sample.text, selector: sample.selector, required: sample.required, complex: sample.complex, floating:sample.floating, color: sample.color, alpha: sample.alpha, minimum, worst };
     }).filter(s => s.minimum !== Infinity);
     return { tested: measurements.length, complex: measurements.filter(s => s.complex).length, pixels, failures: measurements.filter(s => s.minimum < s.required), measurements };
 }

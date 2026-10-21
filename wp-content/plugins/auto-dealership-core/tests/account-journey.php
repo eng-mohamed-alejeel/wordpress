@@ -1,5 +1,5 @@
 <?php
-/** Complete real-theme customer journey, opt in with ADC_BROWSER_JOURNEY=1. */
+/** Catalog plus legacy theme fallback journey; the enabled portal has its own package acceptance. */
 if ( PHP_SAPI !== 'cli' || ! defined( 'DB_NAME' ) || ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', DB_NAME ) ) { exit( 1 ); }
 use AutoDealership\Database\Schema;
 wp_set_current_user( $admin );
@@ -21,6 +21,7 @@ $journey_address = stream_socket_get_name( $journey_socket, false ); fclose( $jo
 $journey_port = (int) substr( $journey_address, strrpos( $journey_address, ':' ) + 1 );
 $journey_log = tempnam( sys_get_temp_dir(), 'adc-journey-http-' );
 $journey_server = null;
+$journey_portal_settings_loaded = false;
 try {
 	$journey_server = proc_open( array( PHP_BINARY, '-S', '127.0.0.1:' . $journey_port, __DIR__ . '/http-router.php' ), array( 0=>array( 'pipe','r' ), 1=>array( 'file',$journey_log,'a' ), 2=>array( 'file',$journey_log,'a' ) ), $journey_pipes, ABSPATH, array_merge( getenv(), array( 'ADC_HTTP_TEST_CONFIG'=>ADC_TEST_HTTP_CONFIG, 'ADC_THEME_TEST'=>'1' ) ) );
 	if ( ! is_resource( $journey_server ) ) { throw new RuntimeException( 'Theme test server failed.' ); }
@@ -35,6 +36,12 @@ try {
 	update_option( 'adc_public_catalog_mode', $journey_catalog_mode );
 	if ( 0 !== $catalog_browser_status ) { throw new RuntimeException( 'Catalog browser journey failed. Server log: ' . $journey_log ); }
 	// Keep the two browser journeys independent from the shared loopback rate-limit bucket.
+	// This second browser contract targets the supported theme fallback, not PortalView's DOM.
+	// Enabled-portal account isolation, forms and recovery are covered by product-package-browser.cjs.
+	$journey_portal_settings = get_option( 'adc_portal_settings', null );
+	$journey_portal_settings_loaded = true;
+	update_option( 'adc_portal_settings', array_replace( (array) $journey_portal_settings, array( 'enabled'=>false ) ) );
+	adc_check( ! \AutoDealership\Portal\PortalAccess::ready(), 'Compatibility journey explicitly uses the configured theme fallback.' );
 	$journey_session_key = hash( 'sha256', ADC_TEST_HTTP_CONFIG . '|session' );
 	$journey_rate_reset = @file_get_contents( 'http://127.0.0.1:' . $journey_port . '/adc-test-reset-rate?key=' . rawurlencode( $journey_session_key ) );
 	if ( 'ok' !== $journey_rate_reset ) { throw new RuntimeException( 'Browser rate-limit reset failed.' ); }
@@ -48,6 +55,7 @@ try {
 	adc_check( $journey_customer === (int) get_post_meta( $journey_legacy_profile, '_crm_retired_core_customer_id', true ) && ! metadata_exists( 'post', $journey_legacy_profile, '_crm_due' ) && ! metadata_exists( 'post', $journey_legacy_profile, '_crm_task' ), 'Real theme linkage retires the account legacy CRM profile without contact matching.' );
 	adc_check( '0' === $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='cd_crm' AND post_title IN ('عميل الاختبار','عميل محدث')" ), 'Real login and profile edit create no duplicate legacy CRM profile.' );
 } finally {
+	if ( $journey_portal_settings_loaded ) { null === $journey_portal_settings ? delete_option( 'adc_portal_settings' ) : update_option( 'adc_portal_settings', $journey_portal_settings ); }
 	if ( isset( $journey_catalog_mode ) ) { update_option( 'adc_public_catalog_mode', $journey_catalog_mode ); }
 	if ( is_resource( $journey_server ) ) { proc_terminate( $journey_server ); proc_close( $journey_server ); }
 }

@@ -58,7 +58,7 @@ const check=(value,label)=>{assert.ok(value,label);checks++;console.log('PASS '+
   await early.route('**/brand-appearance.js*',async route=>{requested();await gate;await route.continue();});
   const first=await early.newPage();const navigation=first.goto(base+'/?lang=en',{waitUntil:'networkidle'});
   try{await pending;check(await first.evaluate(()=>document.documentElement.dataset.abTheme==='dark'&&document.documentElement.style.colorScheme==='dark'),'saved appearance applied before delayed main script or page content');}finally{unblock();await navigation;}
-  await first.goto(base+'/wp-login.php',{waitUntil:'networkidle'});check(await first.locator('[data-ab-toggle]').count()===1,'WordPress sign-in uses the same compact toggle');await early.close();
+  await first.goto(base+'/wp-login.php',{waitUntil:'networkidle'});check(await first.locator('.site-header [data-ab-toggle]').count()===1 && await first.locator('.site-footer [data-ab-toggle]').count()===1,'WordPress sign-in uses the same compact toggle');await early.close();
   fs.mkdirSync(path.join(root,'.tmp/appearance-acceptance'),{recursive:true});fs.writeFileSync(path.join(root,'.tmp/appearance-acceptance/results.json'),JSON.stringify({checks,report},null,2));
   console.log('APPEARANCE PASS: '+checks+' checks');
  }finally{await browser.close();}
