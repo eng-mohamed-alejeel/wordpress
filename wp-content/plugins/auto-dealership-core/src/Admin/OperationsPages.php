@@ -12,7 +12,9 @@ defined( 'ABSPATH' ) || exit;
 final class OperationsPages {
 	public static function boot(): void {
 		add_action( 'admin_menu', array( self::class, 'menu' ) );
-		add_action( 'admin_enqueue_scripts', static function(): void { if ( 'adc-crm' === ( $_GET['page'] ?? '' ) ) { wp_enqueue_style( 'adc-crm-admin', plugins_url( 'assets/css/crm-admin.css', ADC_FILE ), array( 'adc-admin' ), ADC_VERSION ); } } );
+		add_action( 'wp_ajax_adc_move_lead_stage', array( self::class, 'move_lead_stage_ajax' ) );
+		add_action( 'admin_post_adc_export_leads', array( self::class, 'export_leads' ) );
+		add_action( 'admin_enqueue_scripts', static function(): void { if ( 'adc-crm' === ( $_GET['page'] ?? '' ) ) { wp_enqueue_style( 'adc-crm-admin', plugins_url( 'assets/css/crm-admin.css', ADC_FILE ), array( 'adc-admin' ), ADC_VERSION ); wp_enqueue_script( 'adc-crm-board', plugins_url( 'assets/js/crm-board.js', ADC_FILE ), array(), ADC_VERSION, true ); wp_localize_script( 'adc-crm-board', 'adcCrmBoard', array( 'ajaxUrl'=>admin_url( 'admin-ajax.php' ), 'nonce'=>wp_create_nonce( 'adc_crm_board' ) ) ); } } );
 		add_action('admin_post_adc_inventory_map',array(InventoryWorkspacePage::class,'submit_mapping'));
 		add_action( 'admin_post_adc_create_vehicle', array( self::class, 'create_vehicle' ) );
 		add_action( 'admin_post_adc_transition_vehicle', array( self::class, 'transition_vehicle' ) );
@@ -104,6 +106,7 @@ final class OperationsPages {
 		$total_pages = max( 1, (int) ceil( $total_leads / $per_page ) );
 		$current_page = min( $current_page, $total_pages );
 		$leads = LeadService::list_for_current_user( $current_page, $per_page, $filters );
+		$board_leads = LeadService::list_for_current_user( 1, 100, $filters );
 		$summary = LeadService::pipeline_summary();
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><h1><?php esc_html_e( 'فرص العملاء CRM', 'auto-dealership-core' ); ?></h1><?php self::notice(); ?>
@@ -118,6 +121,8 @@ final class OperationsPages {
 				</select><button class="button"><?php esc_html_e( 'عرض السجل', 'auto-dealership-core' ); ?></button>
 			</form>
 			<?php self::render_activity_history(); ?>
+			<?php if ( ! absint( $_GET['lead_id'] ?? 0 ) ) : $export_url = wp_nonce_url( add_query_arg( array( 'action'=>'adc_export_leads', 's'=>sanitize_text_field( wp_unslash( $_GET['s'] ?? '' ) ), 'stage'=>sanitize_key( $_GET['stage'] ?? '' ), 'source'=>sanitize_key( $_GET['source'] ?? '' ), 'overdue'=>! empty( $_GET['overdue'] ) ? 1 : null ), admin_url( 'admin-post.php' ) ), 'adc_export_leads' ); ?><p><a class="button" href="<?php echo esc_url( $export_url ); ?>"><?php esc_html_e( 'تصدير النتائج CSV', 'auto-dealership-core' ); ?></a></p><?php endif; ?>
+			<?php if ( ! absint( $_GET['lead_id'] ?? 0 ) ) : ?><section class="adc-crm-board" aria-label="<?php esc_attr_e( 'لوحة مراحل الفرص', 'auto-dealership-core' ); ?>"><?php foreach ( array( 'new','contacted','qualified','quotation','finance','negotiation','reserved','won','lost' ) as $board_stage ) : ?><div class="adc-crm-board-column" data-lead-stage="<?php echo esc_attr( $board_stage ); ?>"><h2><?php echo esc_html( \AutoDealership\Core\Localization::label( $board_stage ) ); ?></h2><?php foreach ( $board_leads as $board_lead ) : if ( $board_stage !== $board_lead['stage'] ) { continue; } ?><article class="adc-crm-board-card" draggable="true" data-lead-card data-lead-id="<?php echo absint( $board_lead['id'] ); ?>" data-stage="<?php echo esc_attr( $board_lead['stage'] ); ?>" data-allowed="<?php echo esc_attr( wp_json_encode( LeadService::allowed_stage_transitions( (string) $board_lead['stage'] ) ) ); ?>"><strong><?php echo esc_html( $board_lead['full_name'] ); ?></strong><span>#<?php echo absint( $board_lead['id'] ); ?></span><a href="<?php echo esc_url( add_query_arg( array( 'page'=>'adc-crm','lead_id'=>(int) $board_lead['id'] ), admin_url( 'admin.php' ) ) ); ?>"><?php esc_html_e( 'التفاصيل', 'auto-dealership-core' ); ?></a></article><?php endforeach; ?></div><?php endforeach; ?></section><?php endif; ?>
 			<?php if ( ! empty( $_GET['owner'] ) ) : ?><p class="description"><?php echo esc_html( sprintf( __( 'تصفية حسب المسؤول رقم %d', 'auto-dealership-core' ), absint( $_GET['owner'] ) ) ); ?></p><?php endif; ?>
 			<?php if ( absint( $_GET['lead_id'] ?? 0 ) ) : ?><p><a class="button" href="<?php echo esc_url( remove_query_arg( array( 'lead_id', 'activity_page' ) ) ); ?>"><?php esc_html_e( 'العودة إلى قائمة الفرص', 'auto-dealership-core' ); ?></a></p></div><?php return; endif; ?>
 			<table class="widefat striped"><thead><tr><th><?php echo esc_html__( 'ID', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'العميل', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الجوال', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'البريد', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المصدر', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المرحلة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'تحديث', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'إضافة نشاط', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
@@ -210,6 +215,25 @@ final class OperationsPages {
 		check_admin_referer( 'adc_update_lead_stage_' . $id );
 		$result = LeadService::update_stage( $id, sanitize_key( wp_unslash( $_POST['stage'] ?? '' ) ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) );
 		self::redirect( 'adc-crm', $result );
+	}
+
+	public static function move_lead_stage_ajax(): void {
+		check_ajax_referer( 'adc_crm_board', 'nonce' );
+		$lead_id = absint( $_POST['lead_id'] ?? 0 );
+		$stage = sanitize_key( wp_unslash( $_POST['stage'] ?? '' ) );
+		$result = LeadService::update_stage( $lead_id, $stage, sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) );
+		if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), (int) ( $result->get_error_data()['status'] ?? 400 ) ); }
+		wp_send_json_success( array( 'id' => $lead_id, 'stage' => $stage ) );
+	}
+
+	public static function export_leads(): void {
+		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية تصدير الفرص.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
+		check_admin_referer( 'adc_export_leads' );
+		$filters = array( 'search'=>$_GET['s'] ?? '', 'stage'=>$_GET['stage'] ?? '', 'source'=>$_GET['source'] ?? '', 'overdue'=>! empty( $_GET['overdue'] ) );
+		$rows = LeadService::list_for_current_user( 1, 100, $filters );
+		nocache_headers(); header( 'Content-Type: text/csv; charset=UTF-8' ); header( 'Content-Disposition: attachment; filename=crm-leads-' . gmdate( 'Y-m-d' ) . '.csv' );
+		echo "\xEF\xBB\xBF"; $out = fopen( 'php://output', 'w' ); fputcsv( $out, array( 'ID','Customer','Mobile','Email','Source','Stage','Created','Next follow-up' ) );
+		foreach ( $rows as $row ) { fputcsv( $out, array( $row['id'],$row['full_name'],$row['mobile'],$row['email'],$row['source'],$row['stage'],$row['created_at'],$row['next_action_at'] ) ); } fclose( $out ); exit;
 	}
 
 	public static function assign_lead(): void {
