@@ -11,7 +11,8 @@ defined( 'ABSPATH' ) || exit;
 final class LeadService {
 	private const SOURCES = array( 'website', 'whatsapp', 'phone', 'walk_in', 'instagram', 'tiktok', 'snapchat', 'google', 'referral', 'campaign', 'other' );
 	private const STAGE_TRANSITIONS = array(
-		'new' => array( 'contacted', 'lost' ),
+		'new' => array( 'assigned', 'lost' ),
+		'assigned' => array( 'contacted', 'lost' ),
 		'contacted' => array( 'qualified', 'lost' ),
 		'qualified' => array( 'quotation', 'finance', 'negotiation', 'lost' ),
 		'quotation' => array( 'finance', 'negotiation', 'reserved', 'lost' ),
@@ -24,6 +25,35 @@ final class LeadService {
 
 	public static function allowed_stage_transitions( string $from ): array {
 		return self::STAGE_TRANSITIONS[ sanitize_key( $from ) ] ?? array();
+	}
+
+	/** Atomically claims an unassigned lead for the current sales employee. */
+	public static function claim( int $lead_id ) {
+		global $wpdb;
+		if ( ! current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_view_marketing_leads' ) ) { return new \WP_Error( 'adc_claim_forbidden', __( 'لا تملك صلاحية استلام الفرص.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }
+		$user_id = get_current_user_id(); $branch_id = BranchScope::assigned_branch();
+		if ( ! $user_id || ! $branch_id ) { return new \WP_Error( 'adc_claim_branch_required', __( 'يجب ربط الموظف بفرع قبل استلام الفرص.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }
+		$table = Schema::table( 'leads' );
+		if ( ! Transaction::begin() ) { return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) ); }
+		$updated = $wpdb->query( $wpdb->prepare( "UPDATE $table SET owner_user_id=%d,stage='assigned',updated_at=%s WHERE id=%d AND branch_id=%d AND owner_user_id=0 AND stage='new'", $user_id, current_time( 'mysql', true ), $lead_id, $branch_id ) );
+		if ( 1 !== $updated ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_claim_unavailable', __( 'الفرصة لم تعد متاحة للاستلام.', 'auto-dealership-core' ), array( 'status' => 409 ) ); }
+		$wpdb->insert( Schema::table( 'activities' ), array( 'lead_id'=>$lead_id, 'actor_user_id'=>$user_id, 'type'=>'assignment', 'notes'=>'Lead claimed by sales employee', 'created_at'=>current_time( 'mysql', true ) ), array( '%d','%d','%s','%s','%s' ) );
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'lead.claimed', 'lead', $lead_id, 'Sales employee claimed lead', array( 'stage'=>'new','owner_user_id'=>0 ), array( 'stage'=>'assigned','owner_user_id'=>$user_id ) ) ) ) { return new \WP_Error( 'adc_claim_audit_failed', __( 'تعذر توثيق استلام الفرصة.', 'auto-dealership-core' ), array( 'status' => 500 ) ); }
+		return array( 'id'=>$lead_id, 'stage'=>'assigned', 'owner_user_id'=>$user_id );
+	}
+
+	/** Releases claimed leads that received no activity within the configured window. */
+	public static function release_stale_claims(): int {
+		global $wpdb;
+		$minutes = max( 5, min( 1440, absint( get_option( 'adc_lead_claim_timeout_minutes', 30 ) ) ) );
+		$table = Schema::table( 'leads' ); $cutoff = gmdate( 'Y-m-d H:i:s', time() - $minutes * MINUTE_IN_SECONDS );
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id,owner_user_id FROM $table WHERE stage='assigned' AND updated_at<=%s", $cutoff ), ARRAY_A ) ?: array(); $released = 0;
+		foreach ( $rows as $row ) {
+			if ( 1 !== $wpdb->query( $wpdb->prepare( "UPDATE $table SET owner_user_id=0,stage='new',updated_at=%s WHERE id=%d AND stage='assigned' AND updated_at<=%s", current_time( 'mysql', true ), (int) $row['id'], $cutoff ) ) ) { continue; }
+			$wpdb->insert( Schema::table( 'activities' ), array( 'lead_id'=>(int) $row['id'], 'actor_user_id'=>0, 'type'=>'assignment', 'notes'=>'Claim expired without first follow-up', 'created_at'=>current_time( 'mysql', true ) ), array( '%d','%d','%s','%s','%s' ) );
+			AuditLog::record( 'lead.claim_expired', 'lead', (int) $row['id'], 'Claim expired without activity', array( 'owner_user_id'=>(int) $row['owner_user_id'], 'stage'=>'assigned' ), array( 'owner_user_id'=>0, 'stage'=>'new' ) ); $released++;
+		}
+		return $released;
 	}
 
 	public static function create_public( array $input, ?array $legacy_ref = null, string $initial_activity_notes = '', string $compatibility_type = '' ) {
@@ -168,6 +198,7 @@ final class LeadService {
 		$lead_table = Schema::table( 'leads' );
 		$customer_table = Schema::table( 'customers' );
 		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' );
+		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { $scope = '1=1'; $args = array(); }
 		$where = ' WHERE ' . $scope;
 		$search = trim( (string) ( $filters['search'] ?? '' ) );
 		if ( '' !== $search ) {
@@ -209,7 +240,7 @@ final class LeadService {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) { return 0; }
 		$lead_table = Schema::table( 'leads' ); $customer_table = Schema::table( 'customers' );
-		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' ); $where = ' WHERE ' . $scope;
+		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' ); if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { $scope = '1=1'; $args = array(); } $where = ' WHERE ' . $scope;
 		$search = trim( (string) ( $filters['search'] ?? '' ) );
 		if ( '' !== $search ) { $like = '%' . $wpdb->esc_like( $search ) . '%'; $where .= ' AND (c.full_name LIKE %s OR c.mobile LIKE %s OR c.email LIKE %s OR CAST(l.id AS CHAR) LIKE %s)'; array_push( $args, $like, $like, $like, $like ); }
 		$stage = sanitize_key( (string) ( $filters['stage'] ?? '' ) );
@@ -240,7 +271,7 @@ final class LeadService {
 	public static function find_for_current_user( int $lead_id ) {
 		global $wpdb;
 		if ( $lead_id < 1 || ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) ) { return new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status'=>404 ) ); }
-		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' ); $args[] = $lead_id;
+		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' ); if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { $scope = '1=1'; $args = array(); } $args[] = $lead_id;
 		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { $scope .= ' AND l.created_by=%d'; $args[] = get_current_user_id(); }
 		elseif ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) { $scope .= ' AND l.owner_user_id=%d'; $args[] = get_current_user_id(); }
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,l.campaign,l.platform,l.created_by,l.referred_at,l.stage,l.next_action_at,l.created_at,l.updated_at,c.full_name,c.mobile,c.email,c.city FROM ' . Schema::table( 'leads' ) . ' l INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=l.customer_id WHERE ' . $scope . ' AND l.id=%d', $args ), ARRAY_A );
@@ -254,6 +285,7 @@ final class LeadService {
 			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية عرض الفرص.', 'auto-dealership-core' ), array( 'status'=>403 ) );
 		}
 		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' );
+		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { $scope = '1=1'; $args = array(); }
 		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) {
 			$scope .= ' AND l.created_by=%d'; $args[] = get_current_user_id();
 		} elseif ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) {

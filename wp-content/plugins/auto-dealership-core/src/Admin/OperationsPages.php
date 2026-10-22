@@ -24,6 +24,7 @@ final class OperationsPages {
 		add_action( 'admin_post_adc_change_vehicle_vin', array( self::class, 'change_vehicle_vin' ) );
 		add_action( 'admin_post_adc_update_lead_stage', array( self::class, 'update_lead_stage' ) );
 		add_action( 'admin_post_adc_assign_lead', array( self::class, 'assign_lead' ) );
+		add_action( 'admin_post_adc_claim_lead', array( self::class, 'claim_lead' ) );
 		add_action( 'admin_post_adc_add_activity', array( self::class, 'add_activity' ) );
 	}
 
@@ -110,6 +111,11 @@ final class OperationsPages {
 		$leads = LeadService::list_for_current_user( $current_page, $per_page, $filters );
 		$board_leads = LeadService::list_for_current_user( 1, 100, $filters );
 		$summary = LeadService::pipeline_summary();
+		if ( current_user_can( 'adc_manage_own_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) ) {
+			echo '<section class="card adc-lead-claim-queue"><h2>' . esc_html__( 'فرص متاحة للاستلام', 'auto-dealership-core' ) . '</h2>';
+			foreach ( $leads as $claimable ) { if ( 'new' !== $claimable['stage'] || (int) $claimable['owner_user_id'] !== 0 ) { continue; } echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline-block;margin:4px"><input type="hidden" name="action" value="adc_claim_lead"><input type="hidden" name="lead_id" value="' . absint( $claimable['id'] ) . '">' . wp_nonce_field( 'adc_claim_lead_' . (int) $claimable['id'], '_wpnonce', true, false ) . '<button class="button button-primary">' . esc_html( sprintf( __( 'استلام الفرصة #%d', 'auto-dealership-core' ), (int) $claimable['id'] ) ) . '</button></form>'; }
+			echo '</section>';
+		}
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><h1><?php esc_html_e( 'فرص العملاء CRM', 'auto-dealership-core' ); ?></h1><?php self::notice(); ?>
 			<?php self::render_marketing_intake_v2(); ?>
@@ -265,12 +271,14 @@ final class OperationsPages {
 	public static function update_lead_stage(): void {
 		$id = absint( $_POST['lead_id'] ?? 0 );
 		check_admin_referer( 'adc_update_lead_stage_' . $id );
+		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_manage_own_leads' ) && ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية تغيير مراحل الفرص.', 'auto-dealership-core' ), '', array( 'response' => 403 ) ); }
 		$result = LeadService::update_stage( $id, sanitize_key( wp_unslash( $_POST['stage'] ?? '' ) ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) );
 		self::redirect( 'adc-crm', $result );
 	}
 
 	public static function move_lead_stage_ajax(): void {
 		check_ajax_referer( 'adc_crm_board', 'nonce' );
+		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_manage_own_leads' ) && ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { wp_send_json_error( array( 'message' => __( 'لا تملك صلاحية تغيير مراحل الفرص.', 'auto-dealership-core' ) ), 403 ); }
 		$lead_id = absint( $_POST['lead_id'] ?? 0 );
 		$stage = sanitize_key( wp_unslash( $_POST['stage'] ?? '' ) );
 		$result = LeadService::update_stage( $lead_id, $stage, sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) );
@@ -310,7 +318,14 @@ final class OperationsPages {
 	public static function assign_lead(): void {
 		$id = absint( $_POST['lead_id'] ?? 0 );
 		check_admin_referer( 'adc_assign_lead_' . $id );
+		if ( ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية إسناد الفرص.', 'auto-dealership-core' ), '', array( 'response' => 403 ) ); }
 		self::redirect( 'adc-crm', LeadService::assign( $id, absint( $_POST['staff_id'] ?? 0 ) ) );
+	}
+
+	public static function claim_lead(): void {
+		$id = absint( $_POST['lead_id'] ?? 0 );
+		check_admin_referer( 'adc_claim_lead_' . $id );
+		self::redirect( 'adc-crm', LeadService::claim( $id ) );
 	}
 
 	private static function follow_up_input(): string {

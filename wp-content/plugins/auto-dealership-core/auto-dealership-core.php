@@ -418,6 +418,8 @@ add_action( 'plugins_loaded', static function (): void {
 	\AutoDealership\Core\Capabilities::migrate_sales_permissions();
 	\AutoDealership\Core\Capabilities::migrate_purchase_permissions();
 	\AutoDealership\Core\Capabilities::migrate_newsletter_permissions();
+	\AutoDealership\Core\Capabilities::migrate_marketing_permissions();
+	if ( ! wp_next_scheduled( 'adc_release_stale_lead_claims' ) ) { wp_schedule_event( time() + 10 * MINUTE_IN_SECONDS, 'adc_fifteen_minutes', 'adc_release_stale_lead_claims' ); }
 	if ( get_option( 'adc_roles_version' ) !== ADC_VERSION ) {
 		\AutoDealership\Core\Capabilities::activate();
 		update_option( 'adc_roles_version', ADC_VERSION, false );
@@ -521,6 +523,7 @@ add_action( 'init', static function (): void {
 add_action( 'adc_expire_reservations', array( 'AutoDealership\\Reservations\\ReservationService', 'expire_due' ) );
 add_action( 'adc_privacy_retention', array( 'AutoDealership\\Privacy\\RetentionService', 'run' ) );
 add_action( 'adc_process_outbox', array( 'AutoDealership\\Operations\\OutboxService', 'run' ) );
+add_action( 'adc_release_stale_lead_claims', array( 'AutoDealership\\Leads\\LeadService', 'release_stale_claims' ) );
 add_action( 'adc_prune_request_limits', array( 'AutoDealership\\Security\\PublicRequestGuard', 'prune' ) );
 register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_expire_reservations' );

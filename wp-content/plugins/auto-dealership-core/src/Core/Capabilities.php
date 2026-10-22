@@ -14,6 +14,13 @@ final class Capabilities {
 		}
 		update_option( 'adc_newsletter_permissions_version', '1', false );
 	}
+	private const MARKETING_CAPABILITIES = array( 'adc_create_marketing_leads', 'adc_view_marketing_leads', 'adc_edit_marketing_lead_identity', 'adc_view_campaign_metrics', 'adc_add_marketing_activity' );
+	public static function migrate_marketing_permissions(): void {
+		if ( '1' === get_option( 'adc_marketing_permissions_version' ) ) { return; }
+		$role = get_role( 'dealership_marketing' );
+		if ( $role ) { foreach ( self::MARKETING_CAPABILITIES as $cap ) { $role->add_cap( $cap ); } }
+		update_option( 'adc_marketing_permissions_version', '1', false );
+	}
 	private const PURCHASE_CAPABILITIES = array( 'adc_view_purchase_orders', 'adc_create_purchase_orders', 'adc_approve_purchase_orders', 'adc_approve_high_purchase_orders', 'adc_receive_purchase_orders', 'adc_cancel_purchase_orders' );
 	private const PURCHASE_ROLES = array(
 		'dealership_purchasing'=>array( 'adc_view_purchase_orders', 'adc_create_purchase_orders', 'adc_receive_purchase_orders', 'adc_cancel_purchase_orders' ),
@@ -77,7 +84,7 @@ final class Capabilities {
 		'dealership_purchasing' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_view_suppliers', 'adc_manage_suppliers', 'adc_view_vehicle_costs', 'adc_manage_vehicle_costs' ),
 		'dealership_delivery' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_confirm_vehicle_vin', 'adc_process_returns' ),
 		'dealership_customer_service' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_create_reservations' ),
-		'dealership_marketing' => array( 'read', 'adc_view_workspace', 'adc_view_reports', 'adc_view_marketing_subscribers', 'adc_create_marketing_leads', 'adc_view_marketing_leads', 'adc_edit_marketing_lead_identity', 'adc_view_campaign_metrics' ),
+		'dealership_marketing' => array( 'read', 'adc_view_workspace', 'adc_view_marketing_subscribers', 'adc_create_marketing_leads', 'adc_view_marketing_leads', 'adc_edit_marketing_lead_identity', 'adc_view_campaign_metrics', 'adc_add_marketing_activity' ),
 		'dealership_auditor' => array( 'read', 'adc_view_workspace', 'adc_view_audit', 'adc_view_outbox', 'adc_view_integrations', 'adc_view_reports' ),
 	);
 
@@ -165,7 +172,7 @@ final class Capabilities {
 	}
 
 	public static function all_capabilities(): array {
-		$caps = array_merge( array( 'adc_manage_newsletter','adc_publish_customer_documents' ), self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES, \AutoDealership\Portal\PortalAccess::CAPS );
+		$caps = array_merge( array( 'adc_manage_newsletter','adc_publish_customer_documents' ), self::MARKETING_CAPABILITIES, self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES, \AutoDealership\Portal\PortalAccess::CAPS );
 		foreach ( self::ROLE_CAPABILITIES as $role_caps ) {
 			$caps = array_merge( $caps, $role_caps );
 		}
