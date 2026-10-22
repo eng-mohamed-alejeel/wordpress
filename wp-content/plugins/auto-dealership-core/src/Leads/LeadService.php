@@ -160,7 +160,7 @@ final class LeadService {
 	/** Lists only leads within the current user's assigned scope. */
 	public static function list_for_current_user( int $page = 1, int $per_page = 20, array $filters = array() ): array {
 		global $wpdb;
-		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) {
 			return array();
 		}
 		$page = max( 1, $page );
@@ -182,12 +182,18 @@ final class LeadService {
 		}
 		$source = sanitize_key( (string) ( $filters['source'] ?? '' ) );
 		if ( '' !== $source && in_array( $source, self::SOURCES, true ) ) { $where .= ' AND l.source=%s'; $args[] = $source; }
+		$campaign = trim( (string) ( $filters['campaign'] ?? '' ) ); if ( '' !== $campaign ) { $where .= ' AND l.campaign LIKE %s'; $args[] = '%' . $wpdb->esc_like( $campaign ) . '%'; }
+		$platform_raw = (string) ( $filters['platform'] ?? '' );
+		$platform = function_exists( 'sanitize_text_field' ) ? \sanitize_text_field( $platform_raw ) : preg_replace( '/[^\p{L}\p{N} _.-]/u', '', $platform_raw );
+		if ( '' !== $platform ) { $where .= ' AND l.platform=%s'; $args[] = $platform; }
+		if ( ! empty( $filters['created_by'] ) ) { $where .= ' AND l.created_by=%d'; $args[] = absint( $filters['created_by'] ); }
 		if ( array_key_exists( 'owner', $filters ) && absint( $filters['owner'] ) > 0 ) { $where .= ' AND l.owner_user_id=%d'; $args[] = absint( $filters['owner'] ); }
 		if ( ! empty( $filters['overdue'] ) ) {
 			$where .= " AND l.next_action_at IS NOT NULL AND l.next_action_at<=%s AND l.stage NOT IN ('won','lost')";
 			$args[] = current_time( 'mysql', true );
 		}
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { $where .= ' AND l.created_by=%d'; $args[] = get_current_user_id(); }
+		elseif ( ! current_user_can( 'manage_options' ) ) {
 			if ( ! current_user_can( 'adc_view_branch_leads' ) ) {
 				$where .= ' AND l.owner_user_id = %d';
 				$args[] = get_current_user_id();
@@ -195,13 +201,13 @@ final class LeadService {
 		}
 		$args[] = $per_page;
 		$args[] = ( $page - 1 ) * $per_page;
-		$sql = 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,l.stage,l.next_action_at,l.created_at,c.full_name,c.mobile,c.email,c.city FROM ' . $lead_table . ' l INNER JOIN ' . $customer_table . ' c ON c.id=l.customer_id' . $where . ' ORDER BY l.created_at DESC LIMIT %d OFFSET %d';
+		$sql = 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,l.campaign,l.platform,l.created_by,l.referred_at,l.stage,l.next_action_at,l.created_at,c.full_name,c.mobile,c.email,c.city FROM ' . $lead_table . ' l INNER JOIN ' . $customer_table . ' c ON c.id=l.customer_id' . $where . ' ORDER BY l.created_at DESC LIMIT %d OFFSET %d';
 		return $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
 	}
 
 	public static function count_for_current_user( array $filters = array() ): int {
 		global $wpdb;
-		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { return 0; }
+		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) { return 0; }
 		$lead_table = Schema::table( 'leads' ); $customer_table = Schema::table( 'customers' );
 		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' ); $where = ' WHERE ' . $scope;
 		$search = trim( (string) ( $filters['search'] ?? '' ) );
@@ -210,10 +216,14 @@ final class LeadService {
 		if ( '' !== $stage && array_key_exists( $stage, self::STAGE_TRANSITIONS ) ) { $where .= ' AND l.stage=%s'; $args[] = $stage; }
 		$source = sanitize_key( (string) ( $filters['source'] ?? '' ) );
 		if ( '' !== $source && in_array( $source, self::SOURCES, true ) ) { $where .= ' AND l.source=%s'; $args[] = $source; }
+		$campaign = trim( (string) ( $filters['campaign'] ?? '' ) ); if ( '' !== $campaign ) { $where .= ' AND l.campaign LIKE %s'; $args[] = '%' . $wpdb->esc_like( $campaign ) . '%'; }
+		$platform = sanitize_text_field( (string) ( $filters['platform'] ?? '' ) ); if ( '' !== $platform ) { $where .= ' AND l.platform=%s'; $args[] = $platform; }
+		if ( ! empty( $filters['created_by'] ) ) { $where .= ' AND l.created_by=%d'; $args[] = absint( $filters['created_by'] ); }
 		if ( array_key_exists( 'owner', $filters ) && absint( $filters['owner'] ) > 0 ) { $where .= ' AND l.owner_user_id=%d'; $args[] = absint( $filters['owner'] ); }
 		if ( ! empty( $filters['overdue'] ) ) { $where .= " AND l.next_action_at IS NOT NULL AND l.next_action_at<=%s AND l.stage NOT IN ('won','lost')"; $args[] = current_time( 'mysql', true ); }
 		if ( array_key_exists( 'owner', $filters ) ) { $where .= ' AND l.owner_user_id=%d'; $args[] = absint( $filters['owner'] ); }
-		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) { $where .= ' AND l.owner_user_id=%d'; $args[] = get_current_user_id(); }
+		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { $where .= ' AND l.created_by=%d'; $args[] = get_current_user_id(); }
+		elseif ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) { $where .= ' AND l.owner_user_id=%d'; $args[] = get_current_user_id(); }
 		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $lead_table . ' l INNER JOIN ' . $customer_table . ' c ON c.id=l.customer_id' . $where, $args ) );
 	}
 
@@ -229,21 +239,24 @@ final class LeadService {
 
 	public static function find_for_current_user( int $lead_id ) {
 		global $wpdb;
-		if ( $lead_id < 1 || ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) ) { return new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status'=>404 ) ); }
+		if ( $lead_id < 1 || ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) ) { return new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status'=>404 ) ); }
 		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' ); $args[] = $lead_id;
-		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) { $scope .= ' AND l.owner_user_id=%d'; $args[] = get_current_user_id(); }
-		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,l.stage,l.next_action_at,l.created_at,l.updated_at,c.full_name,c.mobile,c.email,c.city FROM ' . Schema::table( 'leads' ) . ' l INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=l.customer_id WHERE ' . $scope . ' AND l.id=%d', $args ), ARRAY_A );
+		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { $scope .= ' AND l.created_by=%d'; $args[] = get_current_user_id(); }
+		elseif ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) { $scope .= ' AND l.owner_user_id=%d'; $args[] = get_current_user_id(); }
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,l.campaign,l.platform,l.created_by,l.referred_at,l.stage,l.next_action_at,l.created_at,l.updated_at,c.full_name,c.mobile,c.email,c.city FROM ' . Schema::table( 'leads' ) . ' l INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=l.customer_id WHERE ' . $scope . ' AND l.id=%d', $args ), ARRAY_A );
 		return $row ?: new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status'=>404 ) );
 	}
 
 	/** Activity content uses the same read scope as the lead list. */
 	public static function activity_history( int $lead_id, int $page = 1, int $per_page = 50 ) {
 		global $wpdb;
-		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية عرض الفرص.', 'auto-dealership-core' ), array( 'status'=>403 ) );
 		}
 		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' );
-		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) {
+		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) {
+			$scope .= ' AND l.created_by=%d'; $args[] = get_current_user_id();
+		} elseif ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) {
 			$scope .= ' AND l.owner_user_id=%d'; $args[] = get_current_user_id();
 		}
 		$args[] = $lead_id;

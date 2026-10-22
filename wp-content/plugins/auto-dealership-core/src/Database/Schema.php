@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.25.0';
+	public const VERSION = '1.26.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -298,6 +298,12 @@ final class Schema {
 				branch_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				owner_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				source varchar(40) NOT NULL DEFAULT 'website',
+				campaign varchar(190) NOT NULL DEFAULT '',
+				platform varchar(80) NOT NULL DEFAULT '',
+				ad_url varchar(500) NOT NULL DEFAULT '',
+				consent_marketing tinyint(1) NOT NULL DEFAULT 0,
+				created_by bigint(20) unsigned NOT NULL DEFAULT 0,
+				referred_at datetime NULL,
 				stage varchar(32) NOT NULL DEFAULT 'new',
 				lost_reason text NOT NULL,
 				next_action_at datetime NULL,
@@ -311,7 +317,10 @@ final class Schema {
 				KEY customer_id (customer_id),
 				UNIQUE KEY legacy_request (legacy_request_type,legacy_request_id),
 				UNIQUE KEY public_request_key (public_request_key),
-				KEY pipeline (branch_id,stage,owner_user_id)
+				KEY pipeline (branch_id,stage,owner_user_id),
+				KEY campaign (campaign),
+				KEY created_by (created_by),
+				KEY source (source)
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'activities' ) . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,

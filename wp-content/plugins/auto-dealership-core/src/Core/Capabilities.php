@@ -77,7 +77,7 @@ final class Capabilities {
 		'dealership_purchasing' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_view_suppliers', 'adc_manage_suppliers', 'adc_view_vehicle_costs', 'adc_manage_vehicle_costs' ),
 		'dealership_delivery' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_confirm_vehicle_vin', 'adc_process_returns' ),
 		'dealership_customer_service' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_create_reservations' ),
-		'dealership_marketing' => array( 'read', 'adc_view_workspace', 'adc_view_reports', 'adc_view_marketing_subscribers' ),
+		'dealership_marketing' => array( 'read', 'adc_view_workspace', 'adc_view_reports', 'adc_view_marketing_subscribers', 'adc_create_marketing_leads', 'adc_view_marketing_leads', 'adc_edit_marketing_lead_identity', 'adc_view_campaign_metrics' ),
 		'dealership_auditor' => array( 'read', 'adc_view_workspace', 'adc_view_audit', 'adc_view_outbox', 'adc_view_integrations', 'adc_view_reports' ),
 	);
 
