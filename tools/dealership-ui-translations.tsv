@@ -1,5 +1,66 @@
 # Arabic<TAB>English; use \u0020 for leading or trailing spaces. UI copy only; never translate stored identifiers or customer input.
 فروع التشغيل	Operational branches
+توزيع العملاء المحتملين	Lead assignment
+انتهاء مهلة استلام فرصة	Lead claim expired
+إسناد يدوي إلى قائمة الفرع المشتركة	Manual assignment to the shared branch queue
+توزيع تلقائي بالتناوب حسب الفرع	Automatic round-robin assignment by branch
+يوزّع الطلبات الجديدة على موظفي المبيعات النشطين المعيّنين إلى الفرع فقط. إذا لم يتوفر موظف مؤهل، يبقى الطلب في قائمة الفرع المشتركة.	New enquiries are assigned only to active sales staff assigned to that branch. If no eligible employee is available, the enquiry remains in the shared branch queue.
+مهلة المطالبة بالدقائق	Claim timeout in minutes
+تُعاد الفرصة المسندة إلى القائمة المشتركة إذا لم يُسجّل الموظف أول تواصل قبل انتهاء المهلة؛ من 5 إلى 1440 دقيقة.	An assigned lead returns to the shared queue if the employee does not record first contact before the timeout; valid range is 5 to 1440 minutes.
+أداء العملاء المحتملين CRM	CRM lead performance
+مؤشرات الفروع	Branch performance
+مؤشرات موظفي المبيعات	Sales employee performance
+توزيع المراحل حسب الفرع والموظف	Pipeline by branch and employee
+التحولات التاريخية بين المراحل	Historical stage transitions
+يعرض الانتقالات المسجلة خلال الفترة؛ لا تتوفر بيانات انتقالات ما قبل تفعيل سجل المراحل.	Shows transitions recorded during the selected period; transitions from before stage history was enabled are unavailable.
+يعرض الانتقالات المسجلة خلال الفترة؛ لا تتوفر بيانات انتقالات ما قبل تفعيل سجل المراحل. حصة كل وجهة هي نسبة الفرص الفريدة التي غادرت المرحلة المصدر ووصلت إليها؛ وقد يتجاوز مجموع حصص الوجهات 100% إذا انتقلت الفرصة إلى وجهات مختلفة خلال الفترة.	Shows transitions recorded during the selected period; transitions from before stage history was enabled are unavailable. Each destination share is the portion of distinct leads leaving the source stage that reached that destination; the sum across destinations may exceed 100% if a lead reaches different destinations during the period.
+الموظف وقت الانتقال	Owner at transition
+من مرحلة	From stage
+إلى مرحلة	To stage
+عدد الانتقالات	Transitions
+عدد الفرص	Leads
+متوسط الزمن بالساعة	Average time (hours)
+لا توجد انتقالات مسجلة للفترة المحددة.	No recorded transitions for the selected period.
+قد يتجاوز مجموع حصص الوجهات 100% إذا انتقلت الفرصة إلى وجهات مختلفة خلال الفترة.	The sum of destination shares may exceed 100% if a lead reaches different destinations during the period.
+حصة الوجهة من المغادرين	Destination share of source exits
+لا توجد فرص متاحة في هذه الصفحة.	No claimable leads on this page.
+صفحات فرص الاستلام	Claim queue pages
+صفحات لوحة المراحل	Pipeline board pages
+عرض %1$d–%2$d من %3$d فرصة في اللوحة	Showing leads %1$d–%2$d of %3$d on the board
+صفحة %1$d من %2$d	Page %1$d of %2$d
+صفحات فرص العملاء	Lead pages
+المرحلة التالية	Next stage
+اختر المرحلة التالية	Select the next stage
+تغيير المرحلة	Change stage
+تعتمد حدود التاريخ على المنطقة الزمنية للموقع. تشمل المؤشرات الفرص المنشأة خلال الفترة المحددة، بينما تعكس المرحلة الحالية والمتابعات المتأخرة حالتها عند إعداد التقرير، لا الأحداث التي وقعت داخل الفترة فقط.	Date boundaries use the site timezone. Metrics include leads created during the selected period, while current stage and overdue follow-ups reflect their state when the report is generated, not only events that occurred within the period.
+مكتملة	Completed
+تعذر إكمال آخر دفعة وستتم إعادة المحاولة	The last batch failed and will be retried
+قيد التنفيذ أو بانتظار المجدول	Running or waiting for the scheduler
+استعادة سجل المراحل: %1$s. عولج %2$s حدث تدقيق، وأعيد حساب مدد %3$s فرصة؛ مؤشر الأحداث %4$s.	Stage history recovery: %1$s. Processed %2$s audit events and recalculated durations for %3$s leads; event cursor %4$s.
+تعذر حفظ سجل مراحل الطلب.	Unable to save lead stage history.
+تعذر تحميل سجل انتقالات CRM.	Unable to load CRM transition history.
+تعذر حساب نسب انتقالات CRM.	Unable to calculate CRM transition rates.
+مفتاح إعادة إرسال الطلب غير صالح.	The request retry key is invalid.
+تعذر التحقق من الفرص المشابهة؛ لم يتم إنشاء فرصة جديدة.	Unable to check for similar leads; no new lead was created.
+متوسط الزمن من إنشاء الفرصة إلى أول تواصل: %s دقيقة	Average time from lead creation to first contact: %s minutes
+متوسط أول تواصل (دقيقة)	Average time to first contact (minutes)
+إجمالي الفرص	Total leads
+تم أول تواصل	First contact recorded
+مباعة	Won
+خاسرة	Lost
+متأخرة	Overdue
+جديدة	New
+من تاريخ	From date
+إلى تاريخ	To date
+كل الأولويات	All priorities
+كل الموظفين	All employees
+غير مسندة	Unassigned
+كل الفروع المسموحة	All permitted branches
+موظف غير نشط	Inactive employee
+بدون فرع	No branch
+لا توجد بيانات للفترة المحددة.	No data for the selected period.
+لا توجد بيانات موظفين للفترة المحددة.	No employee data for the selected period.
+لا توجد مراحل مسجلة للفترة المحددة.	No pipeline stages recorded for the selected period.
 محادثات العملاء	Customer conversations
 تقييمات العملاء	Customer reviews
 مستشار المحادثات	Chat adviser
@@ -820,6 +881,67 @@ VIN الجديد	New VIN
 تفاصيل العرض	Offer details
 تم إبقاء العرض كمسودة لأن السيارة المرتبطة غير منشورة أو غير متوفرة.	The offer was kept as a draft because its linked vehicle is unpublished or unavailable.
 تم إنشاء %d صفحة كمسودة وتوثيق العملية.	Created %d draft pages and audited the operation.
+الفرص المتاحة للاستلام	Leads available to claim
+استلام الفرصة	Claim lead
+فرص جديدة	New leads
+متابعات متأخرة	Overdue follow-ups
+بحث بالاسم أو الجوال أو البريد أو الرقم	Search by name, mobile, email or ID
+كل المراحل	All stages
+كل المصادر	All sources
+المتابعات المتأخرة	Overdue follow-ups
+تصفية	Filter
+تصدير النتائج CSV	Export results CSV
+لوحة مراحل الفرص	Lead stage board
+تصفية حسب المسؤول رقم %d	Filter by owner #%d
+العودة إلى قائمة الفرص	Back to leads
+إضافة فرصة من فريق التسويق	Add a lead from marketing
+اسم العميل	Customer name
+الفرع الافتراضي	Default branch
+الحملة	Campaign
+المنصة	Platform
+إسناد لاحقًا	Assign later
+رابط الإعلان	Ad URL
+تم الحصول على موافقة العميل للتواصل	Customer consent to be contacted has been obtained
+إنشاء الفرصة	Create lead
+منشئ الفرصة	Lead creator
+تصفية التسويق	Filter marketing
+لا تملك صلاحية عرض تقرير أداء CRM.	You are not allowed to view CRM performance reports.
+الموظف	Employee
+لا تملك صلاحية عرض تقارير التسويق.	You are not allowed to view marketing reports.
+أداء موظفي المبيعات	Sales staff performance
+مؤهلة	Qualified
+لا توجد بيانات موظفين ضمن الفترة المحددة.	No employee data is available for the selected period.
+متوسط زمن أول متابعة: %s ساعة	Average time to first follow-up: %s hours
+تقارير التسويق	Marketing reports
+توزيع الفرص التسويقية حسب الحملة والمنصة والمرحلة ضمن نطاق صلاحيتك.	Marketing lead distribution by campaign, platform and stage within your authorized scope.
+نسب التحويل	Conversion rates
+التواصل من الإجمالي: %s — التأهيل من التواصل: %s — البيع من الإجمالي: %s — الخسارة من الإجمالي: %s	Contacted of total: %s — qualified of contacted: %s — won of total: %s — lost of total: %s
+لا توجد بيانات تسويقية بعد.	No marketing data yet.
+الفترة	Period
+ملخص الفرصة	Lead summary
+رسالة	Message
+زيارة	Visit
+بواسطة	By
+لا تملك صلاحية تغيير مراحل الفرص.	You are not allowed to change lead stages.
+لا تملك صلاحية تصدير الفرص.	You are not allowed to export leads.
+لا تملك صلاحية إنشاء فرص تسويقية.	You are not allowed to create marketing leads.
+موافقة التواصل مطلوبة.	Contact consent is required.
+الفرع المحدد غير متاح لصلاحيتك.	The selected branch is outside your access scope.
+لا تملك صلاحية استلام الفرص.	You are not allowed to claim leads.
+تعذر توثيق استلام الفرصة.	Could not record the lead claim.
+تعذر التحقق من موظفي الفرع لتوزيع الطلب.	Could not verify branch staff for lead distribution.
+الفرع غير نشط ولا يمكن توزيع الطلب عليه.	The branch is inactive and cannot receive lead assignments.
+تعذر التحقق من سجل توزيع الطلبات.	Could not verify the lead assignment rotation history.
+تحقق من المصدر والحملة والمنصة وموافقة التواصل.	Check the source, campaign, platform and contact consent.
+موظف المبيعات المحدد غير متاح لهذا الفرع.	The selected salesperson is not available for this branch.
+تعذر حفظ إسناد الطلب.	Could not save the lead assignment.
+مخطط قاعدة البيانات غير جاهز للتقرير.	The database schema is not ready for reporting.
+تعذر تحميل تقرير أداء CRM.	Could not load the CRM performance report.
+تعذر تحميل مراحل تقرير CRM.	Could not load CRM pipeline stages.
+وضع إسناد الفرص أو مهلة الاستلام غير صالحة.	Lead assignment mode or claim timeout is invalid.
+التوزيع بالتناوب	Round robin
+تقارير التسويق	Marketing reports
+أداء CRM	CRM performance
 تم إنشاء الفرع.	The branch was created.
 تم استلام طلبك بنجاح.	Your request was received successfully.
 تم الإبقاء على %d صفحة موجودة دون أي تعديل.	Kept %d existing pages without changes.
@@ -1852,3 +1974,44 @@ VIN الجديد	New VIN
 تشغيل بوابة العميل	Customer portal operations
 مشاركة عقود العميل وفواتيره	Share customer contracts and invoices
 اختر موعدًا آخر؛ هذا الموعد غير متاح حاليًا.	Choose another time; this appointment slot is currently unavailable.
+مسندة	Assigned
+منخفضة	Low priority
+عادية	Normal priority
+عالية	High priority
+عاجلة	Urgent
+تغيير الأولوية	Priority change
+أخرى	Other
+تسجيل أول تواصل فعلي	Record first actual contact
+نوع التواصل	Contact type
+اتصال هاتفي	Phone call
+تاريخ ووقت التواصل	Contact date and time
+نتيجة التواصل	Contact outcome
+ملاحظات مختصرة	Brief notes
+موعد المتابعة التالية (اختياري)	Next follow-up (optional)
+حفظ التواصل وتحديث المرحلة	Save contact and update stage
+إدارة الإسناد	Assignment management
+الموظف الجديد	New employee
+سبب الإسناد أو إعادة الإسناد	Assignment or reassignment reason
+حفظ الإسناد	Save assignment
+سبب إعادة الفرصة إلى قائمة الاستلام	Reason for returning the lead to the shared queue
+إعادة إلى القائمة المشتركة	Return to shared queue
+الأولوية	Priority
+حفظ الأولوية	Save priority
+النتيجة	Outcome
+يجب أن يكون المستخدم موظف مبيعات نشطًا لاستلام الفرص.	The user must be an active sales employee to claim leads.
+الفرصة لم تعد متاحة ضمن فرعك.	The lead is no longer available in your branch.
+تعذر حفظ استلام الفرصة.	Unable to save the lead claim.
+نوع التواصل والنتيجة والملاحظات مطلوبة.	Contact type, outcome, and notes are required.
+تاريخ ووقت التواصل غير صالحين.	The contact date and time are invalid.
+موعد المتابعة يجب أن يكون في المستقبل.	The follow-up must be in the future.
+تم تسجيل أول تواصل لهذه الفرصة مسبقًا.	First contact has already been recorded for this lead.
+تعذر حفظ سجل التواصل الأول.	Unable to save the first-contact record.
+سجل أول تواصل فعلي قبل الانتقال إلى هذه المرحلة.	Record the first actual contact before moving to this stage.
+إعادة فتح الفرصة المفقودة تتطلب صلاحية المدير وسببًا موثقًا.	Reopening a lost lead requires manager permission and a documented reason.
+لا تملك صلاحية تحرير إسناد الفرصة.	You are not allowed to release this lead assignment.
+سبب تحرير الإسناد مطلوب.	A reason is required to release the assignment.
+لا يمكن إعادة هذه الفرصة إلى قائمة الاستلام بعد بدء التواصل أو تغير مرحلتها.	This lead cannot return to the shared queue after contact or a stage change.
+تعذر تحرير إسناد الفرصة.	Unable to release the lead assignment.
+أولوية الفرصة غير صالحة.	The lead priority is invalid.
+لا تملك صلاحية تغيير أولوية الفرصة.	You are not allowed to change the lead priority.
+تعذر حفظ أولوية الفرصة.	Unable to save the lead priority.

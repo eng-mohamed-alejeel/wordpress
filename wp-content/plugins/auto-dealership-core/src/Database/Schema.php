@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.26.0';
+	public const VERSION = '1.29.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -307,6 +307,10 @@ final class Schema {
 				stage varchar(32) NOT NULL DEFAULT 'new',
 				lost_reason text NOT NULL,
 				next_action_at datetime NULL,
+				claimed_at datetime NULL,
+				first_contact_at datetime NULL,
+				first_contact_activity_id bigint(20) unsigned NULL,
+				priority varchar(16) NOT NULL DEFAULT 'normal',
 				legacy_request_type varchar(16) NULL,
 				legacy_request_id bigint(20) unsigned NULL,
 				public_request_key char(64) NULL,
@@ -318,6 +322,8 @@ final class Schema {
 				UNIQUE KEY legacy_request (legacy_request_type,legacy_request_id),
 				UNIQUE KEY public_request_key (public_request_key),
 				KEY pipeline (branch_id,stage,owner_user_id),
+				KEY claim_expiry (stage,claimed_at,first_contact_at),
+				KEY first_contact (first_contact_at),
 				KEY campaign (campaign),
 				KEY created_by (created_by),
 				KEY source (source)
@@ -328,11 +334,30 @@ final class Schema {
 				actor_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				type varchar(32) NOT NULL,
 				notes text NOT NULL,
+				result varchar(500) NOT NULL DEFAULT '',
+				occurred_at datetime NULL,
 				next_action_at datetime NULL,
 				created_at datetime NOT NULL,
 				PRIMARY KEY  (id),
 				KEY lead_date (lead_id,created_at),
 				KEY next_action_at (next_action_at)
+			) $collate ENGINE=InnoDB",
+			"CREATE TABLE " . self::table( 'lead_stage_history' ) . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				lead_id bigint(20) unsigned NOT NULL,
+				branch_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				owner_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				actor_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				audit_event_id bigint(20) unsigned NULL,
+				from_stage varchar(32) NOT NULL DEFAULT '',
+				to_stage varchar(32) NOT NULL,
+				duration_seconds bigint(20) unsigned NULL,
+				changed_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				KEY lead_history (lead_id,changed_at,id),
+				KEY branch_transition (branch_id,changed_at,to_stage),
+				KEY owner_transition (owner_user_id,changed_at,to_stage),
+				UNIQUE KEY audit_event_id (audit_event_id)
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'reservations' ) . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,

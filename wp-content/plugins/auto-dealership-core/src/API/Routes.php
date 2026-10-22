@@ -204,6 +204,25 @@ final class Routes {
 		self::route( '/leads/(?P<id>\d+)/stage', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'update_lead_stage' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'stage' => array( 'type' => 'string', 'required' => true ), 'reason' => array( 'type' => 'string' ) ),
 		) );
+		self::route( '/leads/(?P<id>\d+)/first-contact', array(
+			'methods'=>'POST',
+			'callback'=>array( self::class, 'record_first_contact' ),
+			'permission_callback'=>static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ),
+			'args'=>array(
+				'id'=>array( 'type'=>'integer', 'required'=>true, 'minimum'=>1 ),
+				'type'=>array( 'type'=>'string', 'required'=>true, 'enum'=>array( 'call', 'whatsapp', 'email', 'meeting', 'other' ) ),
+				'contacted_at'=>array( 'type'=>'string', 'required'=>true, 'pattern'=>'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$' ),
+				'result'=>array( 'type'=>'string', 'required'=>true, 'maxLength'=>500 ),
+				'notes'=>array( 'type'=>'string', 'required'=>true, 'maxLength'=>4000 ),
+				'next_action_at'=>array( 'type'=>'string' ),
+			),
+		) );
+		self::route( '/leads/(?P<id>\d+)/priority', array(
+			'methods'=>'POST',
+			'callback'=>array( self::class, 'set_lead_priority' ),
+			'permission_callback'=>static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ),
+			'args'=>array( 'id'=>array( 'type'=>'integer', 'required'=>true, 'minimum'=>1 ), 'priority'=>array( 'type'=>'string', 'required'=>true, 'enum'=>array( 'low','normal','high','urgent' ) ) ),
+		) );
 		self::route( '/leads/(?P<id>\d+)/request', array(
 			array( 'methods'=>'GET', 'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( RequestWorkflow::read( (int) $r['id'] ) ),
 				'permission_callback'=>static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ),
@@ -222,7 +241,13 @@ final class Routes {
 			},
 		) );
 		self::route( '/leads/(?P<id>\d+)/assignment', array(
-			'methods' => 'POST', 'callback' => array( self::class, 'assign_lead' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'staff_id' => array( 'type' => 'integer', 'required' => true ) ),
+			'methods' => 'POST', 'callback' => array( self::class, 'assign_lead' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'staff_id' => array( 'type' => 'integer', 'required' => true ), 'reason'=>array( 'type'=>'string', 'maxLength'=>2000 ) ),
+		) );
+		self::route( '/leads/(?P<id>\d+)/assignment/release', array(
+			'methods'=>'POST',
+			'callback'=>array( self::class, 'release_lead_assignment' ),
+			'permission_callback'=>static fn() => current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ),
+			'args'=>array( 'id'=>array( 'type'=>'integer', 'required'=>true, 'minimum'=>1 ), 'reason'=>array( 'type'=>'string', 'required'=>true, 'minLength'=>1, 'maxLength'=>2000 ) ),
 		) );
 		self::route( '/leads/(?P<id>\d+)/activities', array(
 			'methods' => 'GET', 'callback' => static fn( \WP_REST_Request $r ) => rest_ensure_response( LeadService::activity_history( (int) $r['id'], (int) ( $r['page'] ?? 1 ), (int) ( $r['per_page'] ?? 50 ) ) ),
@@ -316,7 +341,19 @@ final class Routes {
 	}
 
 	public static function assign_lead( \WP_REST_Request $request ) {
-		return rest_ensure_response( LeadService::assign( absint( $request['id'] ), absint( $request['staff_id'] ) ) );
+		return rest_ensure_response( LeadService::assign( absint( $request['id'] ), absint( $request['staff_id'] ), (string) $request->get_param( 'reason' ) ) );
+	}
+
+	public static function record_first_contact( \WP_REST_Request $request ) {
+		return rest_ensure_response( LeadService::record_first_contact( absint( $request['id'] ), (string) $request['type'], (string) $request['contacted_at'], (string) $request['result'], (string) $request['notes'], (string) $request->get_param( 'next_action_at' ) ) );
+	}
+
+	public static function release_lead_assignment( \WP_REST_Request $request ) {
+		return rest_ensure_response( LeadService::release_assignment( absint( $request['id'] ), (string) $request['reason'] ) );
+	}
+
+	public static function set_lead_priority( \WP_REST_Request $request ) {
+		return rest_ensure_response( LeadService::set_priority( absint( $request['id'] ), (string) $request['priority'] ) );
 	}
 
 	public static function add_activity( \WP_REST_Request $request ) {

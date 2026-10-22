@@ -18,7 +18,7 @@ final class ConfigurationService {
 		'adc_sales_manager_discount_limit', 'adc_general_manager_discount_limit',
 		'adc_seller_name', 'adc_seller_tax_number', 'adc_seller_address', 'adc_seller_phone',
 		'adc_delivery_required_documents', 'adc_default_branch_id', 'adc_privacy_retention_days',
-		'adc_public_catalog_mode',
+		'adc_public_catalog_mode', 'adc_lead_assignment_mode', 'adc_lead_claim_timeout_minutes',
 	);
 	private const DELIVERY_DOCUMENTS = array( 'invoice', 'customer_identity', 'vehicle_registration', 'insurance', 'handover_form', 'finance_clearance' );
 
@@ -49,6 +49,11 @@ final class ConfigurationService {
 		$current_catalog_mode = PublicCatalog::mode();
 		$catalog_mode = sanitize_key( (string) ( $input['public_catalog_mode'] ?? $current_catalog_mode ) );
 		$deposit_type = sanitize_key( (string) ( $input['reservation_deposit_type'] ?? 'none' ) );
+		$assignment_mode = $input['lead_assignment_mode'] ?? get_option( 'adc_lead_assignment_mode', 'manual' );
+		$claim_timeout = filter_var( $input['lead_claim_timeout_minutes'] ?? get_option( 'adc_lead_claim_timeout_minutes', 30 ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 5, 'max_range' => 1440 ) ) );
+		if ( ! is_string( $assignment_mode ) || ! in_array( $assignment_mode, array( 'manual', 'round_robin' ), true ) || false === $claim_timeout ) {
+			return new \WP_Error( 'adc_invalid_lead_policy', __( 'Lead assignment mode or claim timeout is invalid.', 'auto-dealership-core' ), array( 'status' => 400 ) );
+		}
 		if ( PublicCatalog::MODE_MODELS === $catalog_mode && PublicCatalog::MODE_MODELS !== $current_catalog_mode ) {
 			$models = \AutoDealership\Database\Schema::table( 'catalog_models' );
 			global $wpdb;
@@ -100,6 +105,8 @@ final class ConfigurationService {
 			'adc_default_branch_id' => $default_branch,
 			'adc_privacy_retention_days' => $retention_days,
 			'adc_public_catalog_mode' => $catalog_mode,
+			'adc_lead_assignment_mode' => $assignment_mode,
+			'adc_lead_claim_timeout_minutes' => $claim_timeout,
 		);
 		if ( $before === $after ) { return array( 'updated' => false ); }
 		foreach ( $after as $key => $value ) { update_option( $key, $value, false ); }
@@ -176,6 +183,8 @@ final class ConfigurationService {
 			'adc_default_branch_id' => absint( get_option( 'adc_default_branch_id', 0 ) ),
 			'adc_privacy_retention_days' => absint( get_option( 'adc_privacy_retention_days', 0 ) ),
 			'adc_public_catalog_mode' => PublicCatalog::mode(),
+			'adc_lead_assignment_mode' => sanitize_key( (string) get_option( 'adc_lead_assignment_mode', 'manual' ) ),
+			'adc_lead_claim_timeout_minutes' => absint( get_option( 'adc_lead_claim_timeout_minutes', 30 ) ),
 		);
 	}
 

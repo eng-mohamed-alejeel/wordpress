@@ -27,6 +27,7 @@ $crm_messages = $wpdb->prefix . 'car_dealer_messages';
 $crm_bookings = $wpdb->prefix . 'car_dealer_bookings';
 $crm_leads = Schema::table( 'leads' );
 $crm_activities = Schema::table( 'activities' );
+$crm_stage_history = Schema::table( 'lead_stage_history' );
 $crm_customer_id = static fn( $lead ) => (int) $wpdb->get_var( $wpdb->prepare( "SELECT customer_id FROM $crm_leads WHERE id=%d", $lead['id'] ) );
 $crm_counts = static function () use ( $wpdb, $customers, $crm_leads, $crm_messages, $crm_bookings, $crm_activities, $audit ): array {
 	return array_map( static fn( $table ) => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table" ), array( $customers, $crm_leads, $crm_messages, $crm_bookings, $crm_activities, $audit ) );
@@ -52,6 +53,7 @@ foreach ( array( '٠٥٠١٢٣٤٥٦٧', '۰۵۰۱۲۳۴۵۶۷', '00966501234567
 }
 $crm_message = $crm_submit( $crm_input );
 adc_check( is_array( $crm_message ) && isset( $crm_message['legacy_request_id'] ), 'Theme-compatible intake atomically creates a linked message.' );
+adc_check( 'new' === $wpdb->get_var( $wpdb->prepare( "SELECT to_stage FROM `$crm_stage_history` WHERE lead_id=%d ORDER BY id ASC LIMIT 1", (int) $crm_message['id'] ) ), 'New leads receive an initial stage-history baseline in the intake transaction.' );
 $crm_after = $crm_counts();
 adc_check( array( 1,1,1,0,1,1 ) === array_map( static fn( $a, $b ) => $a - $b, $crm_after, $crm_before ), 'One message creates exactly one customer, lead, activity and audit.' );
 adc_check( $crm_message === $crm_submit( $crm_input ) && $crm_after === $crm_counts(), 'Identical public retry returns original IDs without duplicate rows.' );
@@ -85,6 +87,24 @@ $crm_generic = $crm_submit( array_replace( $crm_account_input, array( 'idempoten
 adc_check( is_array( $crm_generic ) && $crm_customer_id( $crm_generic ) !== $crm_linked_id && null === $wpdb->get_var( $wpdb->prepare( "SELECT account_user_id FROM $customers WHERE id=%d", $crm_customer_id( $crm_generic ) ) ), 'Generic REST-style intake never claims an account even with matching contact data.' );
 
 wp_set_current_user( $admin );
+$crm_admin_user = new WP_User( $admin );
+$crm_admin_user->add_cap( 'adc_create_marketing_leads' );
+$crm_marketing_input = array( 'name'=>'Synthetic Marketing Lead', 'mobile'=>'+966500000976', 'email'=>'marketing-crm@example.invalid', 'city'=>'Riyadh', 'branch_id'=>(int) $branch_b['id'], 'consent_marketing'=>true, 'idempotency_key'=>wp_generate_uuid4() );
+$crm_marketing_data = array( 'source'=>'marketing', 'campaign'=>'Autumn campaign', 'platform'=>'Google', 'ad_url'=>'https://example.invalid/ad', 'notes'=>'Synthetic campaign lead', 'staff_id'=>$sales_b );
+$crm_before_marketing = $crm_counts();
+$crm_marketing_result = LeadService::create_marketing( $crm_marketing_input, $crm_marketing_data );
+$crm_marketing_row = is_array( $crm_marketing_result ) ? $wpdb->get_row( $wpdb->prepare( "SELECT source,campaign,platform,ad_url,consent_marketing,created_by,referred_at,owner_user_id,stage FROM $crm_leads WHERE id=%d", (int) $crm_marketing_result['id'] ), ARRAY_A ) : null;
+if ( ! is_array( $crm_marketing_result ) || ! is_array( $crm_marketing_row ) ) { throw new RuntimeException( 'CRM marketing lead fixture creation failed.' ); }
+adc_check( is_array( $crm_marketing_result ) && is_array( $crm_marketing_row ) && 'marketing' === $crm_marketing_row['source'] && 'Autumn campaign' === $crm_marketing_row['campaign'] && 'Google' === $crm_marketing_row['platform'] && 'https://example.invalid/ad' === $crm_marketing_row['ad_url'] && '1' === (string) $crm_marketing_row['consent_marketing'] && (int) $admin === (int) $crm_marketing_row['created_by'] && ! empty( $crm_marketing_row['referred_at'] ) && (int) $sales_b === (int) $crm_marketing_row['owner_user_id'] && 'assigned' === $crm_marketing_row['stage'], 'Marketing lead, campaign attribution, consent and requested branch assignment are created together.' );
+adc_check( 2 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $crm_stage_history WHERE lead_id=%d", (int) $crm_marketing_result['id'] ) ) && 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $crm_activities WHERE lead_id=%d AND type='assignment'", (int) $crm_marketing_result['id'] ) ) && 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE subject_type='lead' AND subject_id=%d AND event_key='lead.created'", (int) $crm_marketing_result['id'] ) ), 'Marketing assignment activities, stage transitions and creation audit are transactionally recorded.' );
+$crm_after_marketing = $crm_counts();
+$crm_marketing_retry = LeadService::create_marketing( $crm_marketing_input, $crm_marketing_data );
+adc_check( $crm_marketing_result === $crm_marketing_retry && $crm_after_marketing === $crm_counts(), 'Marketing intake retries use the idempotency key rather than creating a second customer or lead.' );
+$crm_before_marketing_failure = $crm_counts();
+$crm_failed_marketing = $with_sql_failure( static fn( $query ) => str_starts_with( $query, "INSERT INTO `$audit`" ), static fn() => LeadService::create_marketing( array_replace( $crm_marketing_input, array( 'mobile'=>'+966500000975', 'idempotency_key'=>wp_generate_uuid4() ) ), $crm_marketing_data ) );
+adc_check( is_wp_error( $crm_failed_marketing ) && $crm_before_marketing_failure === $crm_counts(), 'Marketing lead creation rolls back all records if its audit event cannot be saved.' );
+adc_check( $error_is( LeadService::create_marketing( array_replace( $crm_marketing_input, array( 'mobile'=>'+966500000974', 'idempotency_key'=>wp_generate_uuid4() ) ), array_replace( $crm_marketing_data, array( 'staff_id'=>$sales_a ) ) ), 'adc_invalid_marketing_assignment' ), 'Marketing intake rejects staff assigned to a different branch without creating records.' );
+$crm_admin_user->remove_cap( 'adc_create_marketing_leads' );
 LeadService::assign( $crm_message['id'], $sales_b );
 wp_set_current_user( $sales_a );
 adc_check( $error_is( RequestWorkflow::read( $crm_message['id'] ), 'adc_request_not_found' ) && is_wp_error( LeadService::activity_history( $crm_message['id'] ) ), 'Foreign branch cannot read request or activity history by ID.' );
@@ -178,8 +198,10 @@ $crm_parallel = static function ( string $scenario, int $actor, array $inputs ) 
 		foreach ( $inputs as $input ) {
 			$process = proc_open( array( PHP_BINARY, __DIR__ . '/database-runner.php', '--worker' ), array( 0=>array( 'pipe','r' ), 1=>array( 'pipe','w' ), 2=>STDERR ), $pipes );
 			if ( ! is_resource( $process ) ) { throw new RuntimeException( 'CRM worker unavailable.' ); }
-			$worker_scenario = $input['_scenario'] ?? $scenario; unset( $input['_scenario'] );
-			fwrite( $pipes[0], wp_json_encode( array( 'database'=>DB_NAME, 'source_database'=>'', 'host'=>DB_HOST, 'user'=>DB_USER, 'password'=>DB_PASSWORD, 'scenario'=>$worker_scenario, 'actor'=>$actor, 'input'=>$input, 'barrier'=>$gate ) ) );
+			$worker_scenario = $input['_scenario'] ?? $scenario;
+			$worker_actor = (int) ( $input['_actor'] ?? $actor );
+			unset( $input['_scenario'], $input['_actor'] );
+			fwrite( $pipes[0], wp_json_encode( array( 'database'=>DB_NAME, 'source_database'=>'', 'host'=>DB_HOST, 'user'=>DB_USER, 'password'=>DB_PASSWORD, 'scenario'=>$worker_scenario, 'actor'=>$worker_actor, 'input'=>$input, 'barrier'=>$gate ) ) );
 			fclose( $pipes[0] ); $jobs[] = array( $process, $pipes[1] );
 		}
 		usleep( 500000 );
@@ -192,6 +214,206 @@ $crm_parallel = static function ( string $scenario, int $actor, array $inputs ) 
 	}
 	return $results;
 };
+$crm_claim_lead = $crm_submit( array_replace( $crm_input, array( 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+if ( ! is_array( $crm_claim_lead ) ) { throw new RuntimeException( 'CRM claim fixture creation failed.' ); }
+$crm_claim_lead_id = (int) $crm_claim_lead['id'];
+$crm_second_sales = $make_user( 'crm_sales_branch_b2', 'dealership_sales', (int) $branch_b['id'] );
+$crm_expiry_manager = $make_user( 'crm_expiry_manager_b', 'dealership_sales_manager', (int) $branch_b['id'] );
+$crm_assignment_lead = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500000986', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+if ( ! is_array( $crm_assignment_lead ) || is_wp_error( LeadService::assign( (int) $crm_assignment_lead['id'], $sales_b ) ) ) { throw new RuntimeException( 'CRM reassignment fixture failed.' ); }
+adc_check( $error_is( LeadService::assign( (int) $crm_assignment_lead['id'], $crm_second_sales ), 'adc_invalid_assignment' ), 'Manager cannot reassign an owned lead without a reason.' );
+adc_check( is_array( LeadService::assign( (int) $crm_assignment_lead['id'], $crm_second_sales, 'Branch workload balancing' ) ) && $crm_second_sales === (int) $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE id=%d", (int) $crm_assignment_lead['id'] ) ), 'Manager reassignment with a reason records the new owner.' );
+adc_check( $error_is( LeadService::release_assignment( (int) $crm_assignment_lead['id'], '' ), 'adc_assignment_reason_required' ) && is_array( LeadService::release_assignment( (int) $crm_assignment_lead['id'], 'No first contact was made' ) ) && 'new' === $wpdb->get_var( $wpdb->prepare( "SELECT stage FROM $crm_leads WHERE id=%d", (int) $crm_assignment_lead['id'] ) ), 'Manager can return an uncontacted lead to the queue only with a reason.' );
+wp_set_current_user( $sales_b );
+adc_check( in_array( $crm_claim_lead_id, array_map( 'intval', array_column( LeadService::list_for_current_user( 1, 100 ), 'id' ) ), true ), 'Sales employee sees an unassigned lead only within the assigned branch queue.' );
+wp_set_current_user( $sales_a );
+adc_check( ! in_array( $crm_claim_lead_id, array_map( 'intval', array_column( LeadService::list_for_current_user( 1, 100 ), 'id' ) ), true ), 'Sales employee in a different branch cannot see the shared lead.' );
+$crm_claim_race = $crm_parallel( 'crm_claim', 0, array(
+	array( '_actor'=>$sales_b, 'lead_id'=>$crm_claim_lead_id ),
+	array( '_actor'=>$crm_second_sales, 'lead_id'=>$crm_claim_lead_id ),
+) );
+adc_check( 1 === count( array_filter( $crm_claim_race, static fn( $r ) => isset( $r['stage'] ) && 'assigned' === $r['stage'] ) ) && 1 === count( array_filter( $crm_claim_race, static fn( $r ) => 'adc_claim_unavailable' === ( $r['error'] ?? '' ) ) ), 'Concurrent claim requests assign a shared lead to one salesperson only.' );
+$crm_claim_owner = (int) $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) );
+wp_set_current_user( $crm_claim_owner );
+adc_check( $error_is( LeadService::update_stage( $crm_claim_lead_id, 'contacted' ), 'adc_first_contact_required' ), 'Stage update cannot mark a claimed lead contacted without first-contact evidence.' );
+adc_check( is_array( LeadService::add_activity( $crm_claim_lead_id, 'call', 'A call note alone is not first-contact evidence.' ) ) && $error_is( LeadService::update_stage( $crm_claim_lead_id, 'contacted' ), 'adc_first_contact_required' ), 'A generic call note does not satisfy first-contact requirements.' );
+adc_check( is_wp_error( $with_sql_failure( static fn( $q ) => str_contains( $q, 'INSERT INTO' ) && str_contains( $q, $crm_stage_history ), static fn() => LeadService::record_first_contact( $crm_claim_lead_id, 'call', current_time( 'Y-m-d\TH:i' ), 'Injected history failure', 'This transaction must roll back' ) ) ) && 'assigned' === $wpdb->get_var( $wpdb->prepare( "SELECT stage FROM `$crm_leads` WHERE id=%d", $crm_claim_lead_id ) ) && null === $wpdb->get_var( $wpdb->prepare( "SELECT first_contact_at FROM `$crm_leads` WHERE id=%d", $crm_claim_lead_id ) ), 'A failed stage-history write rolls back the lead stage and first-contact evidence.' );
+$crm_first_contact = LeadService::record_first_contact( $crm_claim_lead_id, 'call', current_time( 'Y-m-d\TH:i' ), 'Reached the customer', 'Discussed vehicle requirements' );
+adc_check( is_array( $crm_first_contact ) && 'contacted' === $wpdb->get_var( $wpdb->prepare( "SELECT stage FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) ) && $crm_first_contact['first_contact_at'] === $wpdb->get_var( $wpdb->prepare( "SELECT first_contact_at FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) ), 'First-contact record stores its typed time and atomically advances stage.' );
+adc_check( 2 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM `$crm_stage_history` WHERE lead_id=%d AND ((from_stage='new' AND to_stage='assigned') OR (from_stage='assigned' AND to_stage='contacted'))", $crm_claim_lead_id ) ), 'Claim and first-contact stage changes are captured as ordered historical transitions.' );
+adc_check( 'Reached the customer' === $wpdb->get_var( $wpdb->prepare( "SELECT result FROM " . Schema::table( 'activities' ) . " WHERE id=%d", (int) $crm_first_contact['activity_id'] ) ), 'First-contact outcome is retained as structured activity evidence.' );
+adc_check( $error_is( LeadService::set_priority( $crm_claim_lead_id, 'critical' ), 'adc_invalid_lead_priority' ) && is_array( LeadService::set_priority( $crm_claim_lead_id, 'urgent' ) ) && 'urgent' === $wpdb->get_var( $wpdb->prepare( "SELECT priority FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) ), 'Lead priority is validated, persisted and ordered using the configured four levels.' );
+wp_set_current_user( $admin );
+$crm_policy_fields = \AutoDealership\Admin\SettingsPage::sections()['crm'][1];
+$crm_policy_previous_get = $_GET;
+$_GET['section'] = 'crm';
+ob_start();
+\AutoDealership\Admin\SettingsPage::render();
+$crm_policy_html = ob_get_clean();
+$_GET = $crm_policy_previous_get;
+adc_check( str_contains( $crm_policy_html, 'name="lead_assignment_mode"' ) && str_contains( $crm_policy_html, 'name="lead_claim_timeout_minutes"' ) && str_contains( $crm_policy_html, 'round_robin' ), 'CRM settings render both assignment mode choices and the bounded claim timeout.' );
+$crm_policy = \AutoDealership\Core\ConfigurationService::update_section( array( 'lead_assignment_mode'=>'round_robin', 'lead_claim_timeout_minutes'=>'25' ), $crm_policy_fields );
+adc_check( is_array( $crm_policy ) && 'round_robin' === get_option( 'adc_lead_assignment_mode' ) && 25 === (int) get_option( 'adc_lead_claim_timeout_minutes' ), 'Administrator can save the round-robin policy and claim timeout through the CRM settings section.' );
+$crm_invalid_policy = \AutoDealership\Core\ConfigurationService::update_section( array( 'lead_assignment_mode'=>'random', 'lead_claim_timeout_minutes'=>'4' ), $crm_policy_fields );
+adc_check( is_wp_error( $crm_invalid_policy ) && 'round_robin' === get_option( 'adc_lead_assignment_mode' ) && 25 === (int) get_option( 'adc_lead_claim_timeout_minutes' ), 'Invalid CRM assignment modes and out-of-range timeouts are rejected without changing saved policy.' );
+$crm_rr_staff = array_values( array_filter( array_map( 'absint', get_users( array( 'role'=>'dealership_sales', 'fields'=>'ID', 'number'=>-1, 'orderby'=>'ID', 'order'=>'ASC' ) ) ), static fn( $user_id ) => user_can( $user_id, 'adc_manage_own_leads' ) && ! user_can( $user_id, 'manage_options' ) && \AutoDealership\Security\BranchScope::allows( (int) $branch_b['id'], $user_id ) ) );
+sort( $crm_rr_staff, SORT_NUMERIC );
+$crm_rr_success = count( $crm_rr_staff ) > 1;
+if ( $crm_rr_success ) {
+	$crm_rr_placeholders = implode( ',', array_fill( 0, count( $crm_rr_staff ), '%d' ) );
+	$crm_rr_last_owner = $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE branch_id=%d AND owner_user_id IN ($crm_rr_placeholders) AND claimed_at IS NOT NULL ORDER BY claimed_at DESC,id DESC LIMIT 1", array_merge( array( (int) $branch_b['id'] ), $crm_rr_staff ) ) );
+	$crm_rr_last_index = false === $crm_rr_last_owner ? false : array_search( (int) $crm_rr_last_owner, $crm_rr_staff, true );
+	$crm_rr_expected_index = false === $crm_rr_last_index ? 0 : ( ( $crm_rr_last_index + 1 ) % count( $crm_rr_staff ) );
+	for ( $crm_rr_index = 0; $crm_rr_index < 4; ++$crm_rr_index ) {
+		$crm_rr_result = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500001' . str_pad( (string) $crm_rr_index, 3, '0', STR_PAD_LEFT ), 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+		if ( ! is_array( $crm_rr_result ) ) { $crm_rr_success = false; break; }
+		$crm_rr_expected_owner = $crm_rr_staff[$crm_rr_expected_index];
+		$crm_rr_row = $wpdb->get_row( $wpdb->prepare( "SELECT owner_user_id,stage,claimed_at FROM $crm_leads WHERE id=%d", (int) $crm_rr_result['id'] ), ARRAY_A );
+		if ( ! $crm_rr_row || (int) $crm_rr_row['owner_user_id'] !== $crm_rr_expected_owner || 'assigned' !== $crm_rr_row['stage'] || empty( $crm_rr_row['claimed_at'] ) ) { $crm_rr_success = false; break; }
+		$crm_rr_expected_index = ( $crm_rr_expected_index + 1 ) % count( $crm_rr_staff );
+	}
+}
+adc_check( $crm_rr_success, 'Round robin assigns only active branch sales staff and rotates fairly across branch intake order.' );
+if ( count( $crm_rr_staff ) > 1 ) {
+	$crm_clear_rate();
+	$crm_parallel_rr = $crm_parallel( 'crm_intake', 0, array(
+		array_replace( $crm_input, array( 'mobile'=>'+966500001101', 'idempotency_key'=>wp_generate_uuid4() ) ),
+		array_replace( $crm_input, array( 'mobile'=>'+966500001102', 'idempotency_key'=>wp_generate_uuid4() ) ),
+	) );
+	$crm_parallel_owners = array();
+	foreach ( $crm_parallel_rr as $crm_parallel_result ) {
+		if ( empty( $crm_parallel_result['id'] ) ) { continue; }
+		$crm_parallel_owners[] = (int) $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE id=%d AND stage='assigned' AND branch_id=%d", (int) $crm_parallel_result['id'], (int) $branch_b['id'] ) );
+	}
+	$crm_parallel_success = 2 === count( array_unique( $crm_parallel_owners ) ) && 2 === count( array_intersect( $crm_parallel_owners, $crm_rr_staff ) );
+	$crm_parallel_detail = $crm_parallel_success ? '' : ' ' . wp_json_encode( array( 'results'=>$crm_parallel_rr, 'owners'=>$crm_parallel_owners, 'staff'=>$crm_rr_staff ) );
+	adc_check( $crm_parallel_success, 'Concurrent distinct enquiries serialize on the branch and advance the round-robin cursor exactly once each.' . $crm_parallel_detail );
+}
+$crm_filtered_leads = LeadService::list_for_current_user( 1, 20, array( 'priority'=>'urgent', 'branch_id'=>(int) $branch_b['id'], 'owner'=>$crm_claim_owner ) );
+adc_check( 1 === LeadService::count_for_current_user( array( 'priority'=>'urgent', 'branch_id'=>(int) $branch_b['id'], 'owner'=>$crm_claim_owner ) ) && 1 === count( $crm_filtered_leads ) && $crm_claim_lead_id === (int) $crm_filtered_leads[0]['id'], 'CRM list and count apply priority, employee and authorized branch filters consistently.' );
+wp_set_current_user( $manager_a );
+adc_check( 0 === LeadService::count_for_current_user( array( 'branch_id'=>(int) $branch_b['id'] ) ), 'CRM filters cannot expand a manager query beyond assigned branches.' );
+$crm_report_from = gmdate( 'Y-m-d', time() - 30 * DAY_IN_SECONDS );
+$crm_report_to = gmdate( 'Y-m-d' );
+wp_set_current_user( $sales_a );
+adc_check( $error_is( \AutoDealership\Reports\LeadPerformanceReport::summary( $crm_report_from, $crm_report_to ), 'adc_lead_report_forbidden' ), 'Sales employees without report capability cannot open CRM performance aggregates.' );
+$crm_report_manager = $make_user( 'crm_report_manager_b', 'dealership_sales_manager', (int) $branch_b['id'] );
+wp_set_current_user( $crm_report_manager );
+$crm_branch_report = \AutoDealership\Reports\LeadPerformanceReport::summary( $crm_report_from, $crm_report_to );
+adc_check( is_array( $crm_branch_report ) && ! array_filter( $crm_branch_report['branches'], static fn( $row ) => (int) $row['branch_id'] !== (int) $branch_b['id'] ) && ! array_filter( $crm_branch_report['employees'], static fn( $row ) => (int) $row['branch_id'] !== (int) $branch_b['id'] ) && ! array_filter( $crm_branch_report['transitions'], static fn( $row ) => (int) $row['branch_id'] !== (int) $branch_b['id'] ), 'CRM branch, employee and historical transition reports include only rows in the manager active branch scope.' );
+wp_set_current_user( $admin );
+$crm_global_report = \AutoDealership\Reports\LeadPerformanceReport::summary( $crm_report_from, $crm_report_to );
+adc_check( is_array( $crm_global_report ) && array_key_exists( 'avg_first_contact_seconds', $crm_global_report['totals'] ) && isset( $crm_global_report['pipeline'], $crm_global_report['transitions'] ) && array_filter( $crm_global_report['transitions'], static fn( $row ) => 'assigned' === $row['from_stage'] && 'contacted' === $row['to_stage'] && null !== $row['avg_duration_seconds'] && is_numeric( $row['destination_share_percent'] ) && $row['destination_share_percent'] > 0 && $row['transition_rate_percent'] === $row['destination_share_percent'] ) && array_filter( $crm_global_report['branches'], static fn( $row ) => (int) $row['branch_id'] === (int) $branch_b['id'] ), 'CRM report returns source-exit destination shares alongside historical transition counts and elapsed time.' );
+adc_check( $error_is( \AutoDealership\Reports\LeadPerformanceReport::summary( $crm_report_from, gmdate( 'Y-m-d', time() + 400 * DAY_IN_SECONDS ) ), 'adc_lead_report_dates' ), 'CRM performance report rejects invalid or excessive date ranges.' );
+$crm_previous_timezone = get_option( 'timezone_string' );
+update_option( 'timezone_string', 'Asia/Riyadh' );
+$crm_timezone_day = current_time( 'Y-m-d' );
+$crm_timezone_lead = LeadService::create_public( array( 'name'=>'Timezone boundary fixture', 'mobile'=>'+966500000973', 'branch_id'=>(int) $branch_b['id'] ) );
+if ( ! is_array( $crm_timezone_lead ) ) { throw new RuntimeException( 'CRM report timezone fixture creation failed.' ); }
+$crm_timezone_start = new DateTimeImmutable( $crm_timezone_day . ' 00:00:00', wp_timezone() );
+$crm_timezone_end = $crm_timezone_start->modify( '+1 day' );
+$crm_timezone_created = $crm_timezone_start->modify( '+30 minutes' )->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );
+$wpdb->update( $crm_leads, array( 'created_at'=>$crm_timezone_created ), array( 'id'=>(int) $crm_timezone_lead['id'] ), array( '%s' ), array( '%d' ) );
+$crm_timezone_report = \AutoDealership\Reports\LeadPerformanceReport::summary( $crm_timezone_day, $crm_timezone_day );
+$crm_timezone_expected = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $crm_leads WHERE branch_id=%d AND created_at>=%s AND created_at<%s", (int) $branch_b['id'], $crm_timezone_start->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' ), $crm_timezone_end->setTimezone( new DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' ) ) );
+$crm_timezone_actual = is_array( $crm_timezone_report ) ? array_sum( array_column( array_values( array_filter( $crm_timezone_report['branches'], static fn( $row ) => (int) $row['branch_id'] === (int) $branch_b['id'] ) ), 'total' ) ) : -1;
+update_option( 'timezone_string', $crm_previous_timezone );
+adc_check( is_array( $crm_timezone_report ) && $crm_timezone_expected === $crm_timezone_actual && $crm_timezone_expected > 0, 'CRM report date filters follow the WordPress timezone while querying UTC timestamps.' );
+$crm_history_order_lead = LeadService::create_public( array( 'name'=>'Stage duration order fixture', 'mobile'=>'+966500000972', 'branch_id'=>(int) $branch_b['id'] ) );
+if ( ! is_array( $crm_history_order_lead ) ) { throw new RuntimeException( 'CRM stage-duration fixture creation failed.' ); }
+$wpdb->delete( $crm_stage_history, array( 'lead_id'=>(int) $crm_history_order_lead['id'] ), array( '%d' ) );
+$crm_recent_stage_timestamp = time() - 2 * DAY_IN_SECONDS;
+$crm_recent_stage_date = gmdate( 'Y-m-d H:i:s', $crm_recent_stage_timestamp );
+$crm_older_stage_date = gmdate( 'Y-m-d H:i:s', time() - 5 * DAY_IN_SECONDS );
+$crm_history_order_newer = $wpdb->insert( $crm_stage_history, array( 'lead_id'=>(int) $crm_history_order_lead['id'], 'branch_id'=>(int) $branch_b['id'], 'from_stage'=>'new', 'to_stage'=>'assigned', 'changed_at'=>$crm_recent_stage_date ), array( '%d', '%d', '%s', '%s', '%s' ) );
+$crm_history_order_older = $wpdb->insert( $crm_stage_history, array( 'lead_id'=>(int) $crm_history_order_lead['id'], 'branch_id'=>(int) $branch_b['id'], 'from_stage'=>'', 'to_stage'=>'new', 'changed_at'=>$crm_older_stage_date ), array( '%d', '%d', '%s', '%s', '%s' ) );
+if ( 1 !== $crm_history_order_newer || 1 !== $crm_history_order_older ) { throw new RuntimeException( 'CRM stage-duration history fixtures failed.' ); }
+$crm_history_order_update = LeadService::update_stage( (int) $crm_history_order_lead['id'], 'lost', 'Synthetic loss for duration test' );
+$crm_history_order_row_id = (int) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $crm_stage_history WHERE lead_id=%d ORDER BY id DESC LIMIT 1", (int) $crm_history_order_lead['id'] ) );
+$crm_expected_duration = time() - $crm_recent_stage_timestamp;
+$crm_live_duration = (int) $wpdb->get_var( $wpdb->prepare( "SELECT duration_seconds FROM $crm_stage_history WHERE id=%d", $crm_history_order_row_id ) );
+$wpdb->update( $crm_stage_history, array( 'duration_seconds'=>1 ), array( 'id'=>$crm_history_order_row_id ), array( '%d' ), array( '%d' ) );
+update_option( 'adc_lead_stage_history_backfill_complete', true, false );
+update_option( 'adc_lead_stage_history_duration_complete', false, false );
+update_option( 'adc_lead_stage_history_duration_cursor', 0, false );
+$crm_duration_recalculation = true;
+for ( $crm_duration_batch = 0; $crm_duration_batch < 20 && ! get_option( 'adc_lead_stage_history_duration_complete', false ); ++$crm_duration_batch ) {
+	if ( ! \AutoDealership\Leads\LeadStageHistoryBackfill::run_batch() ) { $crm_duration_recalculation = false; break; }
+}
+$crm_duration_recalculation = $crm_duration_recalculation && get_option( 'adc_lead_stage_history_duration_complete', false );
+$crm_history_order_duration = (int) $wpdb->get_var( $wpdb->prepare( "SELECT duration_seconds FROM $crm_stage_history WHERE id=%d", $crm_history_order_row_id ) );
+adc_check( is_array( $crm_history_order_update ) && abs( $crm_live_duration - $crm_expected_duration ) <= 5 && $crm_duration_recalculation && abs( $crm_history_order_duration - $crm_expected_duration ) <= 5, 'Live transitions and bounded historical recalculation use chronological event timestamps through completion.' );
+$crm_report_previous_get = $_GET;
+$_GET = array( 'from'=>$crm_report_from, 'to'=>$crm_report_to );
+ob_start();
+\AutoDealership\Admin\OperationsPages::render_lead_performance();
+$crm_report_html = ob_get_clean();
+$_GET = $crm_report_previous_get;
+adc_check( str_contains( $crm_report_html, 'مؤشرات الفروع' ) && str_contains( $crm_report_html, 'مؤشرات موظفي المبيعات' ) && str_contains( $crm_report_html, 'توزيع المراحل حسب الفرع والموظف' ) && str_contains( $crm_report_html, 'التحولات التاريخية بين المراحل' ) && str_contains( $crm_report_html, 'حصة الوجهة من المغادرين' ) && str_contains( $crm_report_html, 'المنطقة الزمنية للموقع' ) && str_contains( $crm_report_html, 'استعادة سجل المراحل' ), 'CRM performance screen explains cohort metrics, destination-share semantics and backfill status.' );
+$crm_admin_user->add_cap( 'adc_view_own_leads' );
+$crm_admin_user->add_cap( 'adc_view_branch_leads' );
+$crm_admin_user->add_cap( 'adc_manage_branch_leads' );
+$crm_admin_user->add_cap( 'adc_view_marketing_leads' );
+$crm_admin_user->add_cap( 'adc_create_marketing_leads' );
+$crm_crm_previous_get = $_GET;
+$_GET = array( 'page'=>'adc-crm', 'stage'=>'assigned', 'priority'=>'normal', 'branch_id'=>(int) $branch_b['id'], 'source'=>'marketing', 'campaign'=>'Autumn campaign', 'platform'=>'Google', 'created_by'=>(int) $admin, 'owner'=>(int) $sales_b );
+ob_start();
+\AutoDealership\Admin\OperationsPages::render_leads();
+$crm_list_html = ob_get_clean();
+$_GET = $crm_crm_previous_get;
+adc_check( 1 === substr_count( $crm_list_html, 'name="idempotency_key"' ) && ! str_contains( $crm_list_html, 'class="card adc-marketing-intake"' ) && str_contains( $crm_list_html, 'data-crm-board-status' ) && str_contains( $crm_list_html, 'data-lead-stage-form' ) && str_contains( $crm_list_html, 'name="campaign" value="Autumn campaign"' ), 'CRM intake is rendered once and the board offers accessible stage controls while retaining marketing filters.' );
+adc_check( str_contains( $crm_list_html, 'campaign=Autumn+campaign' ) && str_contains( $crm_list_html, 'platform=Google' ) && str_contains( $crm_list_html, 'created_by=' . (int) $admin ), 'CRM export links carry the active campaign, platform and creator filters.' );
+wp_clear_scheduled_hook( 'adc_backfill_lead_stage_history' );
+update_option( 'adc_lead_stage_history_backfill_complete', false, false );
+update_option( 'adc_lead_stage_history_duration_complete', false, false );
+\AutoDealership\Leads\LeadStageHistoryBackfill::schedule_if_needed();
+$crm_backfill_scheduled_at = wp_next_scheduled( 'adc_backfill_lead_stage_history' );
+\AutoDealership\Leads\LeadStageHistoryBackfill::schedule_if_needed();
+$crm_backfill_scheduled_again = wp_next_scheduled( 'adc_backfill_lead_stage_history' );
+wp_clear_scheduled_hook( 'adc_backfill_lead_stage_history' );
+adc_check( 20 === has_action( 'plugins_loaded', array( \AutoDealership\Leads\LeadStageHistoryBackfill::class, 'schedule_if_needed' ) ) && $crm_backfill_scheduled_at > time() && $crm_backfill_scheduled_at === $crm_backfill_scheduled_again, 'Schema migration queues the idempotent history backfill after schema installation without running a batch inline.' );
+$crm_backfill_lead = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500000989', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+if ( ! is_array( $crm_backfill_lead ) ) { throw new RuntimeException( 'CRM audit backfill fixture failed.' ); }
+if ( ! is_array( LeadService::release_assignment( (int) $crm_backfill_lead['id'], 'Backfill fixture release' ) ) ) { throw new RuntimeException( 'CRM assignment-release backfill fixture failed.' ); }
+$wpdb->delete( $crm_stage_history, array( 'lead_id'=>(int) $crm_backfill_lead['id'] ), array( '%d' ) );
+update_option( 'adc_lead_stage_history_backfill_cursor', 0, false );
+update_option( 'adc_lead_stage_history_backfill_complete', false, false );
+for ( $crm_backfill_batch = 0; $crm_backfill_batch < 20 && ! get_option( 'adc_lead_stage_history_backfill_complete', false ); ++$crm_backfill_batch ) {
+	if ( ! \AutoDealership\Leads\LeadStageHistoryBackfill::run_batch() ) { break; }
+}
+$crm_backfilled_rows = $wpdb->get_results( $wpdb->prepare( "SELECT from_stage,to_stage,audit_event_id FROM `$crm_stage_history` WHERE lead_id=%d ORDER BY id", (int) $crm_backfill_lead['id'] ), ARRAY_A );
+adc_check( get_option( 'adc_lead_stage_history_backfill_complete', false ) && 3 === count( $crm_backfilled_rows ) && '' === $crm_backfilled_rows[0]['from_stage'] && 'new' === $crm_backfilled_rows[0]['to_stage'] && 'new' === $crm_backfilled_rows[1]['from_stage'] && 'assigned' === $crm_backfilled_rows[1]['to_stage'] && 'assigned' === $crm_backfilled_rows[2]['from_stage'] && 'new' === $crm_backfilled_rows[2]['to_stage'] && null !== $crm_backfilled_rows[0]['audit_event_id'] && null !== $crm_backfilled_rows[1]['audit_event_id'] && null !== $crm_backfilled_rows[2]['audit_event_id'], 'Audit backfill reconstructs creation, assignment and assignment-release transitions without inventing events.' );
+$crm_policy_reset = \AutoDealership\Core\ConfigurationService::update_section( array( 'lead_assignment_mode'=>'manual', 'lead_claim_timeout_minutes'=>'30' ), $crm_policy_fields );
+adc_check( is_array( $crm_policy_reset ) && 'manual' === get_option( 'adc_lead_assignment_mode' ), 'Manual assignment remains available and can be restored without changing claim handling.' );
+$crm_expiry_lead = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500000987', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+wp_set_current_user( $admin );
+if ( ! is_array( $crm_expiry_lead ) || is_wp_error( LeadService::assign( (int) $crm_expiry_lead['id'], $sales_b ) ) ) { throw new RuntimeException( 'CRM expiry fixture assignment failed.' ); }
+$wpdb->update( $crm_leads, array( 'claimed_at'=>gmdate( 'Y-m-d H:i:s', time() - 31 * MINUTE_IN_SECONDS ), 'updated_at'=>current_time( 'mysql', true ) ), array( 'id'=>(int) $crm_expiry_lead['id'] ), array( '%s', '%s' ), array( '%d' ) );
+update_option( 'adc_lead_claim_timeout_minutes', 30 );
+$crm_expiry_failure = $with_sql_failure( static fn( $q ) => str_contains( $q, 'INSERT IGNORE INTO' ) && str_contains( $q, Schema::table( 'followup_notifications' ) ), static fn() => LeadService::release_stale_claims() );
+$crm_expiry_failure_state = $wpdb->get_row( $wpdb->prepare( "SELECT owner_user_id,stage FROM `$crm_leads` WHERE id=%d", (int) $crm_expiry_lead['id'] ), ARRAY_A );
+adc_check( 0 === $crm_expiry_failure && (int) $crm_expiry_failure_state['owner_user_id'] === (int) $sales_b && 'assigned' === $crm_expiry_failure_state['stage'], 'Failed claim-expiry notification persistence rolls back returning the lead to the shared queue.' );
+$crm_released = LeadService::release_stale_claims();
+$crm_expiry_state = $wpdb->get_row( $wpdb->prepare( "SELECT owner_user_id,stage,claimed_at,first_contact_at FROM $crm_leads WHERE id=%d", (int) $crm_expiry_lead['id'] ), ARRAY_A );
+adc_check( $crm_released >= 1 && '0' === (string) $crm_expiry_state['owner_user_id'] && 'new' === $crm_expiry_state['stage'] && null === $crm_expiry_state['claimed_at'] && null === $crm_expiry_state['first_contact_at'], 'Expiry uses the claim timestamp and actual first-contact record, not unrelated updated_at changes.' );
+$crm_expiry_notifications = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . Schema::table( 'followup_notifications' ) . " WHERE source_type='claim_expired' AND source_id=%d", (int) $crm_expiry_lead['id'] ), ARRAY_A );
+$crm_expiry_owner_notice = array_values( array_filter( $crm_expiry_notifications, static fn( $row ) => (int) $row['recipient_id'] === (int) $sales_b && 0 === (int) $row['level'] ) );
+$crm_expiry_manager_notice = array_values( array_filter( $crm_expiry_notifications, static fn( $row ) => (int) $row['recipient_id'] === (int) $crm_expiry_manager && 1 === (int) $row['level'] ) );
+adc_check( count( $crm_expiry_owner_notice ) === 1 && count( $crm_expiry_manager_notice ) === 1, 'Expired CRM claim queues durable owner and branch-manager notifications immediately.' );
+wp_set_current_user( $sales_b );
+adc_check( is_array( \AutoDealership\Operations\FollowUpNotifications::inbox() ) && array_filter( \AutoDealership\Operations\FollowUpNotifications::inbox(), static fn( $row ) => 'claim_expired' === $row['source_type'] && (int) $row['source_id'] === (int) $crm_expiry_lead['id'] ), 'Claim-expiry notification is visible to the former owner in the scoped inbox.' );
+wp_set_current_user( $admin );
+$crm_expiry_delivered = \AutoDealership\Operations\FollowUpNotifications::deliver( array( 'subject_id'=>(int) $crm_expiry_owner_notice[0]['id'] ) );
+adc_check( true === $crm_expiry_delivered && null !== $wpdb->get_var( $wpdb->prepare( 'SELECT delivered_at FROM ' . Schema::table( 'followup_notifications' ) . ' WHERE id=%d', (int) $crm_expiry_owner_notice[0]['id'] ) ), 'Claim-expiry inbox delivery completes through the shared outbox handler.' );
+$crm_claim_expiry_mail = null;
+$crm_claim_expiry_mail_filter = static function ( $return, $atts ) use ( &$crm_claim_expiry_mail ) { $crm_claim_expiry_mail = $atts; return true; };
+add_filter( 'pre_wp_mail', $crm_claim_expiry_mail_filter, 10, 2 );
+update_option( 'adc_followup_email_enabled', true );
+$crm_claim_expiry_email = \AutoDealership\Operations\FollowUpNotifications::deliver( array( 'subject_id'=>(int) $crm_expiry_manager_notice[0]['id'] ) );
+remove_filter( 'pre_wp_mail', $crm_claim_expiry_mail_filter, 10 );
+update_option( 'adc_followup_email_enabled', false );
+$crm_expiry_manager_user = get_userdata( (int) $crm_expiry_manager );
+adc_check( true === $crm_claim_expiry_email && is_array( $crm_claim_expiry_mail ) && $crm_expiry_manager_user && $crm_expiry_manager_user->user_email === $crm_claim_expiry_mail['to'] && str_contains( $crm_claim_expiry_mail['subject'], 'CRM lead claim expired' ) && ! str_contains( $crm_claim_expiry_mail['message'], 'crm@example.invalid' ) && ! str_contains( $crm_claim_expiry_mail['message'], '+966500000987' ), 'Enabled claim-expiry email reaches the branch manager without including customer contact details.' );
 $crm_clear_rate();
 $crm_parallel_input = array_replace( $crm_input, array( 'idempotency_key'=>wp_generate_uuid4() ) );
 $crm_before = $crm_counts();

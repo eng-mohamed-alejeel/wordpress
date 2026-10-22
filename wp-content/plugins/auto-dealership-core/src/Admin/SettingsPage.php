@@ -33,6 +33,7 @@ final class SettingsPage {
 			'pricing' => array( 'التسعير والضرائب', array( 'vat_rate_bps', 'vat_percent', 'sales_manager_discount_limit', 'general_manager_discount_limit', 'pricing_fee_amount', 'promotion_code', 'promotion_type', 'promotion_value', 'promotion_starts_at', 'promotion_ends_at', 'seller_name', 'seller_tax_number', 'seller_phone', 'seller_address' ) ),
 			'reservations' => array( 'الحجز والعربون', array( 'reservation_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'reservation_refund_hours' ) ),
 			'branches' => array( 'فروع التشغيل', array( 'default_branch_id' ) ),
+			'crm' => array( 'توزيع العملاء المحتملين', array( 'lead_assignment_mode', 'lead_claim_timeout_minutes' ) ),
 			'delivery' => array( 'سياسة التسليم', array( 'delivery_required_documents' ) ),
 			'privacy' => array( 'الاحتفاظ بالبيانات', array( 'privacy_retention_days' ) ),
 			'catalog' => array( 'مصدر الكتالوج', array( 'public_catalog_mode' ) ),
@@ -61,6 +62,8 @@ final class SettingsPage {
 		$document_labels = array( 'invoice'=>'Invoice', 'customer_identity'=>'Customer identity', 'vehicle_registration'=>'Vehicle registration', 'insurance'=>'Insurance', 'handover_form'=>'Signed handover form', 'finance_clearance'=>'Finance clearance' );
 		$branches = BranchService::public_list();
 		$default_branch = absint( get_option( 'adc_default_branch_id', 0 ) );
+		$lead_assignment_mode = sanitize_key( (string) get_option( 'adc_lead_assignment_mode', 'manual' ) );
+		$lead_claim_timeout = min( 1440, max( 5, absint( get_option( 'adc_lead_claim_timeout_minutes', 30 ) ) ) );
 		$retention_days = absint( get_option( 'adc_privacy_retention_days', 0 ) );
 		$catalog_mode = PublicCatalog::mode();
 		$catalog_readiness = PublicCatalog::readiness();
@@ -91,6 +94,10 @@ final class SettingsPage {
 					<?php endif; ?>
 					<?php if ( in_array( 'default_branch_id', $fields, true ) ) : ?>
 					<tr><th scope="row"><label for="adc_default_branch_id"><?php esc_html_e( 'الفرع الافتراضي للطلبات الواردة', 'auto-dealership-core' ); ?></label></th><td><select id="adc_default_branch_id" name="default_branch_id"><option value="0"><?php esc_html_e( 'بدون فرع — يتطلب إسنادًا يدويًا', 'auto-dealership-core' ); ?></option><?php foreach ( $branches as $branch ) : ?><option value="<?php echo absint( $branch['id'] ); ?>" <?php selected( $default_branch, (int) $branch['id'] ); ?>><?php echo esc_html( \AutoDealership\Content\StoredTranslations::text( 'branches', (int) $branch['id'], 'name', (string) $branch['name'] ) . ' — ' . \AutoDealership\Content\StoredTranslations::text( 'branches', (int) $branch['id'], 'city', (string) $branch['city'] ) ); ?></option><?php endforeach; ?></select></td></tr>
+					<?php endif; ?>
+					<?php if ( in_array( 'lead_assignment_mode', $fields, true ) ) : ?>
+					<tr><th scope="row"><label for="adc_lead_assignment_mode"><?php esc_html_e( 'توزيع العملاء المحتملين', 'auto-dealership-core' ); ?></label></th><td><select id="adc_lead_assignment_mode" name="lead_assignment_mode"><option value="manual" <?php selected( $lead_assignment_mode, 'manual' ); ?>><?php esc_html_e( 'إسناد يدوي إلى قائمة الفرع المشتركة', 'auto-dealership-core' ); ?></option><option value="round_robin" <?php selected( $lead_assignment_mode, 'round_robin' ); ?>><?php esc_html_e( 'توزيع تلقائي بالتناوب حسب الفرع', 'auto-dealership-core' ); ?></option></select><p class="description"><?php esc_html_e( 'يوزّع الطلبات الجديدة على موظفي المبيعات النشطين المعيّنين إلى الفرع فقط. إذا لم يتوفر موظف مؤهل، يبقى الطلب في قائمة الفرع المشتركة.', 'auto-dealership-core' ); ?></p></td></tr>
+					<tr><th scope="row"><label for="adc_lead_claim_timeout_minutes"><?php esc_html_e( 'مهلة المطالبة بالدقائق', 'auto-dealership-core' ); ?></label></th><td><input id="adc_lead_claim_timeout_minutes" name="lead_claim_timeout_minutes" type="number" min="5" max="1440" value="<?php echo esc_attr( $lead_claim_timeout ); ?>"><p class="description"><?php esc_html_e( 'تُعاد الفرصة المسندة إلى القائمة المشتركة إذا لم يُسجّل الموظف أول تواصل قبل انتهاء المهلة؛ من 5 إلى 1440 دقيقة.', 'auto-dealership-core' ); ?></p></td></tr>
 					<?php endif; ?>
 					<?php if ( in_array( 'privacy_retention_days', $fields, true ) ) : ?>
 					<tr><th scope="row"><label for="adc_privacy_retention_days"><?php esc_html_e( 'مدة الاحتفاظ ببيانات الهوية (يوم)', 'auto-dealership-core' ); ?></label></th><td><input id="adc_privacy_retention_days" name="privacy_retention_days" type="number" min="0" max="3650" value="<?php echo esc_attr( $retention_days ); ?>"><p class="description"><?php esc_html_e( '0 يعطل الإخفاء المجدول. أي قيمة مفعلة يجب أن تكون بين 30 و3650 يومًا وبعد اعتماد السياسة النظامية.', 'auto-dealership-core' ); ?></p></td></tr>

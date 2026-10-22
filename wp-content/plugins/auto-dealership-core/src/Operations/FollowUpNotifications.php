@@ -10,12 +10,14 @@ defined('ABSPATH') || exit;
 
 /** Durable staff inbox with explicit acknowledgement and permission-checked delivery. */
 final class FollowUpNotifications {
+	private const CLAIM_EXPIRED_NOTE = 'Claim expired before first contact; returned to shared queue';
+
 	public static function label(string $type): string {
-		$labels=array('lead'=>array('متابعة فرصة','Lead follow-up'),'discount'=>array('اعتماد خصم','Discount approval'),'sale'=>array('اعتماد بيع','Sale approval'),'reservation'=>array('حجز منتهي','Expired reservation'),'refund'=>array('استرداد متأخر','Overdue refund'),'outbox'=>array('مهمة آلية متعثرة','Failed background job'));
+		$labels=array('lead'=>array('متابعة فرصة','Lead follow-up'),'claim_expired'=>array('انتهاء مهلة استلام فرصة','Lead claim expired'),'discount'=>array('اعتماد خصم','Discount approval'),'sale'=>array('اعتماد بيع','Sale approval'),'reservation'=>array('حجز منتهي','Expired reservation'),'refund'=>array('استرداد متأخر','Overdue refund'),'outbox'=>array('مهمة آلية متعثرة','Failed background job'));
 		return $labels[$type][\AutoDealership\Core\Localization::language()==='en'?1:0]??$type;
 	}
 	public static function url(array $row): string {
-		$targets=array('lead'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'discount'=>array('page'=>'adc-approvals','section'=>'discounts'),'sale'=>array('page'=>'adc-onyx-documents','sale_id'=>$row['source_id']),'reservation'=>array('page'=>'adc-sales-journey','section'=>'reservations','reservation_id'=>$row['source_id']),'refund'=>array('page'=>'adc-refunds'),'outbox'=>array('page'=>'adc-outbox'));
+		$targets=array('lead'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'claim_expired'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'discount'=>array('page'=>'adc-approvals','section'=>'discounts'),'sale'=>array('page'=>'adc-onyx-documents','sale_id'=>$row['source_id']),'reservation'=>array('page'=>'adc-sales-journey','section'=>'reservations','reservation_id'=>$row['source_id']),'refund'=>array('page'=>'adc-refunds'),'outbox'=>array('page'=>'adc-outbox'));
 		return add_query_arg($targets[$row['source_type']]??array('page'=>'adc-follow-ups'),admin_url('admin.php'));
 	}
 	public static function boot(): void {
@@ -50,6 +52,7 @@ final class FollowUpNotifications {
 		$refund=gmdate('Y-m-d H:i:s',time()-min(720,max(1,absint(get_option('adc_reservation_refund_hours',72))))*HOUR_IN_SECONDS);
 		return array(
 			'lead'=>array('SELECT l.id,l.branch_id,l.owner_user_id,l.next_action_at due_at FROM '.Schema::table('leads')." l WHERE l.stage NOT IN ('won','lost') AND l.next_action_at<=%s",array($now),'adc_view_own_leads','adc_view_branch_leads'),
+			'claim_expired'=>array('SELECT a.lead_id id,h.branch_id,h.owner_user_id,a.created_at due_at FROM '.Schema::table('activities').' a INNER JOIN '.Schema::table('lead_stage_history').' h ON h.lead_id=a.lead_id AND h.changed_at=a.created_at AND h.from_stage=\'assigned\' AND h.to_stage=\'new\' AND h.owner_user_id>0 WHERE a.type=\'assignment\' AND a.notes=%s',array(self::CLAIM_EXPIRED_NOTE),'adc_view_own_leads','adc_view_branch_leads'),
 			'discount'=>array('SELECT d.id,q.branch_id,0 owner_user_id,d.created_at due_at FROM '.Schema::table('discount_requests').' d INNER JOIN '.Schema::table('quotations')." q ON q.id=d.quotation_id WHERE d.status='pending' AND d.created_at<=%s",array($approval),'adc_review_discounts','adc_review_discounts'),
 			'sale'=>array('SELECT s.id,v.branch_id,0 owner_user_id,s.created_at due_at FROM '.Schema::table('sales').' s INNER JOIN '.Schema::table('vehicles')." v ON v.id=s.vehicle_id WHERE s.status='pending_approval' AND s.created_at<=%s",array($approval),'adc_approve_sales','adc_approve_sales'),
 			'reservation'=>array('SELECT r.id,r.branch_id,r.owner_user_id,r.expires_at due_at FROM '.Schema::table('reservations')." r WHERE r.status='confirmed' AND r.expires_at<=%s",array($now),'adc_view_own_leads','adc_view_branch_leads'),
@@ -78,6 +81,7 @@ final class FollowUpNotifications {
 		$summary=array('queued'=>0,'existing'=>0,'unassigned'=>0);
 		$cursors=get_option('adc_followup_cursors',array());
 		foreach(self::sources() as $type=>$source){
+			if('claim_expired'===$type){continue;}
 			$rows=$wpdb->get_results($wpdb->prepare('SELECT * FROM ('.$source[0].') due_work WHERE id>%d ORDER BY id LIMIT 200',array_merge($source[1],array((int)($cursors[$type]??0)))),ARRAY_A);
 			if($wpdb->last_error){return new \WP_Error('adc_followup_read');}
 			foreach($rows as $work){
@@ -109,10 +113,39 @@ final class FollowUpNotifications {
 		return $summary;
 	}
 
+	/** Queues owner and branch-manager expiry alerts inside the lead release transaction. */
+	public static function queue_claim_expired(int $lead_id,int $branch_id,int $owner_user_id,string $expired_at): bool {
+		global $wpdb;
+		$work=array('id'=>$lead_id,'source_id'=>$lead_id,'source_type'=>'claim_expired','branch_id'=>$branch_id,'owner_user_id'=>$owner_user_id,'due_at'=>$expired_at);
+		$recipients=array();
+		if(self::allowed($work,$owner_user_id)){$recipients[$owner_user_id]=0;}
+		foreach(get_users(array('fields'=>'ID')) as $user_id){
+			$user_id=(int)$user_id;
+			if($user_id!==$owner_user_id&&self::allowed($work,$user_id,true)){$recipients[$user_id]=1;}
+		}
+		if(!$recipients){error_log('Auto Dealership Core: no authorized recipient for expired CRM claim alert.');return true;}
+		$table=Schema::table('followup_notifications');
+		foreach($recipients as $recipient=>$level){
+			$key=hash('sha256',implode('|',array('claim_expired',$lead_id,$expired_at,$recipient,$level)));
+			$insert=$wpdb->query($wpdb->prepare("INSERT IGNORE INTO $table (notification_key,source_type,source_id,branch_id,owner_user_id,recipient_id,level,due_at,created_at) VALUES (%s,'claim_expired',%d,%d,%d,%d,%d,%s,%s)",$key,$lead_id,$branch_id,$owner_user_id,$recipient,$level,$expired_at,current_time('mysql',true)));
+			if(false===$insert){return false;}
+			if(0===$insert){continue;}
+			$id=(int)$wpdb->insert_id;
+			$queued=OutboxService::enqueue('followup.notify',array('subject_type'=>'followup_notification','subject_id'=>$id,'recipient_type'=>'user','recipient_id'=>(int)$recipient,'branch_id'=>$branch_id),$key);
+			if(is_wp_error($queued)||!AuditLog::record('followup.queued','followup_notification',$id,'Expired CRM lead claim alert',null,array('recipient_id'=>(int)$recipient,'level'=>$level))){return false;}
+		}
+		return true;
+	}
+
 	private static function current(array $row) {
 		global $wpdb;
 		$source=self::sources()[$row['source_type']]??null;
 		if(!$source){return false;}
+		if('claim_expired'===$row['source_type']){
+			$exists=$wpdb->get_var($wpdb->prepare('SELECT a.id FROM '.Schema::table('activities').' a INNER JOIN '.Schema::table('lead_stage_history').' h ON h.lead_id=a.lead_id AND h.changed_at=a.created_at AND h.from_stage=\'assigned\' AND h.to_stage=\'new\' WHERE a.lead_id=%d AND a.type=\'assignment\' AND a.notes=%s AND a.created_at=%s AND h.branch_id=%d AND h.owner_user_id=%d LIMIT 1',(int)$row['source_id'],self::CLAIM_EXPIRED_NOTE,$row['due_at'],(int)$row['branch_id'],(int)$row['owner_user_id']));
+			if($wpdb->last_error){return new \WP_Error('adc_followup_read');}
+			return (bool)$exists;
+		}
 		$work=$wpdb->get_row($wpdb->prepare('SELECT * FROM ('.$source[0].') due_work WHERE id=%d',array_merge($source[1],array((int)$row['source_id']))),ARRAY_A);
 		if($wpdb->last_error){return new \WP_Error('adc_followup_read');}
 		return $work&&$work['due_at']===$row['due_at']&&(int)$work['branch_id']===(int)$row['branch_id']&&(int)$work['owner_user_id']===(int)$row['owner_user_id'];
@@ -130,7 +163,14 @@ final class FollowUpNotifications {
 		if(get_option('adc_followup_email_enabled',false)){
 			$user=get_userdata((int)$row['recipient_id']);
 			if(!$user||!is_email($user->user_email)){return new \WP_Error('adc_followup_recipient');}
-			if(!wp_mail($user->user_email,'متابعة عمل مستحقة / Due workflow follow-up','توجد متابعة مستحقة ضمن صلاحياتك. افتح لوحة المتابعات للاطلاع والإقرار. / Review and acknowledge your due work: '.admin_url('admin.php?page=adc-follow-ups'))){return new \WP_Error('adc_followup_mail');}
+			if('claim_expired'===$row['source_type']){
+				$subject='انتهاء مهلة استلام فرصة CRM / CRM lead claim expired';
+				$message='انتهت مهلة استلام فرصة CRM وأعيدت إلى قائمة الفرع المشتركة. راجع لوحة المتابعات. / A CRM lead claim expired and the lead returned to the branch queue. Review the follow-up inbox: ';
+			}else{
+				$subject='متابعة عمل مستحقة / Due workflow follow-up';
+				$message='توجد متابعة مستحقة ضمن صلاحياتك. افتح لوحة المتابعات للاطلاع والإقرار. / Review and acknowledge your due work: ';
+			}
+			if(!wp_mail($user->user_email,$subject,$message.admin_url('admin.php?page=adc-follow-ups'))){return new \WP_Error('adc_followup_mail');}
 			$channel='email';
 		}
 		return false!==$wpdb->update(Schema::table('followup_notifications'),array('delivered_at'=>current_time('mysql',true),'delivery_channel'=>$channel),array('id'=>$row['id']));

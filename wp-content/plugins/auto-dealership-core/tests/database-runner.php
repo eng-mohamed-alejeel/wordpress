@@ -53,7 +53,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 	require ABSPATH . 'wp-settings.php';
 	add_filter( 'pre_wp_mail', '__return_true' );
-	if ( in_array( $scenario, array( 'portal_ensure','portal_send','portal_change','portal_review','portal_read','portal_withdraw','email_confirm', 'reserve', 'finance_attempt', 'migrate', 'crm_intake', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase', 'outbox', 'rate_limit', 'purchase_create' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
+	if ( in_array( $scenario, array( 'portal_ensure','portal_send','portal_change','portal_review','portal_read','portal_withdraw','email_confirm', 'reserve', 'finance_attempt', 'migrate', 'crm_intake', 'crm_claim', 'crm_request', 'crm_merge', 'crm_quote', 'crm_erase', 'outbox', 'rate_limit', 'purchase_create' ), true ) && $actor >= 0 && is_array( $input ) && preg_match( '/\Aadc_gate_[a-f0-9]{16}\z/', $barrier ) ) {
 		require $verification_plugin_file;
 		wp_set_current_user( $actor );
 		global $wpdb;
@@ -82,6 +82,8 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 			$result = json_decode( substr( $message, strpos( $message, '{' ) ), true, 512, JSON_THROW_ON_ERROR );
 		} elseif ( 'crm_intake' === $scenario ) {
 			$result = \AutoDealership\Leads\PublicIntake::submit( $input, 'message' );
+		} elseif ( 'crm_claim' === $scenario ) {
+			$result = \AutoDealership\Leads\LeadService::claim( (int) ( $input['lead_id'] ?? 0 ) );
 		} elseif ( 'crm_request' === $scenario ) {
 			$result = \AutoDealership\Leads\RequestWorkflow::update( (int) $input['lead_id'], $input );
 		} elseif ( 'crm_merge' === $scenario ) {

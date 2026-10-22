@@ -140,7 +140,7 @@ BranchScope::clear_cache();
 $test_branches[3] = 8;
 check( ! BranchScope::can_manage_lead( $own_lead ), 'Moving staff revokes their old-branch lead access.' );
 LeadService::list_for_current_user();
-check( str_contains( $wpdb->last_query, 'l.branch_id = %d AND l.owner_user_id = %d' ) && array( 8, 3, 20, 0 ) === $wpdb->last_args, 'Owned lead lists require both branch and owner.' );
+check( str_contains( $wpdb->last_query, "l.branch_id = %d AND (l.owner_user_id=%d OR (l.owner_user_id=0 AND l.stage='new'))" ) && array( 8, 3, 20, 0 ) === $wpdb->last_args, 'Sales lists expose only owned leads and unassigned leads in their active branch.' );
 $wpdb->row = $own_lead;
 $result = LeadService::update_stage( 1, 'contacted' );
 check( $result instanceof WP_Error && 'adc_lead_not_found' === $result->get_error_code(), 'Old-branch stage change is denied by the service.' );

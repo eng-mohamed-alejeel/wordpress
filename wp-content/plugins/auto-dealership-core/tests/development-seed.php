@@ -233,9 +233,10 @@ try {
 		}
 		$leads[$number] = $lead_id; $customers[$number] = $customer_id;
 		$lead_owner = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT owner_user_id FROM ' . Schema::table( 'leads' ) . ' WHERE id=%d', $lead_id ) );
-		if ( ! $lead_owner ) { $require_result( LeadService::assign( $lead_id, $staff[$owner] ), 'lead owner ' . $number ); }
+		if ( ! $lead_owner ) { $require_result( LeadService::assign( $lead_id, $staff[$owner] ), 'lead owner ' . $number ); $lead_owner = (int) $staff[$owner]; }
+		wp_set_current_user( $lead_owner );
 		$current_stage = (string) $wpdb->get_var( $wpdb->prepare( 'SELECT stage FROM ' . Schema::table( 'leads' ) . ' WHERE id=%d', $lead_id ) );
-		if ( 'new' === $current_stage && 'new' !== $target_stage ) { $require_result( LeadService::update_stage( $lead_id, 'contacted', 'Development follow-up' ), 'lead contacted ' . $number ); $current_stage = 'contacted'; }
+		if ( 'assigned' === $current_stage && ! in_array( $target_stage, array( 'new', 'lost' ), true ) ) { $require_result( LeadService::record_first_contact( $lead_id, 'call', current_time( 'Y-m-d\TH:i' ), 'Development contact recorded', 'Synthetic development seed follow-up' ), 'lead first contact ' . $number ); $current_stage = 'contacted'; }
 		if ( 'contacted' === $current_stage && 'qualified' === $target_stage ) { $require_result( LeadService::update_stage( $lead_id, 'qualified', 'Development qualification' ), 'lead qualified ' . $number ); }
 	}
 
