@@ -15,7 +15,8 @@ final class VehicleAcquisitionPage {
 
 	public static function menu(): void {
 		if ( current_user_can( 'adc_view_vehicle_costs' ) || current_user_can( 'adc_manage_vehicle_costs' ) ) {
-			add_submenu_page( 'adc-workspace', __( 'Vehicle acquisition', 'auto-dealership-core' ), __( 'Vehicle acquisition', 'auto-dealership-core' ), 'adc_view_vehicle_costs', 'adc-vehicle-acquisition', array( self::class, 'render' ) );
+			$capability = current_user_can( 'adc_view_vehicle_costs' ) ? 'adc_view_vehicle_costs' : 'adc_manage_vehicle_costs';
+			add_submenu_page( 'adc-workspace', __( 'Vehicle acquisition', 'auto-dealership-core' ), __( 'Vehicle acquisition', 'auto-dealership-core' ), $capability, 'adc-vehicle-acquisition', array( self::class, 'render' ) );
 		}
 	}
 

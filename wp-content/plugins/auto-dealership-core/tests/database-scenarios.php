@@ -106,6 +106,75 @@ $sales_a = $make_user( 'sales_a', 'dealership_sales', $branch_a['id'] );
 $sales_a2 = $make_user( 'sales_a2', 'dealership_sales', $branch_a['id'] );
 $sales_b = $make_user( 'sales_b', 'dealership_sales', $branch_b['id'] );
 $manager_a = $make_user( 'manager_a', 'dealership_sales_manager', $branch_a['id'] );
+$manager_b = $make_user( 'manager_b', 'dealership_sales_manager', $branch_b['id'] );
+$finance_recorder = $make_user( 'finance_record', 'dealership_finance', $branch_a['id'] );
+$finance_verifier = $make_user( 'finance_verify', 'dealership_finance', $branch_a['id'] );
+$finance_other = $make_user( 'finance_other', 'dealership_finance', $branch_b['id'] );
+$effective_role_accounts = array(
+	'dealership_sales' => $sales_a,
+	'dealership_sales_manager' => $manager_a,
+	'dealership_finance' => $finance_recorder,
+);
+$effective_role_matrix = \AutoDealership\Core\Capabilities::role_matrix();
+$effective_capabilities = \AutoDealership\Core\Capabilities::all_capabilities();
+foreach ( $effective_role_matrix as $role => $expected_capabilities ) {
+	if ( ! isset( $effective_role_accounts[$role] ) ) {
+		$login = 'effective_' . $role;
+		$user_id = wp_insert_user( array(
+			'user_login' => $login,
+			'user_pass' => wp_generate_password( 32 ),
+			'user_email' => $login . '@example.invalid',
+			'role' => $role,
+		) );
+		if ( is_wp_error( $user_id ) ) { throw new RuntimeException( 'Isolated effective-access fixture failed for role ' . $role . '.' ); }
+		$effective_role_accounts[$role] = (int) $user_id;
+		if ( 'car_dealer_customer' !== $role ) { update_user_meta( (int) $user_id, 'adc_branch_id', (int) $branch_a['id'] ); }
+	}
+	$assigned_roles = (array) get_userdata( $effective_role_accounts[$role] )->roles;
+	$matches_matrix = array( $role ) === $assigned_roles;
+	foreach ( $effective_capabilities as $capability ) {
+		$matches_matrix = $matches_matrix && ( user_can( $effective_role_accounts[$role], $capability ) === in_array( $capability, $expected_capabilities, true ) );
+	}
+	$matches_matrix = $matches_matrix && ! user_can( $effective_role_accounts[$role], 'manage_options' );
+	adc_check( $matches_matrix, 'Isolated effective-access account matches the unchanged capability baseline for role ' . $role . '.' );
+}
+adc_check( 12 === count( $effective_role_accounts ), 'Isolated effective-access fixtures cover all 12 dealership and customer roles without creating persistent development accounts.' );
+wp_set_current_user( $admin );
+$saved_post = $_POST;
+$options_engine = strtoupper( (string) $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $wpdb->options ) ) );
+adc_check( 'INNODB' === $options_engine, 'WordPress options use a transactional engine in the isolated fixture.' );
+$wpdb->query( "ALTER TABLE `$wpdb->options` ENGINE=MyISAM" );
+$guarded_role_slug = 'adc_role_engine_guard';
+$guarded_role_result = \AutoDealership\Admin\RoleManager::save_role( array( 'slug'=>$guarded_role_slug, 'ar'=>'اختبار محرك', 'en'=>'Engine test', 'caps'=>array( 'adc_view_reports' ), 'new'=>'1' ) );
+adc_check( is_wp_error( $guarded_role_result ) && ! get_role( $guarded_role_slug ) && ! isset( get_option( 'adc_role_definitions', array() )[$guarded_role_slug] ), 'Role updates fail before writing when wp_options is nontransactional.' );
+$wpdb->query( "ALTER TABLE `$wpdb->options` ENGINE=InnoDB" );
+wp_roles()->for_site();
+$usermeta_engine = strtoupper( (string) $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $wpdb->usermeta ) ) );
+adc_check( 'INNODB' === $usermeta_engine, 'WordPress usermeta uses a transactional engine in the isolated fixture.' );
+$permissions_user = get_userdata( $sales_a );
+$permissions_before = $permissions_user->caps;
+$permissions_meta_before = (string) $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM `$wpdb->usermeta` WHERE user_id=%d AND meta_key=%s", $sales_a, $permissions_user->cap_key ) );
+$_POST = array( 'adc_permissions_present'=>'1', 'adc_permissions_nonce'=>wp_create_nonce( 'adc_user_permissions_' . $sales_a ), 'adc_permissions_custom'=>'1', 'adc_permissions'=>array( 'adc_view_reports' ), 'adc_permissions_reason'=>'Transactional engine guard test' );
+$permissions_errors = new WP_Error();
+\AutoDealership\Admin\UserPermissions::validate( $permissions_errors, true, (object) array( 'ID'=>$sales_a ) );
+adc_check( ! $permissions_errors->has_errors(), 'Valid permission updates reach persistence before the storage-engine safety guard.' );
+$wpdb->query( "ALTER TABLE `$wpdb->usermeta` ENGINE=MyISAM" );
+$wp_die_handler = static function () { return static function ( ...$args ): void { throw new RuntimeException( 'Permission persistence was safely rejected.' ); }; };
+add_filter( 'wp_die_handler', $wp_die_handler );
+$permissions_rejected = false;
+try {
+	\AutoDealership\Admin\UserPermissions::save( $sales_a );
+} catch ( RuntimeException $error ) {
+	$permissions_rejected = 'Permission persistence was safely rejected.' === $error->getMessage();
+} finally {
+	remove_filter( 'wp_die_handler', $wp_die_handler );
+	$wpdb->query( "ALTER TABLE `$wpdb->usermeta` ENGINE=InnoDB" );
+	$_POST = $saved_post;
+	clean_user_cache( $sales_a );
+	wp_cache_delete( $sales_a, 'user_meta' );
+}
+$permissions_meta_after = (string) $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM `$wpdb->usermeta` WHERE user_id=%d AND meta_key=%s", $sales_a, $permissions_user->cap_key ) );
+adc_check( $permissions_rejected && $permissions_meta_before === $permissions_meta_after && $permissions_before === get_userdata( $sales_a )->caps, 'Individual permission writes are explicitly rejected and remain unchanged when usermeta is nontransactional.' );
 $make_customer = static function ( int $branch, int $owner ) use ( $wpdb ): int {
 	$lead = LeadService::create_public( array( 'name' => 'Synthetic customer', 'mobile' => '+966500000001', 'branch_id' => $branch ) );
 	if ( ! is_array( $lead ) || is_wp_error( LeadService::assign( $lead['id'], $owner ) ) ) { throw new RuntimeException( 'Fixture lead assignment failed.' ); }
@@ -114,6 +183,31 @@ $make_customer = static function ( int $branch, int $owner ) use ( $wpdb ): int 
 $customer_a = $make_customer( $branch_a['id'], $sales_a );
 $customer_a2 = $make_customer( $branch_a['id'], $sales_a2 );
 $customer_b = $make_customer( $branch_b['id'], $sales_b );
+$lead_a = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'leads' ) . ' WHERE customer_id=%d', $customer_a ) );
+$lead_a2 = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'leads' ) . ' WHERE customer_id=%d', $customer_a2 ) );
+$lead_b = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'leads' ) . ' WHERE customer_id=%d', $customer_b ) );
+wp_set_current_user( $admin );
+$service_a = $make_user( 'service_a', 'dealership_customer_service', $branch_a['id'] );
+$service_b = $make_user( 'service_b', 'dealership_customer_service', $branch_b['id'] );
+$assert_visible_leads = static function ( int $user_id, array $expected, string $label ): void {
+	wp_set_current_user( $user_id );
+	$visible = array_map( 'intval', array_column( LeadService::list_for_current_user( 1, 100 ), 'id' ) );
+	sort( $visible );
+	sort( $expected );
+	adc_check( $visible === $expected, $label . ' ' . wp_json_encode( $visible ) );
+};
+$assert_visible_leads( $sales_a, array( $lead_a ), 'Sales employee sees only their owned lead and not another employee or branch.' );
+$assert_visible_leads( $sales_a2, array( $lead_a2 ), 'Second sales employee in the same branch sees only their own lead.' );
+$assert_visible_leads( $sales_b, array( $lead_b ), 'Sales employee sees the owned lead in their assigned branch only.' );
+$assert_visible_leads( $manager_a, array( $lead_a, $lead_a2 ), 'Branch sales manager sees all branch-A leads and no branch-B lead.' );
+$assert_visible_leads( $manager_b, array( $lead_b ), 'Branch sales manager sees branch-B lead and no branch-A lead.' );
+$assert_visible_leads( $service_a, array( $lead_a, $lead_a2 ), 'Customer-service role sees branch-A leads within its branch scope.' );
+$assert_visible_leads( $service_b, array( $lead_b ), 'Customer-service role sees branch-B lead within its branch scope.' );
+$assert_visible_leads( $effective_role_accounts['dealership_general_manager'], array( $lead_a, $lead_a2 ), 'General-manager lead access remains bounded to its assigned branch.' );
+foreach ( array( 'dealership_marketing', 'dealership_chat_adviser', 'dealership_inventory', 'dealership_finance', 'dealership_purchasing', 'dealership_delivery', 'dealership_auditor', 'car_dealer_customer' ) as $role ) {
+	$assert_visible_leads( $effective_role_accounts[$role], array(), 'Role without matching website-lead visibility returns no CRM rows: ' . $role . '.' );
+}
+wp_set_current_user( $admin );
 $make_vehicle = static function ( string $suffix ) use ( $branch_a, $admin, $brand_reference, $location_reference ): int {
 	$previous = get_current_user_id();
 	wp_set_current_user( $admin );
@@ -175,6 +269,20 @@ update_option( 'adc_sales_manager_discount_limit', 20000, false );
 $pricing_vehicle = $make_vehicle( '5' );
 $pricing_quote = SalesService::create_quote( $customer_a, $pricing_vehicle, $date );
 adc_check( is_array( $pricing_quote ) && 1500 === $pricing_quote['tax_rate_bps'] && 11500000 === $pricing_quote['final_amount'], 'Quote stores the configured VAT rate and integer total.' );
+wp_set_current_user( $sales_a );
+$deposit_type_filter = static fn() => 'fixed';
+$deposit_value_filter = static fn() => 500000;
+add_filter( 'pre_option_adc_reservation_deposit_type', $deposit_type_filter );
+add_filter( 'pre_option_adc_reservation_deposit_value', $deposit_value_filter );
+$deposit_vehicle = $make_vehicle( '33' );
+$deposit_reservation = ReservationService::create( array( 'vehicle_id'=>$deposit_vehicle, 'customer_id'=>$customer_a, 'deposit_amount'=>500000, 'idempotency_key'=>wp_generate_uuid4() ) );
+remove_filter( 'pre_option_adc_reservation_deposit_type', $deposit_type_filter );
+remove_filter( 'pre_option_adc_reservation_deposit_value', $deposit_value_filter );
+adc_check( is_array( $deposit_reservation ) && 500000 === $deposit_reservation['deposit_required_amount'], 'Create a branch-A reservation with a pending-deposit fixture.' );
+wp_set_current_user( $finance_recorder );
+$deposit_evidence = ReservationService::record_deposit( $deposit_reservation['id'], 500000, 'bank_transfer', 'IDOR-DEPOSIT-A' );
+adc_check( is_array( $deposit_evidence ), 'Record pending branch-A deposit evidence for REST scope checks.' );
+wp_set_current_user( $sales_a );
 adc_check( '1' === (string) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . Schema::table( 'quotation_versions' ) . ' WHERE quotation_id = %d', $pricing_quote['id'] ) ), 'Quote creation captures immutable version one.' );
 $history_table = Schema::table( 'quotation_versions' );
 $break_history = static function ( string $query ) use ( $history_table ): string {
@@ -331,6 +439,18 @@ adc_check( '1' === (string) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FRO
 
 AutoDealership\Database\SchemaGuard::boot();
 $server = rest_get_server();
+$deposit_queue_request = new WP_REST_Request( 'GET', '/auto-dealership/v1/reservation-deposits' );
+wp_set_current_user( $finance_recorder );
+$deposit_queue_response = $server->dispatch( $deposit_queue_request );
+$deposit_queue_ids = is_array( $deposit_queue_response->get_data() ) ? array_map( 'intval', array_column( $deposit_queue_response->get_data(), 'id' ) ) : array();
+adc_check( 200 === $deposit_queue_response->get_status() && in_array( (int) $deposit_evidence['id'], $deposit_queue_ids, true ), 'Finance staff can read pending deposit evidence in their own branch.' );
+wp_set_current_user( $finance_other );
+$foreign_deposit_queue_response = $server->dispatch( $deposit_queue_request );
+$foreign_deposit_queue_ids = is_array( $foreign_deposit_queue_response->get_data() ) ? array_map( 'intval', array_column( $foreign_deposit_queue_response->get_data(), 'id' ) ) : array();
+adc_check( 200 === $foreign_deposit_queue_response->get_status() && ! in_array( (int) $deposit_evidence['id'], $foreign_deposit_queue_ids, true ), 'Foreign-branch finance staff cannot read pending deposit evidence.' );
+$foreign_deposit_queue_v2 = $server->dispatch( new WP_REST_Request( 'GET', '/auto-dealership/v2/reservation-deposits' ) );
+$foreign_deposit_queue_v2_ids = is_array( $foreign_deposit_queue_v2->get_data() ) ? array_map( 'intval', array_column( $foreign_deposit_queue_v2->get_data(), 'id' ) ) : array();
+adc_check( 200 === $foreign_deposit_queue_v2->get_status() && ! in_array( (int) $deposit_evidence['id'], $foreign_deposit_queue_v2_ids, true ), 'Version 2 deposit queue preserves foreign-branch isolation.' );
 wp_set_current_user( 0 );
 $rest_request = new WP_REST_Request( 'POST', '/auto-dealership/v1/quotations' );
 $rest_request->set_body_params( array( 'customer_id' => $customer_a, 'vehicle_id' => $vehicle, 'valid_until' => $date ) );
@@ -394,9 +514,6 @@ adc_check( 1 === count( array_filter( $parallel, static fn( $result ) => isset( 
 adc_check( '1' === (string) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $reservations WHERE vehicle_id = %d", $concurrent_vehicle ) ), 'Competing-key concurrency persists exactly one reservation.' );
 
 wp_set_current_user( $admin );
-$finance_recorder = $make_user( 'finance_record', 'dealership_finance', $branch_a['id'] );
-$finance_verifier = $make_user( 'finance_verify', 'dealership_finance', $branch_a['id'] );
-$finance_other = $make_user( 'finance_other', 'dealership_finance', $branch_b['id'] );
 $inventory = $make_user( 'inventory', 'dealership_inventory', $branch_a['id'] );
 $inventory_b = $make_user( 'inventory_b', 'dealership_inventory', $branch_b['id'] );
 $transfer_vehicle = $make_vehicle( '6' );
@@ -435,6 +552,14 @@ adc_check( is_wp_error( SalesService::request_discount( $quote['id'], 100, 'Afte
 adc_check( is_wp_error( PaymentService::record( $sale['id'], 100, 'bank_transfer', 'NO-SALES-ACCESS' ) ), 'Sales staff cannot record payment confirmations.' );
 wp_set_current_user( $finance_recorder );
 $finance_request = SalesService::create_finance_request( $sale['id'], 'Synthetic finance provider', $quote['final_amount'], true );
+$finance_history_request = new WP_REST_Request( 'GET', '/auto-dealership/v1/sales/' . $sale['id'] . '/finance-requests' );
+$finance_history_response = $server->dispatch( $finance_history_request );
+adc_check( 200 === $finance_history_response->get_status() && count( $finance_history_response->get_data() ) === 1 && (int) $finance_history_response->get_data()[0]['id'] === (int) $finance_request['id'], 'Same-branch finance staff can read the sale finance history.' );
+wp_set_current_user( $finance_other );
+$foreign_finance_history_response = $server->dispatch( $finance_history_request );
+adc_check( 404 === $foreign_finance_history_response->get_status(), 'Foreign-branch finance staff cannot read another branch sale finance history.' );
+$foreign_finance_history_v2 = $server->dispatch( new WP_REST_Request( 'GET', str_replace( '/v1/', '/v2/', $finance_history_request->get_route() ) ) );
+adc_check( 404 === $foreign_finance_history_v2->get_status(), 'Version 2 finance history preserves foreign-branch denial.' );
 wp_set_current_user( $finance_verifier );
 adc_check( is_array( SalesService::update_finance_status( $finance_request['id'], 'approved', 'SYNTHETIC-FINANCE' ) ), 'Finance request can be approved by a separate employee.' );
 wp_set_current_user( $manager_a );
@@ -488,6 +613,14 @@ remove_filter( 'query', $break_audit );
 adc_check( 'sold' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $vehicles WHERE id = %d", $vehicle ) ), 'Failed preparation keeps the vehicle sold.' );
 $delivery = DeliveryService::prepare( $sale['id'] );
 adc_check( is_array( $delivery ) && $delivery['id'] > 0, 'Settled sale creates a delivery with a valid identifier.' );
+$delivery_documents_request = new WP_REST_Request( 'GET', '/auto-dealership/v1/deliveries/' . $delivery['id'] . '/documents' );
+$delivery_documents_response = $server->dispatch( $delivery_documents_request );
+adc_check( 200 === $delivery_documents_response->get_status() && is_array( $delivery_documents_response->get_data() ), 'Same-branch manager can read the delivery document checklist.' );
+wp_set_current_user( $manager_b );
+$foreign_delivery_documents_response = $server->dispatch( $delivery_documents_request );
+adc_check( 404 === $foreign_delivery_documents_response->get_status(), 'Foreign-branch manager cannot read the delivery document checklist.' );
+$foreign_delivery_documents_v2 = $server->dispatch( new WP_REST_Request( 'GET', str_replace( '/v1/', '/v2/', $delivery_documents_request->get_route() ) ) );
+adc_check( 404 === $foreign_delivery_documents_v2->get_status(), 'Version 2 delivery documents preserve foreign-branch denial.' );
 wp_set_current_user( $inventory );
 $vin = $wpdb->get_var( $wpdb->prepare( "SELECT vin FROM $vehicles WHERE id = %d", $vehicle ) );
 adc_check( is_wp_error( DeliveryService::confirm_vin( $delivery['id'], 'WRONG-VIN' ) ), 'Mismatched VIN cannot be confirmed.' );
@@ -621,7 +754,6 @@ adc_check( 'Rollback Person' === $wpdb->get_var( $wpdb->prepare( "SELECT full_na
 wp_set_current_user( $admin );
 $branch_c = BranchService::create( array( 'code' => 'VERIFY-C', 'name' => 'Synthetic C' ) );
 if ( ! is_array( $branch_c ) ) { throw new RuntimeException( 'HTTP workflow branch fixture failed.' ); }
-$manager_b = $make_user( 'manager_b', 'dealership_sales_manager', $branch_b['id'] );
 $finance_b_recorder = $make_user( 'finance_b_recorder', 'dealership_finance', $branch_b['id'] );
 $finance_b_reviewer = $make_user( 'finance_b_reviewer', 'dealership_finance', $branch_b['id'] );
 $inventory_c = $make_user( 'inventory_c', 'dealership_inventory', $branch_c['id'] );
@@ -638,6 +770,20 @@ $make_branch_vehicle = static function ( int $branch_id, string $suffix ) use ( 
 $http_discount_vehicle = $make_branch_vehicle( $branch_b['id'], '101' );
 $http_sale_vehicle = $make_branch_vehicle( $branch_b['id'], '102' );
 $http_transfer_vehicle = $make_branch_vehicle( $branch_b['id'], '103' );
+get_userdata( $finance_recorder )->add_cap( 'adc_view_vehicle_costs' );
+get_userdata( $finance_other )->add_cap( 'adc_view_vehicle_costs' );
+wp_set_current_user( $finance_recorder );
+$acquisition_branch_a = $server->dispatch( new WP_REST_Request( 'GET', '/auto-dealership/v1/vehicles/' . $vehicle . '/acquisition' ) );
+adc_check( 200 === $acquisition_branch_a->get_status() && (int) ( $acquisition_branch_a->get_data()['branch_id'] ?? 0 ) === (int) $branch_a['id'] && array_key_exists( 'purchase_cost', $acquisition_branch_a->get_data() ), 'Finance user with acquisition-view permission reads cost data in their branch.' );
+$foreign_acquisition = $server->dispatch( new WP_REST_Request( 'GET', '/auto-dealership/v1/vehicles/' . $http_discount_vehicle . '/acquisition' ) );
+adc_check( 404 === $foreign_acquisition->get_status(), 'Finance user cannot read acquisition costs from another branch.' );
+$foreign_acquisition_v2 = $server->dispatch( new WP_REST_Request( 'GET', '/auto-dealership/v2/vehicles/' . $http_discount_vehicle . '/acquisition' ) );
+adc_check( 404 === $foreign_acquisition_v2->get_status(), 'Version 2 acquisition endpoint preserves foreign-branch denial.' );
+wp_set_current_user( $finance_other );
+$acquisition_branch_b = $server->dispatch( new WP_REST_Request( 'GET', '/auto-dealership/v2/vehicles/' . $http_discount_vehicle . '/acquisition' ) );
+adc_check( 200 === $acquisition_branch_b->get_status() && (int) ( $acquisition_branch_b->get_data()['branch_id'] ?? 0 ) === (int) $branch_b['id'], 'Version 2 acquisition endpoint permits an authorized user in the owning branch.' );
+wp_set_current_user( $sales_b );
+adc_check( 403 === $server->dispatch( new WP_REST_Request( 'GET', '/auto-dealership/v1/vehicles/' . $http_discount_vehicle . '/acquisition' ) )->get_status(), 'Sales user without acquisition permission cannot read restricted vehicle costs.' );
 wp_set_current_user( $sales_b );
 $http_discount_quote = SalesService::create_quote( $customer_b, $http_discount_vehicle, $date );
 $http_discount_request = SalesService::request_discount( $http_discount_quote['id'], 10000, 'HTTP decision fixture' );
@@ -703,7 +849,7 @@ try {
 		if ( isset( $auth['cookie'] ) ) { $headers[] = 'Cookie: ' . $auth['cookie']; }
 		if ( isset( $auth['nonce'] ) ) { $headers[] = 'X-WP-Nonce: ' . $auth['nonce']; }
 		$handle = curl_init( 'http://127.0.0.1:' . $http_port . $path );
-		$options = array( CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $headers, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_TIMEOUT => 5, CURLOPT_FOLLOWLOCATION => false );
+		$options = array( CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $headers, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_TIMEOUT => 15, CURLOPT_FOLLOWLOCATION => false );
 		if ( null !== $body ) {
 			$headers[] = $form ? 'Content-Type: application/x-www-form-urlencoded' : 'Content-Type: application/json';
 			$options[CURLOPT_HTTPHEADER] = $headers;
@@ -739,6 +885,15 @@ try {
 		return $auth;
 	};
 	$rest_path = static fn( string $route ): string => '/?rest_route=' . rawurlencode( $route );
+	$rest_v2_path = static function ( string $path ) use ( $rest_path ): string {
+		$query = (string) parse_url( $path, PHP_URL_QUERY );
+		parse_str( $query, $params );
+		$route = $params['rest_route'] ?? '';
+		if ( ! is_string( $route ) || ! str_starts_with( $route, '/auto-dealership/v1/' ) ) { throw new RuntimeException( 'Cannot derive a v2 REST route from the supplied v1 URL.' ); }
+		unset( $params['rest_route'] );
+		$query_string = $params ? '&' . http_build_query( $params, '', '&', PHP_QUERY_RFC3986 ) : '';
+		return $rest_path( str_replace( '/v1/', '/v2/', $route ) ) . $query_string;
+	};
 	require __DIR__ . '/customer-preferences-http.php';
 
 	$versions_path = $rest_path( '/auto-dealership/v1/quotations/' . $pricing_quote['id'] . '/versions' );
@@ -749,12 +904,280 @@ try {
 	adc_check( 403 === $http_request( $versions_path, array( 'cookie' => $admin_http['cookie'], 'nonce' => 'invalid' ) )[0], 'Real HTTP REST request rejects an invalid WordPress nonce.' );
 	list( $admin_status, $admin_body ) = $http_request( $versions_path, $admin_http );
 	adc_check( 200 === $admin_status, 'Real HTTP REST request accepts an administrator cookie and nonce (received ' . $admin_status . ': ' . substr( wp_strip_all_tags( $admin_body ), 0, 160 ) . ').' );
+	$versions_v2_path = $rest_v2_path( $versions_path );
+	$versions_admin_v2 = $http_request( $versions_v2_path, $admin_http );
+	$versions_admin_v2_data = json_decode( $versions_admin_v2[1], true );
+	adc_check( 200 === $versions_admin_v2[0] && is_array( $versions_admin_v2_data['data'] ?? null ) && count( $versions_admin_v2_data['data'] ) >= 1, 'Version 2 quote history is readable by an authorized administrator over HTTP.' );
 	$sales_b_http = $http_auth( $sales_b );
 	adc_check( 10 === strlen( $sales_b_http['nonce'] ), 'HTTP server issues a branch-user session cookie and REST nonce.' );
+	$schema_path = $rest_path( '/auto-dealership/schema/v2' );
+	$schema_admin_http = $http_request( $schema_path, $admin_http );
+	$schema_admin_data = json_decode( $schema_admin_http[1], true );
+	$schema_workspace_http = $http_request( $schema_path, $sales_b_http );
+	$schema_workspace_data = json_decode( $schema_workspace_http[1], true );
+	adc_check( 200 === $schema_admin_http[0] && '3.1.0' === ( $schema_admin_data['openapi'] ?? '' ) && isset( $schema_admin_data['paths']['/suppliers']['get']['security'][0]['cookieNonce'] ) && ! isset( $schema_admin_data['paths']['/branches']['get']['security'] ), 'Authenticated HTTP OpenAPI schema reflects protected and explicitly public v2 routes.' );
+	adc_check( 200 === $schema_workspace_http[0] && '3.1.0' === ( $schema_workspace_data['openapi'] ?? '' ) && 401 === $http_request( $schema_path )[0], 'Workspace readers can access the OpenAPI schema while anonymous HTTP callers are denied.' );
 	adc_check( 404 === $http_request( $versions_path, $sales_b_http )[0], 'Real HTTP REST request hides a quote from another branch.' );
+	adc_check( 404 === $http_request( $versions_v2_path, $sales_b_http )[0], 'Version 2 quote history preserves foreign-branch denial over HTTP.' );
 	$sales_a_http = $http_auth( $sales_a );
 	adc_check( 10 === strlen( $sales_a_http['nonce'] ), 'HTTP server issues a disabled-branch staff session without restoring branch access.' );
 	adc_check( 404 === $http_request( $versions_path, $sales_a_http )[0], 'Real HTTP REST request denies staff assigned to a disabled branch.' );
+
+	if ( 1 !== $wpdb->update( Schema::table( 'branches' ), array( 'active' => 1 ), array( 'id' => $branch_a['id'] ) ) ) { throw new RuntimeException( 'Could not temporarily activate branch A for CRM HTTP scope assertions.' ); }
+	BranchScope::clear_cache();
+	$http_lead_list_path = $rest_path( '/auto-dealership/v1/leads' ) . '&per_page=100';
+	$read_http_lead_ids = static function ( string $path, array $auth, bool $version_two = false ) use ( $http_request ): array {
+		$response = $http_request( $path, $auth );
+		$decoded = json_decode( $response[1], true );
+		$items = $version_two ? ( $decoded['data'] ?? array() ) : ( $decoded['items'] ?? $decoded );
+		return array( $response[0], is_array( $items ) ? array_map( 'intval', array_column( $items, 'id' ) ) : array() );
+	};
+	$assert_http_lead_scope = static function ( int $user_id, array $included, array $excluded, string $label ) use ( $http_auth, $rest_v2_path, $http_lead_list_path, $read_http_lead_ids ): void {
+		$auth = $http_auth( $user_id );
+		$v1 = $read_http_lead_ids( $http_lead_list_path, $auth );
+		$v2 = $read_http_lead_ids( $rest_v2_path( $http_lead_list_path ), $auth, true );
+		sort( $included );
+		sort( $excluded );
+		$v1_ids = $v1[1];
+		$v2_ids = $v2[1];
+		sort( $v1_ids );
+		sort( $v2_ids );
+		$valid = 200 === $v1[0] && 200 === $v2[0];
+		foreach ( $included as $lead_id ) { $valid = $valid && in_array( $lead_id, $v1_ids, true ) && in_array( $lead_id, $v2_ids, true ); }
+		foreach ( $excluded as $lead_id ) { $valid = $valid && ! in_array( $lead_id, $v1_ids, true ) && ! in_array( $lead_id, $v2_ids, true ); }
+		$unexpected = array_values( array_intersect( $excluded, array_merge( $v1_ids, $v2_ids ) ) );
+		$missing = array_values( array_diff( $included, array_intersect( $v1_ids, $v2_ids ) ) );
+		adc_check( $valid, $label . ' status=' . $v1[0] . '/' . $v2[0] . ' missing=' . wp_json_encode( $missing ) . ' unexpected=' . wp_json_encode( $unexpected ) );
+	};
+	$assert_http_lead_scope( $sales_a, array( $lead_a ), array( $lead_a2, $lead_b ), 'Sales HTTP list is limited to the employee-owned lead across API versions.' );
+	$assert_http_lead_scope( $sales_a2, array( $lead_a2 ), array( $lead_a, $lead_b ), 'A second same-branch salesperson cannot see a colleague lead over HTTP.' );
+	$assert_http_lead_scope( $sales_b, array( $lead_b ), array( $lead_a, $lead_a2 ), 'Sales HTTP list cannot reveal leads from another branch.' );
+	$assert_http_lead_scope( $manager_a, array( $lead_a, $lead_a2 ), array( $lead_b ), 'Branch-A manager HTTP list includes branch-A leads only.' );
+	$assert_http_lead_scope( $manager_b, array( $lead_b ), array( $lead_a, $lead_a2 ), 'Branch-B manager HTTP list includes branch-B leads only.' );
+	$assert_http_lead_scope( $service_a, array( $lead_a, $lead_a2 ), array( $lead_b ), 'Customer-service HTTP list is bounded to branch A.' );
+	$assert_http_lead_scope( $service_b, array( $lead_b ), array( $lead_a, $lead_a2 ), 'Customer-service HTTP list is bounded to branch B.' );
+	$assert_http_lead_scope( $effective_role_accounts['dealership_general_manager'], array( $lead_a, $lead_a2 ), array( $lead_b ), 'General-manager HTTP list remains bounded to its assigned branch.' );
+	foreach ( array( 'dealership_chat_adviser', 'dealership_inventory', 'dealership_finance', 'dealership_purchasing', 'dealership_delivery', 'dealership_auditor', 'car_dealer_customer' ) as $role ) {
+		$role_auth = $http_auth( $effective_role_accounts[$role] );
+		$v1 = $read_http_lead_ids( $http_lead_list_path, $role_auth );
+		$v2 = $read_http_lead_ids( $rest_v2_path( $http_lead_list_path ), $role_auth, true );
+		$v1_denied_or_empty = 403 === $v1[0] || ( 200 === $v1[0] && array() === $v1[1] );
+		$v2_denied_or_empty = 403 === $v2[0] || ( 200 === $v2[0] && array() === $v2[1] );
+		adc_check( $v1_denied_or_empty && $v2_denied_or_empty, 'REST lead list denies or returns no CRM rows to role without matching visibility in v1/v2: ' . $role . ' status=' . $v1[0] . '/' . $v2[0] . '.' );
+	}
+	if ( 1 !== $wpdb->update( Schema::table( 'branches' ), array( 'active' => 0 ), array( 'id' => $branch_a['id'] ) ) ) { throw new RuntimeException( 'Could not restore branch A state after CRM HTTP scope assertions.' ); }
+	BranchScope::clear_cache();
+
+	$portal_customer = $make_user( 'portal_http_customer', 'car_dealer_customer', 0 );
+	$portal_other_customer = $make_user( 'portal_http_other', 'car_dealer_customer', 0 );
+	$portal_foreign_staff = $make_user( 'portal_http_foreign_staff', 'dealership_sales', (int) $branch_c['id'] );
+	foreach ( array( $portal_customer, $portal_other_customer ) as $portal_user_id ) {
+		$portal_user = get_userdata( $portal_user_id );
+		update_user_meta( $portal_user_id, 'adc_email_verification_status', 'verified' );
+		update_user_meta( $portal_user_id, 'adc_email_verified_at', current_time( 'mysql', true ) );
+		update_user_meta( $portal_user_id, 'adc_verified_email_hash', hash( 'sha256', $portal_user->user_email ) );
+	}
+	wp_set_current_user( $portal_customer );
+	$portal_thread = \AutoDealership\Portal\Conversations::ensure( 'general', 0, 'HTTP portal enquiry', (int) $branch_b['id'] );
+	$portal_thread_error = is_wp_error( $portal_thread ) ? $portal_thread->get_error_code() . ': ' . $portal_thread->get_error_message() : ( is_int( $portal_thread ) ? 'created' : gettype( $portal_thread ) );
+	adc_check( is_int( $portal_thread ), 'Verified customer creates an isolated portal conversation for HTTP authorization tests (' . $portal_thread_error . ').' );
+	$portal_initial = \AutoDealership\Portal\Conversations::send( $portal_thread, 'Customer public message', wp_generate_uuid4() );
+	wp_set_current_user( $portal_other_customer );
+	$portal_other_thread = \AutoDealership\Portal\Conversations::ensure( 'general', 0, 'Other HTTP portal enquiry', (int) $branch_b['id'] );
+	adc_check( is_int( $portal_initial ) && is_int( $portal_other_thread ), 'Distinct verified customers receive distinct portal conversations.' );
+	wp_set_current_user( $manager_b );
+	$portal_revision = (int) \AutoDealership\Portal\Conversations::row( $portal_thread )['revision'];
+	adc_check( true === \AutoDealership\Portal\Conversations::change( $portal_thread, 'assign', $portal_revision, $sales_b ), 'Branch manager assigns the portal HTTP fixture to an in-branch adviser.' );
+	wp_set_current_user( $sales_b );
+	$portal_internal = \AutoDealership\Portal\Conversations::send( $portal_thread, 'HTTP_INTERNAL_SECRET', wp_generate_uuid4(), true );
+	$portal_reply = \AutoDealership\Portal\Conversations::send( $portal_thread, 'Staff public response', wp_generate_uuid4() );
+	adc_check( is_int( $portal_internal ) && is_int( $portal_reply ), 'Assigned adviser adds internal and public messages for portal HTTP authorization tests.' );
+
+	$portal_customer_http = $http_auth( $portal_customer );
+	$portal_other_http = $http_auth( $portal_other_customer );
+	$portal_foreign_staff_http = $http_auth( $portal_foreign_staff );
+	$portal_poll_nonce = trim( $http_request( '/adc-test-nonce?action=adc_portal_poll', $portal_customer_http )[1] );
+	$portal_poll_path = static fn( int $thread_id, string $scope, string $nonce ): string => '/wp-admin/admin-ajax.php?' . http_build_query( array( 'action'=>'adc_portal_poll', 'id'=>$thread_id, 'after'=>0, 'portal_scope'=>$scope, 'nonce'=>$nonce ) );
+	$customer_poll = $http_request( $portal_poll_path( $portal_thread, 'personal', $portal_poll_nonce ), $portal_customer_http );
+	$customer_poll_data = json_decode( $customer_poll[1], true );
+	adc_check( 200 === $customer_poll[0] && ! empty( $customer_poll_data['success'] ) && str_contains( $customer_poll[1], 'Staff public response' ) && ! str_contains( $customer_poll[1], 'HTTP_INTERNAL_SECRET' ) && ! str_contains( $customer_poll[1], 'sender_id' ), 'Customer HTTP polling returns public messages only and omits internal notes and sender IDs.' );
+	adc_check( 404 === $http_request( $portal_poll_path( $portal_thread, 'personal', trim( $http_request( '/adc-test-nonce?action=adc_portal_poll', $portal_other_http )[1] ) ), $portal_other_http )[0], 'Another customer cannot read the portal conversation through authenticated HTTP polling.' );
+	adc_check( 403 === $http_request( $portal_poll_path( $portal_thread, 'personal', 'invalid' ), $portal_customer_http )[0], 'Portal polling rejects an invalid action-specific nonce over HTTP.' );
+	$portal_staff_poll_nonce = trim( $http_request( '/adc-test-nonce?action=adc_portal_poll', $sales_b_http )[1] );
+	$staff_poll_path = $portal_poll_path( $portal_thread, 'staff', $portal_staff_poll_nonce );
+	$staff_poll = $http_request( $staff_poll_path, $sales_b_http );
+	adc_check( 200 === $staff_poll[0] && str_contains( $staff_poll[1], 'HTTP_INTERNAL_SECRET' ), 'Assigned in-branch adviser can poll the staff conversation context.' );
+	$foreign_poll_nonce = trim( $http_request( '/adc-test-nonce?action=adc_portal_poll', $portal_foreign_staff_http )[1] );
+	adc_check( 404 === $http_request( $portal_poll_path( $portal_thread, 'staff', $foreign_poll_nonce ), $portal_foreign_staff_http )[0], 'Staff from another branch cannot poll the portal conversation over HTTP.' );
+	adc_check( 404 === $http_request( $portal_poll_path( $portal_thread, 'personal', $portal_staff_poll_nonce ), $sales_b_http )[0], 'Personal portal scope does not inherit an adviser role during HTTP polling.' );
+	adc_check( 404 === $http_request( $portal_poll_path( $portal_other_thread, 'staff', $portal_staff_poll_nonce ), $sales_b_http )[0], 'An assigned adviser cannot read another customer conversation through HTTP polling.' );
+
+	$portal_status_nonce = trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $portal_customer_http )[1] );
+	$portal_status_path = static fn( int $thread_id, string $scope, string $nonce ): string => '/wp-admin/admin-ajax.php?' . http_build_query( array( 'action'=>'adc_live_status', 'thread'=>$thread_id, 'portal_scope'=>$scope, 'nonce'=>$nonce ) );
+	$customer_status = $http_request( $portal_status_path( $portal_thread, 'personal', $portal_status_nonce ), $portal_customer_http );
+	$customer_status_data = json_decode( $customer_status[1], true );
+	$status_keys = array_keys( (array) ( $customer_status_data['data'] ?? array() ) );
+	sort( $status_keys );
+	adc_check( 200 === $customer_status[0] && ! empty( $customer_status_data['success'] ) && array_diff( $status_keys, array( 'online', 'typing', 'typing_ms' ) ) === array() && ! str_contains( $customer_status[1], 'Staff public response' ) && ! str_contains( $customer_status[1], 'customer_id' ), 'Live status HTTP response contains presence state only, not messages or customer identifiers.' );
+	adc_check( 404 === $http_request( $portal_status_path( $portal_thread, 'personal', trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $portal_other_http )[1] ) ), $portal_other_http )[0], 'Another customer cannot read live presence for the portal conversation through HTTP.' );
+	$portal_staff_status_nonce = trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $sales_b_http )[1] );
+	$staff_status = $http_request( $portal_status_path( $portal_thread, 'staff', $portal_staff_status_nonce ), $sales_b_http );
+	$staff_status_data = json_decode( $staff_status[1], true );
+	$staff_status_keys = array_keys( (array) ( $staff_status_data['data'] ?? array() ) );
+	sort( $staff_status_keys );
+	adc_check( 200 === $staff_status[0] && ! empty( $staff_status_data['success'] ) && array_diff( $staff_status_keys, array( 'online', 'typing', 'typing_ms' ) ) === array(), 'Assigned adviser receives only the dedicated live presence DTO over HTTP.' );
+	$foreign_status_nonce = trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $portal_foreign_staff_http )[1] );
+	adc_check( 404 === $http_request( $portal_status_path( $portal_thread, 'staff', $foreign_status_nonce ), $portal_foreign_staff_http )[0], 'Staff from another branch cannot read live presence through HTTP.' );
+	adc_check( 404 === $http_request( $portal_status_path( $portal_thread, 'personal', $portal_staff_status_nonce ), $sales_b_http )[0], 'Personal portal scope cannot read staff live presence through HTTP.' );
+	adc_check( 403 === $http_request( $portal_status_path( $portal_thread, 'personal', 'invalid' ), $portal_customer_http )[0], 'Live status rejects an invalid action-specific nonce over HTTP.' );
+	$typing_response = $http_request( '/wp-admin/admin-ajax.php?action=adc_live_status', $portal_customer_http, 'POST', array( 'thread'=>$portal_thread, 'portal_scope'=>'personal', 'nonce'=>$portal_status_nonce, 'operation'=>'typing', 'typing'=>'1', 'visible'=>'1', 'tab'=>wp_generate_uuid4(), 'seq'=>1, 'ttl'=>1000 ), true );
+	$typing_data = json_decode( $typing_response[1], true );
+	adc_check( 200 === $typing_response[0] && ! empty( $typing_data['success'] ) && ! empty( $typing_data['data']['accepted'] ) && ! str_contains( $typing_response[1], 'typing_until' ), 'Authorized typing signal accepts ephemeral state without returning message or persistence details.' );
+	$foreign_typing = $http_request( '/wp-admin/admin-ajax.php?action=adc_live_status', $portal_other_http, 'POST', array( 'thread'=>$portal_thread, 'portal_scope'=>'personal', 'nonce'=>trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $portal_other_http )[1] ), 'operation'=>'typing', 'typing'=>'1', 'visible'=>'1', 'tab'=>wp_generate_uuid4(), 'seq'=>1, 'ttl'=>1000 ), true );
+	adc_check( 404 === $foreign_typing[0], 'Another customer cannot submit a typing signal for someone else’s conversation.' );
+	$availability = $http_request( '/wp-admin/admin-ajax.php?action=adc_chat_availability' );
+	$availability_data = json_decode( $availability[1], true );
+	$availability_rows = (array) ( $availability_data['data']['branches'] ?? array() );
+	adc_check( 200 === $availability[0] && ! empty( $availability_data['success'] ) && ( ! $availability_rows || ! array_diff( array_keys( $availability_rows[0] ), array( 'id', 'name', 'available' ) ) ), 'Anonymous chat availability exposes branch labels and counts only.' );
+	$live_chat_nonce = trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $portal_customer_http )[1] );
+	$live_chat_form = array( 'action'=>'adc_live_chat', 'nonce'=>$live_chat_nonce, 'operation'=>'beat', 'thread'=>$portal_thread, 'portal_scope'=>'personal', 'typing'=>'0', 'visible'=>'1', 'tab'=>wp_generate_uuid4() );
+	$live_chat_response = $http_request( '/wp-admin/admin-ajax.php', $portal_customer_http, 'POST', $live_chat_form, true );
+	$live_chat_data = json_decode( $live_chat_response[1], true );
+	adc_check( 200 === $live_chat_response[0] && ! empty( $live_chat_data['success'] ) && (int) ( $live_chat_data['data']['thread'] ?? 0 ) === $portal_thread && empty( $live_chat_data['data']['inbox'] ) && ! str_contains( $live_chat_response[1], 'HTTP_INTERNAL_SECRET' ), 'Personal live-chat heartbeat returns only its own thread state without staff inbox or message content.' );
+	$live_chat_invalid_nonce = $http_request( '/wp-admin/admin-ajax.php', $portal_customer_http, 'POST', array_replace( $live_chat_form, array( 'nonce'=>'invalid' ) ), true );
+	adc_check( 403 === $live_chat_invalid_nonce[0], 'Live-chat heartbeat rejects an invalid action nonce over authenticated HTTP.' );
+	$live_chat_foreign_form = array_replace( $live_chat_form, array( 'nonce'=>trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $portal_other_http )[1] ), 'thread'=>$portal_thread ) );
+	$live_chat_foreign_response = $http_request( '/wp-admin/admin-ajax.php', $portal_other_http, 'POST', $live_chat_foreign_form, true );
+	adc_check( 404 === $live_chat_foreign_response[0], 'Another customer cannot heartbeat a conversation they do not own (HTTP ' . $live_chat_foreign_response[0] . ': ' . substr( wp_strip_all_tags( $live_chat_foreign_response[1] ), 0, 120 ) . ').' );
+
+	$read_rows = static function ( string $body ): array {
+		$data = json_decode( $body, true );
+		if ( ! is_array( $data ) ) { return array(); }
+		if ( isset( $data['success'], $data['data'] ) && is_array( $data['data'] ) ) { return $data['data']; }
+		return $data;
+	};
+	$supplier_id_128 = (int) $supplier_128['id'];
+	$supplier_path = $rest_path( '/auto-dealership/v1/suppliers' );
+	$inventory_http = $http_auth( $inventory );
+	$purchasing_http = $http_auth( $purchasing_128 );
+	$delivery_http = $http_auth( $delivery_128 );
+	$acquisition_path = $rest_path( '/auto-dealership/v1/vehicles/' . $http_discount_vehicle . '/acquisition' );
+	$acquisition_purchasing_http = $http_auth( $purchasing_other_128 );
+	$acquisition_local_v1 = $http_request( $acquisition_path, $acquisition_purchasing_http );
+	$acquisition_local_v2 = $http_request( $rest_v2_path( $acquisition_path ), $acquisition_purchasing_http );
+	$acquisition_local_v1_data = json_decode( $acquisition_local_v1[1], true );
+	$acquisition_local_v2_envelope = json_decode( $acquisition_local_v2[1], true );
+	$acquisition_local_v2_data = (array) ( $acquisition_local_v2_envelope['data'] ?? array() );
+	adc_check( 200 === $acquisition_local_v1[0] && 8000000 === (int) ( $acquisition_local_v1_data['purchase_cost'] ?? 0 ) && 200 === $acquisition_local_v2[0] && 8000000 === (int) ( $acquisition_local_v2_data['purchase_cost'] ?? 0 ), 'Authorized purchasing staff can read the owning branch acquisition cost over HTTP in v1 and v2.' );
+	$purchasing_foreign = $make_user( 'purchasing_foreign_http', 'dealership_purchasing', (int) $branch_c['id'] );
+	$purchasing_foreign_http = $http_auth( $purchasing_foreign );
+	$acquisition_foreign_v1 = $http_request( $acquisition_path, $purchasing_foreign_http );
+	$acquisition_foreign_v2 = $http_request( $rest_v2_path( $acquisition_path ), $purchasing_foreign_http );
+	adc_check( 404 === $acquisition_foreign_v1[0] && 404 === $acquisition_foreign_v2[0] && 403 === $http_request( $acquisition_path, $sales_b_http )[0] && 401 === $http_request( $acquisition_path )[0], 'Acquisition costs remain hidden over HTTP from other branches, roles without cost access and anonymous callers in both API versions.' );
+	$inventory_suppliers_http = $http_request( $supplier_path, $inventory_http );
+	$inventory_suppliers_rows = $read_rows( $inventory_suppliers_http[1] );
+	$inventory_supplier_rows = array_values( array_filter( $inventory_suppliers_rows, static fn( $row ) => (int) ( $row['id'] ?? 0 ) === $supplier_id_128 ) );
+	adc_check( 200 === $inventory_suppliers_http[0] && count( $inventory_supplier_rows ) === 1 && ! array_key_exists( 'contact_email', $inventory_supplier_rows[0] ) && ! array_key_exists( 'tax_number', $inventory_supplier_rows[0] ), 'HTTP supplier directory limits inventory role to non-sensitive supplier fields.' );
+	$purchasing_suppliers_http = $http_request( $supplier_path, $purchasing_http );
+	$purchasing_supplier_rows = array_values( array_filter( $read_rows( $purchasing_suppliers_http[1] ), static fn( $row ) => (int) ( $row['id'] ?? 0 ) === $supplier_id_128 ) );
+	adc_check( 200 === $purchasing_suppliers_http[0] && count( $purchasing_supplier_rows ) === 1 && 'supplier@example.invalid' === ( $purchasing_supplier_rows[0]['contact_email'] ?? '' ) && 'TEST-128' === ( $purchasing_supplier_rows[0]['tax_number'] ?? '' ), 'HTTP purchasing supplier directory exposes the restricted fields to its authorized role.' );
+	$purchasing_suppliers_v2_http = $http_request( $rest_v2_path( $supplier_path ), $purchasing_http );
+	$purchasing_supplier_v2_rows = array_values( array_filter( $read_rows( $purchasing_suppliers_v2_http[1] ), static fn( $row ) => (int) ( $row['id'] ?? 0 ) === $supplier_id_128 ) );
+	adc_check( 200 === $purchasing_suppliers_v2_http[0] && count( $purchasing_supplier_v2_rows ) === 1 && 'supplier@example.invalid' === ( $purchasing_supplier_v2_rows[0]['contact_email'] ?? '' ) && 'TEST-128' === ( $purchasing_supplier_v2_rows[0]['tax_number'] ?? '' ), 'Version 2 purchasing supplier directory preserves authorized access to restricted fields.' );
+	$active_suppliers_http = $http_request( $supplier_path . '&active_only=true', $purchasing_http );
+	$active_supplier_ids = array_map( 'intval', array_column( $read_rows( $active_suppliers_http[1] ), 'id' ) );
+	adc_check( 200 === $active_suppliers_http[0] && ! in_array( $supplier_id_128, $active_supplier_ids, true ), 'HTTP active-only supplier list excludes deactivated suppliers.' );
+	$active_suppliers_v2_http = $http_request( $rest_v2_path( $supplier_path . '&active_only=true' ), $purchasing_http );
+	$active_supplier_v2_ids = array_map( 'intval', array_column( $read_rows( $active_suppliers_v2_http[1] ), 'id' ) );
+	adc_check( 200 === $active_suppliers_v2_http[0] && ! in_array( $supplier_id_128, $active_supplier_v2_ids, true ), 'Version 2 active-only supplier listing preserves query parameters and excludes deactivated suppliers.' );
+	adc_check( 403 === $http_request( $supplier_path, $delivery_http )[0] && 401 === $http_request( $supplier_path )[0], 'HTTP supplier directory denies roles without supplier access and anonymous callers.' );
+	$supplier_v2_path = $rest_v2_path( $supplier_path );
+	$supplier_v2_http = $http_request( $supplier_v2_path, $inventory_http );
+	$supplier_v2_rows = array_values( array_filter( $read_rows( $supplier_v2_http[1] ), static fn( $row ) => (int) ( $row['id'] ?? 0 ) === $supplier_id_128 ) );
+	adc_check( 200 === $supplier_v2_http[0] && count( $supplier_v2_rows ) === 1 && ! array_key_exists( 'contact_email', $supplier_v2_rows[0] ) && ! array_key_exists( 'tax_number', $supplier_v2_rows[0] ), 'Version 2 HTTP supplier directory preserves role-based field minimization.' );
+
+	$http_deposit_vehicle = $make_branch_vehicle( (int) $branch_b['id'], '118' );
+	$http_deposit_type_filter = static fn() => 'fixed';
+	$http_deposit_value_filter = static fn() => 500000;
+	add_filter( 'pre_option_adc_reservation_deposit_type', $http_deposit_type_filter );
+	add_filter( 'pre_option_adc_reservation_deposit_value', $http_deposit_value_filter );
+	wp_set_current_user( $sales_b );
+	$http_deposit_reservation = ReservationService::create( array( 'vehicle_id'=>$http_deposit_vehicle, 'customer_id'=>$customer_b, 'deposit_amount'=>500000, 'idempotency_key'=>wp_generate_uuid4() ) );
+	remove_filter( 'pre_option_adc_reservation_deposit_type', $http_deposit_type_filter );
+	remove_filter( 'pre_option_adc_reservation_deposit_value', $http_deposit_value_filter );
+	if ( ! is_array( $http_deposit_reservation ) ) { throw new RuntimeException( 'Active branch-B deposit queue fixture could not be created.' ); }
+	wp_set_current_user( $finance_b_recorder );
+	$http_deposit = ReservationService::record_deposit( (int) $http_deposit_reservation['id'], 500000, 'bank_transfer', 'HTTP-BRANCH-B-DEPOSIT' );
+	if ( ! is_array( $http_deposit ) ) { throw new RuntimeException( 'Active branch-B deposit evidence fixture could not be created.' ); }
+	$finance_b_recorder_http = $http_auth( $finance_b_recorder );
+	$finance_c_reader = $make_user( 'finance_c_reader', 'dealership_finance', (int) $branch_c['id'] );
+	$finance_c_reader_http = $http_auth( $finance_c_reader );
+	$quote_versions_path = $rest_path( '/auto-dealership/v1/quotations/' . (int) $http_sale_quote['id'] . '/versions' );
+	$quote_same_branch_nonowner_http = $http_auth( $crm_second_sales );
+	$quote_owner_v1 = $http_request( $quote_versions_path, $sales_b_http );
+	$quote_owner_v2 = $http_request( $rest_v2_path( $quote_versions_path ), $sales_b_http );
+	$quote_finance_v1 = $http_request( $quote_versions_path, $finance_b_recorder_http );
+	$quote_finance_v2 = $http_request( $rest_v2_path( $quote_versions_path ), $finance_b_recorder_http );
+	$quote_nonowner_v1 = $http_request( $quote_versions_path, $quote_same_branch_nonowner_http );
+	$quote_nonowner_v2 = $http_request( $rest_v2_path( $quote_versions_path ), $quote_same_branch_nonowner_http );
+	$quote_foreign_finance_v1 = $http_request( $quote_versions_path, $finance_c_reader_http );
+	$quote_foreign_finance_v2 = $http_request( $rest_v2_path( $quote_versions_path ), $finance_c_reader_http );
+	adc_check(
+		200 === $quote_owner_v1[0] && count( $read_rows( $quote_owner_v1[1] ) ) > 0
+		&& 200 === $quote_owner_v2[0] && count( $read_rows( $quote_owner_v2[1] ) ) > 0
+		&& 200 === $quote_finance_v1[0] && 200 === $quote_finance_v2[0],
+		'Quote owner and same-branch finance reader can read the active branch quote history in v1 and v2.'
+	);
+	adc_check(
+		404 === $quote_nonowner_v1[0] && 404 === $quote_nonowner_v2[0]
+		&& 404 === $quote_foreign_finance_v1[0] && 404 === $quote_foreign_finance_v2[0],
+		'Same-branch non-owner sales staff and finance staff from another branch cannot read quote history in v1 or v2.'
+	);
+	$deposit_path = $rest_path( '/auto-dealership/v1/reservation-deposits' );
+	$deposit_v1_http = $http_request( $deposit_path, $finance_b_recorder_http );
+	$deposit_v1_rows = $read_rows( $deposit_v1_http[1] );
+	$deposit_v2_http = $http_request( $rest_v2_path( $deposit_path ), $finance_b_recorder_http );
+	$deposit_v2_rows = $read_rows( $deposit_v2_http[1] );
+	$deposit_foreign_v1 = $http_request( $deposit_path, $finance_c_reader_http );
+	$deposit_foreign_v2 = $http_request( $rest_v2_path( $deposit_path ), $finance_c_reader_http );
+	$deposit_foreign_v1_ids = array_map( 'intval', array_column( $read_rows( $deposit_foreign_v1[1] ), 'id' ) );
+	$deposit_foreign_v2_ids = array_map( 'intval', array_column( $read_rows( $deposit_foreign_v2[1] ), 'id' ) );
+	adc_check( 200 === $deposit_v1_http[0] && in_array( (int) $http_deposit['id'], array_map( 'intval', array_column( $deposit_v1_rows, 'id' ) ), true ) && 200 === $deposit_v2_http[0] && in_array( (int) $http_deposit['id'], array_map( 'intval', array_column( $deposit_v2_rows, 'id' ) ), true ), 'Authorized branch-B finance staff can read their deposit queue over HTTP in v1 and v2.' );
+	adc_check( 200 === $deposit_foreign_v1[0] && ! in_array( (int) $http_deposit['id'], $deposit_foreign_v1_ids, true ) && 200 === $deposit_foreign_v2[0] && ! in_array( (int) $http_deposit['id'], $deposit_foreign_v2_ids, true ), 'Active finance staff from another branch cannot read branch-B deposit evidence over HTTP in v1 or v2.' );
+	adc_check( 401 === $http_request( $deposit_path )[0], 'Anonymous HTTP callers cannot read the reservation deposit queue.' );
+
+	$finance_history_path = $rest_path( '/auto-dealership/v1/sales/' . (int) $http_sale['id'] . '/finance-requests' );
+	$finance_history_local = $http_request( $finance_history_path, $finance_b_recorder_http );
+	$finance_history_rows = $read_rows( $finance_history_local[1] );
+	$finance_history_local_v2 = $http_request( $rest_v2_path( $finance_history_path ), $finance_b_recorder_http );
+	$finance_history_local_v2_rows = $read_rows( $finance_history_local_v2[1] );
+	$finance_history_foreign = $http_request( $finance_history_path, $finance_c_reader_http );
+	$finance_history_foreign_v2 = $http_request( $rest_v2_path( $finance_history_path ), $finance_c_reader_http );
+	adc_check( 200 === $finance_history_local[0] && count( $finance_history_rows ) === 1 && (int) $finance_history_rows[0]['id'] === (int) $http_finance['id'] && 200 === $finance_history_local_v2[0] && count( $finance_history_local_v2_rows ) === 1 && (int) $finance_history_local_v2_rows[0]['id'] === (int) $http_finance['id'], 'Same-branch finance staff can read sale financing history through authenticated HTTP in v1 and v2.' );
+	adc_check( 404 === $finance_history_foreign[0] && 404 === $finance_history_foreign_v2[0], 'Foreign-branch finance staff cannot read sale financing history through HTTP in v1 or v2.' );
+	adc_check( 403 === $http_request( $finance_history_path, $sales_b_http )[0] && 401 === $http_request( $finance_history_path )[0], 'Sale financing history rejects non-finance roles and anonymous HTTP callers.' );
+
+	$http_delivery_table = Schema::table( 'deliveries' );
+	$http_delivery_now = current_time( 'mysql', true );
+	if ( 1 !== $wpdb->insert( $http_delivery_table, array( 'sale_id'=>(int) $http_sale['id'], 'vehicle_id'=>(int) $http_sale_vehicle, 'status'=>'preparing', 'created_at'=>$http_delivery_now, 'updated_at'=>$http_delivery_now ), array( '%d','%d','%s','%s','%s' ) ) ) { throw new RuntimeException( 'Could not create branch-B delivery checklist HTTP fixture.' ); }
+	$http_delivery_id = (int) $wpdb->insert_id;
+	$inventory_b_http = $http_auth( $inventory_b );
+	$inventory_c_http = $http_auth( $inventory_c );
+	$delivery_documents_path = $rest_path( '/auto-dealership/v1/deliveries/' . $http_delivery_id . '/documents' );
+	$delivery_documents_local = $http_request( $delivery_documents_path, $inventory_b_http );
+	$delivery_documents_data = json_decode( $delivery_documents_local[1], true );
+	$delivery_documents_data = (array) ( $delivery_documents_data['success'] ?? false ? ( $delivery_documents_data['data'] ?? array() ) : $delivery_documents_data );
+	$delivery_documents_foreign = $http_request( $delivery_documents_path, $inventory_c_http );
+	$delivery_documents_foreign_v2 = $http_request( $rest_v2_path( $delivery_documents_path ), $inventory_c_http );
+	$delivery_documents_v2 = $http_request( $rest_v2_path( $delivery_documents_path ), $inventory_b_http );
+	$delivery_documents_v2_data = json_decode( $delivery_documents_v2[1], true );
+	$delivery_documents_v2_data = (array) ( $delivery_documents_v2_data['success'] ?? false ? ( $delivery_documents_v2_data['data'] ?? array() ) : $delivery_documents_v2_data );
+	$delivery_top_keys = array_keys( $delivery_documents_data );
+	sort( $delivery_top_keys );
+	adc_check( 200 === $delivery_documents_local[0] && (int) ( $delivery_documents_data['delivery_id'] ?? 0 ) === $http_delivery_id && array_diff( $delivery_top_keys, array( 'complete', 'delivery_id', 'items', 'status' ) ) === array(), 'Same-branch inventory can read the delivery checklist DTO over HTTP without unrelated sale/customer fields.' );
+	adc_check( 404 === $delivery_documents_foreign[0] && 404 === $delivery_documents_foreign_v2[0], 'Inventory staff from another active branch cannot read delivery checklist evidence over HTTP in v1 or v2.' );
+	adc_check( 200 === $delivery_documents_v2[0] && (int) ( $delivery_documents_v2_data['delivery_id'] ?? 0 ) === $http_delivery_id && 403 === $http_request( $delivery_documents_path, $sales_b_http )[0] && 401 === $http_request( $delivery_documents_path )[0], 'Version 2 preserves same-branch delivery checklist access while denying other roles and anonymous callers.' );
+	adc_check( 1 === $wpdb->delete( $http_delivery_table, array( 'id'=>$http_delivery_id ), array( '%d' ) ), 'HTTP delivery checklist fixture is removed before remaining delivery lifecycle tests.' );
 
 	$quote_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $quotes" );
 	$missing_nonce_auth = array( 'cookie' => $admin_http['cookie'] );
@@ -787,10 +1210,266 @@ try {
 
 	$manager_a_http = $http_auth( $manager_a );
 	$manager_b_http = $http_auth( $manager_b );
+	$integration_operator = $make_user( 'integration_http_operator', 'subscriber', $branch_b['id'] );
+	get_userdata( $integration_operator )->add_cap( 'adc_manage_integrations' );
+	$integration_operator_http = $http_auth( $integration_operator );
+	$integration_routes_option = \AutoDealership\Integrations\IntegrationActivation::OPTION;
+	$integration_routes_before = get_option( $integration_routes_option, false );
+	$integration_routes_existed = false !== $integration_routes_before;
+	$integration_routes_audit = Schema::table( 'audit_events' );
+	$integration_route_form = array(
+		'action' => 'adc_set_integration_route',
+		'event_key' => 'sale.approved',
+		'enabled' => '0',
+		'reason' => 'HTTP security review completed',
+	);
+	$integration_route_nonce_action = 'adc_set_integration_route_sale.approved';
+	try {
+		update_option( $integration_routes_option, array( 'sale.approved' ), false );
+		list( $integration_operator_nonce_status, $integration_operator_nonce ) = $http_request( '/adc-test-nonce?action=' . rawurlencode( $integration_route_nonce_action ), $integration_operator_http );
+		$integration_route_form['_wpnonce'] = trim( $integration_operator_nonce );
+		$integration_route_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $integration_routes_audit WHERE event_key=%s", 'integration.route_disabled' ) );
+		adc_check(
+			200 === $integration_operator_nonce_status
+			&& 403 === $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $integration_route_form, true )[0]
+			&& array( 'sale.approved' ) === \AutoDealership\Integrations\IntegrationActivation::enabled_events(),
+			'Integration route admin-post rejects a non-manager with a valid nonce without changing activation state.'
+		);
+		adc_check(
+			403 === $http_request( '/wp-admin/admin-post.php', $integration_operator_http, 'POST', array_merge( $integration_route_form, array( '_wpnonce' => 'invalid' ) ), true )[0]
+			&& array( 'sale.approved' ) === \AutoDealership\Integrations\IntegrationActivation::enabled_events(),
+			'Integration route admin-post rejects an invalid nonce without changing activation state.'
+		);
+		$integration_route_response = $http_request( '/wp-admin/admin-post.php', $integration_operator_http, 'POST', $integration_route_form, true );
+		$integration_route_enabled_after = \AutoDealership\Integrations\IntegrationActivation::enabled_events();
+		$integration_route_audit_after = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $integration_routes_audit WHERE event_key=%s", 'integration.route_disabled' ) );
+		adc_check(
+			302 === $integration_route_response[0]
+			&& ! in_array( 'sale.approved', $integration_route_enabled_after, true )
+			&& $integration_route_audit_before + 1 === $integration_route_audit_after,
+			'Authorized integration route admin-post disables a route and records an audit event (HTTP ' . $integration_route_response[0] . ', routes ' . wp_json_encode( $integration_route_enabled_after ) . ', audit ' . $integration_route_audit_before . '->' . $integration_route_audit_after . ').'
+		);
+
+		$reconcile_form = array( 'action' => 'adc_reconcile_integration', 'receipt_id' => 2147483647, 'reason' => 'Review missing integration receipt' );
+		$reconcile_nonce_action = 'adc_reconcile_integration_2147483647';
+		list( $reconcile_nonce_status, $reconcile_nonce ) = $http_request( '/adc-test-nonce?action=' . rawurlencode( $reconcile_nonce_action ), $integration_operator_http );
+		$reconcile_form['_wpnonce'] = trim( $reconcile_nonce );
+		$reconcile_outbox_before = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . \AutoDealership\Operations\OutboxService::table() . ' WHERE event_key=%s', 'integration.reconcile' ) );
+		adc_check(
+			200 === $reconcile_nonce_status
+			&& 403 === $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $reconcile_form, true )[0]
+			&& 403 === $http_request( '/wp-admin/admin-post.php', $integration_operator_http, 'POST', array_merge( $reconcile_form, array( '_wpnonce' => 'invalid' ) ), true )[0],
+			'Integration reconciliation admin-post rejects non-managers and invalid nonces.'
+		);
+		$reconcile_response = $http_request( '/wp-admin/admin-post.php', $integration_operator_http, 'POST', $reconcile_form, true );
+		adc_check(
+			302 === $reconcile_response[0]
+			&& $reconcile_outbox_before === (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . \AutoDealership\Operations\OutboxService::table() . ' WHERE event_key=%s', 'integration.reconcile' ) ),
+			'Integration reconciliation admin-post does not queue a missing receipt.'
+		);
+	} finally {
+		$integration_routes_existed ? update_option( $integration_routes_option, $integration_routes_before, false ) : delete_option( $integration_routes_option );
+	}
+	$outbox_operator = $make_user( 'outbox_http_operator', 'subscriber', $branch_b['id'] );
+	get_userdata( $outbox_operator )->add_cap( 'adc_manage_outbox' );
+	get_userdata( $outbox_operator )->add_cap( 'adc_view_outbox' );
+	$outbox_operator_http = $http_auth( $outbox_operator );
+	$outbox_table = \AutoDealership\Operations\OutboxService::table();
+	$outbox_audit = Schema::table( 'audit_events' );
+	$outbox_created = current_time( 'mysql', true );
+	$outbox_payload = '{}';
+	$wpdb->insert(
+		$outbox_table,
+		array(
+			'event_key' => 'http.retry_test',
+			'payload' => $outbox_payload,
+			'payload_hash' => hash( 'sha256', $outbox_payload ),
+			'status' => 'failed',
+			'attempts' => 5,
+			'next_attempt_at' => $outbox_created,
+			'failed_at' => $outbox_created,
+			'last_error' => 'http_test_failure',
+			'created_at' => $outbox_created,
+		),
+		array( '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s' )
+	);
+	$outbox_retry_id = (int) $wpdb->insert_id;
+	$outbox_retry_form = array(
+		'action' => 'adc_retry_outbox',
+		'event_id' => $outbox_retry_id,
+		'reason' => 'HTTP operator reviewed the failure',
+	);
+	$outbox_retry_nonce_action = 'adc_retry_outbox_' . $outbox_retry_id;
+	list( $outbox_nonce_status, $outbox_retry_nonce ) = $http_request( '/adc-test-nonce?action=' . rawurlencode( $outbox_retry_nonce_action ), $outbox_operator_http );
+	$outbox_retry_form['_wpnonce'] = trim( $outbox_retry_nonce );
+	$outbox_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $outbox_audit WHERE event_key=%s", 'outbox.retry_requested' ) );
+	try {
+		adc_check(
+			200 === $outbox_nonce_status
+			&& 403 === $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $outbox_retry_form, true )[0]
+			&& 'failed' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $outbox_table WHERE id=%d", $outbox_retry_id ) ),
+			'Outbox retry admin-post rejects staff without the management capability even with a valid nonce.'
+		);
+		adc_check(
+			403 === $http_request( '/wp-admin/admin-post.php', $outbox_operator_http, 'POST', array_merge( $outbox_retry_form, array( '_wpnonce' => 'invalid' ) ), true )[0]
+			&& 'failed' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $outbox_table WHERE id=%d", $outbox_retry_id ) ),
+			'Outbox retry admin-post rejects an invalid nonce without changing the event.'
+		);
+		$outbox_retry_response = $http_request( '/wp-admin/admin-post.php', $outbox_operator_http, 'POST', $outbox_retry_form, true );
+		$outbox_retry_row = $wpdb->get_row( $wpdb->prepare( "SELECT status,attempts,failed_at,last_error FROM $outbox_table WHERE id=%d", $outbox_retry_id ), ARRAY_A );
+		adc_check(
+			302 === $outbox_retry_response[0]
+			&& 'retry' === $outbox_retry_row['status']
+			&& 0 === (int) $outbox_retry_row['attempts']
+			&& null === $outbox_retry_row['failed_at']
+			&& '' === $outbox_retry_row['last_error']
+			&& $outbox_audit_before + 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $outbox_audit WHERE event_key=%s", 'outbox.retry_requested' ) ),
+			'Authorized Outbox retry admin-post resets the failed event and records an audit event.'
+		);
+
+		$outbox_old_created = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS - 60 );
+		$wpdb->insert(
+			$outbox_table,
+			array(
+				'event_key' => 'email.verify',
+				'payload' => $outbox_payload,
+				'payload_hash' => hash( 'sha256', $outbox_payload ),
+				'status' => 'failed',
+				'attempts' => 5,
+				'next_attempt_at' => $outbox_old_created,
+				'failed_at' => $outbox_old_created,
+				'last_error' => 'http_old_mail_test',
+				'created_at' => $outbox_old_created,
+			),
+			array( '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s' )
+		);
+		$outbox_old_mail_id = (int) $wpdb->insert_id;
+		$outbox_old_mail_nonce_action = 'adc_retry_outbox_' . $outbox_old_mail_id;
+		list( $outbox_old_nonce_status, $outbox_old_nonce ) = $http_request( '/adc-test-nonce?action=' . rawurlencode( $outbox_old_mail_nonce_action ), $outbox_operator_http );
+		$outbox_old_response = $http_request(
+			'/wp-admin/admin-post.php',
+			$outbox_operator_http,
+			'POST',
+			array( 'action' => 'adc_retry_outbox', 'event_id' => $outbox_old_mail_id, 'reason' => 'Review aged message', '_wpnonce' => trim( $outbox_old_nonce ) ),
+			true
+		);
+		adc_check(
+			200 === $outbox_old_nonce_status
+			&& 302 === $outbox_old_response[0]
+			&& 'failed' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $outbox_table WHERE id=%d", $outbox_old_mail_id ) )
+			&& $outbox_audit_before + 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $outbox_audit WHERE event_key=%s", 'outbox.retry_requested' ) ),
+			'Outbox retry admin-post preserves the review hold on mail events older than 24 hours.'
+		);
+	} finally {
+		$wpdb->delete( $outbox_table, array( 'id' => $outbox_retry_id ), array( '%d' ) );
+		if ( isset( $outbox_old_mail_id ) ) {
+			$wpdb->delete( $outbox_table, array( 'id' => $outbox_old_mail_id ), array( '%d' ) );
+		}
+	}
+	$reference_brand_key = 'rbac_http_' . strtolower( bin2hex( random_bytes( 6 ) ) );
+	$reference_brands = Schema::table( 'brands' );
+	$reference_locations = Schema::table( 'locations' );
+	$reference_location_code = 'RBAC-' . strtoupper( bin2hex( random_bytes( 5 ) ) );
+	$reference_create_form = array( 'action' => 'adc_create_brand', 'key' => $reference_brand_key, 'name_ar' => 'علامة اختبار HTTP', 'name_en' => 'HTTP Test Brand' );
+	list( $reference_sales_nonce_status, $reference_sales_nonce ) = $http_request( '/adc-test-nonce?action=adc_create_brand', $sales_b_http );
+	$reference_create_form['_wpnonce'] = trim( $reference_sales_nonce );
+	try {
+		adc_check(
+			200 === $reference_sales_nonce_status
+			&& 302 === $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $reference_create_form, true )[0]
+			&& ! $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $reference_brands WHERE brand_key=%s", $reference_brand_key ) ),
+			'Reference brand admin-post delegates authorization to its service and makes no change for a non-administrator.'
+		);
+		$reference_admin_create_form = $reference_create_form;
+		list( $reference_admin_nonce_status, $reference_admin_nonce ) = $http_request( '/adc-test-nonce?action=adc_create_brand', $admin_http );
+		$reference_admin_create_form['_wpnonce'] = 'invalid';
+		adc_check(
+			200 === $reference_admin_nonce_status
+			&& 403 === $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', $reference_admin_create_form, true )[0]
+			&& ! $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $reference_brands WHERE brand_key=%s", $reference_brand_key ) ),
+			'Reference brand admin-post rejects an invalid nonce without writing a record.'
+		);
+
+		$reference_admin_create_form['_wpnonce'] = trim( $reference_admin_nonce );
+		$reference_brand_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $outbox_audit WHERE event_key=%s", 'brand.created' ) );
+		$reference_create_response = $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', $reference_admin_create_form, true );
+		$reference_brand_id = (int) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $reference_brands WHERE brand_key=%s", $reference_brand_key ) );
+		adc_check(
+			302 === $reference_create_response[0]
+			&& $reference_brand_id > 0
+			&& $reference_brand_audit_before + 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $outbox_audit WHERE event_key=%s", 'brand.created' ) ),
+			'Authorized reference brand admin-post creates the record and audits it.'
+		);
+
+		$reference_toggle_action = 'adc_toggle_reference_brand_' . $reference_brand_id;
+		list( $reference_sales_toggle_nonce_status, $reference_sales_toggle_nonce ) = $http_request( '/adc-test-nonce?action=' . rawurlencode( $reference_toggle_action ), $sales_b_http );
+		$reference_toggle_form = array( 'action' => 'adc_toggle_reference', 'kind' => 'brand', 'id' => $reference_brand_id, 'active' => '0', '_wpnonce' => trim( $reference_sales_toggle_nonce ) );
+		$reference_toggle_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $outbox_audit WHERE event_key=%s", 'brand.status_changed' ) );
+		adc_check(
+			200 === $reference_sales_toggle_nonce_status
+			&& 302 === $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $reference_toggle_form, true )[0]
+			&& '1' === (string) $wpdb->get_var( $wpdb->prepare( "SELECT active FROM $reference_brands WHERE id=%d", $reference_brand_id ) ),
+			'Reference toggle admin-post cannot be used by a non-administrator, even with a valid nonce.'
+		);
+		$reference_toggle_form['_wpnonce'] = 'invalid';
+		adc_check(
+			403 === $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', $reference_toggle_form, true )[0]
+			&& '1' === (string) $wpdb->get_var( $wpdb->prepare( "SELECT active FROM $reference_brands WHERE id=%d", $reference_brand_id ) ),
+			'Reference toggle admin-post rejects an invalid nonce without changing status.'
+		);
+		list( $reference_admin_toggle_nonce_status, $reference_admin_toggle_nonce ) = $http_request( '/adc-test-nonce?action=' . rawurlencode( $reference_toggle_action ), $admin_http );
+		$reference_toggle_form['_wpnonce'] = trim( $reference_admin_toggle_nonce );
+		$reference_toggle_response = $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', $reference_toggle_form, true );
+		adc_check(
+			200 === $reference_admin_toggle_nonce_status
+			&& 302 === $reference_toggle_response[0]
+			&& '0' === (string) $wpdb->get_var( $wpdb->prepare( "SELECT active FROM $reference_brands WHERE id=%d", $reference_brand_id ) )
+			&& $reference_toggle_audit_before + 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $outbox_audit WHERE event_key=%s", 'brand.status_changed' ) ),
+			'Authorized reference toggle admin-post changes status and records an audit event.'
+		);
+
+		$reference_location_form = array( 'action' => 'adc_create_location', 'branch_id' => $branch_b['id'], 'code' => $reference_location_code, 'name' => 'HTTP Test Location', 'type' => 'warehouse' );
+		list( $reference_location_sales_nonce_status, $reference_location_sales_nonce ) = $http_request( '/adc-test-nonce?action=adc_create_location', $sales_b_http );
+		$reference_location_form['_wpnonce'] = trim( $reference_location_sales_nonce );
+		adc_check(
+			200 === $reference_location_sales_nonce_status
+			&& 302 === $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $reference_location_form, true )[0]
+			&& ! $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $reference_locations WHERE code=%s", $reference_location_code ) ),
+			'Reference location admin-post makes no change for a non-administrator.'
+		);
+		list( $reference_location_admin_nonce_status, $reference_location_admin_nonce ) = $http_request( '/adc-test-nonce?action=adc_create_location', $admin_http );
+		$reference_location_form['_wpnonce'] = 'invalid';
+		adc_check(
+			200 === $reference_location_admin_nonce_status
+			&& 403 === $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', $reference_location_form, true )[0]
+			&& ! $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $reference_locations WHERE code=%s", $reference_location_code ) ),
+			'Reference location admin-post rejects an invalid nonce without writing a record.'
+		);
+		$reference_location_form['_wpnonce'] = trim( $reference_location_admin_nonce );
+		$reference_location_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $outbox_audit WHERE event_key=%s", 'location.created' ) );
+		$reference_location_response = $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', $reference_location_form, true );
+		$reference_location_row = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,location_type FROM $reference_locations WHERE code=%s", $reference_location_code ), ARRAY_A );
+		adc_check(
+			200 === $reference_location_admin_nonce_status
+			&& 302 === $reference_location_response[0]
+			&& is_array( $reference_location_row )
+			&& (int) $branch_b['id'] === (int) $reference_location_row['branch_id']
+			&& 'warehouse' === $reference_location_row['location_type']
+			&& $reference_location_audit_before + 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $outbox_audit WHERE event_key=%s", 'location.created' ) ),
+			'Authorized reference location admin-post creates a branch-bound record and audits it.'
+		);
+	} finally {
+		$wpdb->delete( $reference_brands, array( 'brand_key' => $reference_brand_key ), array( '%s' ) );
+		$wpdb->delete( $reference_locations, array( 'code' => $reference_location_code ), array( '%s' ) );
+	}
 	list( $branches_status, $branches_body ) = $http_request( $rest_path( '/auto-dealership/v1/branches' ) );
 	$public_branches = json_decode( $branches_body, true );
 	$public_branch_codes = is_array( $public_branches ) ? array_column( $public_branches, 'code' ) : array();
 	adc_check( 200 === $branches_status && ! in_array( 'VERIFY-A', $public_branch_codes, true ) && in_array( 'VERIFY-B', $public_branch_codes, true ) && in_array( 'VERIFY-C', $public_branch_codes, true ), 'Public HTTP branch list includes active branches and excludes the disabled branch.' );
+	$branches_v2_response = $http_request( $rest_v2_path( $rest_path( '/auto-dealership/v1/branches' ) ) );
+	$branches_v2_envelope = json_decode( $branches_v2_response[1], true );
+	$branches_v2_codes = array_column( (array) ( $branches_v2_envelope['data'] ?? array() ), 'code' );
+	adc_check( 200 === $branches_v2_response[0] && ! in_array( 'VERIFY-A', $branches_v2_codes, true ) && in_array( 'VERIFY-B', $branches_v2_codes, true ) && in_array( 'VERIFY-C', $branches_v2_codes, true ), 'Version 2 public branch list preserves active-only visibility over HTTP.' );
 	$branch_count = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'branches' ) );
 	adc_check( 403 === $http_request( $rest_path( '/auto-dealership/v1/branches' ), $sales_b_http, 'POST', array( 'code' => 'HTTP-DENIED', 'name' => 'Denied branch' ) )[0] && $branch_count === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'branches' ) ), 'Non-administrator cannot create a branch through HTTP.' );
 
@@ -816,6 +1495,67 @@ try {
 	list( $lead_list_status, $lead_list_body ) = $http_request( $leads_path . '&per_page=100', $sales_b_http );
 	$lead_list = json_decode( $lead_list_body, true );
 	adc_check( 200 === $lead_list_status && in_array( $http_lead_id, array_map( 'intval', array_column( is_array( $lead_list ) ? $lead_list : array(), 'id' ) ), true ), 'Salesperson HTTP lead list includes their newly assigned lead.' );
+	$lead_list_v2_response = $http_request( $rest_v2_path( $leads_path ) . '&per_page=100', $sales_b_http );
+	$lead_list_v2_rows = $read_rows( $lead_list_v2_response[1] );
+	$same_branch_nonowner_leads = $http_request( $leads_path . '&per_page=100', $quote_same_branch_nonowner_http );
+	$same_branch_nonowner_lead_ids = array_map( 'intval', array_column( $read_rows( $same_branch_nonowner_leads[1] ), 'id' ) );
+	$sales_c_list_http = $http_auth( $make_user( 'sales_c_list_reader', 'dealership_sales', (int) $branch_c['id'] ) );
+	$foreign_branch_leads = $http_request( $leads_path . '&per_page=100', $sales_c_list_http );
+	$foreign_branch_lead_ids = array_map( 'intval', array_column( $read_rows( $foreign_branch_leads[1] ), 'id' ) );
+	adc_check(
+		200 === $lead_list_v2_response[0] && in_array( $http_lead_id, array_map( 'intval', array_column( $lead_list_v2_rows, 'id' ) ), true )
+		&& 200 === $same_branch_nonowner_leads[0] && ! in_array( $http_lead_id, $same_branch_nonowner_lead_ids, true )
+		&& 200 === $foreign_branch_leads[0] && ! in_array( $http_lead_id, $foreign_branch_lead_ids, true ),
+		'Lead listing in v1 and v2 includes assigned records for their owner and excludes them from same-branch non-owners and other branches.'
+	);
+	wp_set_current_user( $admin );
+	$crm_formula_lead = LeadService::create_public( array( 'name'=>'=HYPERLINK("https://example.invalid","fixture")', 'mobile'=>'+966501234599', 'email'=>'formula-csv@example.invalid', 'branch_id'=>(int) $branch_b['id'] ) );
+	$crm_csv_peer = $make_user( 'crm_csv_peer', 'dealership_sales', (int) $branch_b['id'] );
+	$crm_csv_foreign = $make_user( 'crm_csv_foreign', 'dealership_sales', (int) $branch_c['id'] );
+	$crm_peer_lead = LeadService::create_public( array( 'name'=>'Same branch peer fixture', 'mobile'=>'+966501234598', 'email'=>'same-branch-peer@example.invalid', 'branch_id'=>(int) $branch_b['id'] ) );
+	$crm_foreign_lead = LeadService::create_public( array( 'name'=>'Foreign branch fixture', 'mobile'=>'+966501234597', 'email'=>'foreign-branch@example.invalid', 'branch_id'=>(int) $branch_c['id'] ) );
+	$crm_fixtures_valid = is_array( $crm_formula_lead ) && is_array( $crm_peer_lead ) && is_array( $crm_foreign_lead )
+		&& ! is_wp_error( LeadService::assign( (int) $crm_formula_lead['id'], $sales_b ) )
+		&& ! is_wp_error( LeadService::assign( (int) $crm_peer_lead['id'], $crm_csv_peer ) )
+		&& ! is_wp_error( LeadService::assign( (int) $crm_foreign_lead['id'], $crm_csv_foreign ) );
+	adc_check( $crm_fixtures_valid, 'Isolated CRM CSV fixtures represent an owner lead, a same-branch colleague lead and a foreign-branch lead.' );
+	list( $crm_export_nonce_status, $crm_export_nonce ) = $http_request( '/adc-test-nonce?action=adc_export_leads', $sales_b_http );
+	$crm_export_form = array( 'action'=>'adc_export_leads', '_wpnonce'=>trim( $crm_export_nonce ) );
+	$crm_export_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) );
+	list( $crm_export_status, $crm_export_csv ) = $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_export_form, true );
+	$crm_export_lines = preg_split( '/\r?\n/', trim( substr( $crm_export_csv, 3 ) ) );
+	$crm_export_rows = array_map( 'str_getcsv', $crm_export_lines );
+	$crm_export_row_count = max( 0, count( $crm_export_rows ) - 1 );
+	$crm_export_fixture_rows = array_values( array_filter( $crm_export_rows, static fn( $row ) => isset( $row[0] ) && (int) $crm_formula_lead['id'] === (int) $row[0] ) );
+	$crm_export_ids = array_map( 'intval', array_column( $crm_export_rows, 0 ) );
+	$crm_export_audit = $wpdb->get_row( $wpdb->prepare( "SELECT actor_user_id,after_data FROM $audit WHERE event_key=%s ORDER BY id DESC LIMIT 1", 'leads.csv_exported' ), ARRAY_A );
+	$crm_export_audit_data = json_decode( $crm_export_audit['after_data'] ?? '', true );
+	adc_check(
+		200 === $crm_export_nonce_status && 200 === $crm_export_status && 1 === count( $crm_export_fixture_rows )
+		&& str_starts_with( $crm_export_fixture_rows[0][1] ?? '', "'=HYPERLINK(" )
+		&& in_array( (int) $crm_formula_lead['id'], $crm_export_ids, true )
+		&& ! in_array( (int) $crm_peer_lead['id'], $crm_export_ids, true )
+		&& ! in_array( (int) $crm_foreign_lead['id'], $crm_export_ids, true ),
+		'Authorized CRM CSV export neutralizes formula-like text and includes only the salesperson’s owned lead, excluding a colleague and another branch.'
+	);
+	adc_check(
+		$crm_export_audit_before + 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) )
+		&& (int) ( $crm_export_audit['actor_user_id'] ?? 0 ) === (int) $sales_b
+		&& array( 'row_count' => $crm_export_row_count ) === $crm_export_audit_data,
+		'CRM CSV export records the actor and exported row count without logging customer filters or personal data.'
+	);
+	$crm_export_audit_after_success = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) );
+	list( $crm_export_audit_failure_status, $crm_export_audit_failure_body ) = $http_request( '/wp-admin/admin-post.php?adc_test_fail_audit=1', $sales_b_http, 'POST', $crm_export_form, true );
+	adc_check(
+		500 === $crm_export_audit_failure_status
+		&& ! str_starts_with( $crm_export_audit_failure_body, "\xEF\xBB\xBF" )
+		&& ! str_contains( $crm_export_audit_failure_body, 'formula-csv@example.invalid' )
+		&& $crm_export_audit_after_success === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) ),
+		'CRM CSV export fails closed and returns no customer data when audit persistence fails.'
+	);
+	$inventory_export_http = $http_auth( $inventory );
+	list( $crm_export_denied_status, $crm_export_denied_body ) = $http_request( '/wp-admin/admin-post.php', $inventory_export_http, 'POST', array( 'action'=>'adc_export_leads', '_wpnonce'=>trim( $crm_export_nonce ) ), true );
+	adc_check( 403 === $crm_export_denied_status && ! str_contains( $crm_export_denied_body, '+966501234599' ) && ! str_contains( $crm_export_denied_body, 'formula-csv@example.invalid' ), 'CRM CSV export denies a role without lead-view capability before returning customer data.' );
 
 	$discount_decision_path = $rest_path( '/auto-dealership/v1/discounts/' . $http_discount_request['id'] . '/decision' );
 	$discounts_table = Schema::table( 'discount_requests' );
@@ -824,6 +1564,59 @@ try {
 
 	$finance_a_http = $http_auth( $finance_verifier );
 	$finance_b_http = $http_auth( $finance_b_reviewer );
+	$financial_export_path = '/wp-admin/admin-post.php';
+	$financial_export_range = array(
+		'from' => gmdate( 'Y-m-d', time() - 2 * DAY_IN_SECONDS ),
+		'to' => gmdate( 'Y-m-d', time() + 2 * DAY_IN_SECONDS ),
+	);
+	$financial_export_form = array_merge( $financial_export_range, array( 'action' => 'adc_financial_export', '_wpnonce' => 'invalid' ) );
+	adc_check( 403 === $http_request( $financial_export_path, $sales_b_http, 'POST', $financial_export_form, true )[0], 'Financial export admin-post rejects users without finance-view capability.' );
+	list( $financial_export_nonce_status, $financial_export_nonce ) = $http_request( '/adc-test-nonce?action=adc_financial_export', $finance_b_http );
+	$financial_export_form['_wpnonce'] = trim( $financial_export_nonce );
+	adc_check( 200 === $financial_export_nonce_status && 403 === $http_request( $financial_export_path, $finance_b_http, 'POST', array_merge( $financial_export_form, array( '_wpnonce' => 'invalid' ) ), true )[0], 'Financial export admin-post rejects an invalid action nonce.' );
+	list( $financial_export_status, $financial_export_csv ) = $http_request( $financial_export_path, $finance_b_http, 'POST', $financial_export_form, true );
+	adc_check(
+		200 === $financial_export_status
+		&& preg_match( '/^' . preg_quote( (string) $http_sale['id'], '/' ) . ',/m', $financial_export_csv )
+		&& ! preg_match( '/^' . preg_quote( (string) $sale['id'], '/' ) . ',/m', $financial_export_csv ),
+		'Authorized financial export includes a same-branch sale and excludes a sale from another branch.'
+	);
+	$operational_export_range = array(
+		'from' => gmdate( 'Y-m-d', time() - 2 * DAY_IN_SECONDS ),
+		'to' => gmdate( 'Y-m-d', time() + 2 * DAY_IN_SECONDS ),
+	);
+	$operational_export_form = array_merge( $operational_export_range, array( 'action' => 'adc_operational_report_export', '_wpnonce' => 'invalid' ) );
+	adc_check( 403 === $http_request( $financial_export_path, $sales_b_http, 'POST', $operational_export_form, true )[0], 'Operational report export admin-post rejects users without report-view capability.' );
+	list( $operational_export_nonce_status, $operational_export_nonce ) = $http_request( '/adc-test-nonce?action=adc_operational_report_export', $manager_b_http );
+	$operational_export_form['_wpnonce'] = trim( $operational_export_nonce );
+	adc_check( 200 === $operational_export_nonce_status && 403 === $http_request( $financial_export_path, $manager_b_http, 'POST', array_merge( $operational_export_form, array( '_wpnonce' => 'invalid' ) ), true )[0], 'Operational report export admin-post rejects an invalid action nonce.' );
+	$operational_branch_name = (string) $wpdb->get_var( $wpdb->prepare( 'SELECT name FROM ' . Schema::table( 'branches' ) . ' WHERE id = %d', $branch_b['id'] ) );
+	$wpdb->update( Schema::table( 'branches' ), array( 'name' => '=HTTP-REPORT-BRANCH' ), array( 'id' => $branch_b['id'] ), array( '%s' ), array( '%d' ) );
+	try {
+		list( $operational_export_status, $operational_export_csv ) = $http_request( $financial_export_path, $manager_b_http, 'POST', $operational_export_form, true );
+		$customer_mobile = (string) $wpdb->get_var( $wpdb->prepare( 'SELECT mobile FROM ' . Schema::table( 'customers' ) . ' WHERE id = %d', $customer_b ) );
+		$vehicle_identity = $wpdb->get_row( $wpdb->prepare( 'SELECT vin,stock_number FROM ' . Schema::table( 'vehicles' ) . ' WHERE id = %d', $http_sale_vehicle ), ARRAY_A );
+		adc_check(
+			200 === $operational_export_status
+			&& str_starts_with( $operational_export_csv, "\xEF\xBB\xBF" )
+			&& preg_match( '/^sales,' . preg_quote( (string) $branch_b['id'], '/' ) . ',/m', $operational_export_csv )
+			&& ! preg_match( '/^sales,' . preg_quote( (string) $branch_a['id'], '/' ) . ',/m', $operational_export_csv ),
+			'Authorized operational export includes a same-branch sales aggregate and excludes another branch.'
+		);
+		adc_check(
+			str_contains( $operational_export_csv, "'=HTTP-REPORT-BRANCH" )
+			&& false === strpos( $operational_export_csv, $customer_mobile )
+			&& false === strpos( $operational_export_csv, (string) $vehicle_identity['vin'] )
+			&& false === strpos( $operational_export_csv, (string) $vehicle_identity['stock_number'] ),
+			'Operational HTTP export neutralizes formula cells and omits customer contact and vehicle identity.'
+		);
+		adc_check(
+			400 === $http_request( $financial_export_path, $manager_b_http, 'POST', array_merge( $operational_export_form, array( 'from' => 'invalid-date' ) ), true )[0],
+			'Operational report export admin-post rejects malformed date ranges.'
+		);
+	} finally {
+		$wpdb->update( Schema::table( 'branches' ), array( 'name' => $operational_branch_name ), array( 'id' => $branch_b['id'] ), array( '%s' ), array( '%d' ) );
+	}
 	$finance_path = $rest_path( '/auto-dealership/v1/finance-requests/' . $http_finance['id'] . '/status' );
 	$finance_table = Schema::table( 'finance_requests' );
 	adc_check( 409 === $http_request( $finance_path, $finance_a_http, 'POST', array( 'status' => 'approved', 'provider_reference' => 'FOREIGN' ) )[0] && 'submitted' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $finance_table WHERE id = %d", $http_finance['id'] ) ), 'Foreign-branch finance reviewer cannot decide a financing request through HTTP.' );
@@ -918,6 +1711,11 @@ try {
 	$catalog_items = is_array( $catalog['items'] ?? null ) ? $catalog['items'] : array();
 	$catalog_match = array_values( array_filter( $catalog_items, static fn( $item ) => $http_vehicle_id === (int) ( $item['id'] ?? 0 ) ) );
 	adc_check( 200 === $catalog_status && 1 === count( $catalog_match ) && ! array_key_exists( 'vin', $catalog_match[0] ) && ! array_key_exists( 'purchase_cost', $catalog_match[0] ), 'Public HTTP catalog exposes the mapped available vehicle without VIN or purchase cost.' );
+	$catalog_v2_response = $http_request( $rest_v2_path( $vehicles_path ) . '&per_page=48' );
+	$catalog_v2_envelope = json_decode( $catalog_v2_response[1], true );
+	$catalog_v2_items = (array) ( $catalog_v2_envelope['data']['items'] ?? array() );
+	$catalog_v2_match = array_values( array_filter( $catalog_v2_items, static fn( $item ) => $http_vehicle_id === (int) ( $item['id'] ?? 0 ) ) );
+	adc_check( 200 === $catalog_v2_response[0] && count( $catalog_v2_match ) === 1 && ! array_key_exists( 'vin', $catalog_v2_match[0] ) && ! array_key_exists( 'purchase_cost', $catalog_v2_match[0] ) && ! array_key_exists( 'minimum_price', $catalog_v2_match[0] ), 'Version 2 public catalog preserves published-item scope and omits private inventory fields.' );
 	adc_check( \AutoDealership\Core\Localization::label( 'Silver' ) === $catalog_match[0]['exterior_color'] && 5 === (int) $catalog_match[0]['seats'] && 'awd' === $catalog_match[0]['drivetrain'] && ! array_key_exists( 'minimum_price', $catalog_match[0] ), 'Public HTTP catalog includes updated specifications without the private price floor.' );
 	$public_catalog_price = \AutoDealership\Pricing\Money::calculate(12000000,0,(int)get_option('adc_vat_rate_bps',0))['final_amount'];
 	adc_check( $public_catalog_price === (int)$catalog_match[0]['retail_price'], 'Public HTTP catalog includes configured VAT while inventory retains its net price.' );

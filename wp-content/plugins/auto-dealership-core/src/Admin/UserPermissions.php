@@ -223,7 +223,8 @@ final class UserPermissions {
 		// One metadata update produces one existing SecurityAudit event for the complete change.
 		if ( $caps !== $user->caps ) {
 			$before = $user->caps;
-			if ( ! \AutoDealership\Database\Transaction::begin() ) { wp_die( esc_html__( 'The access change could not be saved.', 'auto-dealership-core' ), '', array( 'response' => 500 ) ); }
+			global $wpdb;
+			if ( ! \AutoDealership\Database\Transaction::begin( array( $wpdb->usermeta ) ) ) { wp_die( esc_html__( 'The access change could not be saved.', 'auto-dealership-core' ), '', array( 'response' => 500 ) ); }
 			update_user_meta( $id, $user->cap_key, $caps );
 			$verified = get_user_meta( $id, $user->cap_key, true ) === $caps;
 			if ( ! \AutoDealership\Database\Transaction::commit( static fn() => $verified && \AutoDealership\Audit\AuditLog::record( 'security.user_permissions_changed', 'user', $id, $request['reason'], $before, $caps ) ) ) {

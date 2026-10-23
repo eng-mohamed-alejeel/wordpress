@@ -136,6 +136,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	if ( '1' === getenv( 'ADC_CURRENCY_ONLY' ) ) { require __DIR__ . '/currency-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_THEME_CUTOVER' ) ) { require __DIR__ . '/theme-cutover.php'; exit; }
 	if ( '1' === getenv( 'ADC_JOURNEY_ONLY' ) ) { require __DIR__ . '/account-journey-fixture.php'; exit; }
+	if ( '1' === getenv( 'ADC_DATABASE_SCENARIOS_ONLY' ) ) { require __DIR__ . '/database-scenarios.php'; exit; }
 	require __DIR__ . '/database-scenarios.php';
 	require __DIR__ . '/purchasing-scenarios.php';
 	require __DIR__ . '/onyx-scenarios.php';

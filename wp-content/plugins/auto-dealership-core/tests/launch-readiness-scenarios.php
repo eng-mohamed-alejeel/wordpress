@@ -75,8 +75,9 @@ wp_set_current_user($staff);$assert(is_wp_error(OnyxDocuments::attach($sale['id'
 wp_set_current_user($manager);$assert(is_array(SalesService::approve_sale($sale['id'],'ONYX-LAUNCH-1')),'Verified invoice enables independent sale approval');
 
 Alerts::boot();
+update_option('adc_followup_email_enabled',false);wp_cache_delete('adc_followup_email_enabled','options');wp_cache_delete('alloptions','options');
 wp_set_current_user($staff);$assert(is_wp_error(Alerts::email_policy(true,false)),'Staff cannot enable workflow email');
-wp_set_current_user($admin);$assert(is_array(Alerts::email_policy(false,false)),'Administrator explicitly saves inbox-only delivery');
+wp_set_current_user($admin);$inbox_policy=Alerts::email_policy(false,false);$assert(is_array($inbox_policy),'Administrator explicitly saves inbox-only delivery'.(is_wp_error($inbox_policy)?': '.$inbox_policy->get_error_code():''));
 $assert(is_wp_error(Alerts::email_policy(true,true)),'Stale email setting cannot overwrite the current policy');
 $due=gmdate('Y-m-d H:i:s',time()-2*DAY_IN_SECONDS);$wpdb->update(Schema::table('leads'),array('next_action_at'=>$due),array('id'=>$lead));
 $scan=Alerts::scan();$assert(is_array($scan),'Scheduled scan creates durable staff reminders');

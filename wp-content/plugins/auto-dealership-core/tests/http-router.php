@@ -146,6 +146,12 @@ if ( '/adc-test-nonce' === $request_path ) {
 if ( '/wp-admin/admin-post.php' === $request_path ) {
 	$action = sanitize_key( $_REQUEST['action'] ?? '' );
 	if ( '' === $action ) { http_response_code( 400 ); exit; }
+	if ( 'adc_export_leads' === $action && '1' === ( $_GET['adc_test_fail_audit'] ?? '' ) ) {
+		$audit_table = \AutoDealership\Database\Schema::table( 'audit_events' );
+		add_filter( 'query', static function ( string $query ) use ( $audit_table ): string {
+			return str_starts_with( $query, 'INSERT INTO `' . $audit_table . '`' ) ? str_replace( '`' . $audit_table . '`', '`missing_adc_test_audit`', $query ) : $query;
+		} );
+	}
 	do_action( ( is_user_logged_in() ? 'admin_post_' : 'admin_post_nopriv_' ) . $action );
 	http_response_code( 400 );
 	exit;
@@ -169,6 +175,7 @@ if ( in_array( $request_path, array( '/wp-admin/admin.php', '/wp-admin/options-g
 		'adc-social-channels'=>array( \AutoDealership\Core\SocialChannels::class, 'admin' ),
 		'adc-branch-locations'=>array( \AutoDealership\Core\BranchLocations::class, 'admin' ),
 		'adc-editorial-setup'=>array( \AutoDealership\Admin\EditorialSetupPage::class, 'render' ),
+		'adc-vehicle-acquisition'=>array( \AutoDealership\Admin\VehicleAcquisitionPage::class, 'render' ),
 		'adc-transfers'=>array( \AutoDealership\Admin\TransferPages::class, 'render' ),
 		'adc-site-content'=>array( \AutoDealership\Admin\SiteContentPage::class, 'render' ),
 	);
@@ -179,7 +186,7 @@ if ( in_array( $request_path, array( '/wp-admin/admin.php', '/wp-admin/options-g
 }
 if ( '/wp-admin/admin-ajax.php' === $request_path ) {
 	$action = sanitize_key( $_REQUEST['action'] ?? '' );
-	if ( ! in_array( $action, array( 'car_dealer_contact', 'car_dealer_booking' ), true ) ) { http_response_code( 400 ); exit; }
+	if ( ! in_array( $action, array( 'car_dealer_contact', 'car_dealer_booking', 'car_dealer_lead', 'car_dealer_subscribe', 'car_dealer_comparison', 'car_dealer_loan_calculator', 'adc_lookup_vin', 'adc_move_lead_stage', 'adc_portal_poll', 'adc_live_chat', 'adc_live_status', 'adc_chat_availability', 'adc_newsletter_preview', 'adc_jobs_tick', 'adc_jobs_probe' ), true ) ) { http_response_code( 400 ); exit; }
 	do_action( ( is_user_logged_in() ? 'wp_ajax_' : 'wp_ajax_nopriv_' ) . $action );
 	http_response_code( 400 ); exit;
 }

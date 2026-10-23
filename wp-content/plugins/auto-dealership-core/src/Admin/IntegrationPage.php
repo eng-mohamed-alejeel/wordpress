@@ -44,7 +44,8 @@ final class IntegrationPage {
 
 	public static function set_route(): void {
 		if ( ! current_user_can( 'adc_manage_integrations' ) ) { wp_die( esc_html__( 'لا تملك صلاحية إدارة التكاملات.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
-		$event_key = sanitize_key( wp_unslash( $_POST['event_key'] ?? '' ) );
+		$raw_event_key = $_POST['event_key'] ?? '';
+		$event_key = is_string( $raw_event_key ) ? sanitize_text_field( wp_unslash( $raw_event_key ) ) : '';
 		check_admin_referer( 'adc_set_integration_route_' . $event_key );
 		$enabled = '1' === (string) ( $_POST['enabled'] ?? '0' );
 		$reason = sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) );

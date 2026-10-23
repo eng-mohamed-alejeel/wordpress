@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-23 — Audited CRM lead export
+
+- CRM lead CSV exports now append a minimized audit event with the authenticated actor and row count; customer data and search/filter values are not copied into the audit log.
+- Export is withheld with an explicit server error if the audit event cannot be persisted. Isolated HTTP coverage verifies owner/branch scoping, formula neutralization, minimized audit content and fail-closed behavior.
+
+## 2026-10-22 — Granular marketing lead assignment
+
+- Added the explicit `adc_assign_marketing_leads` capability to the default Sales Manager and General Manager roles and the role/user permission catalog. Marketing does not receive it by default.
+- Protected lead assignment and assignment release in both the service layer and REST routes. The new capability alone is restricted to records whose stored source is `marketing`; existing `adc_manage_branch_leads` and administrator grants retain their previous behavior during this compatibility increment. Branch-scope checks are unchanged.
+- Added role-matrix and database-backed service regression assertions. The isolated acceptance suite passed.
+
+## 2026-10-22 — Marketing permission governance
+
+- Marketing capability migration now preserves administrator-defined role grants and denials; the permission editor catalog includes and translates all five assignable marketing capabilities.
+- REST lead and activity-history reads now admit the marketing view capability and retain service-level creator filtering. Isolated HTTP regression coverage confirms marketers cannot list records created by other users.
+- The dedicated marketing-activity capability now permits creator-only activity access for marketing leads, with non-sales activity types; service and REST checks reject other creators' leads and sales workflow events.
+- The complete database and HTTP scenario suite passed against a newly initialized temporary MariaDB instance. PHP syntax checks passed. The full localization checker still reports pre-existing untranslated navigation/outbox strings; none are among the marketing labels added here.
+
 ## 2026-10-03 — Finance Calculator page
 
 - Renamed the published `/finance/` page to “حاسبة التمويل” with “Finance Calculator” for English visitors. Updated its navigation/footer labels, editorial blueprint and bilingual page copy, and aligned the browser title with the English title. The URL remains unchanged.

@@ -50,7 +50,8 @@ final class RoleManager {
 		$definitions = get_option( 'adc_role_definitions', array() );
 		$original = $definitions[$slug]['original'] ?? ( $new ? $next : $before );
 		$definitions[$slug] = array( 'ar' => $ar, 'en' => $en, 'caps' => array_values( array_unique( $caps ) ), 'original' => $original );
-		if ( ! \AutoDealership\Database\Transaction::begin() ) { return new \WP_Error( 'adc_role_write_failed', __( 'The access change could not be saved.', 'auto-dealership-core' ) ); }
+		global $wpdb;
+		if ( ! \AutoDealership\Database\Transaction::begin( array( $wpdb->options ) ) ) { return new \WP_Error( 'adc_role_write_failed', __( 'The access change could not be saved.', 'auto-dealership-core' ) ); }
 		if ( $new ) {
 			$role = add_role( $slug, $en, $next );
 			if ( ! $role ) { global $wpdb; $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_role_exists', __( 'The role identifier is unavailable.', 'auto-dealership-core' ) ); }
@@ -112,7 +113,8 @@ final class RoleManager {
 		if ( $preview ) { return $impact; }
 		if ( '' === trim( $reason ) || ! hash_equals( $impact['revision'], $revision ) ) { return new \WP_Error( 'adc_role_stale', __( 'Access changed since the preview. Review the impact again.', 'auto-dealership-core' ) ); }
 		$before = get_role( $slug )->capabilities;
-		if ( ! \AutoDealership\Database\Transaction::begin() ) { return new \WP_Error( 'adc_role_write_failed', __( 'The access change could not be saved.', 'auto-dealership-core' ) ); }
+		global $wpdb;
+		if ( ! \AutoDealership\Database\Transaction::begin( array( $wpdb->options, $wpdb->usermeta ) ) ) { return new \WP_Error( 'adc_role_write_failed', __( 'The access change could not be saved.', 'auto-dealership-core' ) ); }
 		foreach ( $impact['users'] as $row ) {
 			$user = get_userdata( $row['id'] );
 			$user->add_role( $target ); $user->remove_role( $slug );

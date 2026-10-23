@@ -17,6 +17,10 @@ $slug = 'adc_role_test_' . strtolower( wp_generate_password( 8, false ) );
 $post_before = $_POST;
 try {
 	wp_set_current_user( $admin );
+	$matrix = Capabilities::role_matrix();
+	$check( in_array( 'adc_assign_marketing_leads', $matrix['dealership_sales_manager'], true ) && in_array( 'adc_assign_marketing_leads', $matrix['dealership_general_manager'], true ), 'Factory manager roles receive the dedicated lead-assignment capability.' );
+	$check( ! in_array( 'adc_assign_marketing_leads', $matrix['dealership_marketing'], true ), 'Marketing does not receive lead-assignment authority by default.' );
+	$check( in_array( 'adc_assign_marketing_leads', Capabilities::assignable_capabilities(), true ), 'Dedicated lead assignment is available for explicit role and user grants.' );
 	$input = array( 'slug' => $slug, 'ar' => 'دور اختبار', 'en' => 'Test role', 'caps' => array( 'adc_view_workspace', 'adc_view_inventory' ), 'new' => '1' );
 	$check( $slug === RoleManager::save_role( $input ), 'Create a bilingual role.' );
 	$clone = $input; $clone['slug'] .= '_copy'; $clone['caps'] = array(); $clone['clone_source'] = 'dealership_inventory';

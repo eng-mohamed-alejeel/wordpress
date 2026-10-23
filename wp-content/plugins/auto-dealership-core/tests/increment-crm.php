@@ -3,6 +3,8 @@
 if ( PHP_SAPI !== 'cli' || ! defined( 'DB_NAME' ) || ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', DB_NAME ) ) { exit( 1 ); }
 
 use AutoDealership\Database\Schema;
+use AutoDealership\Core\Capabilities;
+use AutoDealership\Admin\UserPermissions;
 use AutoDealership\Leads\ContactIdentity;
 use AutoDealership\Leads\PublicIntake;
 use AutoDealership\Leads\LeadService;
@@ -12,6 +14,80 @@ use AutoDealership\Leads\CustomerIdentity;
 use AutoDealership\Privacy\PrivacyTools;
 use AutoDealership\Privacy\RetentionService;
 use AutoDealership\Security\CustomerScope;
+
+$crm_role_matrix = Capabilities::role_matrix();
+adc_check( in_array( 'adc_assign_marketing_leads', $crm_role_matrix['dealership_sales_manager'], true ) && in_array( 'adc_assign_marketing_leads', $crm_role_matrix['dealership_general_manager'], true ), 'Default sales and general managers receive the dedicated marketing-assignment capability.' );
+adc_check( ! in_array( 'adc_assign_marketing_leads', $crm_role_matrix['dealership_marketing'], true ), 'Marketing cannot assign leads by default.' );
+adc_check( in_array( 'adc_assign_marketing_leads', Capabilities::assignable_capabilities(), true ), 'Dedicated assignment is available in explicit role and user grants.' );
+adc_check( isset( UserPermissions::catalog()['adc_assign_marketing_leads'] ), 'Dedicated assignment appears in the existing permission editor catalog.' );
+$crm_assignable_caps = Capabilities::assignable_capabilities();
+$crm_permission_catalog = array_keys( UserPermissions::catalog() );
+sort( $crm_assignable_caps ); sort( $crm_permission_catalog );
+adc_check( $crm_assignable_caps === $crm_permission_catalog, 'Permission editor catalog covers every assignable capability exactly.' );
+$crm_roles_option = wp_roles()->role_key;
+$crm_roles_before_migration = get_option( $crm_roles_option );
+$crm_definitions_before_migration = get_option( 'adc_role_definitions', null );
+$crm_marketing_version_before = get_option( 'adc_marketing_permissions_version', null );
+$crm_sales_version_before = get_option( 'adc_sales_permissions_version', null );
+$crm_marketing_role = get_role( 'dealership_marketing' );
+if ( ! $crm_marketing_role ) { throw new RuntimeException( 'Marketing role fixture is unavailable.' ); }
+try {
+	$crm_custom_definitions = get_option( 'adc_role_definitions', array() );
+	$crm_custom_definitions['dealership_marketing'] = array( 'caps'=>array_values( array_diff( array_keys( array_filter( $crm_marketing_role->capabilities ) ), array( 'adc_view_campaign_metrics' ) ) ) );
+	update_option( 'adc_role_definitions', $crm_custom_definitions, false );
+	$crm_marketing_role->remove_cap( 'adc_view_campaign_metrics' );
+	delete_option( 'adc_marketing_permissions_version' );
+	Capabilities::migrate_marketing_permissions();
+	adc_check( ! get_role( 'dealership_marketing' )->has_cap( 'adc_view_campaign_metrics' ), 'Marketing permission migration preserves an administrator-customized role denial.' );
+
+	update_option( 'adc_role_definitions', $crm_definitions_before_migration ?? array(), false );
+	$crm_marketing_role = get_role( 'dealership_marketing' );
+	$crm_marketing_role->remove_cap( 'adc_view_campaign_metrics' );
+	delete_option( 'adc_marketing_permissions_version' );
+	$crm_role_write_filter = static function ( $value, $previous ) { return $previous; };
+	add_filter( 'pre_update_option_' . $crm_roles_option, $crm_role_write_filter, 10, 2 );
+	Capabilities::migrate_marketing_permissions();
+	remove_filter( 'pre_update_option_' . $crm_roles_option, $crm_role_write_filter, 10 );
+	adc_check( ! get_role( 'dealership_marketing' )->has_cap( 'adc_view_campaign_metrics' ) && '1' !== get_option( 'adc_marketing_permissions_version' ), 'Failed role-capability persistence leaves the migration incomplete and retryable.' );
+	Capabilities::migrate_marketing_permissions();
+	adc_check( get_role( 'dealership_marketing' )->has_cap( 'adc_view_campaign_metrics' ) && '1' === get_option( 'adc_marketing_permissions_version' ), 'Retry completes a partially applied permission migration.' );
+
+	delete_option( 'adc_marketing_permissions_version' );
+	$crm_version_write_filter = static function ( $value, $previous ) { return $previous; };
+	add_filter( 'pre_update_option_adc_marketing_permissions_version', $crm_version_write_filter, 10, 2 );
+	Capabilities::migrate_marketing_permissions();
+	remove_filter( 'pre_update_option_adc_marketing_permissions_version', $crm_version_write_filter, 10 );
+	adc_check( '1' !== get_option( 'adc_marketing_permissions_version' ), 'Failed migration-version persistence is not reported as complete.' );
+	Capabilities::migrate_marketing_permissions();
+	adc_check( '1' === get_option( 'adc_marketing_permissions_version' ), 'Migration can be completed after the version-store failure is removed.' );
+
+	$crm_migration_user = wp_insert_user( array( 'user_login'=>'crm_migration_retry_' . wp_generate_password( 8, false ), 'user_pass'=>wp_generate_password( 40 ), 'role'=>'subscriber' ) );
+	if ( is_wp_error( $crm_migration_user ) ) { throw new RuntimeException( $crm_migration_user->get_error_message() ); }
+	(new WP_User( $crm_migration_user ))->add_cap( 'adc_create_reservations' );
+	delete_option( 'adc_sales_permissions_version' );
+	$usermeta_table = $wpdb->usermeta;
+	$with_sql_failure(
+		static fn( $query ) => str_starts_with( $query, 'SELECT user_id FROM ' . $usermeta_table . ' ' ),
+		static fn() => Capabilities::migrate_sales_permissions()
+	);
+	adc_check( '1' !== get_option( 'adc_sales_permissions_version' ), 'Failed legacy-user discovery query leaves the sales migration incomplete.' );
+	$with_sql_failure(
+		static fn( $query ) => str_starts_with( $query, "UPDATE `$usermeta_table`" ) && str_contains( $query, (string) $crm_migration_user ),
+		static fn() => Capabilities::migrate_sales_permissions()
+	);
+	adc_check( '1' !== get_option( 'adc_sales_permissions_version' ) && ! user_can( $crm_migration_user, 'adc_create_quotes' ), 'Failed direct-user grant persistence leaves the sales migration incomplete.' );
+	Capabilities::migrate_sales_permissions();
+	adc_check( '1' === get_option( 'adc_sales_permissions_version' ) && user_can( $crm_migration_user, 'adc_create_quotes' ), 'Sales migration retry completes legacy direct-user grants.' );
+} finally {
+	if ( isset( $crm_role_write_filter ) ) { remove_filter( 'pre_update_option_' . $crm_roles_option, $crm_role_write_filter, 10 ); }
+	if ( isset( $crm_version_write_filter ) ) { remove_filter( 'pre_update_option_adc_marketing_permissions_version', $crm_version_write_filter, 10 ); }
+	update_option( $crm_roles_option, $crm_roles_before_migration );
+	if ( null === $crm_definitions_before_migration ) { delete_option( 'adc_role_definitions' ); } else { update_option( 'adc_role_definitions', $crm_definitions_before_migration, false ); }
+	if ( null === $crm_marketing_version_before ) { delete_option( 'adc_marketing_permissions_version' ); } else { update_option( 'adc_marketing_permissions_version', $crm_marketing_version_before, false ); }
+	if ( isset( $crm_migration_user ) && ! is_wp_error( $crm_migration_user ) ) { wp_delete_user( $crm_migration_user ); }
+	if ( null === $crm_sales_version_before ) { delete_option( 'adc_sales_permissions_version' ); } else { update_option( 'adc_sales_permissions_version', $crm_sales_version_before, false ); }
+	wp_roles()->for_site();
+}
 
 // Upgrade a populated pre-intake schema without changing existing business records.
 $crm_existing_customers = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $customers" );
@@ -97,6 +173,15 @@ $crm_marketing_row = is_array( $crm_marketing_result ) ? $wpdb->get_row( $wpdb->
 if ( ! is_array( $crm_marketing_result ) || ! is_array( $crm_marketing_row ) ) { throw new RuntimeException( 'CRM marketing lead fixture creation failed.' ); }
 adc_check( is_array( $crm_marketing_result ) && is_array( $crm_marketing_row ) && 'marketing' === $crm_marketing_row['source'] && 'Autumn campaign' === $crm_marketing_row['campaign'] && 'Google' === $crm_marketing_row['platform'] && 'https://example.invalid/ad' === $crm_marketing_row['ad_url'] && '1' === (string) $crm_marketing_row['consent_marketing'] && (int) $admin === (int) $crm_marketing_row['created_by'] && ! empty( $crm_marketing_row['referred_at'] ) && (int) $sales_b === (int) $crm_marketing_row['owner_user_id'] && 'assigned' === $crm_marketing_row['stage'], 'Marketing lead, campaign attribution, consent and requested branch assignment are created together.' );
 adc_check( 2 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $crm_stage_history WHERE lead_id=%d", (int) $crm_marketing_result['id'] ) ) && 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $crm_activities WHERE lead_id=%d AND type='assignment'", (int) $crm_marketing_result['id'] ) ) && 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE subject_type='lead' AND subject_id=%d AND event_key='lead.created'", (int) $crm_marketing_result['id'] ) ), 'Marketing assignment activities, stage transitions and creation audit are transactionally recorded.' );
+$crm_marketer = $make_user( 'crm_marketer', 'dealership_marketing', (int) $branch_b['id'] );
+wp_set_current_user( $crm_marketer );
+$crm_marketer_input = array_replace( $crm_marketing_input, array( 'name'=>'Marketing staff lead', 'mobile'=>'+966500000977', 'email'=>'marketing-staff@example.invalid', 'idempotency_key'=>wp_generate_uuid4() ) );
+$crm_marketer_result = LeadService::create_marketing( $crm_marketer_input, array_replace( $crm_marketing_data, array( 'staff_id'=>0 ) ) );
+if ( ! is_array( $crm_marketer_result ) ) { throw new RuntimeException( 'CRM marketing staff lead fixture creation failed.' ); }
+adc_check( current_user_can( 'adc_add_marketing_activity' ) && is_array( LeadService::add_activity( (int) $crm_marketer_result['id'], 'note', 'Marketing follow-up recorded by creator.' ) ), 'Marketing activity capability permits notes on the creator’s own marketing lead.' );
+adc_check( $error_is( LeadService::add_activity( (int) $crm_marketing_result['id'], 'note', 'Must not reach another creator’s lead.' ), 'adc_lead_not_found' ), 'Marketing activity capability cannot modify another user’s marketing lead.' );
+adc_check( $error_is( LeadService::add_activity( (int) $crm_marketer_result['id'], 'sale', 'Must not record sales events.' ), 'adc_activity_forbidden' ), 'Marketing activity capability cannot record sales workflow events.' );
+wp_set_current_user( $admin );
 $crm_after_marketing = $crm_counts();
 $crm_marketing_retry = LeadService::create_marketing( $crm_marketing_input, $crm_marketing_data );
 adc_check( $crm_marketing_result === $crm_marketing_retry && $crm_after_marketing === $crm_counts(), 'Marketing intake retries use the idempotency key rather than creating a second customer or lead.' );
@@ -224,6 +309,14 @@ if ( ! is_array( $crm_assignment_lead ) || is_wp_error( LeadService::assign( (in
 adc_check( $error_is( LeadService::assign( (int) $crm_assignment_lead['id'], $crm_second_sales ), 'adc_invalid_assignment' ), 'Manager cannot reassign an owned lead without a reason.' );
 adc_check( is_array( LeadService::assign( (int) $crm_assignment_lead['id'], $crm_second_sales, 'Branch workload balancing' ) ) && $crm_second_sales === (int) $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE id=%d", (int) $crm_assignment_lead['id'] ) ), 'Manager reassignment with a reason records the new owner.' );
 adc_check( $error_is( LeadService::release_assignment( (int) $crm_assignment_lead['id'], '' ), 'adc_assignment_reason_required' ) && is_array( LeadService::release_assignment( (int) $crm_assignment_lead['id'], 'No first contact was made' ) ) && 'new' === $wpdb->get_var( $wpdb->prepare( "SELECT stage FROM $crm_leads WHERE id=%d", (int) $crm_assignment_lead['id'] ) ), 'Manager can return an uncontacted lead to the queue only with a reason.' );
+$crm_assignment_user = new WP_User( $crm_second_sales );
+$crm_assignment_user->add_cap( 'adc_assign_marketing_leads' );
+wp_set_current_user( $crm_second_sales );
+adc_check( is_wp_error( LeadService::assign( (int) $crm_assignment_lead['id'], $sales_b, 'Must remain denied' ) ) && 'new' === $wpdb->get_var( $wpdb->prepare( "SELECT stage FROM $crm_leads WHERE id=%d", (int) $crm_assignment_lead['id'] ) ), 'Dedicated marketing assignment capability cannot assign a non-marketing lead.' );
+adc_check( is_wp_error( LeadService::release_assignment( (int) $crm_assignment_lead['id'], 'Must remain denied' ) ) && 'new' === $wpdb->get_var( $wpdb->prepare( "SELECT stage FROM $crm_leads WHERE id=%d", (int) $crm_assignment_lead['id'] ) ), 'Dedicated marketing assignment capability cannot release a non-marketing assignment.' );
+adc_check( is_array( LeadService::release_assignment( (int) $crm_marketing_result['id'], 'Return marketing lead to assignment queue' ) ), 'Scoped assignment permission can release a marketing assignment.' );
+$dedicated_assignment = LeadService::assign( (int) $crm_marketing_result['id'], $sales_b, 'Dedicated assignment capability' );
+adc_check( is_array( $dedicated_assignment ) && current_user_can( 'adc_assign_marketing_leads' ) && ! current_user_can( 'adc_manage_branch_leads' ) && $sales_b === (int) $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE id=%d", (int) $crm_marketing_result['id'] ) ), 'Dedicated assignment capability permits same-branch marketing assignment without branch-wide lead management.' );
 wp_set_current_user( $sales_b );
 adc_check( in_array( $crm_claim_lead_id, array_map( 'intval', array_column( LeadService::list_for_current_user( 1, 100 ), 'id' ) ), true ), 'Sales employee sees an unassigned lead only within the assigned branch queue.' );
 wp_set_current_user( $sales_a );

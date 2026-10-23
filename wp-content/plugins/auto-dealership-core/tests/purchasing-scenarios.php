@@ -12,6 +12,12 @@ global $wpdb; $admin=(int)get_user_by('login','verify_admin')->ID; wp_set_curren
 if(!Schema::is_ready()){throw new RuntimeException(wp_json_encode(Schema::verify()));}
 $check=static function(bool $ok,string $message)use(&$checks):void{if(!$ok){throw new RuntimeException($message);}++$checks;echo "PASS $message\n";};
 $branch=BranchService::create(array('name'=>'Purchase test','code'=>'PO-TEST'));
+$cost_manager=wp_insert_user(array('user_login'=>'cost_manager_menu','user_pass'=>wp_generate_password(),'role'=>'subscriber'));
+$cost_manager_user=get_userdata($cost_manager);$cost_manager_user->add_cap('adc_manage_vehicle_costs');$cost_manager_user->add_cap('adc_view_workspace');update_user_meta($cost_manager,'adc_branch_id',$branch['id']);
+wp_set_current_user($cost_manager);
+global $menu,$submenu;$menu=is_array($menu)?$menu:array();$submenu=is_array($submenu)?$submenu:array();\AutoDealership\Admin\Navigation::menu();$acquisition_menu=array_values(array_filter($submenu['adc-area-purchasing']??array(),static fn($item)=>'adc-vehicle-acquisition'===$item[2]));
+$check(1===count($acquisition_menu)&&'adc_manage_vehicle_costs'===$acquisition_menu[0][1],'Cost managers without the separate view capability receive the acquisition page with their managing capability.');
+wp_set_current_user($admin);
 $supplier=SupplierService::create(array('supplier_code'=>'PO-SUPPLIER','display_name'=>'Test supplier'));
 $vehicle=VehicleService::create(array('vin'=>'TESTPURC000000001','stock_number'=>'PO-1','brand'=>'Test','model'=>'Order','model_year'=>2026,'condition'=>'new','branch_id'=>$branch['id'],'retail_price'=>20000000));
 $check(is_array($vehicle)&&is_array($supplier),'Create isolated purchase reference data');

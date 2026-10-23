@@ -90,7 +90,7 @@ final class Navigation {
 			'purchasing' => array( 'المشتريات', 'dashicons-store', array(
 				array( 'adc-purchase-orders', 'Purchase orders', 'adc_view_purchase_orders', PurchaseOrderPage::class, 'render' ),
 				array( 'adc-suppliers', 'الموردون', 'adc_view_suppliers', SupplierPage::class, 'render' ),
-				array( 'adc-vehicle-acquisition', 'اقتناء المركبات وتكاليفها', 'adc_view_vehicle_costs', VehicleAcquisitionPage::class, 'render' ),
+				array( 'adc-vehicle-acquisition', 'اقتناء المركبات وتكاليفها', array( 'adc_view_vehicle_costs', 'adc_manage_vehicle_costs' ), VehicleAcquisitionPage::class, 'render' ),
 			) ),
 			'approvals' => array( 'الاعتمادات', 'dashicons-yes-alt', array(
 				array( 'adc-approvals', 'اعتماد الخصومات والمبيعات', array( 'adc_review_discounts', 'adc_approve_sales' ), WorkflowPages::class, 'approvals' ),

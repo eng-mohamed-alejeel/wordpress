@@ -1695,6 +1695,15 @@ VIN الجديد	New VIN
 إدارة فرصه البيعية	Manage own leads
 عرض فرص الفروع المعيّنة	View assigned branch leads
 إدارة فرص الفروع المعيّنة	Manage assigned branch leads
+إسناد الفرص التسويقية	Assign marketing leads
+تتيح هذه الصلاحية إسناد الفرص التسويقية فقط.	This permission only allows assigning marketing leads.
+تتيح هذه الصلاحية تحرير إسناد الفرص التسويقية فقط.	This permission only allows releasing marketing lead assignments.
+التسويق	Marketing
+إنشاء فرص تسويقية	Create marketing leads
+عرض فرص التسويق	View marketing leads
+تعديل بيانات الفرص التسويقية	Edit marketing lead identity
+عرض مؤشرات الحملات التسويقية	View campaign metrics
+إضافة نشاط تسويقي	Add marketing activity
 المخزون والمشتريات	Inventory and purchasing
 عرض المخزون	View inventory
 إدارة المخزون	Manage inventory

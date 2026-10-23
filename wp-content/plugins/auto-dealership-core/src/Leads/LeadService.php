@@ -618,7 +618,8 @@ final class LeadService {
 	public static function assign( int $lead_id, int $staff_id, string $reason = '' ) {
 		global $wpdb;
 		$reason = sanitize_textarea_field( $reason );
-		if ( ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) {
+		$legacy_assignment_access = current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' );
+		if ( ! current_user_can( 'adc_assign_marketing_leads' ) && ! $legacy_assignment_access ) {
 			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية إسناد الفرص.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
 		$staff = get_userdata( $staff_id );
@@ -627,7 +628,11 @@ final class LeadService {
 			return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$lead_table = Schema::table( 'leads' );
-		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id,stage FROM $lead_table WHERE id = %d FOR UPDATE", $lead_id ), ARRAY_A );
+		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id,stage,source FROM $lead_table WHERE id = %d FOR UPDATE", $lead_id ), ARRAY_A );
+		if ( $lead && ! $legacy_assignment_access && 'marketing' !== $lead['source'] ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'adc_forbidden', __( 'This permission only allows assigning marketing leads.', 'auto-dealership-core' ), array( 'status' => 403 ) );
+		}
 		$assign_branch = $lead && 0 === (int) $lead['branch_id'] && current_user_can( 'manage_options' ) ? $staff_branch : (int) ( $lead['branch_id'] ?? 0 );
 		if ( ! $lead || ! $staff || ! in_array( 'dealership_sales', (array) $staff->roles, true ) || ! \AutoDealership\Inventory\VehicleService::user_can_access_branch( (int) $lead['branch_id'] ) || ! \AutoDealership\Inventory\VehicleService::branch_exists( $assign_branch ) || $staff_branch !== $assign_branch || ( (int) $lead['owner_user_id'] > 0 && (int) $lead['owner_user_id'] !== $staff_id && '' === $reason ) || (int) $lead['owner_user_id'] === $staff_id ) {
 			$wpdb->query( 'ROLLBACK' );
@@ -654,20 +659,25 @@ final class LeadService {
 	public static function release_assignment( int $lead_id, string $reason ) {
 		global $wpdb;
 		$reason = sanitize_textarea_field( $reason );
+		$legacy_assignment_access = current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' );
 		if ( '' === trim( $reason ) ) {
 			return new \WP_Error( 'adc_assignment_reason_required', __( 'سبب تحرير الإسناد مطلوب.', 'auto-dealership-core' ), array( 'status'=>400 ) );
 		}
-		if ( ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) {
-			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية تحرير إسناد الفرصة.', 'auto-dealership-core' ), array( 'status'=>403 ) );
+		if ( ! current_user_can( 'adc_assign_marketing_leads' ) && ! $legacy_assignment_access ) {
+			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية تحرير إسناد الفرصة.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
 		if ( ! Transaction::begin() ) {
 			return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status'=>500 ) );
 		}
 		$table = Schema::table( 'leads' );
-		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id,stage,first_contact_at FROM $table WHERE id=%d FOR UPDATE", $lead_id ), ARRAY_A );
+		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id,stage,first_contact_at,source FROM $table WHERE id=%d FOR UPDATE", $lead_id ), ARRAY_A );
 		if ( ! $lead || ! BranchScope::allows( (int) $lead['branch_id'] ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status'=>404 ) );
+		}
+		if ( ! $legacy_assignment_access && 'marketing' !== $lead['source'] ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'adc_forbidden', __( 'This permission only allows releasing marketing lead assignments.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
 		if ( 0 === (int) $lead['owner_user_id'] || 'assigned' !== $lead['stage'] || null !== $lead['first_contact_at'] ) {
 			$wpdb->query( 'ROLLBACK' );
@@ -718,9 +728,17 @@ final class LeadService {
 
 	public static function add_activity( int $lead_id, string $type, string $notes, string $next_action_at = '' ) {
 		global $wpdb;
+		$can_manage_leads = current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' );
+		$marketing_activity_only = ! $can_manage_leads && current_user_can( 'adc_add_marketing_activity' );
+		if ( ! $can_manage_leads && ! $marketing_activity_only ) {
+			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية إضافة نشاط للفرصة.', 'auto-dealership-core' ), array( 'status'=>403 ) );
+		}
 		$types = array( 'call', 'whatsapp', 'email', 'meeting', 'test_drive', 'quotation', 'follow_up', 'finance_request', 'reservation', 'sale', 'note' );
 		if ( ! in_array( $type, $types, true ) || '' === trim( $notes ) ) {
 			return new \WP_Error( 'adc_invalid_activity', __( 'نوع النشاط والملاحظة مطلوبان.', 'auto-dealership-core' ), array( 'status' => 400 ) );
+		}
+		if ( $marketing_activity_only && ! in_array( $type, array( 'call', 'whatsapp', 'email', 'meeting', 'follow_up', 'note' ), true ) ) {
+			return new \WP_Error( 'adc_activity_forbidden', __( 'لا تملك صلاحية إضافة هذا النوع من النشاط.', 'auto-dealership-core' ), array( 'status'=>403 ) );
 		}
 		$due = null;
 		if ( '' !== $next_action_at ) {
@@ -734,8 +752,9 @@ final class LeadService {
 			return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$lead_table = Schema::table( 'leads' );
-		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id FROM $lead_table WHERE id = %d FOR UPDATE", $lead_id ), ARRAY_A );
-		if ( ! $lead || ! BranchScope::can_manage_lead( $lead ) ) {
+		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id,source,created_by FROM $lead_table WHERE id = %d FOR UPDATE", $lead_id ), ARRAY_A );
+		$can_add_to_own_marketing_lead = $marketing_activity_only && $lead && 'marketing' === $lead['source'] && get_current_user_id() === (int) $lead['created_by'] && BranchScope::allows( (int) $lead['branch_id'] );
+		if ( ! $lead || ( ! $can_add_to_own_marketing_lead && ! BranchScope::can_manage_lead( $lead ) ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status' => 404 ) );
 		}

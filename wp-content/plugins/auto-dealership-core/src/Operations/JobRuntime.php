@@ -2,7 +2,9 @@
 namespace AutoDealership\Operations;
 
 use AutoDealership\Core\ProductSetup;
+use AutoDealership\Audit\AuditLog;
 use AutoDealership\Database\Schema;
+use AutoDealership\Database\Transaction;
 defined('ABSPATH') || exit;
 
 /** Bounded, observable execution. Never relaxes REST permissions or bypasses host protection. */
@@ -57,6 +59,22 @@ final class JobRuntime {
         }
     }
     public static function settings(): array {return array('mode'=>in_array(get_option('adc_jobs_mode','auto'),array('auto','browser','server'),true)?get_option('adc_jobs_mode','auto'):'auto');}
+    public static function save_mode(string $mode) {
+        global $wpdb;
+        if(!current_user_can('manage_options')){return new \WP_Error('adc_jobs_forbidden');}
+        if(!in_array($mode,array('auto','browser','server'),true)){return new \WP_Error('adc_jobs_mode');}
+        $option='adc_jobs_mode';
+        if(!Transaction::begin()){return new \WP_Error('adc_jobs_storage');}
+        wp_cache_delete($option,'options');wp_cache_delete('alloptions','options');wp_cache_delete('notoptions','options');
+        $raw=$wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name=%s FOR UPDATE",$option));
+        if($wpdb->last_error){$wpdb->query('ROLLBACK');return new \WP_Error('adc_jobs_storage');}
+        $before=maybe_unserialize($raw);
+        if(!in_array($before,array('auto','browser','server'),true)){$before='auto';}
+        update_option($option,$mode,false);
+        $ok=!$wpdb->last_error&&$mode===get_option($option)&&Transaction::commit(static fn()=>AuditLog::record('platform.job_mode','settings',0,'Scheduled execution mode updated',array('mode'=>$before),array('mode'=>$mode)));
+        if(!$ok){$wpdb->query('ROLLBACK');wp_cache_delete($option,'options');wp_cache_delete('alloptions','options');wp_cache_delete('notoptions','options');return new \WP_Error('adc_jobs_storage');}
+        return true;
+    }
     public static function mail_where(string $where): string {
         global $wpdb;
         // A long outage must not suddenly send old confirmations, welcomes or campaigns.
@@ -142,10 +160,20 @@ final class JobRuntime {
         wp_localize_script('adc-job-runtime','adcJobRuntime',array('url'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('adc_job_runtime'),'rest'=>rest_url('wp/v2/types/post?context=edit'),'restNonce'=>wp_create_nonce('wp_rest'),'enabled'=>self::browser_allowed(),'initial'=>self::status(),'strings'=>array('running'=>self::t('جارٍ فحص التشغيل…','Checking execution…'),'offline'=>self::t('تعذر الاتصال. سيعاد الفحص عند عودة الاتصال.','Connection unavailable; checks resume when connected.'),'browser'=>self::t('التشغيل البديل متاح أثناء فتح لوحة الإدارة فقط؛ يلزم Cron من الخادم للعمل المستمر.','Fallback runs while this dashboard is open. Server Cron is required for continuous execution.'),'server'=>self::t('وضع مجدول الخادم؛ التشغيل البديل متوقف.','Server scheduler mode; browser fallback is off.'),'held'=>self::t('رسائل قديمة معلّقة للمراجعة: ','Old messages held for review: '),'probe'=>self::t('نتيجة الفحص','Diagnostic result'),'last'=>self::t('آخر تشغيل للعامل: ','Last worker run: '),'notRun'=>self::t('لم يُرصد بعد','Not observed yet'),'source'=>self::t('المصدر: ','Source: '),'due'=>self::t('مهام مستحقة: ','Due jobs: '),'failed'=>self::t('تعذر إتمام الفحص.','Could not complete the check.'))));
     }
     public static function save(): void {
-        if(!current_user_can('manage_options')){wp_die('Forbidden','',array('response'=>403));}check_admin_referer('adc_jobs_settings');$mode=sanitize_key($_POST['mode']??'');if(in_array($mode,array('auto','browser','server'),true)){update_option('adc_jobs_mode',$mode,false);}\AutoDealership\Audit\AuditLog::record('platform.job_mode','settings',0,'Scheduled execution mode updated',null,array('mode'=>$mode));wp_safe_redirect(admin_url('admin.php?page=adc-outbox'));exit;
+        if(!current_user_can('manage_options')){wp_die('Forbidden','',array('response'=>403));}
+        check_admin_referer('adc_jobs_settings');
+        $posted_mode=wp_unslash($_POST['mode']??'');
+        $result=self::save_mode(is_string($posted_mode)?sanitize_key($posted_mode):'');
+        set_transient('adc_job_settings_notice_'.get_current_user_id(),array('ok'=>!is_wp_error($result)),MINUTE_IN_SECONDS);
+        wp_safe_redirect(admin_url('admin.php?page=adc-outbox'));exit;
     }
     public static function notice(): void {
-        if(!current_user_can('manage_options')||!in_array($_GET['page']??'',array('adc-outbox','adc-platform-setup','adc-workspace','adc-integrations'),true)){return;}$health=self::status();if(!$health['worker_observed']||$health['held_mail']||$health['failed_jobs']){echo '<div class="notice notice-warning"><p>'.esc_html(self::t('المهام الآلية تحتاج متابعة: راجع آخر تشغيل فعلي والرسائل المعلقة قبل الاعتماد على التشغيل المستمر.','Background jobs need attention: review observed execution and held messages before relying on continuous operation.')).' <a href="'.esc_url(admin_url('admin.php?page=adc-outbox')).'">'.esc_html(self::t('مراقبة التشغيل','Execution monitor')).'</a></p></div>';}
+        if(!current_user_can('manage_options')||!in_array($_GET['page']??'',array('adc-outbox','adc-platform-setup','adc-workspace','adc-integrations'),true)){return;}
+        if('adc-outbox'===($_GET['page']??'')){
+            $notice=get_transient('adc_job_settings_notice_'.get_current_user_id());delete_transient('adc_job_settings_notice_'.get_current_user_id());
+            if(is_array($notice)){echo '<div class="notice '.(!empty($notice['ok'])?'notice-success':'notice-error').' is-dismissible"><p>'.esc_html(!empty($notice['ok'])?self::t('تم حفظ طريقة التشغيل.','Execution mode saved.'):self::t('تعذر حفظ طريقة التشغيل أو تسجيل التدقيق. لم يُعتمد التغيير.','Execution mode could not be saved or audited; the change was not applied.')).'</p></div>';}
+        }
+        $health=self::status();if(!$health['worker_observed']||$health['held_mail']||$health['failed_jobs']){echo '<div class="notice notice-warning"><p>'.esc_html(self::t('المهام الآلية تحتاج متابعة: راجع آخر تشغيل فعلي والرسائل المعلقة قبل الاعتماد على التشغيل المستمر.','Background jobs need attention: review observed execution and held messages before relying on continuous operation.')).' <a href="'.esc_url(admin_url('admin.php?page=adc-outbox')).'">'.esc_html(self::t('مراقبة التشغيل','Execution monitor')).'</a></p></div>';}
     }
     public static function panel(): void {
         if(!current_user_can('manage_options')){return;}$status=self::status();

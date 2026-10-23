@@ -21,6 +21,15 @@ update_user_meta( $preference_account, 'car_dealer_phone', '+966505555551' );
 wp_set_current_user( $preference_account );
 $initial_preferences = CustomerIdentity::current_preferences();
 adc_check( is_array( $initial_preferences ) && ! $initial_preferences['consent_marketing'] && 0 === $initial_preferences['linked_customer_id'], 'A new account starts opted out and exposes no unrelated customer identity.' );
+$preferences_v1 = $server->dispatch( new WP_REST_Request( 'GET', '/auto-dealership/v1/account/preferences' ) );
+$preferences_v2 = $server->dispatch( new WP_REST_Request( 'GET', '/auto-dealership/v2/account/preferences' ) );
+adc_check( 200 === $preferences_v1->get_status() && false === $preferences_v1->get_data()['consent_marketing'] && 200 === $preferences_v2->get_status() && false === $preferences_v2->get_data()['consent_marketing'], 'Account preference REST reads return the authenticated account in both API versions.' );
+$other_preference_account = $make_user( 'other_preference_account', 'subscriber', 0 );
+update_user_meta( $other_preference_account, 'adc_marketing_consent', '1' );
+wp_set_current_user( $other_preference_account );
+$other_preferences = $server->dispatch( new WP_REST_Request( 'GET', '/auto-dealership/v2/account/preferences' ) );
+adc_check( 200 === $other_preferences->get_status() && true === $other_preferences->get_data()['consent_marketing'] && 0 === (int) $other_preferences->get_data()['linked_customer_id'], 'Account preference REST reads cannot expose another account customer linkage.' );
+wp_set_current_user( $preference_account );
 $explicit_opt_out = CustomerIdentity::update_preferences( false );
 adc_check( is_array( $explicit_opt_out ) && metadata_exists( 'user', $preference_account, 'adc_marketing_consent' ) && '0' === (string) get_user_meta( $preference_account, 'adc_marketing_consent', true ), 'An explicit pre-enquiry opt-out is stored on the WordPress account.' );
 

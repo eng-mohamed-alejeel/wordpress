@@ -199,7 +199,7 @@ final class Routes {
 				'car_id'=>array( 'type'=>'integer', 'minimum'=>0 ), 'date'=>array( 'type'=>'string' ), 'time'=>array( 'type'=>'string' ),
 				'website'=>array( 'type'=>'string' ), 'idempotency_key'=>array( 'type'=>'string', 'maxLength'=>36 ),
 			) ),
-			array( 'methods' => 'GET', 'callback' => array( self::class, 'list_leads' ), 'permission_callback' => static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'page' => array( 'type' => 'integer', 'minimum' => 1 ), 'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 100 ) ) ),
+			array( 'methods' => 'GET', 'callback' => array( self::class, 'list_leads' ), 'permission_callback' => static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'adc_view_marketing_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'page' => array( 'type' => 'integer', 'minimum' => 1 ), 'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 100 ) ) ),
 		) );
 		self::route( '/leads/(?P<id>\d+)/stage', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'update_lead_stage' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'stage' => array( 'type' => 'string', 'required' => true ), 'reason' => array( 'type' => 'string' ) ),
@@ -241,21 +241,21 @@ final class Routes {
 			},
 		) );
 		self::route( '/leads/(?P<id>\d+)/assignment', array(
-			'methods' => 'POST', 'callback' => array( self::class, 'assign_lead' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'staff_id' => array( 'type' => 'integer', 'required' => true ), 'reason'=>array( 'type'=>'string', 'maxLength'=>2000 ) ),
+			'methods' => 'POST', 'callback' => array( self::class, 'assign_lead' ), 'permission_callback' => static fn() => current_user_can( 'adc_assign_marketing_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'staff_id' => array( 'type' => 'integer', 'required' => true ), 'reason'=>array( 'type'=>'string', 'maxLength'=>2000 ) ),
 		) );
 		self::route( '/leads/(?P<id>\d+)/assignment/release', array(
 			'methods'=>'POST',
 			'callback'=>array( self::class, 'release_lead_assignment' ),
-			'permission_callback'=>static fn() => current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ),
+			'permission_callback'=>static fn() => current_user_can( 'adc_assign_marketing_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ),
 			'args'=>array( 'id'=>array( 'type'=>'integer', 'required'=>true, 'minimum'=>1 ), 'reason'=>array( 'type'=>'string', 'required'=>true, 'minLength'=>1, 'maxLength'=>2000 ) ),
 		) );
 		self::route( '/leads/(?P<id>\d+)/activities', array(
 			'methods' => 'GET', 'callback' => static fn( \WP_REST_Request $r ) => rest_ensure_response( LeadService::activity_history( (int) $r['id'], (int) ( $r['page'] ?? 1 ), (int) ( $r['per_page'] ?? 50 ) ) ),
-			'permission_callback' => static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ),
+			'permission_callback' => static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'adc_view_marketing_leads' ) || current_user_can( 'manage_options' ),
 			'args' => array( 'id'=>array( 'type'=>'integer', 'minimum'=>1 ), 'page'=>array( 'type'=>'integer', 'minimum'=>1 ), 'per_page'=>array( 'type'=>'integer', 'minimum'=>1, 'maximum'=>100 ) ),
 		) );
 		self::route( '/leads/(?P<id>\d+)/activities', array(
-			'methods' => 'POST', 'callback' => array( self::class, 'add_activity' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'type' => array( 'type' => 'string', 'required' => true ), 'notes' => array( 'type' => 'string', 'required' => true ), 'next_action_at' => array( 'type' => 'string' ) ),
+			'methods' => 'POST', 'callback' => array( self::class, 'add_activity' ), 'permission_callback' => static fn() => current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_manage_branch_leads' ) || current_user_can( 'adc_add_marketing_activity' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'type' => array( 'type' => 'string', 'required' => true ), 'notes' => array( 'type' => 'string', 'required' => true ), 'next_action_at' => array( 'type' => 'string' ) ),
 		) );
 	}
 

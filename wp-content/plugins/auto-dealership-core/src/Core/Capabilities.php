@@ -5,21 +5,61 @@ defined( 'ABSPATH' ) || exit;
 
 /** Registers scoped dealership roles and capabilities. */
 final class Capabilities {
+	private static function refresh_roles(): void {
+		$roles = wp_roles();
+		wp_cache_delete( $roles->role_key, 'options' );
+		wp_cache_delete( 'alloptions', 'options' );
+		wp_cache_delete( 'notoptions', 'options' );
+		$roles->for_site();
+	}
+
+	private static function role_has_caps( string $slug, array $caps ): bool {
+		self::refresh_roles();
+		$role = get_role( $slug );
+		if ( ! $role ) { return false; }
+		foreach ( $caps as $cap ) {
+			if ( ! array_key_exists( $cap, $role->capabilities ) || ! $role->capabilities[$cap] ) { return false; }
+		}
+		return true;
+	}
+
+	private static function option_matches( string $name, $expected ): bool {
+		wp_cache_delete( $name, 'options' );
+		wp_cache_delete( 'alloptions', 'options' );
+		wp_cache_delete( 'notoptions', 'options' );
+		return get_option( $name, null ) === $expected;
+	}
+
+	private static function migration_failed( string $name ): void {
+		error_log( 'Auto Dealership Core: permission migration failed (' . $name . '); it will retry on a later request.' );
+	}
+
+	private static function complete_migration( string $version_option ): bool {
+		update_option( $version_option, '1', false );
+		return self::option_matches( $version_option, '1' );
+	}
+
 	public static function migrate_newsletter_permissions(): void {
 		if ( '1' === get_option( 'adc_newsletter_permissions_version' ) ) { return; }
 		$definitions = get_option( 'adc_role_definitions', array() );
 		foreach ( array( 'dealership_marketing', 'dealership_general_manager' ) as $slug ) {
 			$role = get_role( $slug );
-			if ( $role && ! isset( $definitions[$slug] ) && ! array_key_exists( 'adc_manage_newsletter', $role->capabilities ) ) { $role->add_cap( 'adc_manage_newsletter' ); }
+			if ( $role && ! isset( $definitions[$slug] ) ) {
+				$required = array();
+				if ( ! array_key_exists( 'adc_manage_newsletter', $role->capabilities ) ) { $role->add_cap( 'adc_manage_newsletter' ); $required[] = 'adc_manage_newsletter'; }
+				if ( $required && ! self::role_has_caps( $slug, $required ) ) { self::migration_failed( 'newsletter' ); return; }
+			}
 		}
-		update_option( 'adc_newsletter_permissions_version', '1', false );
+		if ( ! self::complete_migration( 'adc_newsletter_permissions_version' ) ) { self::migration_failed( 'newsletter' ); }
 	}
 	private const MARKETING_CAPABILITIES = array( 'adc_create_marketing_leads', 'adc_view_marketing_leads', 'adc_edit_marketing_lead_identity', 'adc_view_campaign_metrics', 'adc_add_marketing_activity' );
 	public static function migrate_marketing_permissions(): void {
 		if ( '1' === get_option( 'adc_marketing_permissions_version' ) ) { return; }
+		$definitions = get_option( 'adc_role_definitions', array() );
 		$role = get_role( 'dealership_marketing' );
-		if ( $role ) { foreach ( self::MARKETING_CAPABILITIES as $cap ) { $role->add_cap( $cap ); } }
-		update_option( 'adc_marketing_permissions_version', '1', false );
+		if ( $role && ! isset( $definitions['dealership_marketing'] ) ) { foreach ( self::MARKETING_CAPABILITIES as $cap ) { $role->add_cap( $cap ); } }
+		if ( $role && ! isset( $definitions['dealership_marketing'] ) && ! self::role_has_caps( 'dealership_marketing', self::MARKETING_CAPABILITIES ) ) { self::migration_failed( 'marketing' ); return; }
+		if ( ! self::complete_migration( 'adc_marketing_permissions_version' ) ) { self::migration_failed( 'marketing' ); }
 	}
 	private const PURCHASE_CAPABILITIES = array( 'adc_view_purchase_orders', 'adc_create_purchase_orders', 'adc_approve_purchase_orders', 'adc_approve_high_purchase_orders', 'adc_receive_purchase_orders', 'adc_cancel_purchase_orders' );
 	private const PURCHASE_ROLES = array(
@@ -34,9 +74,11 @@ final class Capabilities {
 		$definitions = get_option( 'adc_role_definitions', array() );
 		foreach ( self::PURCHASE_ROLES as $slug=>$caps ) {
 			$role = get_role( $slug ); if ( ! $role || isset( $definitions[$slug] ) ) { continue; }
-			foreach ( $caps as $cap ) { if ( ! array_key_exists( $cap, $role->capabilities ) ) { $role->add_cap( $cap ); } }
+			$required = array();
+			foreach ( $caps as $cap ) { if ( ! array_key_exists( $cap, $role->capabilities ) ) { $role->add_cap( $cap ); $required[] = $cap; } }
+			if ( $required && ! self::role_has_caps( $slug, $required ) ) { self::migration_failed( 'purchasing' ); return; }
 		}
-		update_option( 'adc_purchase_permissions_version', '1', false );
+		if ( ! self::complete_migration( 'adc_purchase_permissions_version' ) ) { self::migration_failed( 'purchasing' ); }
 	}
 	private const SALES_CAPABILITIES = array( 'adc_create_quotes', 'adc_request_discounts', 'adc_start_sales' );
 
@@ -50,19 +92,27 @@ final class Capabilities {
 			foreach ( self::SALES_CAPABILITIES as $cap ) {
 				if ( array_key_exists( $cap, $definition['capabilities'] ) && ! $definition['capabilities'][$cap] ) { continue; }
 				if ( ! array_key_exists( $cap, $definition['capabilities'] ) ) { $role->add_cap( $cap ); }
+				if ( ! self::role_has_caps( $slug, array( $cap ) ) ) { self::migration_failed( 'sales' ); return; }
 				if ( isset( $definitions[$slug]['caps'] ) && ! in_array( $cap, $definitions[$slug]['caps'], true ) ) { $definitions[$slug]['caps'][] = $cap; }
 			}
 		}
 		global $wpdb;
 		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key=%s AND (meta_value LIKE %s OR meta_value LIKE %s)", $wpdb->get_blog_prefix() . 'capabilities', '%adc_create_reservations%', '%adc_manage_branch_leads%' ) );
-		if ( $wpdb->last_error ) { return; }
+		if ( $wpdb->last_error ) { self::migration_failed( 'sales' ); return; }
 		foreach ( $ids as $id ) {
 			$user = new \WP_User( (int) $id );
 			if ( empty( $user->caps['adc_create_reservations'] ) && empty( $user->caps['adc_manage_branch_leads'] ) ) { continue; }
 			foreach ( self::SALES_CAPABILITIES as $cap ) { if ( ! array_key_exists( $cap, $user->caps ) ) { $user->add_cap( $cap ); } }
+			clean_user_cache( (int) $id );
+			$stored_user = get_userdata( (int) $id );
+			if ( ! $stored_user ) { self::migration_failed( 'sales' ); return; }
+			foreach ( self::SALES_CAPABILITIES as $cap ) {
+				if ( ! empty( $user->caps[$cap] ) && empty( $stored_user->caps[$cap] ) ) { self::migration_failed( 'sales' ); return; }
+			}
 		}
 		update_option( 'adc_role_definitions', $definitions, false );
-		update_option( 'adc_sales_permissions_version', '1', false );
+		if ( ! self::option_matches( 'adc_role_definitions', $definitions ) ) { self::migration_failed( 'sales' ); return; }
+		if ( ! self::complete_migration( 'adc_sales_permissions_version' ) ) { self::migration_failed( 'sales' ); }
 	}
 	private const CONTENT_CAPABILITIES = array(
 		'edit_car', 'read_car', 'delete_car', 'edit_cars', 'edit_others_cars', 'publish_cars',
@@ -77,8 +127,8 @@ final class Capabilities {
 	private const ROLE_CAPABILITIES = array(
 		'car_dealer_customer' => array( 'read' ),
 		'dealership_sales' => array( 'read', 'adc_view_workspace', 'adc_view_own_leads', 'adc_manage_own_leads', 'adc_create_reservations' ),
-		'dealership_sales_manager' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_create_reservations', 'adc_review_discounts', 'adc_manage_reservations', 'adc_approve_sales', 'adc_cancel_sales', 'adc_approve_delivery', 'adc_process_returns', 'adc_view_reports' ),
-		'dealership_general_manager' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_view_inventory', 'adc_change_vehicle_vin', 'adc_create_reservations', 'adc_review_discounts', 'adc_approve_high_discounts', 'adc_manage_reservations', 'adc_approve_sales', 'adc_cancel_sales', 'adc_approve_delivery', 'adc_process_returns', 'adc_manage_pricing', 'adc_view_finance', 'adc_view_vehicle_costs', 'adc_manage_vehicle_costs', 'adc_view_suppliers', 'adc_manage_suppliers', 'adc_view_audit', 'adc_view_outbox', 'adc_manage_outbox', 'adc_view_integrations', 'adc_manage_integrations', 'adc_view_reports', 'adc_view_marketing_subscribers' ),
+		'dealership_sales_manager' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_assign_marketing_leads', 'adc_create_reservations', 'adc_review_discounts', 'adc_manage_reservations', 'adc_approve_sales', 'adc_cancel_sales', 'adc_approve_delivery', 'adc_process_returns', 'adc_view_reports' ),
+		'dealership_general_manager' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_assign_marketing_leads', 'adc_view_inventory', 'adc_change_vehicle_vin', 'adc_create_reservations', 'adc_review_discounts', 'adc_approve_high_discounts', 'adc_manage_reservations', 'adc_approve_sales', 'adc_cancel_sales', 'adc_approve_delivery', 'adc_process_returns', 'adc_manage_pricing', 'adc_view_finance', 'adc_view_vehicle_costs', 'adc_manage_vehicle_costs', 'adc_view_suppliers', 'adc_manage_suppliers', 'adc_view_audit', 'adc_view_outbox', 'adc_manage_outbox', 'adc_view_integrations', 'adc_manage_integrations', 'adc_view_reports', 'adc_view_marketing_subscribers' ),
 		'dealership_inventory' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_manage_inventory', 'adc_transfer_inventory', 'adc_confirm_vehicle_vin', 'adc_view_suppliers' ),
 		'dealership_finance' => array( 'read', 'adc_view_workspace', 'adc_view_finance', 'adc_manage_finance', 'adc_record_payments', 'adc_verify_payments', 'adc_record_refunds', 'adc_verify_refunds' ),
 		'dealership_purchasing' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_view_suppliers', 'adc_manage_suppliers', 'adc_view_vehicle_costs', 'adc_manage_vehicle_costs' ),

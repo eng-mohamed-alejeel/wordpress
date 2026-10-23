@@ -1,6 +1,7 @@
 <?php
 namespace AutoDealership\Admin;
 
+use AutoDealership\Audit\AuditLog;
 use AutoDealership\Branches\BranchService;
 use AutoDealership\Inventory\VehicleService;
 use AutoDealership\Leads\LeadService;
@@ -462,15 +463,23 @@ final class OperationsPages {
 		$filters = array( 'search'=>$_GET['s'] ?? '', 'stage'=>$_GET['stage'] ?? '', 'priority'=>$_GET['priority'] ?? '', 'branch_id'=>absint( $_GET['branch_id'] ?? 0 ), 'source'=>$_GET['source'] ?? '', 'campaign'=>$_GET['campaign'] ?? '', 'platform'=>$_GET['platform'] ?? '', 'created_by'=>absint( $_GET['created_by'] ?? 0 ), 'overdue'=>! empty( $_GET['overdue'] ) );
 		if ( isset( $_GET['owner'] ) && '' !== (string) $_GET['owner'] ) { $filters['owner'] = absint( $_GET['owner'] ); }
 		$total_rows = LeadService::count_for_current_user( $filters );
+		if ( ! AuditLog::record( 'leads.csv_exported', 'lead_export', 0, 'CRM lead CSV export', null, array( 'row_count' => $total_rows ) ) ) {
+			wp_die( esc_html__( 'تعذر تسجيل عملية التصدير؛ لم يتم إنشاء الملف.', 'auto-dealership-core' ), '', array( 'response' => 500 ) );
+		}
 		$total_pages = max( 1, (int) ceil( $total_rows / 100 ) );
 		nocache_headers(); header( 'Content-Type: text/csv; charset=UTF-8' ); header( 'Content-Disposition: attachment; filename=crm-leads-' . gmdate( 'Y-m-d' ) . '.csv' );
 		echo "\xEF\xBB\xBF"; $out = fopen( 'php://output', 'w' ); fputcsv( $out, array( 'ID','Customer','Mobile','Email','Source','Campaign','Platform','Created by','Referred at','Stage','Created','Next follow-up' ) );
 		for ( $page = 1; $page <= $total_pages; ++$page ) {
 			$rows = LeadService::list_for_current_user( $page, 100, $filters );
-			foreach ( $rows as $row ) { $creator = ! empty( $row['created_by'] ) ? get_userdata( (int) $row['created_by'] ) : null; fputcsv( $out, array( $row['id'],$row['full_name'],$row['mobile'],$row['email'],$row['source'],$row['campaign'],$row['platform'],$creator ? $creator->display_name : '',$row['referred_at'],$row['stage'],$row['created_at'],$row['next_action_at'] ) ); }
+			foreach ( $rows as $row ) { $creator = ! empty( $row['created_by'] ) ? get_userdata( (int) $row['created_by'] ) : null; fputcsv( $out, array_map( array( self::class, 'safe_csv_cell' ), array( $row['id'],$row['full_name'],$row['mobile'],$row['email'],$row['source'],$row['campaign'],$row['platform'],$creator ? $creator->display_name : '',$row['referred_at'],$row['stage'],$row['created_at'],$row['next_action_at'] ) ) ); }
 			if ( count( $rows ) < 100 ) { break; }
 		}
 		fclose( $out ); exit;
+	}
+
+	private static function safe_csv_cell( $value ): string {
+		$value = (string) $value;
+		return preg_match( '/^[=+\-@\t\r]/', $value ) ? "'" . $value : $value;
 	}
 
 	public static function create_marketing_lead(): void {
