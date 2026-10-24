@@ -31,7 +31,16 @@ final class LeadService {
 		return self::STAGE_TRANSITIONS;
 	}
 
+	/** Sales employees see new unassigned leads from every branch, and their own leads inside their branches. */
+	private static function is_sales_only_viewer(): bool {
+		return current_user_can( 'adc_manage_own_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' );
+	}
+
 	private static function append_marketing_visibility_scope( string &$scope, array &$args ): void {
+		if ( self::is_sales_only_viewer() ) {
+			$scope = "(($scope) OR (l.owner_user_id=0 AND l.stage='new'))";
+			return;
+		}
 		if ( ! current_user_can( 'adc_view_marketing_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ) ) { return; }
 		if ( current_user_can( 'adc_view_marketing_team_leads' ) ) {
 			$scope .= ' AND l.created_by>0';
@@ -88,19 +97,28 @@ final class LeadService {
 	public static function claim( int $lead_id ) {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_manage_own_leads' ) || current_user_can( 'adc_view_marketing_leads' ) ) { return new \WP_Error( 'adc_claim_forbidden', __( 'لا تملك صلاحية استلام الفرص.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }
+		if ( 'manual' !== self::assignment_mode() ) { return new \WP_Error( 'adc_claim_disabled', __( 'الاستلام الذاتي غير مفعّل؛ تُسند الفرص عبر مدير المبيعات أو التوزيع الآلي.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }
+		$daily_cap = self::daily_cap();
+		if ( $daily_cap > 0 && self::leads_received_today( get_current_user_id() ) >= $daily_cap ) { return new \WP_Error( 'adc_daily_cap_reached', __( 'بلغت الحد اليومي للفرص الجديدة.', 'auto-dealership-core' ), array( 'status' => 429 ) ); }
 		$user_id = get_current_user_id();
 		$user = get_userdata( $user_id );
 		if ( ! $user || ! in_array( 'dealership_sales', (array) $user->roles, true ) ) { return new \WP_Error( 'adc_claim_forbidden', __( 'يجب أن يكون المستخدم موظف مبيعات نشطًا لاستلام الفرص.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }
+		$claim_branch = 0;
+		foreach ( BranchScope::assigned_branches( $user_id ) as $candidate_branch ) {
+			if ( BranchScope::is_active( $candidate_branch ) ) { $claim_branch = $candidate_branch; break; }
+		}
+		if ( $claim_branch < 1 ) { return new \WP_Error( 'adc_claim_forbidden', __( 'لا يوجد فرع نشط مرتبط بحسابك لاستلام الفرص.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }
 		$table = Schema::table( 'leads' );
 		if ( ! Transaction::begin() ) { return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) ); }
 		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id,stage FROM $table WHERE id=%d FOR UPDATE", $lead_id ), ARRAY_A );
-		if ( ! $lead || 'new' !== $lead['stage'] || 0 !== (int) $lead['owner_user_id'] || ! BranchScope::allows( (int) $lead['branch_id'] ) ) {
+		if ( ! $lead || 'new' !== $lead['stage'] || 0 !== (int) $lead['owner_user_id'] ) {
 			$wpdb->query( 'ROLLBACK' );
-			return new \WP_Error( 'adc_claim_unavailable', __( 'الفرصة لم تعد متاحة ضمن فرعك.', 'auto-dealership-core' ), array( 'status' => 409 ) );
+			return new \WP_Error( 'adc_claim_unavailable', __( 'الفرصة لم تعد متاحة للاستلام.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
 		$now = current_time( 'mysql', true );
-		$updated = $wpdb->query( $wpdb->prepare( "UPDATE $table SET owner_user_id=%d,stage='assigned',claimed_at=%s,updated_at=%s WHERE id=%d AND branch_id=%d AND owner_user_id=0 AND stage='new'", $user_id, $now, $now, $lead_id, (int) $lead['branch_id'] ) );
-		$history = 1 === $updated && self::record_stage_transition( $lead_id, (int) $lead['branch_id'], $user_id, $user_id, 'new', 'assigned', $now );
+		// New leads are open to every branch; the claim moves the lead into the claiming employee's branch.
+		$updated = $wpdb->query( $wpdb->prepare( "UPDATE $table SET owner_user_id=%d,branch_id=%d,stage='assigned',claimed_at=%s,updated_at=%s WHERE id=%d AND branch_id=%d AND owner_user_id=0 AND stage='new'", $user_id, $claim_branch, $now, $now, $lead_id, (int) $lead['branch_id'] ) );
+		$history = 1 === $updated && self::record_stage_transition( $lead_id, $claim_branch, $user_id, $user_id, 'new', 'assigned', $now );
 		$activity = 1 === $updated ? $wpdb->insert( Schema::table( 'activities' ), array( 'lead_id'=>$lead_id, 'actor_user_id'=>$user_id, 'type'=>'assignment', 'notes'=>'Claimed from shared branch queue', 'created_at'=>$now ), array( '%d','%d','%s','%s','%s' ) ) : false;
 		if ( 1 !== $updated || ! $history || 1 !== $activity ) {
 			$wpdb->query( 'ROLLBACK' );
@@ -148,7 +166,7 @@ final class LeadService {
 		return $released;
 	}
 
-	private static function round_robin_assignment( int $branch_id, string $now ) {
+	private static function round_robin_assignment( int $branch_id, string $now, bool $any_branch = false ) {
 		global $wpdb;
 		if ( $branch_id < 1 || 'round_robin' !== get_option( 'adc_lead_assignment_mode', 'manual' ) ) {
 			return array( 'owner_user_id'=>0, 'stage'=>'new', 'claimed_at'=>null );
@@ -159,7 +177,7 @@ final class LeadService {
 			error_log( 'Auto Dealership Core: round-robin branch lock failed: ' . $wpdb->last_error );
 			return new \WP_Error( 'adc_assignment_unavailable', __( 'تعذر التحقق من موظفي الفرع لتوزيع الطلب.', 'auto-dealership-core' ), array( 'status'=>503 ) );
 		}
-		if ( ! $branch ) {
+		if ( ! $branch && ! $any_branch ) {
 			return new \WP_Error( 'adc_assignment_branch_unavailable', __( 'الفرع غير نشط ولا يمكن توزيع الطلب عليه.', 'auto-dealership-core' ), array( 'status'=>409 ) );
 		}
 
@@ -169,26 +187,105 @@ final class LeadService {
 			return new \WP_Error( 'adc_assignment_unavailable', __( 'تعذر التحقق من موظفي الفرع لتوزيع الطلب.', 'auto-dealership-core' ), array( 'status'=>503 ) );
 		}
 		$staff = array();
+		$staff_branches = array();
 		foreach ( $users as $user_id ) {
 			$user_id = absint( $user_id );
-			if ( $user_id && user_can( $user_id, 'adc_manage_own_leads' ) && ! user_can( $user_id, 'manage_options' ) && BranchScope::allows( $branch_id, $user_id ) ) {
+			if ( ! $user_id || ! user_can( $user_id, 'adc_manage_own_leads' ) || user_can( $user_id, 'manage_options' ) ) { continue; }
+			if ( $any_branch ) {
+				foreach ( BranchScope::assigned_branches( $user_id ) as $candidate_branch ) {
+					if ( BranchScope::is_active( $candidate_branch ) ) { $staff[] = $user_id; $staff_branches[$user_id] = $candidate_branch; break; }
+				}
+			} elseif ( BranchScope::allows( $branch_id, $user_id ) ) {
 				$staff[] = $user_id;
+				$staff_branches[$user_id] = $branch_id;
 			}
 		}
 		if ( ! $staff ) {
 			return array( 'owner_user_id'=>0, 'stage'=>'new', 'claimed_at'=>null );
 		}
 
+		$day_start = self::day_start_utc();
 		$placeholders = implode( ',', array_fill( 0, count( $staff ), '%d' ) );
-		$sql = 'SELECT owner_user_id FROM ' . Schema::table( 'leads' ) . " WHERE branch_id=%d AND owner_user_id IN ($placeholders) AND claimed_at IS NOT NULL ORDER BY claimed_at DESC,id DESC LIMIT 1 FOR UPDATE";
-		$last_owner = $wpdb->get_var( $wpdb->prepare( $sql, array_merge( array( $branch_id ), $staff ) ) );
+		$sql = 'SELECT owner_user_id, COUNT(*) AS total, MAX(claimed_at) AS last_claimed FROM ' . Schema::table( 'leads' ) . " WHERE owner_user_id IN ($placeholders) AND claimed_at>=%s GROUP BY owner_user_id FOR UPDATE";
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $staff, array( $day_start ) ) ), ARRAY_A );
 		if ( $wpdb->last_error ) {
-			error_log( 'Auto Dealership Core: round-robin rotation lookup failed: ' . $wpdb->last_error );
+			error_log( 'Auto Dealership Core: lead workload lookup failed: ' . $wpdb->last_error );
 			return new \WP_Error( 'adc_assignment_unavailable', __( 'تعذر التحقق من سجل توزيع الطلبات.', 'auto-dealership-core' ), array( 'status'=>503 ) );
 		}
-		$last_index = false === $last_owner ? false : array_search( (int) $last_owner, $staff, true );
-		$next_index = false === $last_index ? 0 : ( ( $last_index + 1 ) % count( $staff ) );
-		return array( 'owner_user_id'=>$staff[$next_index], 'stage'=>'assigned', 'claimed_at'=>$now );
+		$loads = array();
+		foreach ( (array) $rows as $row ) { $loads[(int) $row['owner_user_id']] = array( (int) $row['total'], (string) $row['last_claimed'] ); }
+		$cap = self::daily_cap();
+		$candidates = array();
+		foreach ( $staff as $user_id ) {
+			$total = $loads[$user_id][0] ?? 0;
+			if ( $cap > 0 && $total >= $cap ) { continue; }
+			$candidates[] = array( $total, $loads[$user_id][1] ?? '', $user_id );
+		}
+		if ( ! $candidates ) {
+			return array( 'owner_user_id'=>0, 'stage'=>'new', 'claimed_at'=>null );
+		}
+		// Fewest new leads today first; ties go to whoever received a lead longest ago.
+		usort( $candidates, static fn( $a, $b ) => array( $a[0], $a[1], $a[2] ) <=> array( $b[0], $b[1], $b[2] ) );
+		return array( 'owner_user_id'=>$candidates[0][2], 'stage'=>'assigned', 'claimed_at'=>$now, 'branch_id'=>$staff_branches[$candidates[0][2]] ?? $branch_id );
+			}
+	public static function assignment_mode(): string {
+		$mode = sanitize_key( (string) get_option( 'adc_lead_assignment_mode', 'manual' ) );
+		return in_array( $mode, array( 'manual', 'manager', 'round_robin' ), true ) ? $mode : 'manual';
+	}
+
+	/** Maximum new leads one sales employee may receive per site-local day; 0 means unlimited. */
+	public static function daily_cap(): int {
+		return min( 500, absint( get_option( 'adc_lead_daily_cap', 0 ) ) );
+	}
+
+	private static function day_start_utc(): string {
+		$start = new \DateTimeImmutable( 'today', wp_timezone() );
+		return $start->setTimezone( new \DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );
+	}
+
+	public static function leads_received_today( int $user_id ): int {
+		global $wpdb;
+		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . Schema::table( 'leads' ) . ' WHERE owner_user_id=%d AND claimed_at>=%s', $user_id, self::day_start_utc() ) );
+	}
+
+	/** Distributes unassigned branch leads in automatic mode once staff capacity is available. */
+	public static function distribute_pending(): int {
+		global $wpdb;
+		if ( 'round_robin' !== self::assignment_mode() ) { return 0; }
+		$table = Schema::table( 'leads' );
+		$ids = $wpdb->get_col( "SELECT id FROM $table WHERE stage='new' AND owner_user_id=0 AND branch_id>0 ORDER BY created_at ASC,id ASC LIMIT 50" );
+		if ( $wpdb->last_error ) {
+			error_log( 'Auto Dealership Core: pending lead scan failed: ' . $wpdb->last_error );
+			return 0;
+		}
+		$distributed = 0;
+		foreach ( (array) $ids as $lead_id ) {
+			if ( ! Transaction::begin() ) { break; }
+			$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id,stage FROM $table WHERE id=%d FOR UPDATE", (int) $lead_id ), ARRAY_A );
+			if ( ! $lead || 'new' !== $lead['stage'] || 0 !== (int) $lead['owner_user_id'] ) { $wpdb->query( 'ROLLBACK' ); continue; }
+			$now = current_time( 'mysql', true );
+			$pick = self::round_robin_assignment( (int) $lead['branch_id'], $now );
+			if ( is_wp_error( $pick ) || 0 === (int) $pick['owner_user_id'] ) {
+				// Branch staff are full or unavailable: the lead is open to every branch.
+				$pick = self::round_robin_assignment( (int) $lead['branch_id'], $now, true );
+			}
+			if ( is_wp_error( $pick ) || 0 === (int) $pick['owner_user_id'] ) {
+				$wpdb->query( 'ROLLBACK' );
+				continue;
+			}
+			$owner = (int) $pick['owner_user_id'];
+			$new_branch = (int) ( $pick['branch_id'] ?? $lead['branch_id'] );
+			$updated = $wpdb->query( $wpdb->prepare( "UPDATE $table SET owner_user_id=%d,branch_id=%d,stage='assigned',claimed_at=%s,updated_at=%s WHERE id=%d AND owner_user_id=0 AND stage='new'", $owner, $new_branch, $now, $now, (int) $lead['id'] ) );
+			$history = 1 === $updated && self::record_stage_transition( (int) $lead['id'], $new_branch, $owner, 0, 'new', 'assigned', $now );
+			$activity = 1 === $updated ? $wpdb->insert( Schema::table( 'activities' ), array( 'lead_id'=>(int) $lead['id'], 'actor_user_id'=>0, 'type'=>'assignment', 'notes'=>'Automatic distribution by daily workload', 'created_at'=>$now ), array( '%d','%d','%s','%s','%s' ) ) : false;
+			if ( 1 !== $updated || ! $history || 1 !== $activity || ! Transaction::commit( static fn() => AuditLog::record( 'lead.auto_assigned', 'lead', (int) $lead['id'], 'Automatic distribution', array( 'stage'=>'new','owner_user_id'=>0 ), array( 'stage'=>'assigned','owner_user_id'=>$owner ) ) ) ) {
+				$wpdb->query( 'ROLLBACK' );
+				error_log( 'Auto Dealership Core: automatic lead distribution failed.' );
+				continue;
+			}
+			$distributed++;
+		}
+		return $distributed;
 	}
 
 	public static function create_public( array $input, ?array $legacy_ref = null, string $initial_activity_notes = '', string $compatibility_type = '', array $marketing = array() ) {
@@ -480,9 +577,10 @@ final class LeadService {
 		if ( $lead_id < 1 || ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) ) { return new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status'=>404 ) ); }
 		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' );
 		self::append_marketing_visibility_scope( $scope, $args );
-		if ( ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) { $scope .= ' AND l.owner_user_id=%d'; $args[] = get_current_user_id(); }
+		if ( ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) { $scope .= " AND (l.owner_user_id=%d OR (l.owner_user_id=0 AND l.stage='new'))"; $args[] = get_current_user_id(); }
 		$args[] = $lead_id;
-		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.campaign END campaign,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.platform END platform,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN 0 ELSE l.created_by END created_by,l.referred_at,l.stage,l.next_action_at,l.claimed_at,l.first_contact_at,l.priority,l.created_at,l.updated_at,c.full_name,c.mobile,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.email END email,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.city END city FROM ' . Schema::table( 'leads' ) . ' l INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=l.customer_id WHERE ' . $scope . ' AND l.id=%d', $args ), ARRAY_A );
+				$args[] = $lead_id;
+				$row = $wpdb->get_row( $wpdb->prepare( 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.campaign END campaign,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.platform END platform,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN 0 ELSE l.created_by END created_by,l.referred_at,l.stage,l.next_action_at,l.claimed_at,l.first_contact_at,l.priority,l.created_at,l.updated_at,c.full_name,c.mobile,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.email END email,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.city END city FROM ' . Schema::table( 'leads' ) . ' l INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=l.customer_id WHERE ' . $scope . ' AND l.id=%d', $args ), ARRAY_A );
 		return $row ?: new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status'=>404 ) );
 	}
 
@@ -494,12 +592,16 @@ final class LeadService {
 		}
 		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' );
 		self::append_marketing_visibility_scope( $scope, $args );
+		$visible_scope = $scope;
+		$visible_args = $args;
 		if ( ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) {
 			$scope .= ' AND l.owner_user_id=%d'; $args[] = get_current_user_id();
+			// Unassigned new leads can be opened, but their history is only for the assigned employee.
+			$visible_scope .= " AND (l.owner_user_id=%d OR (l.owner_user_id=0 AND l.stage='new'))"; $visible_args[] = get_current_user_id();
 		}
 		$args[] = $lead_id;
-		$from = Schema::table( 'leads' ) . " l WHERE $scope AND l.id=%d";
-		if ( ! $wpdb->get_var( $wpdb->prepare( 'SELECT l.id FROM ' . $from, $args ) ) ) {
+		$visible_args[] = $lead_id;
+		if ( ! $wpdb->get_var( $wpdb->prepare( 'SELECT l.id FROM ' . Schema::table( 'leads' ) . " l WHERE $visible_scope AND l.id=%d", $visible_args ) ) ) {
 			return new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status'=>404 ) );
 		}
 		$per_page = min( 100, max( 1, $per_page ) );

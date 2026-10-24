@@ -545,6 +545,7 @@ add_action( 'adc_expire_reservations', array( 'AutoDealership\\Reservations\\Res
 add_action( 'adc_privacy_retention', array( 'AutoDealership\\Privacy\\RetentionService', 'run' ) );
 add_action( 'adc_process_outbox', array( 'AutoDealership\\Operations\\OutboxService', 'run' ) );
 add_action( 'adc_release_stale_lead_claims', array( 'AutoDealership\\Leads\\LeadService', 'release_stale_claims' ) );
+add_action( 'adc_release_stale_lead_claims', array( 'AutoDealership\\Leads\\LeadService', 'distribute_pending' ), 20 );
 add_action( 'adc_prune_request_limits', array( 'AutoDealership\\Security\\PublicRequestGuard', 'prune' ) );
 register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_expire_reservations' );

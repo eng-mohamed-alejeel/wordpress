@@ -390,13 +390,14 @@ adc_check( is_array( $dedicated_assignment ) && current_user_can( 'adc_assign_ma
 wp_set_current_user( $sales_b );
 adc_check( in_array( $crm_claim_lead_id, array_map( 'intval', array_column( LeadService::list_for_current_user( 1, 100 ), 'id' ) ), true ), 'Sales employee sees an unassigned lead only within the assigned branch queue.' );
 wp_set_current_user( $sales_a );
-adc_check( ! in_array( $crm_claim_lead_id, array_map( 'intval', array_column( LeadService::list_for_current_user( 1, 100 ), 'id' ) ), true ), 'Sales employee in a different branch cannot see the shared lead.' );
+adc_check( in_array( $crm_claim_lead_id, array_map( 'intval', array_column( LeadService::list_for_current_user( 1, 100 ), 'id' ) ), true ), 'Sales employee in a different branch also sees a new unassigned lead (open to every branch).' );
 $crm_claim_race = $crm_parallel( 'crm_claim', 0, array(
 	array( '_actor'=>$sales_b, 'lead_id'=>$crm_claim_lead_id ),
 	array( '_actor'=>$crm_second_sales, 'lead_id'=>$crm_claim_lead_id ),
 ) );
 adc_check( 1 === count( array_filter( $crm_claim_race, static fn( $r ) => isset( $r['stage'] ) && 'assigned' === $r['stage'] ) ) && 1 === count( array_filter( $crm_claim_race, static fn( $r ) => 'adc_claim_unavailable' === ( $r['error'] ?? '' ) ) ), 'Concurrent claim requests assign a shared lead to one salesperson only.' );
 $crm_claim_owner = (int) $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) );
+adc_check( (int) $wpdb->get_var( $wpdb->prepare( "SELECT branch_id FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) ) === \AutoDealership\Security\BranchScope::assigned_branch( $crm_claim_owner ), 'A claimed lead moves into the claiming employee branch.' );
 wp_set_current_user( $crm_claim_owner );
 adc_check( $error_is( LeadService::update_stage( $crm_claim_lead_id, 'contacted' ), 'adc_first_contact_required' ), 'Stage update cannot mark a claimed lead contacted without first-contact evidence.' );
 adc_check( is_array( LeadService::add_activity( $crm_claim_lead_id, 'call', 'A call note alone is not first-contact evidence.' ) ) && $error_is( LeadService::update_stage( $crm_claim_lead_id, 'contacted' ), 'adc_first_contact_required' ), 'A generic call note does not satisfy first-contact requirements.' );
@@ -429,20 +430,33 @@ $crm_rr_staff = array_values( array_filter( array_map( 'absint', get_users( arra
 sort( $crm_rr_staff, SORT_NUMERIC );
 $crm_rr_success = count( $crm_rr_staff ) > 1;
 if ( $crm_rr_success ) {
-	$crm_rr_placeholders = implode( ',', array_fill( 0, count( $crm_rr_staff ), '%d' ) );
-	$crm_rr_last_owner = $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE branch_id=%d AND owner_user_id IN ($crm_rr_placeholders) AND claimed_at IS NOT NULL ORDER BY claimed_at DESC,id DESC LIMIT 1", array_merge( array( (int) $branch_b['id'] ), $crm_rr_staff ) ) );
-	$crm_rr_last_index = false === $crm_rr_last_owner ? false : array_search( (int) $crm_rr_last_owner, $crm_rr_staff, true );
-	$crm_rr_expected_index = false === $crm_rr_last_index ? 0 : ( ( $crm_rr_last_index + 1 ) % count( $crm_rr_staff ) );
+	$crm_rr_expect = static function () use ( $wpdb, $crm_leads, $crm_rr_staff ) {
+		$best = null;
+		$day_start = ( new \DateTimeImmutable( 'today', wp_timezone() ) )->setTimezone( new \DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );
+		foreach ( $crm_rr_staff as $uid ) {
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT COUNT(*) total, COALESCE(MAX(claimed_at),'') last_claimed FROM $crm_leads WHERE owner_user_id=%d AND claimed_at>=%s", $uid, $day_start ), ARRAY_A );
+			$key = array( (int) $row['total'], (string) $row['last_claimed'], $uid );
+			if ( null === $best || $key < $best ) { $best = $key; }
+		}
+		return $best[2];
+	};
 	for ( $crm_rr_index = 0; $crm_rr_index < 4; ++$crm_rr_index ) {
+		$crm_rr_expected_owner = $crm_rr_expect();
 		$crm_rr_result = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500001' . str_pad( (string) $crm_rr_index, 3, '0', STR_PAD_LEFT ), 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
 		if ( ! is_array( $crm_rr_result ) ) { $crm_rr_success = false; break; }
-		$crm_rr_expected_owner = $crm_rr_staff[$crm_rr_expected_index];
 		$crm_rr_row = $wpdb->get_row( $wpdb->prepare( "SELECT owner_user_id,stage,claimed_at FROM $crm_leads WHERE id=%d", (int) $crm_rr_result['id'] ), ARRAY_A );
 		if ( ! $crm_rr_row || (int) $crm_rr_row['owner_user_id'] !== $crm_rr_expected_owner || 'assigned' !== $crm_rr_row['stage'] || empty( $crm_rr_row['claimed_at'] ) ) { $crm_rr_success = false; break; }
-		$crm_rr_expected_index = ( $crm_rr_expected_index + 1 ) % count( $crm_rr_staff );
 	}
 }
 adc_check( $crm_rr_success, 'Round robin assigns only active branch sales staff and rotates fairly across branch intake order.' );
+$crm_cap_before = array( get_option( 'adc_lead_assignment_mode' ), get_option( 'adc_lead_daily_cap' ) );
+update_option( 'adc_lead_assignment_mode', 'manager' );
+update_option( 'adc_lead_daily_cap', 7 );
+adc_check( 'manager' === \AutoDealership\Leads\LeadService::assignment_mode() && 7 === \AutoDealership\Leads\LeadService::daily_cap(), 'Manager-only assignment mode and the daily lead cap are read back from saved policy.' );
+update_option( 'adc_lead_assignment_mode', 'bogus' );
+adc_check( 'manual' === \AutoDealership\Leads\LeadService::assignment_mode(), 'Unknown assignment modes fall back to self-claim.' );
+update_option( 'adc_lead_assignment_mode', (string) $crm_cap_before[0] );
+update_option( 'adc_lead_daily_cap', (string) $crm_cap_before[1] );
 if ( count( $crm_rr_staff ) > 1 ) {
 	$crm_clear_rate();
 	$crm_parallel_rr = $crm_parallel( 'crm_intake', 0, array(

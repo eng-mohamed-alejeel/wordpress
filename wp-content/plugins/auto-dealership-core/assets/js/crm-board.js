@@ -116,11 +116,15 @@
 		}
 		var allowed = allowedStages(card);
 		if (!allowed || allowed.indexOf(targetStage) < 0) {
-			if (card.dataset.needsContact === '1' && targetStage === 'contacted') {
-				announce('سجّل أول تواصل مع العميل من تفاصيل الفرصة قبل نقلها إلى «تم التواصل».', 'error');
-			} else {
-				announce('هذا الانتقال غير مسموح من المرحلة الحالية.', 'error');
-			}
+			announce('هذا الانتقال غير مسموح من المرحلة الحالية.', 'error');
+			return;
+		}
+		if (card.dataset.needsContact === '1' && targetStage === 'contacted') {
+			askContact().then(function (data) {
+				if (data) {
+					sendMove(card, targetStage, '', data);
+				}
+			});
 			return;
 		}
 		var isAssign = card.dataset.stage === 'new' && targetStage === 'assigned';
@@ -139,6 +143,81 @@
 				return;
 			}
 			sendMove(card, targetStage, reason);
+		});
+	}
+
+	function askContact() {
+		return new Promise(function (resolve) {
+			var dialog = document.createElement('dialog');
+			dialog.className = 'adc-crm-board-dialog';
+			var form = document.createElement('form');
+			form.method = 'dialog';
+			function field(text, control) {
+				var label = document.createElement('label');
+				label.textContent = text;
+				label.style.cssText = 'display:block;font-weight:600;margin-bottom:8px';
+				control.style.cssText = 'display:block;width:100%;font-weight:400';
+				label.appendChild(control);
+				form.appendChild(label);
+				return control;
+			}
+			var title = document.createElement('p');
+			title.textContent = 'تسجيل أول تواصل فعلي مع العميل';
+			title.style.fontWeight = '700';
+			form.appendChild(title);
+			var type = document.createElement('select');
+			[['call', 'اتصال هاتفي'], ['whatsapp', 'WhatsApp'], ['email', 'رسالة'], ['meeting', 'زيارة'], ['other', 'أخرى']].forEach(function (item) {
+				var option = document.createElement('option');
+				option.value = item[0];
+				option.textContent = item[1];
+				type.appendChild(option);
+			});
+			field('نوع التواصل', type);
+			var when = document.createElement('input');
+			when.type = 'datetime-local';
+			when.required = true;
+			var now = new Date();
+			now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+			when.value = now.toISOString().slice(0, 16);
+			when.max = when.value;
+			field('تاريخ ووقت التواصل', when);
+			var result = document.createElement('input');
+			result.required = true;
+			result.maxLength = 500;
+			field('نتيجة التواصل', result);
+			var notes = document.createElement('textarea');
+			notes.required = true;
+			notes.rows = 3;
+			notes.maxLength = 4000;
+			field('ملاحظات مختصرة', notes);
+			var next = document.createElement('input');
+			next.type = 'datetime-local';
+			field('موعد المتابعة التالية (اختياري)', next);
+			var menu = document.createElement('menu');
+			var cancel = document.createElement('button');
+			cancel.type = 'button';
+			cancel.className = 'button';
+			cancel.textContent = 'إلغاء';
+			var ok = document.createElement('button');
+			ok.type = 'submit';
+			ok.className = 'button button-primary';
+			ok.textContent = 'حفظ ونقل إلى «تم التواصل»';
+			menu.appendChild(cancel);
+			menu.appendChild(ok);
+			form.appendChild(menu);
+			dialog.appendChild(form);
+			document.body.appendChild(dialog);
+			var value = null;
+			cancel.addEventListener('click', function () { dialog.close(); });
+			form.addEventListener('submit', function () {
+				value = { type: type.value, contacted_at: when.value, result: result.value.trim(), notes: notes.value.trim(), next_action_at: next.value };
+			});
+			dialog.addEventListener('close', function () {
+				document.body.removeChild(dialog);
+				resolve(value);
+			});
+			dialog.showModal();
+			result.focus();
 		});
 	}
 
@@ -188,7 +267,10 @@
 		});
 	}
 
-	function sendMove(card, targetStage, reason) {
+	function sendMove(card, targetStage, reason, contact) {
+		if (card.dataset.pending === '1') {
+			return;
+		}
 		var previousColumn = card.parentNode;
 		var wasNew = card.dataset.stage === 'new';
 		var destination = document.querySelector('[data-lead-stage="' + targetStage + '"]');
@@ -203,7 +285,9 @@
 		updateCounts();
 
 		var payload;
-		if (wasNew && targetStage === 'assigned') {
+		if (contact) {
+			payload = Object.assign({ action: 'adc_first_contact_ajax', nonce: cfg.nonce, lead_id: card.dataset.leadId }, contact);
+		} else if (wasNew && targetStage === 'assigned') {
 			payload = card.dataset.assignStaff
 				? { action: 'adc_assign_lead_ajax', nonce: cfg.nonce, lead_id: card.dataset.leadId, staff_id: reason }
 				: { action: 'adc_claim_lead_ajax', nonce: cfg.nonce, lead_id: card.dataset.leadId };
@@ -225,6 +309,7 @@
 		}).then(function (result) {
 			var next = Array.isArray(result.allowed_stages) ? result.allowed_stages : [];
 			card.dataset.stage = result.stage;
+			card.dataset.needsContact = '0';
 			card.dataset.allowed = JSON.stringify(next);
 			card.classList.remove('is-fresh');
 			card.draggable = result.stage !== 'new' && next.length > 0;

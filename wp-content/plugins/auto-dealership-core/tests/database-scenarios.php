@@ -870,7 +870,7 @@ adc_check( $erasure['done'] && __( 'Erased customer', 'auto-dealership-core' ) =
 $wpdb->update( Schema::table( 'branches' ), array( 'active' => 0 ), array( 'id' => $branch_a['id'] ) );
 BranchScope::clear_cache();
 wp_set_current_user( $sales_a );
-adc_check( ! BranchScope::allows( $branch_a['id'] ) && array() === LeadService::list_for_current_user(), 'Deactivating an assigned branch immediately revokes service and list scope.' );
+adc_check( ! BranchScope::allows( $branch_a['id'] ) && array() === array_filter( LeadService::list_for_current_user(), static fn( $lead ) => ! ( 'new' === $lead['stage'] && 0 === (int) $lead['owner_user_id'] ) ), 'Deactivating an assigned branch immediately revokes service and list scope (only the open new-lead pool remains).' );
 adc_check( 404 === $server->dispatch( $versions_request )->get_status(), 'Inactive-branch staff cannot retrieve an existing quote by direct REST identifier.' );
 wp_set_current_user( $admin );
 adc_check( 200 === $server->dispatch( $versions_request )->get_status(), 'Global administrator retains inactive-branch remediation access.' );

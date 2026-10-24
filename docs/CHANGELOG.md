@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-24 — New leads visible to all branches; first-contact dialog on drag
+
+- Sales reps now see unassigned `new` leads from every branch; claiming or assigning moves the lead to the rep's branch, and it is visible to everyone again when it returns to `new`.
+- Dragging an assigned lead to "Contacted" opens a first-contact dialog (type, time, result, notes) and saves it before the move; duplicate in-flight moves are ignored.
+
+## 2026-10-24 — Lead assignment modes and daily cap
+
+- Three assignment modes in CRM settings: self-claim (`manual`), manager-only (`manager`), and automatic balanced distribution (`round_robin`).
+- New `adc_lead_daily_cap` (0 = unlimited): automatic distribution picks the employee with the fewest leads today (then the oldest last assignment) and skips those at the cap; self-claim also enforces it.
+- Scheduled `distribute_pending()` assigns waiting leads every 15 minutes in automatic mode; self-claim UI and `claim()` are disabled outside `manual`; managers can always assign (drag on the board).
+- Settings page shows today's workload per sales employee.
+
 ## 2026-10-24 — CRM pipeline board redesign
 
 - Horizontal scrollable board with a distinct color per stage, live stage counters, empty-column states, and priority, overdue, source and age badges on cards.

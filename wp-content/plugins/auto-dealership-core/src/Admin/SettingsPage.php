@@ -33,7 +33,7 @@ final class SettingsPage {
 			'pricing' => array( 'التسعير والضرائب', array( 'vat_rate_bps', 'vat_percent', 'sales_manager_discount_limit', 'general_manager_discount_limit', 'pricing_fee_amount', 'promotion_code', 'promotion_type', 'promotion_value', 'promotion_starts_at', 'promotion_ends_at', 'seller_name', 'seller_tax_number', 'seller_phone', 'seller_address' ) ),
 			'reservations' => array( 'الحجز والعربون', array( 'reservation_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'reservation_refund_hours' ) ),
 			'branches' => array( 'فروع التشغيل', array( 'default_branch_id' ) ),
-			'crm' => array( 'توزيع العملاء المحتملين', array( 'lead_assignment_mode', 'lead_claim_timeout_minutes' ) ),
+			'crm' => array( 'توزيع العملاء المحتملين', array( 'lead_assignment_mode', 'lead_daily_cap', 'lead_claim_timeout_minutes' ) ),
 			'delivery' => array( 'سياسة التسليم', array( 'delivery_required_documents' ) ),
 			'privacy' => array( 'الاحتفاظ بالبيانات', array( 'privacy_retention_days' ) ),
 			'catalog' => array( 'مصدر الكتالوج', array( 'public_catalog_mode' ) ),
@@ -64,6 +64,7 @@ final class SettingsPage {
 		$default_branch = absint( get_option( 'adc_default_branch_id', 0 ) );
 		$lead_assignment_mode = sanitize_key( (string) get_option( 'adc_lead_assignment_mode', 'manual' ) );
 		$lead_claim_timeout = min( 1440, max( 5, absint( get_option( 'adc_lead_claim_timeout_minutes', 30 ) ) ) );
+		$lead_daily_cap = min( 500, absint( get_option( 'adc_lead_daily_cap', 0 ) ) );
 		$retention_days = absint( get_option( 'adc_privacy_retention_days', 0 ) );
 		$catalog_mode = PublicCatalog::mode();
 		$catalog_readiness = PublicCatalog::readiness();
@@ -96,7 +97,16 @@ final class SettingsPage {
 					<tr><th scope="row"><label for="adc_default_branch_id"><?php esc_html_e( 'الفرع الافتراضي للطلبات الواردة', 'auto-dealership-core' ); ?></label></th><td><select id="adc_default_branch_id" name="default_branch_id"><option value="0"><?php esc_html_e( 'بدون فرع — يتطلب إسنادًا يدويًا', 'auto-dealership-core' ); ?></option><?php foreach ( $branches as $branch ) : ?><option value="<?php echo absint( $branch['id'] ); ?>" <?php selected( $default_branch, (int) $branch['id'] ); ?>><?php echo esc_html( \AutoDealership\Content\StoredTranslations::text( 'branches', (int) $branch['id'], 'name', (string) $branch['name'] ) . ' — ' . \AutoDealership\Content\StoredTranslations::text( 'branches', (int) $branch['id'], 'city', (string) $branch['city'] ) ); ?></option><?php endforeach; ?></select></td></tr>
 					<?php endif; ?>
 					<?php if ( in_array( 'lead_assignment_mode', $fields, true ) ) : ?>
-					<tr><th scope="row"><label for="adc_lead_assignment_mode"><?php esc_html_e( 'توزيع العملاء المحتملين', 'auto-dealership-core' ); ?></label></th><td><select id="adc_lead_assignment_mode" name="lead_assignment_mode"><option value="manual" <?php selected( $lead_assignment_mode, 'manual' ); ?>><?php esc_html_e( 'إسناد يدوي إلى قائمة الفرع المشتركة', 'auto-dealership-core' ); ?></option><option value="round_robin" <?php selected( $lead_assignment_mode, 'round_robin' ); ?>><?php esc_html_e( 'توزيع تلقائي بالتناوب حسب الفرع', 'auto-dealership-core' ); ?></option></select><p class="description"><?php esc_html_e( 'يوزّع الطلبات الجديدة على موظفي المبيعات النشطين المعيّنين إلى الفرع فقط. إذا لم يتوفر موظف مؤهل، يبقى الطلب في قائمة الفرع المشتركة.', 'auto-dealership-core' ); ?></p></td></tr>
+					<tr><th scope="row"><label for="adc_lead_assignment_mode"><?php esc_html_e( 'طريقة إسناد الفرص', 'auto-dealership-core' ); ?></label></th><td><select id="adc_lead_assignment_mode" name="lead_assignment_mode"><option value="manual" <?php selected( $lead_assignment_mode, 'manual' ); ?>><?php esc_html_e( 'استلام ذاتي: الموظف يستلم من قائمة الفرع المشتركة (ويمكن للمدير الإسناد)', 'auto-dealership-core' ); ?></option><option value="manager" <?php selected( $lead_assignment_mode, 'manager' ); ?>><?php esc_html_e( 'إسناد عبر مدير المبيعات فقط', 'auto-dealership-core' ); ?></option><option value="round_robin" <?php selected( $lead_assignment_mode, 'round_robin' ); ?>><?php esc_html_e( 'توزيع آلي متوازن حسب عدد فرص كل موظف اليوم', 'auto-dealership-core' ); ?></option></select><p class="description"><?php esc_html_e( 'في التوزيع الآلي تُسند الفرصة إلى الموظف الأقل فرصًا اليوم داخل الفرع ثم الأقدم استلامًا، وتبقى الفرص الزائدة في القائمة حتى يتوفر موظف دون الحد اليومي. يستطيع مدير المبيعات الإسناد يدويًا في كل الأوضاع.', 'auto-dealership-core' ); ?></p></td></tr>
+					<tr><th scope="row"><label for="adc_lead_daily_cap"><?php esc_html_e( 'الحد الأقصى للفرص الجديدة لكل موظف يوميًا', 'auto-dealership-core' ); ?></label></th><td><input id="adc_lead_daily_cap" name="lead_daily_cap" type="number" min="0" max="500" value="<?php echo esc_attr( $lead_daily_cap ); ?>"><p class="description"><?php esc_html_e( 'يُطبَّق على التوزيع الآلي والاستلام الذاتي؛ صفر يعني بلا حد. اليوم بحسب توقيت الموقع.', 'auto-dealership-core' ); ?></p>
+					<?php
+					$workload_staff = get_users( array( 'role' => 'dealership_sales', 'number' => 100, 'orderby' => 'display_name' ) );
+					if ( $workload_staff ) :
+						?>
+						<table class="widefat striped" style="max-width:420px;margin-top:8px"><thead><tr><th><?php esc_html_e( 'موظف المبيعات', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'فرص اليوم', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
+						<?php foreach ( $workload_staff as $workload_user ) : ?><tr><td><?php echo esc_html( $workload_user->display_name ); ?></td><td><?php echo esc_html( number_format_i18n( \AutoDealership\Leads\LeadService::leads_received_today( (int) $workload_user->ID ) ) . ( $lead_daily_cap ? ' / ' . number_format_i18n( $lead_daily_cap ) : '' ) ); ?></td></tr><?php endforeach; ?>
+						</tbody></table>
+					<?php endif; ?></td></tr>
 					<tr><th scope="row"><label for="adc_lead_claim_timeout_minutes"><?php esc_html_e( 'مهلة المطالبة بالدقائق', 'auto-dealership-core' ); ?></label></th><td><input id="adc_lead_claim_timeout_minutes" name="lead_claim_timeout_minutes" type="number" min="5" max="1440" value="<?php echo esc_attr( $lead_claim_timeout ); ?>"><p class="description"><?php esc_html_e( 'تُعاد الفرصة المسندة إلى القائمة المشتركة إذا لم يُسجّل الموظف أول تواصل قبل انتهاء المهلة؛ من 5 إلى 1440 دقيقة.', 'auto-dealership-core' ); ?></p></td></tr>
 					<?php endif; ?>
 					<?php if ( in_array( 'privacy_retention_days', $fields, true ) ) : ?>
