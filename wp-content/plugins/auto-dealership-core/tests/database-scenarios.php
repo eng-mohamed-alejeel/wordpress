@@ -1049,6 +1049,35 @@ try {
 	$live_chat_foreign_form = array_replace( $live_chat_form, array( 'nonce'=>trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $portal_other_http )[1] ), 'thread'=>$portal_thread ) );
 	$live_chat_foreign_response = $http_request( '/wp-admin/admin-ajax.php', $portal_other_http, 'POST', $live_chat_foreign_form, true );
 	adc_check( 404 === $live_chat_foreign_response[0], 'Another customer cannot heartbeat a conversation they do not own (HTTP ' . $live_chat_foreign_response[0] . ': ' . substr( wp_strip_all_tags( $live_chat_foreign_response[1] ), 0, 120 ) . ').' );
+	$live_chat_get = $http_request( '/wp-admin/admin-ajax.php?' . http_build_query( array( 'action'=>'adc_live_chat', 'nonce'=>$live_chat_nonce, 'operation'=>'beat', 'thread'=>$portal_thread, 'portal_scope'=>'personal' ) ), $portal_customer_http );
+	adc_check( 405 === $live_chat_get[0], 'Live-chat operations reject GET requests over authenticated HTTP.' );
+	$live_chat_unknown = $http_request( '/wp-admin/admin-ajax.php', $portal_customer_http, 'POST', array_replace( $live_chat_form, array( 'operation'=>'unknown', 'tab'=>wp_generate_uuid4() ) ), true );
+	adc_check( 400 === $live_chat_unknown[0] && empty( json_decode( $live_chat_unknown[1], true )['success'] ), 'Live-chat rejects an unknown operation without heartbeat side effects.' );
+	$live_chat_available_rows = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \AutoDealership\Portal\PortalAccess::table( 'presence' ) . ' WHERE available=1 AND user_id=' . (int) $portal_customer );
+	$live_chat_customer_available = $http_request( '/wp-admin/admin-ajax.php', $portal_customer_http, 'POST', array_replace( $live_chat_form, array( 'operation'=>'available', 'available'=>'1', 'tab'=>wp_generate_uuid4() ) ), true );
+	adc_check( 403 === $live_chat_customer_available[0] && 0 === $live_chat_available_rows && 0 === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \AutoDealership\Portal\PortalAccess::table( 'presence' ) . ' WHERE available=1 AND user_id=' . (int) $portal_customer ), 'A customer cannot mark themselves as an available chat adviser, and no availability row is written.' );
+	$live_chat_start_nonce = trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $portal_customer_http )[1] );
+	$live_chat_started = $http_request( '/wp-admin/admin-ajax.php', $portal_customer_http, 'POST', array( 'action'=>'adc_live_chat', 'nonce'=>$live_chat_start_nonce, 'operation'=>'start', 'branch'=>(int) $branch_b['id'], 'portal_scope'=>'personal', 'typing'=>'0', 'visible'=>'1', 'tab'=>wp_generate_uuid4() ), true );
+	$live_chat_started_data = json_decode( $live_chat_started[1], true );
+	$live_chat_started_thread = (int) ( $live_chat_started_data['data']['thread'] ?? 0 );
+	$live_chat_started_row = $live_chat_started_thread ? \AutoDealership\Portal\Conversations::row( $live_chat_started_thread ) : null;
+	adc_check( 200 === $live_chat_started[0] && ! empty( $live_chat_started_data['success'] ) && $live_chat_started_thread > 0 && (int) ( $live_chat_started_row['customer_id'] ?? 0 ) === $portal_customer && (int) ( $live_chat_started_row['branch_id'] ?? 0 ) === (int) $branch_b['id'] && empty( $live_chat_started_data['data']['inbox'] ), 'Verified customer can start a personal live-chat conversation in the selected active branch without receiving staff inbox data.' );
+	$live_chat_staff_nonce = trim( $http_request( '/adc-test-nonce?action=adc_live_chat', $sales_b_http )[1] );
+	$sales_b_logged_in_cookie = '';
+	foreach ( explode( ';', $sales_b_http['cookie'] ) as $cookie_part ) {
+		$cookie_part = trim( $cookie_part );
+		if ( str_starts_with( $cookie_part, 'wordpress_logged_in_' ) ) { $sales_b_logged_in_cookie = rawurldecode( substr( $cookie_part, strpos( $cookie_part, '=' ) + 1 ) ); break; }
+	}
+	$sales_b_cookie_parts = explode( '|', $sales_b_logged_in_cookie );
+	$sales_b_session_token = $sales_b_cookie_parts[2] ?? '';
+	if ( '' === $sales_b_session_token ) { throw new RuntimeException( 'Could not identify isolated adviser session token.' ); }
+	$live_chat_staff_available = $http_request( '/wp-admin/admin-ajax.php', $sales_b_http, 'POST', array( 'action'=>'adc_live_chat', 'nonce'=>$live_chat_staff_nonce, 'operation'=>'available', 'available'=>'1', 'portal_scope'=>'staff', 'typing'=>'0', 'visible'=>'1', 'tab'=>wp_generate_uuid4() ), true );
+	$live_chat_staff_available_data = json_decode( $live_chat_staff_available[1], true );
+	$live_chat_staff_presence = $wpdb->get_row( $wpdb->prepare( 'SELECT available,seen_at FROM ' . \AutoDealership\Portal\PortalAccess::table( 'presence' ) . ' WHERE user_id=%d AND session_key=%s', $sales_b, hash( 'sha256', $sales_b_session_token ) ), ARRAY_A );
+	adc_check( 200 === $live_chat_staff_available[0] && ! empty( $live_chat_staff_available_data['success'] ) && ! empty( $live_chat_staff_presence['available'] ), 'Eligible in-branch adviser can enable live-chat availability over authenticated HTTP.' );
+	$live_chat_staff_pause = $http_request( '/wp-admin/admin-ajax.php', $sales_b_http, 'POST', array( 'action'=>'adc_live_chat', 'nonce'=>$live_chat_staff_nonce, 'operation'=>'available', 'available'=>'0', 'portal_scope'=>'staff', 'typing'=>'0', 'visible'=>'1', 'tab'=>wp_generate_uuid4() ), true );
+	$live_chat_staff_presence = $wpdb->get_row( $wpdb->prepare( 'SELECT available FROM ' . \AutoDealership\Portal\PortalAccess::table( 'presence' ) . ' WHERE user_id=%d AND session_key=%s', $sales_b, hash( 'sha256', $sales_b_session_token ) ), ARRAY_A );
+	adc_check( 200 === $live_chat_staff_pause[0] && ! empty( json_decode( $live_chat_staff_pause[1], true )['success'] ) && isset( $live_chat_staff_presence['available'] ) && 0 === (int) $live_chat_staff_presence['available'], 'Eligible adviser can disable availability and the current session lease is marked unavailable.' );
 
 	$read_rows = static function ( string $body ): array {
 		$data = json_decode( $body, true );

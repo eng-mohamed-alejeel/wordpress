@@ -437,6 +437,7 @@ add_action( 'admin_notices', static function (): void {
 		echo '<div class="notice notice-error"><p>' . esc_html__( 'تعذر التحقق من بنية قاعدة بيانات منصة المعرض. راجع فحص الجداول والفهارس قبل تنفيذ العمليات التشغيلية.', 'auto-dealership-core' ) . '</p></div>';
 	}
 } );
+add_action( 'admin_notices', array( 'AutoDealership\\Core\\Capabilities', 'migration_notice' ) );
 
 add_action( 'rest_api_init', array( 'AutoDealership\\API\\Routes', 'register' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\API\\ResponseContract', 'boot' ) );

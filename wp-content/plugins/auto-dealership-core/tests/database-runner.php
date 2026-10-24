@@ -39,6 +39,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	unset( $connection );
 	define( 'WP_INSTALLING', true );
 	define( 'WP_ENVIRONMENT_TYPE', 'local' );
+	if ( '1' === getenv( 'ADC_PERMISSION_GOVERNANCE_ONLY' ) ) { define( 'WP_ADMIN', true ); }
 	define( 'ADC_MAIL_MODE', 'mailpit' ); // Synthetic mail is short-circuited by scenario filters.
 	define( 'WP_HTTP_BLOCK_EXTERNAL', true );
 	define( 'DISABLE_WP_CRON', true );
@@ -119,6 +120,13 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	wp_set_current_user( 0 );
 	wp_set_current_user( (int) $install['user_id'] );
 	\AutoDealership\Database\Schema::install();
+	if ( '1' === getenv( 'ADC_ACCESS_GOVERNANCE_ONLY' ) ) { require __DIR__ . '/access-governance.php'; exit; }
+	if ( '1' === getenv( 'ADC_PERMISSION_GOVERNANCE_ONLY' ) ) {
+		\AutoDealership\Admin\UserPermissions::boot();
+		require __DIR__ . '/role-management.php';
+		require __DIR__ . '/user-permissions.php';
+		exit;
+	}
 	if ( '1' === getenv( 'ADC_AUTH_ONLY' ) ) { require __DIR__ . '/authentication-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_WORKSPACE_ONLY' ) ) { require __DIR__ . '/workspace-overview-scenarios.php'; exit; }
 	require __DIR__.'/onyx-document-fixture.php';

@@ -1,9 +1,13 @@
 <?php
 /** Real WordPress authorization, persistence and bilingual profile regression checks. */
 if ( PHP_SAPI !== 'cli' ) { exit; }
-define( 'DISABLE_WP_CRON', true );
-define( 'WP_ADMIN', true );
-require dirname( __DIR__, 4 ) . '/wp-load.php';
+if ( ! defined( 'DB_NAME' ) ) {
+	putenv( 'ADC_PERMISSION_GOVERNANCE_ONLY=1' );
+	$process = proc_open( array( PHP_BINARY, __DIR__ . '/database-runner.php', '--run' ), array( 0 => STDIN, 1 => STDOUT, 2 => STDERR ), $pipes );
+	if ( ! is_resource( $process ) ) { throw new RuntimeException( 'Cannot start isolated permission tests.' ); }
+	exit( proc_close( $process ) );
+}
+if ( ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', DB_NAME ) ) { throw new RuntimeException( 'Permission tests require a disposable verification database.' ); }
 require_once ABSPATH . 'wp-admin/includes/user.php';
 
 use AutoDealership\Admin\UserPermissions;

@@ -1,7 +1,12 @@
 <?php
 if ( PHP_SAPI !== 'cli' ) { exit; }
-define( 'DISABLE_WP_CRON', true ); define( 'WP_ADMIN', true );
-require dirname( __DIR__, 4 ) . '/wp-load.php';
+if ( ! defined( 'DB_NAME' ) ) {
+	putenv( 'ADC_PERMISSION_GOVERNANCE_ONLY=1' );
+	$process = proc_open( array( PHP_BINARY, __DIR__ . '/database-runner.php', '--run' ), array( 0 => STDIN, 1 => STDOUT, 2 => STDERR ), $pipes );
+	if ( ! is_resource( $process ) ) { throw new RuntimeException( 'Cannot start isolated role tests.' ); }
+	exit( proc_close( $process ) );
+}
+if ( ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', DB_NAME ) ) { throw new RuntimeException( 'Role tests require a disposable verification database.' ); }
 require_once ABSPATH . 'wp-admin/includes/user.php';
 use AutoDealership\Admin\RoleManager;
 use AutoDealership\Admin\UserPermissions;
@@ -22,7 +27,8 @@ try {
 	$check( ! in_array( 'adc_assign_marketing_leads', $matrix['dealership_marketing'], true ), 'Marketing does not receive lead-assignment authority by default.' );
 	$check( in_array( 'adc_assign_marketing_leads', Capabilities::assignable_capabilities(), true ), 'Dedicated lead assignment is available for explicit role and user grants.' );
 	$input = array( 'slug' => $slug, 'ar' => 'دور اختبار', 'en' => 'Test role', 'caps' => array( 'adc_view_workspace', 'adc_view_inventory' ), 'new' => '1' );
-	$check( $slug === RoleManager::save_role( $input ), 'Create a bilingual role.' );
+	$created_role = RoleManager::save_role( $input );
+	$check( $slug === $created_role, 'Create a bilingual role.' . ( is_wp_error( $created_role ) ? ' (' . $created_role->get_error_code() . ': ' . $created_role->get_error_message() . ')' : '' ) );
 	$clone = $input; $clone['slug'] .= '_copy'; $clone['caps'] = array(); $clone['clone_source'] = 'dealership_inventory';
 	$check( $clone['slug'] === RoleManager::save_role( $clone ) && get_role( $clone['slug'] )->has_cap( 'adc_manage_inventory' ) && ! get_role( $clone['slug'] )->has_cap( 'manage_options' ), 'Clone copies scoped defaults even without JavaScript.' );
 	$check( get_role( $slug )->has_cap( 'read' ) && ! get_role( $slug )->has_cap( 'manage_options' ), 'Custom role preserves account access without system privileges.' );

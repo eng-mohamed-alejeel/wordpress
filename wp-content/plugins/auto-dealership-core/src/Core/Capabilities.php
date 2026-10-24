@@ -5,6 +5,8 @@ defined( 'ABSPATH' ) || exit;
 
 /** Registers scoped dealership roles and capabilities. */
 final class Capabilities {
+	private static array $request_migration_failures = array();
+
 	private static function refresh_roles(): void {
 		$roles = wp_roles();
 		wp_cache_delete( $roles->role_key, 'options' );
@@ -32,11 +34,62 @@ final class Capabilities {
 
 	private static function migration_failed( string $name ): void {
 		error_log( 'Auto Dealership Core: permission migration failed (' . $name . '); it will retry on a later request.' );
+		$failures = get_option( 'adc_permission_migration_failures', array() );
+		if ( ! is_array( $failures ) ) { $failures = array(); }
+		$failures[$name] = time();
+		self::$request_migration_failures[$name] = $failures[$name];
+		update_option( 'adc_permission_migration_failures', $failures, false );
+		if ( ! self::option_matches( 'adc_permission_migration_failures', $failures ) ) {
+			error_log( 'Auto Dealership Core: unable to persist permission migration failure status (' . $name . '); the administrator notice is limited to this request.' );
+		}
 	}
 
 	private static function complete_migration( string $version_option ): bool {
 		update_option( $version_option, '1', false );
-		return self::option_matches( $version_option, '1' );
+		if ( ! self::option_matches( $version_option, '1' ) ) { return false; }
+		$names = array(
+			'adc_newsletter_permissions_version'=>'newsletter',
+			'adc_marketing_permissions_version'=>'marketing',
+			'adc_purchase_permissions_version'=>'purchasing',
+			'adc_sales_permissions_version'=>'sales',
+		);
+		$name = $names[$version_option] ?? '';
+		if ( '' !== $name ) {
+			$failures = get_option( 'adc_permission_migration_failures', array() );
+			if ( is_array( $failures ) && isset( $failures[$name] ) ) {
+				unset( $failures[$name] );
+				if ( $failures ) { update_option( 'adc_permission_migration_failures', $failures, false ); }
+				else { delete_option( 'adc_permission_migration_failures' ); }
+			}
+		}
+		return true;
+	}
+
+	public static function migration_notice(): void {
+		if ( ! current_user_can( 'manage_options' ) ) { return; }
+		$failures = get_option( 'adc_permission_migration_failures', array() );
+		if ( ! is_array( $failures ) ) { $failures = array(); }
+		$failures = array_merge( $failures, self::$request_migration_failures );
+		$versions = array(
+			'newsletter'=>'adc_newsletter_permissions_version',
+			'marketing'=>'adc_marketing_permissions_version',
+			'purchasing'=>'adc_purchase_permissions_version',
+			'sales'=>'adc_sales_permissions_version',
+		);
+		$labels = array(
+			'newsletter'=>__( 'النشرة البريدية', 'auto-dealership-core' ),
+			'marketing'=>__( 'التسويق', 'auto-dealership-core' ),
+			'purchasing'=>__( 'المشتريات', 'auto-dealership-core' ),
+			'sales'=>__( 'المبيعات', 'auto-dealership-core' ),
+		);
+		$pending = array();
+		foreach ( $versions as $name => $option ) {
+			if ( isset( $failures[$name] ) && '1' !== get_option( $option ) ) { $pending[] = $labels[$name]; }
+		}
+		if ( ! $pending ) { return; }
+		echo '<div class="notice notice-error"><p>' .
+			esc_html( sprintf( __( 'تعذر إكمال ترحيل صلاحيات: %s. قد تكون بعض الإضافات قد حُفظت جزئيًا؛ سيُعاد التحقق والمحاولة تلقائيًا في الطلب التالي. افحص سجل أخطاء PHP وصلاحية الكتابة في قاعدة البيانات، ولا تعدّل المنح يدويًا قبل مراجعة الحالة.', 'auto-dealership-core' ), implode( '، ', $pending ) ) ) .
+			'</p></div>';
 	}
 
 	public static function migrate_newsletter_permissions(): void {

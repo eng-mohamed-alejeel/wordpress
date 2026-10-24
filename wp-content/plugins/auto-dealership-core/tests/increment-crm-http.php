@@ -5,9 +5,179 @@ if ( PHP_SAPI !== 'cli' || ! defined( 'DB_NAME' ) || ! preg_match( '/\Aadc_verif
 use AutoDealership\Leads\CustomerIdentity;
 use AutoDealership\Leads\RequestWorkflow;
 use AutoDealership\Database\Schema;
+use AutoDealership\Audit\AuditLog;
+use AutoDealership\Content\SiteContent;
 
 // HTTP requests share a different REMOTE_ADDR from CLI fixtures.
 $wpdb->delete( Schema::table( 'request_limits' ), array( 'policy_key'=>'intake' ), array( '%s' ) );
+$verification_http_nonce_response = $http_request( '/adc-test-nonce?action=' . rawurlencode( 'adc_resend_' . $sales_b ), $admin_http );
+$verification_http_nonce = trim( $verification_http_nonce_response[1] );
+$verification_http_rows_before = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \AutoDealership\Accounts\EmailVerification::table() );
+$verification_http_outbox_before = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \AutoDealership\Operations\OutboxService::table() );
+$verification_http_forbidden = $http_request( '/wp-admin/admin-post.php?action=adc_verification_resend&user_id=' . $sales_b . '&_wpnonce=' . rawurlencode( $verification_http_nonce ), $sales_b_http );
+adc_check( 403 === $verification_http_forbidden[0] && $verification_http_rows_before === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \AutoDealership\Accounts\EmailVerification::table() ) && $verification_http_outbox_before === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \AutoDealership\Operations\OutboxService::table() ), 'Verification resend admin-post denies a staff user with a valid target nonce without changing verification or outbox records.' );
+$verification_http_bad_nonce = $http_request( '/wp-admin/admin-post.php?action=adc_verification_resend&user_id=' . $sales_b . '&_wpnonce=invalid', $admin_http );
+adc_check( 403 === $verification_http_bad_nonce[0] && $verification_http_rows_before === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \AutoDealership\Accounts\EmailVerification::table() ) && $verification_http_outbox_before === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \AutoDealership\Operations\OutboxService::table() ), 'Verification resend admin-post rejects an invalid nonce without changing verification or outbox records.' );
+$content_http_nonce = trim( $http_request( '/adc-test-nonce?action=adc_site_content', $admin_http )[1] );
+$content_http_before = get_option( SiteContent::OPTION );
+$content_http_form = array( 'action'=>'adc_site_content', 'tab'=>'transfer', 'operation'=>'import_preview', '_wpnonce'=>$content_http_nonce );
+$content_http_forbidden = $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $content_http_form, true );
+adc_check( 403 === $content_http_forbidden[0] && $content_http_before === get_option( SiteContent::OPTION ), 'Site-content import admin-post rejects a non-administrator without changing content.' );
+$content_http_bad_nonce = $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', array_merge( $content_http_form, array( '_wpnonce'=>'invalid' ) ), true );
+adc_check( 403 === $content_http_bad_nonce[0] && $content_http_before === get_option( SiteContent::OPTION ), 'Site-content import admin-post rejects an invalid nonce without changing content.' );
+$content_http_temp = tempnam( sys_get_temp_dir(), 'adc-content-http-' );
+if ( false === $content_http_temp ) { throw new RuntimeException( 'Could not create the isolated content import fixture.' ); }
+if ( false === file_put_contents( $content_http_temp, 'not a ZIP archive' ) ) { unlink( $content_http_temp ); throw new RuntimeException( 'Could not write the isolated content import fixture.' ); }
+$content_http_upload_handle = curl_init( 'http://127.0.0.1:' . $http_port . '/wp-admin/admin-post.php' );
+$content_http_headers = array( 'Host: adc-verification.invalid', 'Cookie: ' . $admin_http['cookie'] );
+curl_setopt_array( $content_http_upload_handle, array(
+	CURLOPT_RETURNTRANSFER=>true,
+	CURLOPT_HEADER=>false,
+	CURLOPT_POST=>true,
+	CURLOPT_HTTPHEADER=>$content_http_headers,
+	CURLOPT_POSTFIELDS=>array_merge( $content_http_form, array( 'content_file'=>curl_file_create( $content_http_temp, 'application/zip', 'invalid.zip' ) ) ),
+	CURLOPT_TIMEOUT=>15,
+	CURLOPT_FOLLOWLOCATION=>false,
+) );
+$content_http_upload_body = curl_exec( $content_http_upload_handle );
+$content_http_upload_status = (int) curl_getinfo( $content_http_upload_handle, CURLINFO_RESPONSE_CODE );
+$content_http_upload_error = curl_error( $content_http_upload_handle );
+curl_close( $content_http_upload_handle );
+unlink( $content_http_temp );
+if ( false === $content_http_upload_body ) { throw new RuntimeException( 'Content import HTTP upload failed: ' . $content_http_upload_error ); }
+adc_check( 302 === $content_http_upload_status && $content_http_before === get_option( SiteContent::OPTION ) && false === get_transient( 'adc_content_import_' . (int) $admin ), 'Invalid site-content import upload redirects with an error and leaves content and staged-import state unchanged.' );
+$content_http_db_before = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", SiteContent::OPTION ) );
+$content_http_fixture = tempnam( sys_get_temp_dir(), 'adc-content-http-' );
+$content_http_staged_paths = array();
+if ( false === $content_http_fixture ) { throw new RuntimeException( 'Could not create the valid isolated content package.' ); }
+try {
+	$content_http_data = SiteContent::defaults();
+	$content_http_data['home']['hero']['title_ar'] = 'استيراد HTTP معزول';
+	$content_http_manifest = array( 'product'=>'auto-dealership-content', 'format'=>1, 'content'=>$content_http_data );
+	$content_http_zip = new ZipArchive();
+	if ( true !== $content_http_zip->open( $content_http_fixture, ZipArchive::OVERWRITE ) || ! $content_http_zip->addFromString( 'content.json', wp_json_encode( $content_http_manifest, JSON_UNESCAPED_UNICODE ) ) || true !== $content_http_zip->close() ) { throw new RuntimeException( 'Could not build the valid isolated content package.' ); }
+	$content_http_upload = static function ( string $package, array $form ) use ( $http_port, $admin_http ): array {
+		$handle = curl_init( 'http://127.0.0.1:' . $http_port . '/wp-admin/admin-post.php' );
+		curl_setopt_array( $handle, array(
+			CURLOPT_RETURNTRANSFER=>true,
+			CURLOPT_HTTPHEADER=>array( 'Host: adc-verification.invalid', 'Cookie: ' . $admin_http['cookie'] ),
+			CURLOPT_POST=>true,
+			CURLOPT_POSTFIELDS=>array_merge( $form, array( 'content_file'=>curl_file_create( $package, 'application/zip', 'website-content.zip' ) ) ),
+			CURLOPT_TIMEOUT=>15,
+			CURLOPT_FOLLOWLOCATION=>false,
+		) );
+		$body = curl_exec( $handle );
+		$status = (int) curl_getinfo( $handle, CURLINFO_RESPONSE_CODE );
+		$error = curl_error( $handle );
+		curl_close( $handle );
+		if ( false === $body ) { throw new RuntimeException( 'Content import HTTP upload failed: ' . $error ); }
+		return array( $status, $body );
+	};
+	$content_http_transient = static function () use ( $wpdb, $admin ): array {
+		$name = '_transient_adc_content_import_' . (int) $admin;
+		$value = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $name ) );
+		$data = maybe_unserialize( $value );
+		return is_array( $data ) ? $data : array();
+	};
+	$content_http_apply = static function ( array $preview ) use ( $http_request, $admin_http, $content_http_nonce ): array {
+		return $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', array(
+			'action'=>'adc_site_content', 'tab'=>'transfer', 'operation'=>'import',
+			'preview_hash'=>$preview['hash'], 'revision'=>$preview['revision'], '_wpnonce'=>$content_http_nonce,
+		), true );
+	};
+	$content_http_preview_form = array( 'action'=>'adc_site_content', 'tab'=>'transfer', 'operation'=>'import_preview', '_wpnonce'=>$content_http_nonce );
+	$content_http_initial_upload = $content_http_upload( $content_http_fixture, $content_http_preview_form );
+	$content_http_preview = $content_http_transient();
+	$content_http_staged_paths[] = (string) ( $content_http_preview['path'] ?? '' );
+	adc_check( 302 === $content_http_initial_upload[0] && is_file( $content_http_preview['path'] ?? '' ) && hash_equals( hash_file( 'sha256', $content_http_preview['path'] ), (string) ( $content_http_preview['hash'] ?? '' ) ) && $content_http_db_before === $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", SiteContent::OPTION ) ), 'Authorized site-content upload stages a valid package without changing stored content.' );
+	$content_http_confirmation = $http_request( '/wp-admin/admin.php?page=adc-site-content&tab=transfer', $admin_http );
+	adc_check( 200 === $content_http_confirmation[0] && str_contains( $content_http_confirmation[1], 'name="preview_hash" value="' . esc_attr( $content_http_preview['hash'] ) . '"' ) && str_contains( $content_http_confirmation[1], esc_attr( $content_http_preview['revision'] ) ), 'Site-content transfer page displays the staged package and its revision-bound confirmation fields.' );
+	$content_http_concurrent = SiteContent::data();
+	$content_http_concurrent['home']['hero']['title_ar'] = 'محتوى متزامن بعد المعاينة';
+	$content_http_concurrent_saved = SiteContent::save( $content_http_concurrent, SiteContent::revision() );
+	$content_http_stale_before = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", SiteContent::OPTION ) );
+	$content_http_stale = $content_http_apply( $content_http_preview );
+	adc_check( true === $content_http_concurrent_saved && 302 === $content_http_stale[0] && $content_http_stale_before === $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", SiteContent::OPTION ) ) && is_file( $content_http_preview['path'] ) && $content_http_transient(), 'Stale site-content import preview preserves concurrent edits and remains available for review.' );
+	$content_http_fresh_upload = $content_http_upload( $content_http_fixture, $content_http_preview_form );
+	$content_http_fresh_preview = $content_http_transient();
+	$content_http_staged_paths[] = (string) ( $content_http_fresh_preview['path'] ?? '' );
+	clearstatcache( true, $content_http_preview['path'] );
+	adc_check( 302 === $content_http_fresh_upload[0] && is_file( $content_http_fresh_preview['path'] ?? '' ) && ! is_file( $content_http_preview['path'] ), 'A fresh site-content preview replaces and removes the prior stale staged file.' );
+	$content_http_attachment_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'attachment'" );
+	$content_http_import_audit_before = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . AuditLog::table_name() . ' WHERE event_key = %s', 'content.saved' ) );
+	$content_http_applied = $content_http_apply( $content_http_fresh_preview );
+	$content_http_import_audit_after = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . AuditLog::table_name() . ' WHERE event_key = %s', 'content.saved' ) );
+	$content_http_import_title = SiteContent::data()['home']['hero']['title_ar'] ?? '';
+	$content_http_attachment_count_after = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'attachment'" );
+	$content_http_transient_after = $content_http_transient();
+	clearstatcache( true, $content_http_fresh_preview['path'] );
+	adc_check( 302 === $content_http_applied[0] && 'استيراد HTTP معزول' === $content_http_import_title && $content_http_import_audit_before + 1 === $content_http_import_audit_after && $content_http_attachment_count === $content_http_attachment_count_after && ! is_file( $content_http_fresh_preview['path'] ) && ! $content_http_transient_after, 'Confirmed site-content import applies the reviewed package, records an audit event and consumes staged state (HTTP ' . $content_http_applied[0] . ', title ' . var_export( $content_http_import_title, true ) . ', audits ' . $content_http_import_audit_before . '->' . $content_http_import_audit_after . ', attachments ' . $content_http_attachment_count . '->' . $content_http_attachment_count_after . ', staged file ' . ( is_file( $content_http_fresh_preview['path'] ) ? 'present' : 'absent' ) . ', transient ' . ( $content_http_transient_after ? 'present' : 'absent' ) . ').' );
+} finally {
+	if ( false !== $content_http_fixture && is_file( $content_http_fixture ) ) { unlink( $content_http_fixture ); }
+	if ( isset( $content_http_transient ) ) {
+		$content_http_remaining = $content_http_transient();
+		if ( ! empty( $content_http_remaining['path'] ) ) { $content_http_staged_paths[] = (string) $content_http_remaining['path']; }
+	}
+	foreach ( array_unique( array_filter( $content_http_staged_paths ) ) as $staged_path ) {
+		wp_clear_scheduled_hook( 'adc_content_import_cleanup', array( $staged_path ) );
+		if ( is_file( $staged_path ) ) { unlink( $staged_path ); }
+	}
+	delete_transient( 'adc_content_import_' . (int) $admin );
+	if ( null === $content_http_db_before ) { delete_option( SiteContent::OPTION ); }
+	else {
+		$wpdb->update( $wpdb->options, array( 'option_value'=>$content_http_db_before ), array( 'option_name'=>SiteContent::OPTION ), array( '%s' ), array( '%s' ) );
+		wp_cache_delete( SiteContent::OPTION, 'options' );
+		wp_cache_delete( 'alloptions', 'options' );
+		wp_cache_delete( 'notoptions', 'options' );
+	}
+}
+$role_http_slug = 'adc_role_http_' . strtolower( wp_generate_password( 8, false ) );
+$role_http_form = array(
+	'action'=>'adc_save_role', 'slug'=>$role_http_slug, 'ar'=>'دور HTTP', 'en'=>'HTTP test role',
+	'caps'=>array( 'adc_view_workspace' ), 'new'=>'1', 'reason'=>'Isolated role-management HTTP test',
+);
+$role_http_nonce = trim( $http_request( '/adc-test-nonce?action=adc_save_role', $admin_http )[1] );
+$role_http_definitions_before = get_option( 'adc_role_definitions', array() );
+$role_http_audit_count = static function () use ( $wpdb ): int {
+	return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . AuditLog::table_name() . ' WHERE event_key IN (%s,%s)', 'security.role_created', 'security.role_updated' ) );
+};
+$role_http_audits_before = $role_http_audit_count();
+$role_http_forbidden = $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', array_merge( $role_http_form, array( '_wpnonce'=>$role_http_nonce ) ), true );
+adc_check( 403 === $role_http_forbidden[0] && ! get_role( $role_http_slug ) && $role_http_definitions_before === get_option( 'adc_role_definitions', array() ), 'Role admin-post rejects a non-administrator before changing role definitions.' );
+$role_http_bad_nonce = $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', array_merge( $role_http_form, array( '_wpnonce'=>'invalid' ) ), true );
+adc_check( 403 === $role_http_bad_nonce[0] && ! get_role( $role_http_slug ) && $role_http_audits_before === $role_http_audit_count(), 'Role admin-post rejects an invalid nonce without creating a role or audit event.' );
+$role_http_preview = $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', array_merge( $role_http_form, array( '_wpnonce'=>$role_http_nonce ) ), true );
+$role_http_transient = $wpdb->get_var( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value LIKE %s ORDER BY option_id DESC LIMIT 1", '_transient_adc_role_preview_%', '%' . $wpdb->esc_like( $role_http_slug ) . '%' ) );
+$role_http_token = is_string( $role_http_transient ) ? substr( $role_http_transient, strlen( '_transient_adc_role_preview_' ) ) : '';
+$role_http_preview_value = $role_http_transient ? $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $role_http_transient ) ) : false;
+$role_http_preview_data = is_string( $role_http_preview_value ) ? maybe_unserialize( $role_http_preview_value ) : false;
+$role_http_revision = is_array( $role_http_preview_data ) ? (string) ( $role_http_preview_data['impact']['revision'] ?? '' ) : '';
+adc_check( 302 === $role_http_preview[0] && $role_http_token !== '' && preg_match( '/\A[a-f0-9]{64}\z/', $role_http_revision ) && ! get_role( $role_http_slug ), 'Role admin-post creates a revision-bound impact preview without writing the proposed role.' );
+$role_http_definitions_changed = $role_http_definitions_before;
+$role_http_definitions_changed['adc_role_concurrent_test'] = array( 'ar'=>'اختبار متزامن', 'en'=>'Concurrent test', 'caps'=>array() );
+update_option( 'adc_role_definitions', $role_http_definitions_changed, false );
+$role_http_stale = $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', array_merge( $role_http_form, array( '_wpnonce'=>$role_http_nonce, 'confirmed'=>'1', 'preview_token'=>$role_http_token, 'revision'=>$role_http_revision ) ), true );
+update_option( 'adc_role_definitions', $role_http_definitions_before, false );
+adc_check( 400 === $role_http_stale[0] && ! get_role( $role_http_slug ) && $role_http_audits_before === $role_http_audit_count(), 'Role admin-post rejects a stale impact preview without committing the role or audit.' );
+delete_transient( 'adc_role_preview_' . $role_http_token );
+$role_http_preview = $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', array_merge( $role_http_form, array( '_wpnonce'=>$role_http_nonce ) ), true );
+$role_http_transient = $wpdb->get_var( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value LIKE %s ORDER BY option_id DESC LIMIT 1", '_transient_adc_role_preview_%', '%' . $wpdb->esc_like( $role_http_slug ) . '%' ) );
+$role_http_token = is_string( $role_http_transient ) ? substr( $role_http_transient, strlen( '_transient_adc_role_preview_' ) ) : '';
+$role_http_preview_value = $role_http_transient ? $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $role_http_transient ) ) : false;
+$role_http_preview_data = is_string( $role_http_preview_value ) ? maybe_unserialize( $role_http_preview_value ) : false;
+$role_http_revision = is_array( $role_http_preview_data ) ? (string) ( $role_http_preview_data['impact']['revision'] ?? '' ) : '';
+$role_http_saved = $http_request( '/wp-admin/admin-post.php', $admin_http, 'POST', array_merge( $role_http_form, array( '_wpnonce'=>$role_http_nonce, 'confirmed'=>'1', 'preview_token'=>$role_http_token, 'revision'=>$role_http_revision ) ), true );
+wp_cache_delete( 'alloptions', 'options' );
+wp_cache_delete( wp_roles()->role_key, 'options' );
+wp_roles()->roles = array();
+wp_roles()->for_site();
+wp_cache_delete( 'adc_role_definitions', 'options' );
+adc_check( 302 === $role_http_saved[0] && get_role( $role_http_slug ) && get_role( $role_http_slug )->has_cap( 'adc_view_workspace' ) && $role_http_audits_before + 1 === $role_http_audit_count(), 'Role admin-post commits only the confirmed current preview and records its audit event.' );
+delete_transient( 'adc_role_preview_' . $role_http_token );
+remove_role( $role_http_slug );
+wp_cache_delete( 'adc_role_definitions', 'options' );
+wp_cache_delete( 'alloptions', 'options' );
+update_option( 'adc_role_definitions', $role_http_definitions_before, false );
 $crm_http_auth = $http_auth( $crm_account );
 $crm_http_nonce = trim( $http_request( '/adc-test-nonce?action=car_dealer_frontend', $crm_http_auth )[1] );
 $crm_http_form = array( 'action'=>'car_dealer_contact', 'nonce'=>$crm_http_nonce, 'name'=>'Forged form name', 'email'=>'forged@example.invalid', 'phone'=>'123', 'message'=>'HTTP account enquiry', 'branch_id'=>$branch_b['id'], 'idempotency_key'=>wp_generate_uuid4() );

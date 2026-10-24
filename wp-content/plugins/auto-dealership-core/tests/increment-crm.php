@@ -29,6 +29,7 @@ $crm_roles_before_migration = get_option( $crm_roles_option );
 $crm_definitions_before_migration = get_option( 'adc_role_definitions', null );
 $crm_marketing_version_before = get_option( 'adc_marketing_permissions_version', null );
 $crm_sales_version_before = get_option( 'adc_sales_permissions_version', null );
+$crm_migration_failures_before = get_option( 'adc_permission_migration_failures', null );
 $crm_marketing_role = get_role( 'dealership_marketing' );
 if ( ! $crm_marketing_role ) { throw new RuntimeException( 'Marketing role fixture is unavailable.' ); }
 try {
@@ -48,9 +49,31 @@ try {
 	add_filter( 'pre_update_option_' . $crm_roles_option, $crm_role_write_filter, 10, 2 );
 	Capabilities::migrate_marketing_permissions();
 	remove_filter( 'pre_update_option_' . $crm_roles_option, $crm_role_write_filter, 10 );
-	adc_check( ! get_role( 'dealership_marketing' )->has_cap( 'adc_view_campaign_metrics' ) && '1' !== get_option( 'adc_marketing_permissions_version' ), 'Failed role-capability persistence leaves the migration incomplete and retryable.' );
+	$crm_marketing_failure_state = get_option( 'adc_permission_migration_failures', array() );
+	adc_check( ! get_role( 'dealership_marketing' )->has_cap( 'adc_view_campaign_metrics' ) && '1' !== get_option( 'adc_marketing_permissions_version' ) && isset( $crm_marketing_failure_state['marketing'] ), 'Failed role-capability persistence leaves the migration incomplete, retryable and visible in status.' );
+	$crm_current_user = get_current_user_id();
+	wp_set_current_user( 0 );
+	ob_start(); Capabilities::migration_notice(); $crm_migration_notice = ob_get_clean();
+	wp_set_current_user( $admin );
+	ob_start(); Capabilities::migration_notice(); $crm_migration_admin_notice = ob_get_clean();
+	adc_check( false !== has_action( 'admin_notices', array( Capabilities::class, 'migration_notice' ) ) && '' === $crm_migration_notice && str_contains( $crm_migration_admin_notice, 'notice-error' ) && str_contains( $crm_migration_admin_notice, 'التسويق' ) && str_contains( $crm_migration_admin_notice, 'سجل أخطاء PHP' ), 'Migration warning is wired to the admin screen, actionable for administrators and hidden from non-administrators.' );
+	wp_set_current_user( $crm_current_user );
 	Capabilities::migrate_marketing_permissions();
-	adc_check( get_role( 'dealership_marketing' )->has_cap( 'adc_view_campaign_metrics' ) && '1' === get_option( 'adc_marketing_permissions_version' ), 'Retry completes a partially applied permission migration.' );
+	$crm_marketing_failure_state = get_option( 'adc_permission_migration_failures', array() );
+	adc_check( get_role( 'dealership_marketing' )->has_cap( 'adc_view_campaign_metrics' ) && '1' === get_option( 'adc_marketing_permissions_version' ) && ! isset( $crm_marketing_failure_state['marketing'] ), 'Retry completes a partially applied permission migration and clears its warning.' );
+
+	$crm_marketing_role->remove_cap( 'adc_view_campaign_metrics' );
+	delete_option( 'adc_marketing_permissions_version' );
+	$crm_failure_status_filter = static function ( $value, $previous ) { return $previous; };
+	add_filter( 'pre_update_option_adc_permission_migration_failures', $crm_failure_status_filter, 10, 2 );
+	add_filter( 'pre_update_option_' . $crm_roles_option, $crm_role_write_filter, 10, 2 );
+	Capabilities::migrate_marketing_permissions();
+	remove_filter( 'pre_update_option_' . $crm_roles_option, $crm_role_write_filter, 10 );
+	remove_filter( 'pre_update_option_adc_permission_migration_failures', $crm_failure_status_filter, 10 );
+	ob_start(); Capabilities::migration_notice(); $crm_unpersisted_migration_notice = ob_get_clean();
+	$crm_marketing_failure_state = get_option( 'adc_permission_migration_failures', array() );
+	adc_check( '1' !== get_option( 'adc_marketing_permissions_version' ) && ! isset( $crm_marketing_failure_state['marketing'] ) && str_contains( $crm_unpersisted_migration_notice, 'التسويق' ), 'Migration failure remains visible during the request when its status option cannot be persisted.' );
+	Capabilities::migrate_marketing_permissions();
 
 	delete_option( 'adc_marketing_permissions_version' );
 	$crm_version_write_filter = static function ( $value, $previous ) { return $previous; };
@@ -84,6 +107,7 @@ try {
 	update_option( $crm_roles_option, $crm_roles_before_migration );
 	if ( null === $crm_definitions_before_migration ) { delete_option( 'adc_role_definitions' ); } else { update_option( 'adc_role_definitions', $crm_definitions_before_migration, false ); }
 	if ( null === $crm_marketing_version_before ) { delete_option( 'adc_marketing_permissions_version' ); } else { update_option( 'adc_marketing_permissions_version', $crm_marketing_version_before, false ); }
+	if ( null === $crm_migration_failures_before ) { delete_option( 'adc_permission_migration_failures' ); } else { update_option( 'adc_permission_migration_failures', $crm_migration_failures_before, false ); }
 	if ( isset( $crm_migration_user ) && ! is_wp_error( $crm_migration_user ) ) { wp_delete_user( $crm_migration_user ); }
 	if ( null === $crm_sales_version_before ) { delete_option( 'adc_sales_permissions_version' ); } else { update_option( 'adc_sales_permissions_version', $crm_sales_version_before, false ); }
 	wp_roles()->for_site();

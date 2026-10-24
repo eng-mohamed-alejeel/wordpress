@@ -1,8 +1,14 @@
 <?php
 /** Real WordPress access enforcement and role lifecycle regression checks. */
 if ( PHP_SAPI !== 'cli' ) { exit; }
-define( 'DISABLE_WP_CRON', true ); define( 'WP_ADMIN', true );
-require dirname( __DIR__, 4 ) . '/wp-load.php';
+if ( ! defined( 'DB_NAME' ) ) {
+	putenv( 'ADC_ACCESS_GOVERNANCE_ONLY=1' );
+	$runner = __DIR__ . '/database-runner.php';
+	$process = proc_open( array( PHP_BINARY, $runner, '--run' ), array( 0 => STDIN, 1 => STDOUT, 2 => STDERR ), $pipes );
+	if ( ! is_resource( $process ) ) { throw new RuntimeException( 'Cannot start isolated access-governance tests.' ); }
+	exit( proc_close( $process ) );
+}
+if ( ! preg_match( '/\Aadc_verify_[a-f0-9]{16}\z/', DB_NAME ) ) { throw new RuntimeException( 'Access-governance tests require a disposable verification database.' ); }
 require_once ABSPATH . 'wp-admin/includes/user.php';
 use AutoDealership\Security\AccessPolicy;
 use AutoDealership\Admin\AccessReviewPage;
@@ -19,6 +25,7 @@ $users = array(); $prefix = 'adc_role_governance_' . strtolower( wp_generate_pas
 $password = wp_generate_password( 40 );
 try {
 	wp_set_current_user( $admin );
+	AccessPolicy::boot();
 	$report = AccessReviewPage::report( get_userdata( $admin ) );
 	if ( ! get_option( 'link_manager_enabled' ) ) {
 		$check( ! $report['manage_links']['allowed'] && 'The legacy link manager is disabled in site settings.' === $report['manage_links']['reason'], 'Explain disabled link manager without changing administrator permissions.' );
@@ -64,6 +71,19 @@ try {
 	wp_set_current_user( $admin );
 	$input = array( 'slug' => $prefix, 'ar' => 'دور حوكمة', 'en' => 'Governance role', 'caps' => array( 'adc_view_inventory' ), 'new' => '1', 'reason' => 'Role regression' );
 	$check( $prefix === RoleManager::save_role( $input ), 'Create a role for lifecycle testing.' );
+	$temporary_user = wp_insert_user( array( 'user_login' => $prefix . '_temporary', 'user_pass' => $password, 'role' => $prefix ) );
+	if ( is_wp_error( $temporary_user ) ) { throw new RuntimeException( $temporary_user->get_error_message() ); }
+	$users[] = $temporary_user;
+	update_user_meta( $temporary_user, 'adc_temporary_permissions', array( 'adc_view_inventory' => array( 'expires' => time() + HOUR_IN_SECONDS, 'granted_by' => $admin, 'reason' => 'Impact preview regression' ) ) );
+	$suspended_user = wp_insert_user( array( 'user_login' => $prefix . '_suspended', 'user_pass' => $password, 'role' => $prefix ) );
+	if ( is_wp_error( $suspended_user ) ) { throw new RuntimeException( $suspended_user->get_error_message() ); }
+	$users[] = $suspended_user;
+	update_user_meta( $suspended_user, 'adc_suspended', '1' );
+	$effective_impact = RoleManager::impact( $prefix, array( 'read' => true, 'adc_manage_inventory' => true ) );
+	$temporary_impact = current( array_filter( $effective_impact['users'], static fn( $row ) => $row['id'] === $temporary_user ) );
+	$suspended_impact = current( array_filter( $effective_impact['users'], static fn( $row ) => $row['id'] === $suspended_user ) );
+	$check( 1 === count( $temporary_impact['added'] ) && empty( $temporary_impact['removed'] ) && 1 === count( $effective_impact['role_added'] ) && 1 === count( $effective_impact['role_removed'] ), 'Role impact preview distinguishes effective temporary grants from role-level additions and removals.' );
+	$check( empty( $suspended_impact['added'] ) && empty( $suspended_impact['removed'] ), 'Role impact preview does not report capability changes for a suspended user.' );
 	$user = get_userdata( $id ); $user->set_role( $prefix ); $user->add_role( 'dealership_marketing' );
 	$user->add_cap( 'adc_manage_inventory', false );
 	$impact = RoleManager::impact( $prefix, array( 'read' => true, 'adc_view_inventory' => true, 'adc_manage_inventory' => true ) );
@@ -75,10 +95,10 @@ try {
 	$preview = RoleManager::save_role( $input, true ); $input['revision'] = $preview['revision'];
 	$check( $prefix === RoleManager::save_role( $input ), 'Apply a current reviewed role change.' );
 	$delete = RoleManager::delete_role( $prefix, 'dealership_inventory', 'Role retired', true );
-	$check( is_array( $delete ) && 1 === count( $delete['users'] ), 'Preview affected users before deleting a custom role.' );
+	$check( is_array( $delete ) && 3 === count( $delete['users'] ), 'Preview every affected user before deleting a custom role.' );
 	$check( 'dealership_inventory' === RoleManager::delete_role( $prefix, 'dealership_inventory', 'Role retired', false, $delete['revision'] ), 'Transfer users and delete custom role.' );
 	$user = get_userdata( $id );
-	$check( ! get_role( $prefix ) && in_array( 'dealership_inventory', $user->roles, true ) && in_array( 'dealership_marketing', $user->roles, true ) && false === $user->caps['adc_manage_inventory'], 'Transfer preserves other roles and individual overrides.' );
+	$check( ! get_role( $prefix ) && in_array( 'dealership_inventory', $user->roles, true ) && in_array( 'dealership_marketing', $user->roles, true ) && false === $user->caps['adc_manage_inventory'] && in_array( 'dealership_inventory', get_userdata( $temporary_user )->roles, true ) && in_array( 'dealership_inventory', get_userdata( $suspended_user )->roles, true ) && AccessPolicy::suspended( $suspended_user ), 'Transfer preserves other roles, individual overrides and account suspension.' );
 	$check( is_wp_error( RoleManager::delete_role( 'dealership_sales', 'dealership_inventory', 'Forbidden deletion', true ) ), 'Factory roles cannot be deleted.' );
 	$_POST = array( 'adc_branch_scope_present' => '1', 'adc_branch_id' => '0', 'adc_branch_ids' => array( '999999999' ), 'adc_branch_nonce' => wp_create_nonce( 'adc_assign_branch_' . $id ) );
 	$errors = new WP_Error(); SettingsPage::validate_branch( $errors, true, (object) array( 'ID' => $id ) );
