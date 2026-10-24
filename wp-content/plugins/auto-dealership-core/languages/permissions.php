@@ -19,6 +19,7 @@ return array(
 	'adc_manage_own_leads' => array( 'Leads and sales', 'Manage own leads' ),
 	'adc_view_branch_leads' => array( 'Leads and sales', 'View assigned branch leads' ),
 	'adc_manage_branch_leads' => array( 'Leads and sales', 'Manage assigned branch leads' ),
+	'adc_export_crm_leads' => array( 'Leads and sales', 'Export CRM lead data (contains personal information)' ),
 	'adc_assign_marketing_leads' => array( 'Leads and sales', 'Assign marketing leads' ),
 	'adc_create_marketing_leads' => array( 'Marketing', 'Create marketing leads' ),
 	'adc_view_marketing_leads' => array( 'Marketing', 'View marketing leads' ),

@@ -15,7 +15,7 @@ final class SupplierService {
 			return array();
 		}
 		$where = $active_only ? ' WHERE active=1' : '';
-		$restricted = current_user_can( 'adc_manage_suppliers' ) || current_user_can( 'adc_view_vehicle_costs' ) || current_user_can( 'manage_options' );
+		$restricted = current_user_can( 'adc_manage_suppliers' );
 		$fields = $restricted ? 'id,supplier_code,display_name,legal_name,country,tax_number,contact_name,contact_email,contact_phone,notes,active,created_at,updated_at' : 'id,supplier_code,display_name,country,active';
 		return $wpdb->get_results( 'SELECT ' . $fields . ' FROM ' . Schema::table( 'suppliers' ) . $where . ' ORDER BY active DESC,display_name ASC,id ASC LIMIT 500', ARRAY_A ) ?: array();
 	}

@@ -33,7 +33,7 @@ $qa=$quote(1,$va,$a['id'],$c);$qb=$quote(2,$vb,$b['id'],$foreign);
 $discount_ids=array();
 foreach(array(array($other,'sales_manager',$va,$a['id'],$c),array($manager,'sales_manager',$va,$a['id'],$c),array($other,'general_manager',$va,$a['id'],$c),array($other,'sales_manager',$vb,$b['id'],$foreign))as$i=>$d){$q=$quote(10+$i,$d[2],$d[3],$d[4],'pending_discount');$discount_ids[]=$insert('discount_requests',array('quotation_id'=>$q,'requester_user_id'=>$d[0],'requested_amount'=>100,'approval_tier'=>$d[1],'reason'=>'Synthetic review','created_at'=>$now));}
 $sale=static function($q,$v,$customer,$owner,$status='pending_approval')use($insert,$now){return$insert('sales',array('quotation_id'=>$q,'reservation_id'=>0,'customer_id'=>$customer,'vehicle_id'=>$v,'owner_user_id'=>$owner,'status'=>$status,'created_at'=>$now,'updated_at'=>$now));};
-$sa=$sale($qa,$va,$c,$other);$selfsale=$sale($qa,$va,$c,$finance);$sb=$sale($qb,$vb,$foreign,$other);$approved=$sale($qa,$va,$c,$other,'approved');
+$sa=$sale($qa,$va,$c,$other);$selfsale=$sale($qa,$va,$c,$finance);$manager_owned_sale=$sale($qa,$va,$c,$manager);$sb=$sale($qb,$vb,$foreign,$other);$approved=$sale($qa,$va,$c,$other,'approved');
 $payment_ids=array();foreach(array(array($sa,$other),array($sa,$finance),array($selfsale,$other),array($sb,$other))as$i=>$p){$payment_ids[]=$insert('payment_confirmations',array('sale_id'=>$p[0],'amount'=>100,'source'=>'cash_receipt','reference'=>'OV-P-'.$i,'recorded_by'=>$p[1],'decision_reason'=>'','created_at'=>$now));}
 $reservation=$insert('reservations',array('vehicle_id'=>$va,'customer_id'=>$c,'branch_id'=>$a['id'],'owner_user_id'=>$sales,'expires_at'=>$future,'idempotency_key'=>wp_generate_uuid4(),'created_at'=>$now,'updated_at'=>$now));
 $expired=$insert('reservations',array('vehicle_id'=>$va,'customer_id'=>$c,'branch_id'=>$a['id'],'owner_user_id'=>$sales,'expires_at'=>$past,'idempotency_key'=>wp_generate_uuid4(),'created_at'=>$now,'updated_at'=>$now));
@@ -50,13 +50,20 @@ $_GET=array('workspace_task'=>'overdue','workspace_page'=>2);$next=Overview::sna
 $check(count($next['rows'])===5&&!array_intersect(array_column($data['rows'],'id'),array_column($next['rows'],'id')),'Second page reaches remaining rows without duplicates');
 $_GET=array('workspace_task'=>'new_leads','workspace_period'=>'week');$check(26===Overview::snapshot()['queues']['new_leads']['count'],'Period filter reaches older owned leads');
 $_GET=array('workspace_branch'=>$b['id']);$check(is_wp_error(Overview::snapshot()),'Branch parameter cannot widen access');
+$_GET=array('workspace_branch'=>$b['id'],'workspace_task'=>'overdue');wp_set_current_user($manager);$check(is_wp_error(Overview::snapshot()),'Branch filter cannot switch a scoped manager workspace to another branch');
 $_GET=array('workspace_task'=>'payments');$check(is_wp_error(Overview::snapshot()),'Queue parameter cannot reveal unauthorized counters');
 $_GET=array('workspace_task'=>'overdue');wp_set_current_user($manager);$data=Overview::snapshot();
 $check(30===$data['queues']['overdue']['count'],'Manager sees permitted branch, not foreign branch');
 $check(1===$data['queues']['discounts']['count'],'Discount queue excludes own requests and higher approval tier');
+$_GET=array('workspace_task'=>'discounts');$manager_discounts=Overview::snapshot();
+$check((int)$manager_discounts['rows'][0]['target_id']===(int)$discount_ids[0]&&!in_array((int)$discount_ids[3],array_map('intval',array_column($manager_discounts['rows'],'target_id')),true),'Discount queue exposes only the eligible same-branch request identifier');
 $check(1===$data['queues']['reservations']['count'],'Reservation scope follows branch-manager access');
+$_GET=array('workspace_task'=>'sales');$manager_sales=Overview::snapshot();
+$manager_sale_targets=array_map('intval',array_column($manager_sales['rows'],'target_id'));
+$check(2===$manager_sales['queues']['sales']['count']&&in_array((int)$sa,$manager_sale_targets,true)&&in_array((int)$selfsale,$manager_sale_targets,true)&&!in_array((int)$manager_owned_sale,$manager_sale_targets,true)&&!in_array((int)$sb,$manager_sale_targets,true),'Sales approval queue links eligible same-branch records and excludes reviewer-owned and foreign-branch sales');
 $_GET=array('workspace_task'=>'payments');wp_set_current_user($finance);$data=Overview::snapshot();
 $check(1===$data['queues']['payments']['count']&&(int)$data['rows'][0]['id']===$payment_ids[0],'Payment reviewer excludes own recording and owned sales');
+$check((int)$data['rows'][0]['target_id']===(int)$payment_ids[0],'Payment drill-down target is the exact authorized pending receipt identifier');
 $check(1===$data['queues']['deposits']['count']&&1===$data['queues']['finance']['count'],'Independent deposit and finance work is visible');
 $check(!isset($data['queues']['new_leads']),'Finance-only role cannot infer CRM counters');
 wp_get_current_user()->add_cap('adc_view_own_leads');$_GET=array();$hybrid=Overview::snapshot();$check(0===$hybrid['queues']['overdue']['count']&&0===$hybrid['queues']['new_leads']['count'],'Finance plus own-leads permission does not grant branch-wide CRM access');wp_get_current_user()->remove_cap('adc_view_own_leads');
@@ -75,11 +82,11 @@ $check(count($items['adc-profit-margin'])===1&&$items['adc-profit-margin'][0][0]
 $check(count($items['adc-onyx-documents'])===1&&$items['adc-onyx-documents'][0][0]==='finance','Onyx documents have one canonical finance entry');
 wp_set_current_user($sales);$check(!Navigation::allowed($items['adc-profit-margin'][0][1])&&!Navigation::allowed($items['adc-onyx-documents'][0][1]),'Unauthorized role sees neither financial document nor margin entry');
 wp_set_current_user($finance);$check(Navigation::allowed($items['adc-onyx-documents'][0][1])&&!Navigation::allowed($items['adc-profit-margin'][0][1]),'Finance can open documents without acquiring pricing-settings permission');
-$list=OnyxDocuments::sales_page();$check(!is_wp_error($list)&&3===$list['total']&&!str_contains(wp_json_encode($list),'FOREIGN_CUSTOMER_SECRET'),'Document sales picker respects branch scope');
+$list=OnyxDocuments::sales_page();$check(!is_wp_error($list)&&4===$list['total']&&!str_contains(wp_json_encode($list),'FOREIGN_CUSTOMER_SECRET'),'Document sales picker respects branch scope');
 $check(0===OnyxDocuments::sales_page(1,"' OR 1=1 --")['total'],'Document search cannot widen SQL scope');
 $check(0===OnyxDocuments::sales_page(1,'100%_')['total'],'Document search escapes literal wildcard characters');
 for($i=0;$i<21;$i++){$sale($qa,$va,$c,$other);}
-$list=OnyxDocuments::sales_page(2);$check(24===$list['total']&&4===count($list['rows'])&&2===$list['pages'],'Document sales picker reaches records beyond the first page');
+$list=OnyxDocuments::sales_page(2);$check(25===$list['total']&&5===count($list['rows'])&&2===$list['pages'],'Document sales picker reaches records beyond the first page');
 $check(2===OnyxDocuments::sales_page(9999)['page'],'Document page outside the range clamps safely');
 wp_set_current_user($sales);$check(is_wp_error(OnyxDocuments::sales_page()),'Direct document-list access requires document permission');
 

@@ -22,6 +22,12 @@ foreach($paActors as $actor){
 }
 foreach($paActors as $actor){
     wp_set_current_user($actor);$_GET=array('cd_account'=>'dashboard','lang'=>'en');Access::request_scope(false);$own=$paFixtures[$actor];
+    $journeyQueries=array();$captureJourney=static function($sql)use(&$journeyQueries){$journeyQueries[]=$sql;return $sql;};add_filter('query',$captureJourney);try{$journeySale=Journey::sale($own['sid']);}finally{remove_filter('query',$captureJourney);}
+    $journeyQuery=implode("\n",$journeyQueries);
+    $check(is_array($journeySale)&&isset($journeySale['quote_number'],$journeySale['final_amount'],$journeySale['approved_by'])&&!array_intersect(array('quotation_id','reservation_id','customer_id','vehicle_id','invoice_reference','created_at','updated_at'),array_keys($journeySale))&&str_contains($journeyQuery,'SELECT s.id,s.status,s.owner_user_id,s.approved_by')&&!str_contains($journeyQuery,'s.*'),'customer purchase lookup selects and returns only fields required by the journey view');
+    $documentQueries=array();$captureDocument=static function($sql)use(&$documentQueries){$documentQueries[]=$sql;return $sql;};add_filter('query',$captureDocument);try{$journeyDocument=Journey::document($own['doc']);}finally{remove_filter('query',$captureDocument);}
+    $documentQuery=implode("\n",$documentQueries);
+    $check(is_array($journeyDocument)&&array('id','sale_id','kind','content_hash','file_bytes')===array_keys($journeyDocument)&&str_contains($documentQuery,'SELECT id,sale_id,kind,content_hash,file_bytes')&&!str_contains($documentQuery,'SELECT *'),'customer document download loads only the approved file payload and ownership fields');
     $personalQueries=array();$capturePersonal=static function($sql)use(&$personalQueries){$personalQueries[]=$sql;return $sql;};add_filter('query',$capturePersonal);$beforeQueries=$wpdb->num_queries;try{$snapshot=AccountOverview::snapshot();}finally{remove_filter('query',$capturePersonal);}
     $check(!$snapshot['errors']&&$snapshot['counts']===array('requests'=>1,'bookings'=>1,'messages'=>1,'favorites'=>0,'purchases'=>1,'documents'=>1),'customer/staff/admin summary counts are strictly personal: '.$actor.' '.wp_json_encode($snapshot['errors']));
     $dataQueries=array_filter($personalQueries,static fn($sql)=>!str_contains($sql,$wpdb->options));
@@ -31,7 +37,7 @@ foreach($paActors as $actor){
     $check(count(Chat::list(1,'',-1,0,true))===1&&count(Chat::list(1,'unread',-1,0,true))===1,'personal and unread conversation lists match personal counter for every role');
     foreach($paFixtures as $otherActor=>$otherFixture){if($otherActor===$actor){continue;}
         $check($error(Chat::detail($otherFixture['thread']))&&$error(Chat::send($otherFixture['thread'],'forged',wp_generate_uuid4())),'personal page cannot read or reply to another account despite elevated role');
-        $check(Journey::document($otherFixture['doc'],true)===null,'personal document guard cannot use administrative fallback');
+        $check(Journey::document($otherFixture['doc'],true)===null,'personal document identifier cannot use staff fallback or access another account file');
         $check(\AutoDealership\Accounts\CustomerRequestView::page('messages',1,array('request'=>$otherFixture['request']))['items']===array(),'direct request filter preserves ownership');
         $_GET['portal']='purchases';$_GET['sale']=(string)$otherFixture['sid'];ob_start();PortalView::render();$html=ob_get_clean();$check(!str_contains($html,$otherFixture['marker']),'direct purchase filter preserves ownership');unset($_GET['sale']);
     }

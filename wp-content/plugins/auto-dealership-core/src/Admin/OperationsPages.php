@@ -11,6 +11,9 @@ defined( 'ABSPATH' ) || exit;
 
 /** Capability-scoped staff screens over the same application services used by REST. */
 final class OperationsPages {
+	private const CRM_EXPORT_MAX_ROWS = 5000;
+	private const CRM_EXPORT_PAGE_SIZE = 100;
+
 	public static function boot(): void {
 		add_action( 'admin_menu', array( self::class, 'menu' ) );
 		add_action( 'wp_ajax_adc_move_lead_stage', array( self::class, 'move_lead_stage_ajax' ) );
@@ -173,7 +176,25 @@ final class OperationsPages {
 				</select><button class="button"><?php esc_html_e( 'عرض السجل', 'auto-dealership-core' ); ?></button>
 			</form>
 			<?php self::render_activity_history(); ?>
-			<?php if ( ! absint( $_GET['lead_id'] ?? 0 ) ) : $export_args = array_merge( self::crm_filter_query_args(), array( 'action'=>'adc_export_leads' ) ); $export_url = wp_nonce_url( add_query_arg( $export_args, admin_url( 'admin-post.php' ) ), 'adc_export_leads' ); ?><p><a class="button" href="<?php echo esc_url( $export_url ); ?>"><?php esc_html_e( 'تصدير النتائج CSV', 'auto-dealership-core' ); ?></a></p><?php endif; ?>
+			<?php if ( ! absint( $_GET['lead_id'] ?? 0 ) && current_user_can( 'adc_export_crm_leads' ) ) : ?>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="card">
+					<input type="hidden" name="action" value="adc_export_leads">
+					<?php foreach ( self::crm_filter_query_args() as $filter_key => $filter_value ) : ?><input type="hidden" name="<?php echo esc_attr( $filter_key ); ?>" value="<?php echo esc_attr( $filter_value ); ?>"><?php endforeach; ?>
+					<?php wp_nonce_field( 'adc_export_leads' ); ?>
+					<label for="adc-crm-export-purpose"><?php esc_html_e( 'غرض تصدير بيانات CRM', 'auto-dealership-core' ); ?></label>
+					<select id="adc-crm-export-purpose" name="purpose" required>
+						<option value=""><?php esc_html_e( 'اختر الغرض', 'auto-dealership-core' ); ?></option>
+						<?php foreach ( self::crm_export_purpose_options() as $purpose_code => $purpose_label ) : ?><option value="<?php echo esc_attr( $purpose_code ); ?>"><?php echo esc_html( $purpose_label ); ?></option><?php endforeach; ?>
+					</select>
+					<label for="adc-crm-export-reason"><?php esc_html_e( 'سبب تصدير بيانات CRM', 'auto-dealership-core' ); ?></label>
+					<select id="adc-crm-export-reason" name="reason" required>
+						<option value=""><?php esc_html_e( 'اختر السبب', 'auto-dealership-core' ); ?></option>
+						<?php foreach ( self::crm_export_reason_options() as $reason_code => $reason_label ) : ?><option value="<?php echo esc_attr( $reason_code ); ?>"><?php echo esc_html( $reason_label ); ?></option><?php endforeach; ?>
+					</select>
+					<p class="description"><?php esc_html_e( 'تختلف أعمدة الملف حسب الغرض المختار. يُسجّل النظام فئتي الغرض والسبب فقط؛ لا تُدخل بيانات العملاء في وصف حر.', 'auto-dealership-core' ); ?></p>
+					<button class="button"><?php esc_html_e( 'تصدير النتائج CSV', 'auto-dealership-core' ); ?></button>
+				</form>
+			<?php endif; ?>
 			<?php if ( ! absint( $_GET['lead_id'] ?? 0 ) ) : ?>
 				<section class="adc-crm-board" aria-label="<?php esc_attr_e( 'لوحة مراحل الفرص', 'auto-dealership-core' ); ?>">
 					<p class="description" data-crm-board-status role="status" aria-live="polite"></p>
@@ -287,43 +308,37 @@ final class OperationsPages {
 		if ( ! $report['branches'] ) { echo '<tr><td colspan="8">' . esc_html__( 'لا توجد بيانات للفترة المحددة.', 'auto-dealership-core' ) . '</td></tr>'; }
 		echo '</tbody></table>';
 
-		echo '<h2>' . esc_html__( 'مؤشرات موظفي المبيعات', 'auto-dealership-core' ) . '</h2><table class="widefat striped"><thead><tr><th>' . esc_html__( 'الموظف', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'الفرع', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'إجمالي الفرص', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'جديدة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'تم أول تواصل', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'متوسط أول تواصل (دقيقة)', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'متأخرة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'مباعة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'خاسرة', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
-		foreach ( $report['employees'] as $row ) {
-			$staff = get_userdata( $row['owner_user_id'] );
-			echo '<tr><td>' . esc_html( $staff ? $staff->display_name : __( 'موظف غير نشط', 'auto-dealership-core' ) ) . '</td><td>' . esc_html( $row['branch_name'] ?: __( 'بدون فرع', 'auto-dealership-core' ) ) . '</td><td>' . esc_html( number_format_i18n( $row['total'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['new_count'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['first_contact_count'] ) ) . '</td><td>' . esc_html( null === $row['avg_first_contact_seconds'] ? '—' : number_format_i18n( $row['avg_first_contact_seconds'] / MINUTE_IN_SECONDS, 1 ) ) . '</td><td>' . esc_html( number_format_i18n( $row['overdue_count'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['won_count'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['lost_count'] ) ) . '</td></tr>';
-		}
-		if ( ! $report['employees'] ) { echo '<tr><td colspan="9">' . esc_html__( 'لا توجد بيانات موظفين للفترة المحددة.', 'auto-dealership-core' ) . '</td></tr>'; }
-		echo '</tbody></table><h2>' . esc_html__( 'توزيع المراحل حسب الفرع والموظف', 'auto-dealership-core' ) . '</h2><table class="widefat striped"><thead><tr><th>' . esc_html__( 'الفرع', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'الموظف', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المرحلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'العدد', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		echo '<p class="description">' . esc_html__( 'تعرض مؤشرات الأداء مجمعة حسب الفرع فقط؛ لا تتضمن هوية الموظف قبل اعتماد الجمهور والغرض.', 'auto-dealership-core' ) . '</p>';
+		echo '<h2>' . esc_html__( 'توزيع المراحل حسب الفرع', 'auto-dealership-core' ) . '</h2><table class="widefat striped"><thead><tr><th>' . esc_html__( 'الفرع', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المرحلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'العدد', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 		foreach ( $report['pipeline'] as $row ) {
-			$staff = $row['owner_user_id'] ? get_userdata( $row['owner_user_id'] ) : null;
-			echo '<tr><td>' . esc_html( (string) ( array_column( $report['branches'], 'branch_name', 'branch_id' )[$row['branch_id']] ?? __( 'بدون فرع', 'auto-dealership-core' ) ) ) . '</td><td>' . esc_html( $staff ? $staff->display_name : __( 'غير مسندة', 'auto-dealership-core' ) ) . '</td><td>' . esc_html( \AutoDealership\Core\Localization::label( $row['stage'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['total'] ) ) . '</td></tr>';
+			echo '<tr><td>' . esc_html( (string) ( array_column( $report['branches'], 'branch_name', 'branch_id' )[$row['branch_id']] ?? __( 'بدون فرع', 'auto-dealership-core' ) ) ) . '</td><td>' . esc_html( \AutoDealership\Core\Localization::label( $row['stage'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['total'] ) ) . '</td></tr>';
 		}
-		if ( ! $report['pipeline'] ) { echo '<tr><td colspan="4">' . esc_html__( 'لا توجد مراحل مسجلة للفترة المحددة.', 'auto-dealership-core' ) . '</td></tr>'; }
-		echo '</tbody></table><h2>' . esc_html__( 'التحولات التاريخية بين المراحل', 'auto-dealership-core' ) . '</h2><p class="description">' . esc_html__( 'يعرض الانتقالات المسجلة خلال الفترة؛ لا تتوفر بيانات انتقالات ما قبل تفعيل سجل المراحل. حصة كل وجهة هي نسبة الفرص الفريدة التي غادرت المرحلة المصدر ووصلت إليها؛ وقد يتجاوز مجموع حصص الوجهات 100% إذا انتقلت الفرصة إلى وجهات مختلفة خلال الفترة.', 'auto-dealership-core' ) . '</p><table class="widefat striped"><thead><tr><th>' . esc_html__( 'الفرع', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'الموظف وقت الانتقال', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'من مرحلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'إلى مرحلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'عدد الانتقالات', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'عدد الفرص', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'حصة الوجهة من المغادرين', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'متوسط الزمن بالساعة', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		if ( ! $report['pipeline'] ) { echo '<tr><td colspan="3">' . esc_html__( 'لا توجد مراحل مسجلة للفترة المحددة.', 'auto-dealership-core' ) . '</td></tr>'; }
+		echo '</tbody></table><h2>' . esc_html__( 'التحولات التاريخية بين المراحل حسب الفرع', 'auto-dealership-core' ) . '</h2><p class="description">' . esc_html__( 'يعرض الانتقالات المسجلة خلال الفترة؛ لا تتوفر بيانات انتقالات ما قبل تفعيل سجل المراحل. حصة كل وجهة هي نسبة الفرص الفريدة التي غادرت المرحلة المصدر ووصلت إليها؛ وقد يتجاوز مجموع حصص الوجهات 100% إذا انتقلت الفرصة إلى وجهات مختلفة خلال الفترة.', 'auto-dealership-core' ) . '</p><table class="widefat striped"><thead><tr><th>' . esc_html__( 'الفرع', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'من مرحلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'إلى مرحلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'عدد الانتقالات', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'عدد الفرص', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'حصة الوجهة من المغادرين', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'متوسط الزمن بالساعة', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 		foreach ( $report['transitions'] as $row ) {
-			$staff = $row['owner_user_id'] ? get_userdata( $row['owner_user_id'] ) : null;
-			echo '<tr><td>' . esc_html( $row['branch_name'] ?: __( 'بدون فرع', 'auto-dealership-core' ) ) . '</td><td>' . esc_html( $staff ? $staff->display_name : __( 'غير مسندة', 'auto-dealership-core' ) ) . '</td><td>' . esc_html( \AutoDealership\Core\Localization::label( $row['from_stage'] ) ) . '</td><td>' . esc_html( \AutoDealership\Core\Localization::label( $row['to_stage'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['transition_count'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['lead_count'] ) ) . '</td><td>' . esc_html( null === $row['destination_share_percent'] ? '—' : number_format_i18n( $row['destination_share_percent'], 1 ) . '%' ) . '</td><td>' . esc_html( null === $row['avg_duration_seconds'] ? '—' : number_format_i18n( $row['avg_duration_seconds'] / HOUR_IN_SECONDS, 1 ) ) . '</td></tr>';
+			echo '<tr><td>' . esc_html( $row['branch_name'] ?: __( 'بدون فرع', 'auto-dealership-core' ) ) . '</td><td>' . esc_html( \AutoDealership\Core\Localization::label( $row['from_stage'] ) ) . '</td><td>' . esc_html( \AutoDealership\Core\Localization::label( $row['to_stage'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['transition_count'] ) ) . '</td><td>' . esc_html( number_format_i18n( $row['lead_count'] ) ) . '</td><td>' . esc_html( null === $row['destination_share_percent'] ? '—' : number_format_i18n( $row['destination_share_percent'], 1 ) . '%' ) . '</td><td>' . esc_html( null === $row['avg_duration_seconds'] ? '—' : number_format_i18n( $row['avg_duration_seconds'] / HOUR_IN_SECONDS, 1 ) ) . '</td></tr>';
 		}
-		if ( ! $report['transitions'] ) { echo '<tr><td colspan="8">' . esc_html__( 'لا توجد انتقالات مسجلة للفترة المحددة.', 'auto-dealership-core' ) . '</td></tr>'; }
+		if ( ! $report['transitions'] ) { echo '<tr><td colspan="7">' . esc_html__( 'لا توجد انتقالات مسجلة للفترة المحددة.', 'auto-dealership-core' ) . '</td></tr>'; }
 		echo '</tbody></table></div>';
 	}
 
 	public static function render_marketing_reports(): void {
 		if ( ! current_user_can( 'adc_view_campaign_metrics' ) && ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية عرض تقارير التسويق.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
 		global $wpdb; $table = \AutoDealership\Database\Schema::table( 'leads' ); list( $scope, $args ) = \AutoDealership\Security\BranchScope::predicate( 'l.branch_id' );
-		$where = ' WHERE ' . $scope . ' AND l.campaign<>""'; $period = sanitize_key( $_GET['period'] ?? '' ); if ( 'today' === $period ) { $where .= ' AND l.created_at>=%s'; $args[] = gmdate( 'Y-m-d 00:00:00' ); } elseif ( '7days' === $period ) { $where .= ' AND l.created_at>=%s'; $args[] = gmdate( 'Y-m-d H:i:s', time() - 7 * DAY_IN_SECONDS ); } elseif ( 'month' === $period ) { $where .= ' AND l.created_at>=%s'; $args[] = gmdate( 'Y-m-01 00:00:00' ); } $rows = $wpdb->get_results( $wpdb->prepare( 'SELECT l.campaign,l.platform,l.stage,COUNT(*) total FROM ' . $table . ' l' . $where . ' GROUP BY l.campaign,l.platform,l.stage ORDER BY total DESC', $args ), ARRAY_A ) ?: array();
+		$where = ' WHERE ' . $scope . ' AND l.campaign<>""'; $period = sanitize_key( $_GET['period'] ?? '' ); if ( 'today' === $period ) { $where .= ' AND l.created_at>=%s'; $args[] = gmdate( 'Y-m-d 00:00:00' ); } elseif ( '7days' === $period ) { $where .= ' AND l.created_at>=%s'; $args[] = gmdate( 'Y-m-d H:i:s', time() - 7 * DAY_IN_SECONDS ); } elseif ( 'month' === $period ) { $where .= ' AND l.created_at>=%s'; $args[] = gmdate( 'Y-m-01 00:00:00' ); } $rows = $wpdb->get_results( $wpdb->prepare( 'SELECT l.campaign,l.platform,l.stage,COUNT(*) total FROM ' . $table . ' l' . $where . ' GROUP BY l.campaign,l.platform,l.stage ORDER BY total DESC', $args ), ARRAY_A );
+		if ( $wpdb->last_error ) { error_log( 'Auto Dealership Core: campaign metrics query failed: ' . $wpdb->last_error ); wp_die( esc_html__( 'تعذر تحميل تقارير التسويق.', 'auto-dealership-core' ), '', array( 'response'=>503 ) ); return; }
+		if ( ! is_array( $rows ) ) { wp_die( esc_html__( 'تعذر تحميل تقارير التسويق.', 'auto-dealership-core' ), '', array( 'response'=>503 ) ); return; }
 		$summary = array( 'total'=>0, 'new'=>0, 'contacted'=>0, 'qualified'=>0, 'reserved'=>0, 'won'=>0, 'lost'=>0, 'overdue'=>0 );
 		$activity_table = \AutoDealership\Database\Schema::table( 'activities' );
 		$avg_first_followup = $wpdb->get_var( $wpdb->prepare( 'SELECT AVG(TIMESTAMPDIFF(SECOND,l.created_at,a.first_activity)) FROM ' . $table . ' l INNER JOIN (SELECT lead_id,MIN(created_at) first_activity FROM ' . $activity_table . ' GROUP BY lead_id) a ON a.lead_id=l.id' . $where, $args ) );
-		$staff_rows = $wpdb->get_results( $wpdb->prepare( 'SELECT l.owner_user_id,COUNT(*) total,SUM(l.stage="contacted") contacted,SUM(l.stage="qualified") qualified,SUM(l.stage="reserved") reserved,SUM(l.stage="won") won,SUM(l.stage="lost") lost FROM ' . $table . ' l' . $where . ' GROUP BY l.owner_user_id ORDER BY total DESC', $args ), ARRAY_A ) ?: array();
+		if ( $wpdb->last_error ) { error_log( 'Auto Dealership Core: campaign follow-up metric query failed: ' . $wpdb->last_error ); wp_die( esc_html__( 'تعذر تحميل متوسط متابعة الحملات.', 'auto-dealership-core' ), '', array( 'response'=>503 ) ); return; }
 		self::render_report_filters( $period );
-		echo '<h2>' . esc_html__( 'أداء موظفي المبيعات', 'auto-dealership-core' ) . '</h2><table class="widefat striped"><thead><tr><th>' . esc_html__( 'الموظف', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'الإجمالي', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'تم التواصل', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'مؤهلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'محجوزة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'مباعة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'خاسرة', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
-		foreach ( $staff_rows as $staff_row ) { $staff = $staff_row['owner_user_id'] ? get_userdata( (int) $staff_row['owner_user_id'] ) : null; echo '<tr><td>' . esc_html( $staff ? $staff->display_name : __( 'غير مسندة', 'auto-dealership-core' ) ) . '</td><td>' . esc_html( number_format_i18n( (int) $staff_row['total'] ) ) . '</td><td>' . esc_html( number_format_i18n( (int) $staff_row['contacted'] ) ) . '</td><td>' . esc_html( number_format_i18n( (int) $staff_row['qualified'] ) ) . '</td><td>' . esc_html( number_format_i18n( (int) $staff_row['reserved'] ) ) . '</td><td>' . esc_html( number_format_i18n( (int) $staff_row['won'] ) ) . '</td><td>' . esc_html( number_format_i18n( (int) $staff_row['lost'] ) ) . '</td></tr>'; }
-		if ( ! $staff_rows ) { echo '<tr><td colspan="7">' . esc_html__( 'لا توجد بيانات موظفين ضمن الفترة المحددة.', 'auto-dealership-core' ) . '</td></tr>'; }
-		echo '</tbody></table>';
+		echo '<p class="description">' . esc_html__( 'مقاييس الأداء المعروضة مجمعة للحملة؛ لا تعرض اسم الموظف أو معرفه قبل اعتماد الجمهور والغرض.', 'auto-dealership-core' ) . '</p>';
 		echo '<p class="description">' . esc_html( sprintf( __( 'متوسط زمن أول متابعة: %s ساعة', 'auto-dealership-core' ), $avg_first_followup ? number_format_i18n( (float) $avg_first_followup / HOUR_IN_SECONDS, 1 ) : '0' ) ) . '</p>';
 		foreach ( $rows as $row ) { $count = (int) $row['total']; $summary['total'] += $count; if ( isset( $summary[ $row['stage'] ] ) ) { $summary[ $row['stage'] ] += $count; } }
-		$overdue = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table . ' l' . $where . " AND l.next_action_at IS NOT NULL AND l.next_action_at<=%s AND l.stage NOT IN ('won','lost')", array_merge( $args, array( current_time( 'mysql', true ) ) ) ) ); $summary['overdue'] = (int) $overdue;
+		$overdue = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table . ' l' . $where . " AND l.next_action_at IS NOT NULL AND l.next_action_at<=%s AND l.stage NOT IN ('won','lost')", array_merge( $args, array( current_time( 'mysql', true ) ) ) ) );
+		if ( $wpdb->last_error ) { error_log( 'Auto Dealership Core: campaign overdue metric query failed: ' . $wpdb->last_error ); wp_die( esc_html__( 'تعذر تحميل مؤشرات المتابعة المتأخرة.', 'auto-dealership-core' ), '', array( 'response'=>503 ) ); return; }
+		$summary['overdue'] = (int) $overdue;
 		echo '<div class="wrap"><h1>' . esc_html__( 'تقارير التسويق', 'auto-dealership-core' ) . '</h1><p>' . esc_html__( 'توزيع الفرص التسويقية حسب الحملة والمنصة والمرحلة ضمن نطاق صلاحيتك.', 'auto-dealership-core' ) . '</p><div class="adc-crm-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0">';
 		foreach ( array( 'total'=>'الإجمالي','new'=>'جديدة','contacted'=>'تم التواصل','qualified'=>'مؤهلة','reserved'=>'محجوزة','won'=>'مباعة','lost'=>'خاسرة','overdue'=>'متأخرة' ) as $key=>$label ) { echo '<div class="card"><strong>' . esc_html( number_format_i18n( $summary[ $key ] ) ) . '</strong><br>' . esc_html__( $label, 'auto-dealership-core' ) . '</div>'; }
 		$conversion = static function ( int $value, int $base ): string { return $base > 0 ? number_format_i18n( ( $value / $base ) * 100, 1 ) . '%' : '0%'; };
@@ -458,23 +473,170 @@ final class OperationsPages {
 	}
 
 	public static function export_leads(): void {
-		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية تصدير الفرص.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
+		if ( 'POST' !== strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) { wp_die( esc_html__( 'يجب إرسال طلب التصدير بطريقة POST.', 'auto-dealership-core' ), '', array( 'response' => 405 ) ); }
+		if ( ! current_user_can( 'adc_export_crm_leads' ) || ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) ) { wp_die( esc_html__( 'لا تملك صلاحية تصدير الفرص.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
 		check_admin_referer( 'adc_export_leads' );
-		$filters = array( 'search'=>$_GET['s'] ?? '', 'stage'=>$_GET['stage'] ?? '', 'priority'=>$_GET['priority'] ?? '', 'branch_id'=>absint( $_GET['branch_id'] ?? 0 ), 'source'=>$_GET['source'] ?? '', 'campaign'=>$_GET['campaign'] ?? '', 'platform'=>$_GET['platform'] ?? '', 'created_by'=>absint( $_GET['created_by'] ?? 0 ), 'overdue'=>! empty( $_GET['overdue'] ) );
-		if ( isset( $_GET['owner'] ) && '' !== (string) $_GET['owner'] ) { $filters['owner'] = absint( $_GET['owner'] ); }
-		$total_rows = LeadService::count_for_current_user( $filters );
-		if ( ! AuditLog::record( 'leads.csv_exported', 'lead_export', 0, 'CRM lead CSV export', null, array( 'row_count' => $total_rows ) ) ) {
+		$post = wp_unslash( $_POST );
+		$purpose = isset( $post['purpose'] ) && is_scalar( $post['purpose'] ) ? sanitize_key( (string) $post['purpose'] ) : '';
+		$reason = isset( $post['reason'] ) && is_scalar( $post['reason'] ) ? sanitize_key( (string) $post['reason'] ) : '';
+		if ( ! array_key_exists( $purpose, self::crm_export_purpose_options() ) || ! array_key_exists( $reason, self::crm_export_reason_options() ) ) {
+			wp_die( esc_html__( 'اختر غرضًا وسببًا صالحين من القائمتين.', 'auto-dealership-core' ), '', array( 'response' => 400 ) );
+		}
+		$filters = self::crm_export_filters( $post );
+		$audit_context = self::crm_export_audit_context( $filters, $purpose, $reason );
+		global $wpdb;
+		$count_exception_code = null;
+		$previous_error_suppression = $wpdb->suppress_errors( true );
+		try {
+			$total_rows = LeadService::count_for_current_user( $filters );
+		} catch ( \mysqli_sql_exception $exception ) {
+			$count_exception_code = (int) $exception->getCode();
+		} finally {
+			$wpdb->suppress_errors( $previous_error_suppression );
+		}
+		if ( null !== $count_exception_code ) {
+			error_log( 'Auto Dealership Core: CRM lead export count failed with database error ' . $count_exception_code . '.' );
+			wp_die( esc_html__( 'تعذر حساب صفوف التصدير؛ لم يتم إنشاء الملف.', 'auto-dealership-core' ), '', array( 'response' => 503 ) );
+		}
+		if ( $wpdb->last_error ) {
+			error_log( 'Auto Dealership Core: CRM lead export count failed: ' . $wpdb->last_error );
+			wp_die( esc_html__( 'تعذر حساب صفوف التصدير؛ لم يتم إنشاء الملف.', 'auto-dealership-core' ), '', array( 'response' => 503 ) );
+		}
+		if ( $total_rows > self::CRM_EXPORT_MAX_ROWS ) {
+			self::reject_crm_export_row_limit( $audit_context, $total_rows );
+		}
+		$export_rows = array();
+		$max_pages = (int) ceil( ( self::CRM_EXPORT_MAX_ROWS + 1 ) / self::CRM_EXPORT_PAGE_SIZE );
+		for ( $page = 1; $page <= $max_pages; ++$page ) {
+			$page_exception_code = null;
+			$previous_error_suppression = $wpdb->suppress_errors( true );
+			try {
+				$rows = LeadService::list_for_current_user( $page, self::CRM_EXPORT_PAGE_SIZE, $filters );
+			} catch ( \mysqli_sql_exception $exception ) {
+				$page_exception_code = (int) $exception->getCode();
+			} finally {
+				$wpdb->suppress_errors( $previous_error_suppression );
+			}
+			if ( null !== $page_exception_code ) {
+				error_log( 'Auto Dealership Core: CRM lead export page failed with database error ' . $page_exception_code . '.' );
+				wp_die( esc_html__( 'تعذر تحميل صفوف التصدير؛ لم يتم إنشاء الملف.', 'auto-dealership-core' ), '', array( 'response' => 503 ) );
+			}
+			if ( $wpdb->last_error ) {
+				error_log( 'Auto Dealership Core: CRM lead export page failed: ' . $wpdb->last_error );
+				wp_die( esc_html__( 'تعذر تحميل صفوف التصدير؛ لم يتم إنشاء الملف.', 'auto-dealership-core' ), '', array( 'response' => 503 ) );
+			}
+			if ( count( $export_rows ) + count( $rows ) > self::CRM_EXPORT_MAX_ROWS ) {
+				self::reject_crm_export_row_limit( $audit_context, count( $export_rows ) + count( $rows ) );
+			}
+			array_push( $export_rows, ...$rows );
+			if ( count( $rows ) < self::CRM_EXPORT_PAGE_SIZE ) { break; }
+		}
+		$audit_context['row_count'] = count( $export_rows );
+		$audit_context['row_limit'] = self::CRM_EXPORT_MAX_ROWS;
+		$export_columns = self::crm_export_columns( $purpose );
+		$audit_context['export_fields'] = array_keys( $export_columns );
+		if ( ! AuditLog::record( 'leads.csv_exported', 'lead_export', 0, 'CRM lead CSV export', null, $audit_context ) ) {
 			wp_die( esc_html__( 'تعذر تسجيل عملية التصدير؛ لم يتم إنشاء الملف.', 'auto-dealership-core' ), '', array( 'response' => 500 ) );
 		}
-		$total_pages = max( 1, (int) ceil( $total_rows / 100 ) );
 		nocache_headers(); header( 'Content-Type: text/csv; charset=UTF-8' ); header( 'Content-Disposition: attachment; filename=crm-leads-' . gmdate( 'Y-m-d' ) . '.csv' );
-		echo "\xEF\xBB\xBF"; $out = fopen( 'php://output', 'w' ); fputcsv( $out, array( 'ID','Customer','Mobile','Email','Source','Campaign','Platform','Created by','Referred at','Stage','Created','Next follow-up' ) );
-		for ( $page = 1; $page <= $total_pages; ++$page ) {
-			$rows = LeadService::list_for_current_user( $page, 100, $filters );
-			foreach ( $rows as $row ) { $creator = ! empty( $row['created_by'] ) ? get_userdata( (int) $row['created_by'] ) : null; fputcsv( $out, array_map( array( self::class, 'safe_csv_cell' ), array( $row['id'],$row['full_name'],$row['mobile'],$row['email'],$row['source'],$row['campaign'],$row['platform'],$creator ? $creator->display_name : '',$row['referred_at'],$row['stage'],$row['created_at'],$row['next_action_at'] ) ) ); }
-			if ( count( $rows ) < 100 ) { break; }
-		}
+		echo "\xEF\xBB\xBF"; $out = fopen( 'php://output', 'w' ); fputcsv( $out, array_values( $export_columns ) );
+		foreach ( $export_rows as $row ) { fputcsv( $out, array_map( array( self::class, 'safe_csv_cell' ), array_map( static fn( string $field ) => $row[$field] ?? '', array_keys( $export_columns ) ) ) ); }
 		fclose( $out ); exit;
+	}
+
+	private static function crm_export_purpose_options(): array {
+		return array(
+			'customer_follow_up' => __( 'متابعة العملاء', 'auto-dealership-core' ),
+			'campaign_analysis' => __( 'تحليل الحملات', 'auto-dealership-core' ),
+			'management_reporting' => __( 'تقارير الإدارة', 'auto-dealership-core' ),
+			'compliance_review' => __( 'مراجعة الالتزام', 'auto-dealership-core' ),
+			'data_quality_review' => __( 'مراجعة جودة البيانات', 'auto-dealership-core' ),
+		);
+	}
+
+	private static function crm_export_reason_options(): array {
+		return array(
+			'assigned_work' => __( 'مهمة عمل مسندة', 'auto-dealership-core' ),
+			'campaign_review' => __( 'مراجعة حملة', 'auto-dealership-core' ),
+			'management_request' => __( 'طلب إداري', 'auto-dealership-core' ),
+			'compliance_requirement' => __( 'متطلب امتثال', 'auto-dealership-core' ),
+			'data_correction' => __( 'تصحيح بيانات', 'auto-dealership-core' ),
+		);
+	}
+
+	private static function crm_export_columns( string $purpose ): array {
+		$column_labels = array(
+			'id' => 'ID',
+			'full_name' => 'Customer',
+			'mobile' => 'Mobile',
+			'email' => 'Email',
+			'source' => 'Source',
+			'campaign' => 'Campaign',
+			'platform' => 'Platform',
+			'referred_at' => 'Referred at',
+			'stage' => 'Stage',
+			'created_at' => 'Created',
+			'next_action_at' => 'Next follow-up',
+		);
+		$fields_by_purpose = array(
+			'customer_follow_up' => array( 'id', 'full_name', 'mobile', 'source', 'stage', 'created_at', 'next_action_at' ),
+			'campaign_analysis' => array( 'source', 'campaign', 'platform', 'stage', 'referred_at', 'created_at' ),
+			'management_reporting' => array( 'source', 'stage', 'created_at' ),
+			'compliance_review' => array( 'id', 'source', 'stage', 'referred_at', 'created_at' ),
+			'data_quality_review' => array( 'id', 'full_name', 'mobile', 'email', 'source', 'campaign', 'platform', 'stage', 'created_at', 'next_action_at' ),
+		);
+		$columns = array();
+		foreach ( $fields_by_purpose[$purpose] ?? array() as $field ) {
+			$columns[$field] = $column_labels[$field];
+		}
+		return $columns;
+	}
+
+	private static function crm_export_filters( array $post ): array {
+		$filters = array();
+		foreach ( array( 's' => 'search', 'campaign' => 'campaign', 'platform' => 'platform' ) as $input_key => $filter_key ) {
+			if ( isset( $post[$input_key] ) && is_scalar( $post[$input_key] ) ) { $filters[$filter_key] = sanitize_text_field( (string) $post[$input_key] ); }
+		}
+		foreach ( array( 'stage', 'priority', 'source' ) as $key ) {
+			if ( isset( $post[$key] ) && is_scalar( $post[$key] ) ) { $filters[$key] = sanitize_key( (string) $post[$key] ); }
+		}
+		foreach ( array( 'branch_id', 'created_by' ) as $key ) {
+			if ( isset( $post[$key] ) && is_scalar( $post[$key] ) ) { $filters[$key] = absint( $post[$key] ); }
+		}
+		if ( isset( $post['owner'] ) && is_scalar( $post['owner'] ) && '' !== (string) $post['owner'] ) { $filters['owner'] = absint( $post['owner'] ); }
+		if ( ! empty( $post['overdue'] ) ) { $filters['overdue'] = 1; }
+		return $filters;
+	}
+
+	private static function crm_export_audit_context( array $filters, string $purpose, string $reason ): array {
+		$scope = 'owned_and_unassigned_new';
+		$branch_ids = array();
+		if ( current_user_can( 'manage_options' ) ) {
+			$scope = 'all_branches';
+		} elseif ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) ) {
+			$scope = 'creator_owned_marketing_leads';
+		} elseif ( current_user_can( 'adc_view_branch_leads' ) ) {
+			$scope = 'assigned_branches';
+			$branch_ids = array_values( array_filter( BranchScope::assigned_branches(), array( BranchScope::class, 'is_active' ) ) );
+		}
+		$safe_filter_keys = array( 'stage', 'priority', 'branch_id', 'source', 'created_by', 'owner', 'overdue' );
+		return array(
+			'purpose' => $purpose,
+			'reason_code' => $reason,
+			'scope' => $scope,
+			'branch_ids' => $branch_ids,
+			'filters' => array_intersect_key( $filters, array_flip( $safe_filter_keys ) ),
+		);
+	}
+
+	private static function reject_crm_export_row_limit( array $audit_context, int $row_count ): void {
+		$audit_context['row_count'] = $row_count;
+		$audit_context['row_limit'] = self::CRM_EXPORT_MAX_ROWS;
+		$audit_context['rejection'] = 'row_limit';
+		if ( ! AuditLog::record( 'leads.csv_export_rejected', 'lead_export', 0, 'CRM lead CSV export exceeded technical row limit', null, $audit_context ) ) {
+			wp_die( esc_html__( 'تعذر تسجيل رفض التصدير؛ لم يتم إنشاء الملف.', 'auto-dealership-core' ), '', array( 'response' => 500 ) );
+		}
+		wp_die( esc_html( sprintf( __( 'يتجاوز التصدير الحد التقني البالغ %d صف؛ قلّص التصفية ثم أعد المحاولة.', 'auto-dealership-core' ), self::CRM_EXPORT_MAX_ROWS ) ), '', array( 'response' => 413 ) );
 	}
 
 	private static function safe_csv_cell( $value ): string {

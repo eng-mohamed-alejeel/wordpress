@@ -28,7 +28,7 @@ final class OnyxDocuments {
 	private static function sale(int $id,bool $lock=false) {
 		global $wpdb;
 		if(!self::can_read()){return null;}
-		$row=$wpdb->get_row($wpdb->prepare('SELECT s.*,v.branch_id,q.final_amount,q.tax_amount FROM '.Schema::table('sales').' s INNER JOIN '.Schema::table('vehicles').' v ON v.id=s.vehicle_id INNER JOIN '.Schema::table('quotations').' q ON q.id=s.quotation_id WHERE s.id=%d'.($lock?' FOR UPDATE':''),$id),ARRAY_A);
+		$row=$wpdb->get_row($wpdb->prepare('SELECT s.id,s.vehicle_id,s.customer_id,s.quotation_id,v.branch_id,q.final_amount,q.tax_amount FROM '.Schema::table('sales').' s INNER JOIN '.Schema::table('vehicles').' v ON v.id=s.vehicle_id INNER JOIN '.Schema::table('quotations').' q ON q.id=s.quotation_id WHERE s.id=%d'.($lock?' FOR UPDATE':''),$id),ARRAY_A);
 		return $row&&BranchScope::allows((int)$row['branch_id'])?$row:null;
 	}
 	public static function attach(int $sale_id,string $kind,string $reference,string $date,int $total,int $tax,string $pdf,bool $verified,int $parent_id=0) {

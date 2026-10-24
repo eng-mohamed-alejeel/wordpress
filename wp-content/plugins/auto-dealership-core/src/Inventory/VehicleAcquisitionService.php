@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 /** Restricted supplier, landed-cost and acquisition-document fields for a vehicle. */
 final class VehicleAcquisitionService {
 	private const EDITABLE_STATES = array( 'ordered','in_transit','received','inspection','available','hold','maintenance','returned' );
-	private const FIELDS = array( 'supplier_id','purchase_cost','additional_cost','total_cost','wholesale_price','customs_reference','arrival_date','document_media_ids','internal_notes' );
+	private const FIELDS = array( 'supplier_id','purchase_cost','additional_cost','total_cost','wholesale_price','customs_reference','arrival_date','internal_notes' );
 
 	public static function get( int $vehicle_id ) {
 		global $wpdb;
@@ -22,7 +22,14 @@ final class VehicleAcquisitionService {
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT v.id,v.stock_number,v.brand,v.model,v.branch_id,v.status,v.supplier_id,v.purchase_cost,v.additional_cost,v.total_cost,v.wholesale_price,v.customs_reference,v.arrival_date,v.document_media_ids,v.internal_notes,s.supplier_code,s.display_name supplier_name FROM ' . Schema::table( 'vehicles' ) . ' v LEFT JOIN ' . Schema::table( 'suppliers' ) . ' s ON s.id=v.supplier_id WHERE v.id=%d AND ' . $scope, $args ), ARRAY_A );
 		if ( ! $row ) { return self::error( 'adc_vehicle_not_found', 404 ); }
 		foreach ( array( 'id','branch_id','supplier_id','purchase_cost','additional_cost','total_cost','wholesale_price' ) as $field ) { if ( null !== $row[$field] ) { $row[$field] = (int) $row[$field]; } }
-		$row['document_media_ids'] = self::decode_ids( $row['document_media_ids'] );
+		$row['legacy_public_document_count'] = count( self::decode_ids( $row['document_media_ids'] ) );
+		unset( $row['document_media_ids'] );
+		$documents = VehicleAcquisitionDocuments::all( $vehicle_id );
+		if ( is_wp_error( $documents ) ) { return $documents; }
+		$row['private_documents'] = $documents;
+		$public_originals = VehicleAcquisitionDocuments::legacy_public_original_count( $vehicle_id );
+		if ( is_wp_error( $public_originals ) ) { return $public_originals; }
+		$row['migrated_public_original_count'] = $public_originals;
 		return $row;
 	}
 
@@ -30,6 +37,9 @@ final class VehicleAcquisitionService {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_manage_vehicle_costs' ) ) { return self::error( 'adc_forbidden', 403 ); }
 		$reason = sanitize_textarea_field( $reason );
+		if ( array_key_exists( 'document_media_ids', $input ) ) {
+			return new \WP_Error( 'adc_acquisition_public_document_unsupported', __( 'Public media-library IDs are no longer accepted for acquisition documents. Use the private upload section.', 'auto-dealership-core' ), array( 'status'=>400 ) );
+		}
 		if ( $vehicle_id < 1 || '' === trim( $reason ) || mb_strlen( $reason ) > 2000 || array_diff( array_keys( $input ), self::FIELDS ) ) { return self::error( 'adc_acquisition_invalid', 400 ); }
 		$changes = self::validate( $input );
 		if ( is_wp_error( $changes ) ) { return $changes; }
@@ -85,27 +95,7 @@ final class VehicleAcquisitionService {
 				$result['arrival_date'] = $value;
 			}
 		}
-		if ( array_key_exists( 'document_media_ids', $input ) ) {
-			$ids = self::document_ids( $input['document_media_ids'] );
-			if ( false === $ids ) { return self::error( 'adc_acquisition_invalid', 400 ); }
-			$result['document_media_ids'] = wp_json_encode( $ids );
-		}
 		return $result;
-	}
-
-	private static function document_ids( $value ) {
-		if ( ! is_array( $value ) || count( $value ) > 20 ) { return false; }
-		$ids = array();
-		foreach ( $value as $item ) {
-			if ( ! is_int( $item ) && ( ! is_string( $item ) || ! preg_match( '/\A[0-9]+\z/', $item ) ) ) { return false; }
-			$id = (int) $item;
-			$mime = (string) get_post_mime_type( $id );
-			if ( $id < 1 || ! current_user_can( 'read_post', $id ) || 'attachment' !== get_post_type( $id ) || ( 'application/pdf' !== $mime && ! str_starts_with( $mime, 'image/' ) ) ) { return false; }
-			$path = get_attached_file( $id );
-			if ( ! is_string( $path ) || ! is_file( $path ) || filesize( $path ) > 20 * MB_IN_BYTES ) { return false; }
-			$ids[$id] = $id;
-		}
-		return array_values( $ids );
 	}
 
 	private static function decode_ids( $value ): array {

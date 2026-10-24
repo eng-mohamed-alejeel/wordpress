@@ -6,6 +6,7 @@ defined( 'ABSPATH' ) || exit;
 /** Registers scoped dealership roles and capabilities. */
 final class Capabilities {
 	private static array $request_migration_failures = array();
+	private const EXPLICIT_GRANT_CAPABILITIES = array( 'adc_export_crm_leads' );
 
 	private static function refresh_roles(): void {
 		$roles = wp_roles();
@@ -44,9 +45,9 @@ final class Capabilities {
 		}
 	}
 
-	private static function complete_migration( string $version_option ): bool {
-		update_option( $version_option, '1', false );
-		if ( ! self::option_matches( $version_option, '1' ) ) { return false; }
+	private static function complete_migration( string $version_option, string $version = '1' ): bool {
+		update_option( $version_option, $version, false );
+		if ( ! self::option_matches( $version_option, $version ) ) { return false; }
 		$names = array(
 			'adc_newsletter_permissions_version'=>'newsletter',
 			'adc_marketing_permissions_version'=>'marketing',
@@ -84,7 +85,8 @@ final class Capabilities {
 		);
 		$pending = array();
 		foreach ( $versions as $name => $option ) {
-			if ( isset( $failures[$name] ) && '1' !== get_option( $option ) ) { $pending[] = $labels[$name]; }
+			$expected = 'purchasing' === $name ? '2' : '1';
+			if ( isset( $failures[$name] ) && $expected !== get_option( $option ) ) { $pending[] = $labels[$name]; }
 		}
 		if ( ! $pending ) { return; }
 		echo '<div class="notice notice-error"><p>' .
@@ -117,12 +119,13 @@ final class Capabilities {
 	private const PURCHASE_CAPABILITIES = array( 'adc_view_purchase_orders', 'adc_create_purchase_orders', 'adc_approve_purchase_orders', 'adc_approve_high_purchase_orders', 'adc_receive_purchase_orders', 'adc_cancel_purchase_orders' );
 	private const PURCHASE_ROLES = array(
 		'dealership_purchasing'=>array( 'adc_view_purchase_orders', 'adc_create_purchase_orders', 'adc_receive_purchase_orders', 'adc_cancel_purchase_orders' ),
-		'dealership_sales_manager'=>array( 'adc_view_purchase_orders', 'adc_approve_purchase_orders' ),
+		'dealership_sales_manager'=>array( 'adc_view_purchase_orders' ),
+		'dealership_purchase_approver'=>array( 'adc_view_purchase_orders', 'adc_approve_purchase_orders' ),
 		'dealership_general_manager'=>array( 'adc_view_purchase_orders', 'adc_approve_purchase_orders', 'adc_approve_high_purchase_orders', 'adc_cancel_purchase_orders' ),
 		'dealership_finance'=>array( 'adc_view_purchase_orders' ),
 	);
 	public static function migrate_purchase_permissions(): void {
-		if ( '1' === get_option( 'adc_purchase_permissions_version' ) ) { return; }
+		if ( '2' === get_option( 'adc_purchase_permissions_version' ) ) { return; }
 		// Existing administrator-managed role definitions remain authoritative.
 		$definitions = get_option( 'adc_role_definitions', array() );
 		foreach ( self::PURCHASE_ROLES as $slug=>$caps ) {
@@ -131,7 +134,16 @@ final class Capabilities {
 			foreach ( $caps as $cap ) { if ( ! array_key_exists( $cap, $role->capabilities ) ) { $role->add_cap( $cap ); $required[] = $cap; } }
 			if ( $required && ! self::role_has_caps( $slug, $required ) ) { self::migration_failed( 'purchasing' ); return; }
 		}
-		if ( ! self::complete_migration( 'adc_purchase_permissions_version' ) ) { self::migration_failed( 'purchasing' ); }
+		$sales_manager_definition = $definitions['dealership_sales_manager']['caps'] ?? null;
+		$has_custom_sales_manager_approval = is_array( $sales_manager_definition ) && in_array( 'adc_approve_purchase_orders', $sales_manager_definition, true );
+		if ( ! $has_custom_sales_manager_approval && ( ! isset( $definitions['dealership_sales_manager'] ) || is_array( $sales_manager_definition ) ) ) {
+			$role = get_role( 'dealership_sales_manager' );
+			if ( $role && array_key_exists( 'adc_approve_purchase_orders', $role->capabilities ) ) {
+				$role->remove_cap( 'adc_approve_purchase_orders' );
+				if ( array_key_exists( 'adc_approve_purchase_orders', $role->capabilities ) ) { self::migration_failed( 'purchasing' ); return; }
+			}
+		}
+		if ( ! self::complete_migration( 'adc_purchase_permissions_version', '2' ) ) { self::migration_failed( 'purchasing' ); }
 	}
 	private const SALES_CAPABILITIES = array( 'adc_create_quotes', 'adc_request_discounts', 'adc_start_sales' );
 
@@ -185,6 +197,7 @@ final class Capabilities {
 		'dealership_inventory' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_manage_inventory', 'adc_transfer_inventory', 'adc_confirm_vehicle_vin', 'adc_view_suppliers' ),
 		'dealership_finance' => array( 'read', 'adc_view_workspace', 'adc_view_finance', 'adc_manage_finance', 'adc_record_payments', 'adc_verify_payments', 'adc_record_refunds', 'adc_verify_refunds' ),
 		'dealership_purchasing' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_view_suppliers', 'adc_manage_suppliers', 'adc_view_vehicle_costs', 'adc_manage_vehicle_costs' ),
+		'dealership_purchase_approver' => array( 'read', 'adc_view_workspace' ),
 		'dealership_delivery' => array( 'read', 'adc_view_workspace', 'adc_view_inventory', 'adc_confirm_vehicle_vin', 'adc_process_returns' ),
 		'dealership_customer_service' => array( 'read', 'adc_view_workspace', 'adc_view_branch_leads', 'adc_manage_branch_leads', 'adc_create_reservations' ),
 		'dealership_marketing' => array( 'read', 'adc_view_workspace', 'adc_view_marketing_subscribers', 'adc_create_marketing_leads', 'adc_view_marketing_leads', 'adc_edit_marketing_lead_identity', 'adc_view_campaign_metrics', 'adc_add_marketing_activity' ),
@@ -210,11 +223,12 @@ final class Capabilities {
 		update_option( 'adc_roles_version', ADC_VERSION, false );
 	}
 
-	/** Keep the system administrator complete when new dealership permissions are added. */
+	/** Sync administrative defaults while leaving explicitly granted bulk exports opt-in. */
 	public static function sync_administrator(): void {
 		$administrator = get_role( 'administrator' );
 		if ( $administrator ) {
 			foreach ( self::all_capabilities() as $capability ) {
+				if ( in_array( $capability, self::EXPLICIT_GRANT_CAPABILITIES, true ) ) { continue; }
 				if ( ! $administrator->has_cap( $capability ) ) {
 					$administrator->add_cap( $capability );
 				}
@@ -234,6 +248,7 @@ final class Capabilities {
 			'dealership_inventory' => __( 'Dealership Inventory', 'auto-dealership-core' ),
 			'dealership_finance' => __( 'Dealership Finance', 'auto-dealership-core' ),
 			'dealership_purchasing' => __( 'Dealership Purchasing', 'auto-dealership-core' ),
+			'dealership_purchase_approver' => __( 'Dealership Purchase Approver', 'auto-dealership-core' ),
 			'dealership_delivery' => __( 'Dealership Delivery', 'auto-dealership-core' ),
 			'dealership_customer_service' => __( 'Dealership Customer Service', 'auto-dealership-core' ),
 			'dealership_chat_adviser' => Localization::language()==='en'?'Chat adviser':'مستشار المحادثات',
@@ -275,7 +290,7 @@ final class Capabilities {
 	}
 
 	public static function all_capabilities(): array {
-		$caps = array_merge( array( 'adc_manage_newsletter','adc_publish_customer_documents' ), self::MARKETING_CAPABILITIES, self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES, \AutoDealership\Portal\PortalAccess::CAPS );
+		$caps = array_merge( array( 'adc_manage_newsletter','adc_publish_customer_documents','adc_export_crm_leads' ), self::MARKETING_CAPABILITIES, self::CONTENT_CAPABILITIES, self::SALES_CAPABILITIES, self::PURCHASE_CAPABILITIES, \AutoDealership\Portal\PortalAccess::CAPS );
 		foreach ( self::ROLE_CAPABILITIES as $role_caps ) {
 			$caps = array_merge( $caps, $role_caps );
 		}

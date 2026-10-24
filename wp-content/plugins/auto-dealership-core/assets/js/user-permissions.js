@@ -110,7 +110,18 @@ if (typeof adcPermissionFilters !== 'undefined') {
   document.querySelectorAll('.adc-user-permissions, .adc-permission-report').forEach((section) => {
     const labels = [...section.querySelectorAll('.adc-permission-grid > label')];
     const rows = [...section.querySelectorAll('tbody tr[data-granted]')];
+    const functionReferences = [...section.querySelectorAll('input[name="organizational_functions[]"]')];
+    const functionReviews = [...section.querySelectorAll('[data-function-review]')];
+    const functionComparison = section.querySelector('[data-function-comparison]');
     if (!labels.length && !rows.length) return;
+    let functionStatus;
+    if (functionReferences.length) {
+      functionStatus = document.createElement('p');
+      functionStatus.className = 'description adc-function-filter-status';
+      functionStatus.setAttribute('aria-live', 'polite');
+      functionStatus.setAttribute('aria-atomic', 'true');
+      functionReferences[0].closest('fieldset').append(functionStatus);
+    }
     const toolbar = document.createElement('div'); toolbar.className = 'adc-permission-filters';
     const searchLabel = document.createElement('label'); searchLabel.textContent = adcPermissionFilters.search + ' ';
     const search = document.createElement('input'); search.type = 'search'; searchLabel.append(search); toolbar.append(searchLabel);
@@ -118,16 +129,67 @@ if (typeof adcPermissionFilters !== 'undefined') {
     for (const key of ['all', 'granted', 'denied', 'custom']) { const option = document.createElement('option'); option.value = key; option.textContent = adcPermissionFilters[key]; filter.append(option); }
     toolbar.append(filter); section.prepend(toolbar);
     const update = () => {
+      const selectedFunctions = new Set(functionReferences.filter((input) => input.checked).map((input) => input.value));
+      let selectedOutsideFunctionFilter = 0;
+      const relatedCapabilityStates = new Map();
+      for (const review of functionReviews) {
+        const selected = selectedFunctions.has(review.dataset.functionReview);
+        review.hidden = !selected;
+        if (!selected) continue;
+        for (const item of review.querySelectorAll('[data-review-capability]')) {
+          const capability = item.dataset.reviewCapability;
+          const permission = labels.find((label) => label.querySelector('input[name="caps[]"]')?.value === capability)?.querySelector('input[name="caps[]"]');
+          const state = item.querySelector('[data-review-state]');
+          relatedCapabilityStates.set(capability, Boolean(permission?.checked));
+          if (state) state.textContent = permission?.checked ? adcPermissionFilters.selectedManually : adcPermissionFilters.notSelected;
+        }
+      }
+      if (functionComparison) {
+        functionComparison.hidden = !selectedFunctions.size;
+        const relatedSelected = [...relatedCapabilityStates.values()].filter(Boolean).length;
+        const relatedNotSelected = relatedCapabilityStates.size - relatedSelected;
+        const outside = [...labels].filter((label) => {
+          const permission = label.querySelector('input[name="caps[]"]');
+          const functions = (label.dataset.organizationalFunctions || '').split(',').filter(Boolean);
+          return permission?.checked && !functions.some((id) => selectedFunctions.has(id));
+        });
+        const summary = functionComparison.querySelector('[data-function-comparison-summary]');
+        if (summary) {
+          summary.textContent = adcPermissionFilters.functionComparisonSummary
+            .replace('%1$d', String(relatedSelected))
+            .replace('%2$d', String(relatedNotSelected))
+            .replace('%3$d', String(outside.length));
+        }
+        const outsideList = functionComparison.querySelector('[data-function-comparison-outside]');
+        const outsideItems = outsideList?.querySelector('ul');
+        if (outsideList && outsideItems) {
+          outsideList.hidden = !outside.length;
+          outsideItems.replaceChildren();
+          for (const label of outside) {
+            const item = document.createElement('li');
+            item.textContent = label.querySelector('input[name="caps[]"]')?.value + ' — ' + label.textContent.trim();
+            outsideItems.append(item);
+          }
+        }
+      }
       for (const item of [...labels, ...rows]) {
         const input = item.querySelector('input[type="checkbox"]');
         const granted = input ? input.checked : item.dataset.granted === '1';
         const custom = item.dataset.custom === '1';
         const textMatches = item.textContent.toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase());
-        item.hidden = !textMatches || (filter.value === 'granted' && !granted) || (filter.value === 'denied' && granted) || (filter.value === 'custom' && !custom);
+        const relatedFunctions = (item.dataset.organizationalFunctions || '').split(',').filter(Boolean);
+        const functionMatches = !selectedFunctions.size || relatedFunctions.some((id) => selectedFunctions.has(id));
+        if (selectedFunctions.size && labels.includes(item) && input?.checked && !functionMatches) selectedOutsideFunctionFilter++;
+        item.hidden = !textMatches || (filter.value === 'granted' && !granted) || (filter.value === 'denied' && granted) || (filter.value === 'custom' && !custom) || (!rows.includes(item) && !functionMatches);
+      }
+      if (functionStatus) {
+        functionStatus.hidden = !selectedFunctions.size;
+        functionStatus.textContent = adcPermissionFilters.outsideFunctionFilter.replace('%d', String(selectedOutsideFunctionFilter));
       }
       section.querySelectorAll('.adc-permission-group').forEach((group) => { group.hidden = [...group.querySelectorAll('.adc-permission-grid > label')].every((label) => label.hidden); });
     };
     search.addEventListener('input', update); filter.addEventListener('change', update); section.addEventListener('change', update);
+    functionReferences.forEach((input) => input.addEventListener('change', update));
     section.addEventListener('adc-defaults-changed', update);
     update();
   });

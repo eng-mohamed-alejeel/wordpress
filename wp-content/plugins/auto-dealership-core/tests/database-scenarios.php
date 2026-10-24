@@ -35,6 +35,12 @@ adc_check( array() === Schema::verify(), 'Installed schema matches columns, defa
 adc_check( Schema::VERSION === get_option( 'adc_db_version' ), 'Schema version advances only after successful verification.' );
 Schema::install();
 adc_check( array() === Schema::verify(), 'Repeat schema installation is idempotent.' );
+$acquisition_documents = Schema::table( 'vehicle_acquisition_documents' );
+$wpdb->query( "ALTER TABLE `$acquisition_documents` DROP INDEX source_attachment_id" );
+$wpdb->query( "ALTER TABLE `$acquisition_documents` DROP COLUMN source_attachment_id" );
+adc_check( in_array( $acquisition_documents . ':column:source_attachment_id', Schema::verify(), true ) && in_array( $acquisition_documents . ':index:source_attachment_id', Schema::verify(), true ), 'Schema verifier detects missing acquisition-document provenance column and index.' );
+Schema::install( false );
+adc_check( array() === Schema::verify() && Schema::VERSION === get_option( 'adc_db_version' ), 'Drift repair restores acquisition-document provenance without running unrelated legacy quote backfill.' );
 
 $vehicles = Schema::table( 'vehicles' );
 $customers = Schema::table( 'customers' );
@@ -67,6 +73,8 @@ Schema::install();
 adc_check( array() === Schema::verify() && Schema::VERSION === get_option( 'adc_db_version' ), 'Verified repair restores the version marker.' );
 
 $admin = get_current_user_id();
+require __DIR__ . '/policy-profile-scenarios.php';
+require __DIR__ . '/organizational-capability-map-scenarios.php';
 $branch_a = BranchService::create( array( 'code' => 'VERIFY-A', 'name' => 'Synthetic A' ) );
 $branch_b = BranchService::create( array( 'code' => 'VERIFY-B', 'name' => 'Synthetic B' ) );
 adc_check( is_array( $branch_a ) && is_array( $branch_b ), 'Create synthetic branches.' );
@@ -117,6 +125,15 @@ $effective_role_accounts = array(
 );
 $effective_role_matrix = \AutoDealership\Core\Capabilities::role_matrix();
 $effective_capabilities = \AutoDealership\Core\Capabilities::all_capabilities();
+\AutoDealership\Core\Capabilities::sync_administrator();
+adc_check(
+	in_array( 'adc_export_crm_leads', \AutoDealership\Core\Capabilities::assignable_capabilities(), true )
+	&& isset( \AutoDealership\Admin\UserPermissions::catalog()['adc_export_crm_leads'] )
+	&& ! in_array( 'adc_export_crm_leads', $effective_role_matrix['dealership_sales'], true )
+	&& ! in_array( 'adc_export_crm_leads', $effective_role_matrix['dealership_marketing'], true )
+	&& ! user_can( $admin, 'adc_export_crm_leads' ),
+	'CRM export is separately assignable but is not included in factory roles or automatically granted to administrators.'
+);
 foreach ( $effective_role_matrix as $role => $expected_capabilities ) {
 	if ( ! isset( $effective_role_accounts[$role] ) ) {
 		$login = 'effective_' . $role;
@@ -138,7 +155,7 @@ foreach ( $effective_role_matrix as $role => $expected_capabilities ) {
 	$matches_matrix = $matches_matrix && ! user_can( $effective_role_accounts[$role], 'manage_options' );
 	adc_check( $matches_matrix, 'Isolated effective-access account matches the unchanged capability baseline for role ' . $role . '.' );
 }
-adc_check( 12 === count( $effective_role_accounts ), 'Isolated effective-access fixtures cover all 12 dealership and customer roles without creating persistent development accounts.' );
+adc_check( 13 === count( $effective_role_accounts ), 'Isolated effective-access fixtures cover all 13 dealership and customer roles without creating persistent development accounts.' );
 wp_set_current_user( $admin );
 $saved_post = $_POST;
 $options_engine = strtoupper( (string) $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $wpdb->options ) ) );
@@ -1102,7 +1119,28 @@ try {
 	$purchasing_foreign_http = $http_auth( $purchasing_foreign );
 	$acquisition_foreign_v1 = $http_request( $acquisition_path, $purchasing_foreign_http );
 	$acquisition_foreign_v2 = $http_request( $rest_v2_path( $acquisition_path ), $purchasing_foreign_http );
-	adc_check( 404 === $acquisition_foreign_v1[0] && 404 === $acquisition_foreign_v2[0] && 403 === $http_request( $acquisition_path, $sales_b_http )[0] && 401 === $http_request( $acquisition_path )[0], 'Acquisition costs remain hidden over HTTP from other branches, roles without cost access and anonymous callers in both API versions.' );
+	$acquisition_same_branch_denied = $http_request( $acquisition_path, $sales_b_http );
+	$acquisition_missing_id = $http_request( $rest_path( '/auto-dealership/v1/vehicles/99999999/acquisition' ), $acquisition_purchasing_http );
+	$acquisition_denied_bodies = array( $acquisition_foreign_v1[1], $acquisition_foreign_v2[1], $acquisition_same_branch_denied[1], $acquisition_missing_id[1] );
+	$acquisition_data_leaked = (bool) array_filter(
+		$acquisition_denied_bodies,
+		static fn( string $body ): bool => str_contains( $body, 'purchase_cost' ) || str_contains( $body, '8000000' ) || str_contains( $body, 'HTTP-101' ) || str_contains( $body, 'supplier_name' )
+	);
+	adc_check( 404 === $acquisition_foreign_v1[0] && 404 === $acquisition_foreign_v2[0] && 403 === $acquisition_same_branch_denied[0] && 404 === $acquisition_missing_id[0] && ! $acquisition_data_leaked && 401 === $http_request( $acquisition_path )[0], 'Acquisition ID swapping returns indistinguishable not-found errors across branches and nonexistent IDs without exposing cost fields; same-branch unauthorized and anonymous callers are also denied.' );
+	$purchasing_foreign_suppliers = $http_request( $supplier_path, $purchasing_foreign_http );
+	$purchasing_foreign_supplier_rows = array_values( array_filter( $read_rows( $purchasing_foreign_suppliers[1] ), static fn( $row ) => (int) ( $row['id'] ?? 0 ) === $supplier_id_128 ) );
+	adc_check( 200 === $purchasing_foreign_suppliers[0] && count( $purchasing_foreign_supplier_rows ) === 1 && 'supplier@example.invalid' === ( $purchasing_foreign_supplier_rows[0]['contact_email'] ?? '' ), 'Supplier directory remains intentionally global across branch-scoped purchasing users, with restricted fields still governed by role capability.' );
+	$cost_supplier_viewer = $make_user( 'cost_supplier_viewer_http', 'subscriber', (int) $branch_b['id'] );
+	get_userdata( $cost_supplier_viewer )->add_cap( 'adc_view_suppliers' );
+	get_userdata( $cost_supplier_viewer )->add_cap( 'adc_view_vehicle_costs' );
+	$cost_supplier_viewer_http = $http_auth( $cost_supplier_viewer );
+	$cost_suppliers_v1_http = $http_request( $supplier_path, $cost_supplier_viewer_http );
+	$cost_supplier_v1_rows = array_values( array_filter( $read_rows( $cost_suppliers_v1_http[1] ), static fn( $row ) => (int) ( $row['id'] ?? 0 ) === $supplier_id_128 ) );
+	$cost_suppliers_v2_http = $http_request( $rest_v2_path( $supplier_path ), $cost_supplier_viewer_http );
+	$cost_supplier_v2_rows = array_values( array_filter( $read_rows( $cost_suppliers_v2_http[1] ), static fn( $row ) => (int) ( $row['id'] ?? 0 ) === $supplier_id_128 ) );
+	adc_check( 200 === $cost_suppliers_v1_http[0] && count( $cost_supplier_v1_rows ) === 1 && ! array_key_exists( 'legal_name', $cost_supplier_v1_rows[0] ) && ! array_key_exists( 'contact_email', $cost_supplier_v1_rows[0] ) && ! array_key_exists( 'tax_number', $cost_supplier_v1_rows[0] ) && ! array_key_exists( 'notes', $cost_supplier_v1_rows[0] ) && 200 === $cost_suppliers_v2_http[0] && count( $cost_supplier_v2_rows ) === 1 && ! array_key_exists( 'legal_name', $cost_supplier_v2_rows[0] ) && ! array_key_exists( 'contact_email', $cost_supplier_v2_rows[0] ) && ! array_key_exists( 'tax_number', $cost_supplier_v2_rows[0] ) && ! array_key_exists( 'notes', $cost_supplier_v2_rows[0] ), 'Supplier PII remains hidden from cost-only viewers over REST v1 and v2.' );
+	$supplier_id_path = $rest_path( '/auto-dealership/v1/suppliers/' . $supplier_id_128 );
+	adc_check( 404 === $http_request( $supplier_id_path, $purchasing_foreign_http )[0], 'Supplier directory exposes no per-ID endpoint that could bypass list field minimization.' );
 	$inventory_suppliers_http = $http_request( $supplier_path, $inventory_http );
 	$inventory_suppliers_rows = $read_rows( $inventory_suppliers_http[1] );
 	$inventory_supplier_rows = array_values( array_filter( $inventory_suppliers_rows, static fn( $row ) => (int) ( $row['id'] ?? 0 ) === $supplier_id_128 ) );
@@ -1549,8 +1587,54 @@ try {
 		&& ! is_wp_error( LeadService::assign( (int) $crm_foreign_lead['id'], $crm_csv_foreign ) );
 	adc_check( $crm_fixtures_valid, 'Isolated CRM CSV fixtures represent an owner lead, a same-branch colleague lead and a foreign-branch lead.' );
 	list( $crm_export_nonce_status, $crm_export_nonce ) = $http_request( '/adc-test-nonce?action=adc_export_leads', $sales_b_http );
-	$crm_export_form = array( 'action'=>'adc_export_leads', '_wpnonce'=>trim( $crm_export_nonce ) );
+	$crm_export_form = array( 'action'=>'adc_export_leads', '_wpnonce'=>trim( $crm_export_nonce ), 'purpose'=>'customer_follow_up', 'reason'=>'assigned_work' );
 	$crm_export_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) );
+	list( $crm_export_denied_status, $crm_export_denied_body ) = $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_export_form, true );
+	adc_check(
+		200 === $crm_export_nonce_status && 403 === $crm_export_denied_status
+		&& ! str_contains( $crm_export_denied_body, 'formula-csv@example.invalid' )
+		&& $crm_export_audit_before === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) ),
+		'CRM lead visibility alone cannot export personal data or create an export audit event.'
+	);
+	$admin_export_http = $http_auth( $admin );
+	list( $admin_export_nonce_status, $admin_export_nonce ) = $http_request( '/adc-test-nonce?action=adc_export_leads', $admin_export_http );
+	list( $admin_export_status, $admin_export_body ) = $http_request(
+		'/wp-admin/admin-post.php',
+		$admin_export_http,
+		'POST',
+		array( 'action'=>'adc_export_leads', '_wpnonce'=>trim( $admin_export_nonce ) ),
+		true
+	);
+	adc_check(
+		200 === $admin_export_nonce_status && 403 === $admin_export_status
+		&& ! str_contains( $admin_export_body, 'formula-csv@example.invalid' ),
+		'Site administration alone does not grant the separate bulk CRM export permission (nonce HTTP ' . $admin_export_nonce_status . ', export HTTP ' . $admin_export_status . ').'
+	);
+	(new WP_User( $sales_b ))->add_cap( 'adc_export_crm_leads' );
+	clean_user_cache( $sales_b );
+	$crm_export_missing_purpose = $crm_export_form;
+	unset( $crm_export_missing_purpose['purpose'] );
+	$crm_export_invalid_purpose = array_merge( $crm_export_form, array( 'purpose'=>'customer_names_for_personal_use' ) );
+	$crm_export_missing_reason = $crm_export_form;
+	unset( $crm_export_missing_reason['reason'] );
+	$crm_export_invalid_reason = array_merge( $crm_export_form, array( 'reason'=>'customer_requested_by_name_and_phone' ) );
+	$crm_export_invalid_nonce = array_merge( $crm_export_form, array( '_wpnonce'=>'invalid-export-nonce' ) );
+	$crm_export_get_attempt = $http_request( '/wp-admin/admin-post.php?' . http_build_query( $crm_export_form ), $sales_b_http );
+	$crm_export_invalid_inputs = array(
+		$http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_export_missing_purpose, true ),
+		$http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_export_invalid_purpose, true ),
+		$http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_export_missing_reason, true ),
+		$http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_export_invalid_reason, true ),
+	);
+	$crm_export_nonce_rejected = $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_export_invalid_nonce, true );
+	adc_check(
+		array( 400, 400, 400, 400 ) === array_column( $crm_export_invalid_inputs, 0 )
+		&& 403 === $crm_export_nonce_rejected[0]
+		&& 405 === $crm_export_get_attempt[0] && ! str_starts_with( $crm_export_get_attempt[1], "\xEF\xBB\xBF" )
+		&& $crm_export_audit_before === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) )
+		&& ! str_starts_with( $crm_export_invalid_inputs[0][1] ?? '', "\xEF\xBB\xBF" ),
+		'CRM CSV export requires POST and rejects missing or unrecognized purpose/reason and invalid nonces before creating a file or success audit event.'
+	);
 	list( $crm_export_status, $crm_export_csv ) = $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_export_form, true );
 	$crm_export_lines = preg_split( '/\r?\n/', trim( substr( $crm_export_csv, 3 ) ) );
 	$crm_export_rows = array_map( 'str_getcsv', $crm_export_lines );
@@ -1565,15 +1649,60 @@ try {
 		&& in_array( (int) $crm_formula_lead['id'], $crm_export_ids, true )
 		&& ! in_array( (int) $crm_peer_lead['id'], $crm_export_ids, true )
 		&& ! in_array( (int) $crm_foreign_lead['id'], $crm_export_ids, true ),
-		'Authorized CRM CSV export neutralizes formula-like text and includes only the salesperson’s owned lead, excluding a colleague and another branch.'
+		'Explicitly authorized CRM CSV export neutralizes formula-like text and includes only the salesperson’s owned lead, excluding a colleague and another branch.'
 	);
 	adc_check(
 		$crm_export_audit_before + 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) )
 		&& (int) ( $crm_export_audit['actor_user_id'] ?? 0 ) === (int) $sales_b
-		&& array( 'row_count' => $crm_export_row_count ) === $crm_export_audit_data,
-		'CRM CSV export records the actor and exported row count without logging customer filters or personal data.'
+		&& (int) ( $crm_export_audit_data['row_count'] ?? -1 ) === $crm_export_row_count
+		&& 5000 === (int) ( $crm_export_audit_data['row_limit'] ?? 0 )
+		&& 'customer_follow_up' === ( $crm_export_audit_data['purpose'] ?? '' )
+		&& 'assigned_work' === ( $crm_export_audit_data['reason_code'] ?? '' )
+		&& 'owned_and_unassigned_new' === ( $crm_export_audit_data['scope'] ?? '' )
+		&& array() === ( $crm_export_audit_data['branch_ids'] ?? null )
+		&& array() === ( $crm_export_audit_data['filters'] ?? null )
+		&& array( 'id','full_name','mobile','source','stage','created_at','next_action_at' ) === ( $crm_export_audit_data['export_fields'] ?? null ),
+		'CRM CSV export records actor, purpose, reason, branch scope, row count and limit without customer search/filter data.'
+	);
+	$crm_purpose_expected_headers = array(
+		'campaign_analysis' => array( 'Source','Campaign','Platform','Stage','Referred at','Created' ),
+		'management_reporting' => array( 'Source','Stage','Created' ),
+		'compliance_review' => array( 'ID','Source','Stage','Referred at','Created' ),
+		'data_quality_review' => array( 'ID','Customer','Mobile','Email','Source','Campaign','Platform','Stage','Created','Next follow-up' ),
+	);
+	$crm_purpose_exports_valid = true;
+	foreach ( $crm_purpose_expected_headers as $purpose_code => $expected_headers ) {
+		$purpose_form = array_merge( $crm_export_form, array( 'purpose'=>$purpose_code ) );
+		$purpose_response = $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $purpose_form, true );
+		$purpose_csv_lines = preg_split( '/\r?\n/', trim( substr( $purpose_response[1], 3 ) ) );
+		$purpose_csv_header = str_getcsv( $purpose_csv_lines[0] ?? '' );
+		if ( 200 !== $purpose_response[0] || $expected_headers !== $purpose_csv_header ) { $crm_purpose_exports_valid = false; }
+	}
+	$crm_purpose_audits = $wpdb->get_results( $wpdb->prepare( "SELECT after_data FROM $audit WHERE event_key=%s ORDER BY id DESC LIMIT %d", 'leads.csv_exported', count( $crm_purpose_expected_headers ) ), ARRAY_A );
+	$crm_purpose_audit_fields = array();
+	foreach ( $crm_purpose_audits as $purpose_audit ) {
+		$purpose_audit_data = json_decode( $purpose_audit['after_data'] ?? '', true );
+		$crm_purpose_audit_fields[ $purpose_audit_data['purpose'] ?? '' ] = $purpose_audit_data['export_fields'] ?? array();
+	}
+	adc_check(
+		$crm_purpose_exports_valid
+		&& array( 'source','campaign','platform','stage','referred_at','created_at' ) === ( $crm_purpose_audit_fields['campaign_analysis'] ?? null )
+		&& array( 'source','stage','created_at' ) === ( $crm_purpose_audit_fields['management_reporting'] ?? null )
+		&& array( 'id','source','stage','referred_at','created_at' ) === ( $crm_purpose_audit_fields['compliance_review'] ?? null )
+		&& array( 'id','full_name','mobile','email','source','campaign','platform','stage','created_at','next_action_at' ) === ( $crm_purpose_audit_fields['data_quality_review'] ?? null ),
+		'Each CRM export purpose emits only its fixed field allowlist and records the exact field names in the audit event.'
 	);
 	$crm_export_audit_after_success = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) );
+	$crm_export_audit_rejected_before_query_failure = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_export_rejected' ) );
+	$crm_export_count_failure = $http_request( '/wp-admin/admin-post.php?adc_test_fail_export_query=count', $sales_b_http, 'POST', $crm_export_form, true );
+	$crm_export_page_failure = $http_request( '/wp-admin/admin-post.php?adc_test_fail_export_query=page', $sales_b_http, 'POST', $crm_export_form, true );
+	adc_check(
+		503 === $crm_export_count_failure[0] && 503 === $crm_export_page_failure[0]
+		&& ! str_starts_with( $crm_export_count_failure[1], "\xEF\xBB\xBF" ) && ! str_starts_with( $crm_export_page_failure[1], "\xEF\xBB\xBF" )
+		&& $crm_export_audit_after_success === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) )
+		&& $crm_export_audit_rejected_before_query_failure === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_export_rejected' ) ),
+		'CRM CSV export surfaces count/list database failures without a CSV or a success/rejection audit event.'
+	);
 	list( $crm_export_audit_failure_status, $crm_export_audit_failure_body ) = $http_request( '/wp-admin/admin-post.php?adc_test_fail_audit=1', $sales_b_http, 'POST', $crm_export_form, true );
 	adc_check(
 		500 === $crm_export_audit_failure_status
@@ -1582,9 +1711,60 @@ try {
 		&& $crm_export_audit_after_success === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) ),
 		'CRM CSV export fails closed and returns no customer data when audit persistence fails.'
 	);
+	$crm_limit_campaign = 'adc-export-limit-' . wp_generate_password( 10, false, false );
+	$crm_limit_customer_id = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT customer_id FROM ' . Schema::table( 'leads' ) . ' WHERE id=%d', (int) $crm_formula_lead['id'] ) );
+	$crm_limit_table = Schema::table( 'leads' );
+	$crm_limit_columns = 'customer_id,branch_id,owner_user_id,source,campaign,platform,created_by,stage,lost_reason,priority,created_at,updated_at';
+	$crm_limit_row_values = array( $crm_limit_customer_id, (int) $branch_b['id'], (int) $sales_b, 'website', $crm_limit_campaign, 'limit-fixture', (int) $sales_b, 'contacted', '', 'normal', current_time( 'mysql', true ), current_time( 'mysql', true ) );
+	$crm_limit_inserted = 0;
+	for ( $batch_start = 0; $batch_start < 5000; $batch_start += 200 ) {
+		$batch_size = min( 200, 5000 - $batch_start );
+		$batch_rows = array_fill( 0, $batch_size, '(%d,%d,%d,%s,%s,%s,%d,%s,%s,%s,%s,%s)' );
+		$batch_args = array();
+		for ( $batch_index = 0; $batch_index < $batch_size; ++$batch_index ) { array_push( $batch_args, ...$crm_limit_row_values ); }
+		$insert_sql = $wpdb->prepare( 'INSERT INTO ' . $crm_limit_table . ' (' . $crm_limit_columns . ') VALUES ' . implode( ',', $batch_rows ), $batch_args );
+		$insert_result = $wpdb->query( $insert_sql );
+		if ( false === $insert_result ) { break; }
+		$crm_limit_inserted += (int) $insert_result;
+	}
+	$crm_limit_form = array_merge( $crm_export_form, array( 'campaign'=>$crm_limit_campaign, 'branch_id'=>(int) $branch_b['id'], 'owner'=>(int) $sales_b ) );
+	list( $crm_limit_export_status, $crm_limit_export_csv ) = $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_limit_form, true );
+	$crm_limit_export_lines = preg_split( '/\r?\n/', trim( substr( $crm_limit_export_csv, 3 ) ) );
+	$crm_limit_export_rows = array_map( 'str_getcsv', $crm_limit_export_lines );
+	$crm_limit_export_count = max( 0, count( $crm_limit_export_rows ) - 1 );
+	$crm_limit_audit = $wpdb->get_row( $wpdb->prepare( "SELECT after_data FROM $audit WHERE event_key=%s ORDER BY id DESC LIMIT 1", 'leads.csv_exported' ), ARRAY_A );
+	$crm_limit_audit_data = json_decode( $crm_limit_audit['after_data'] ?? '', true );
+	adc_check(
+		5000 === $crm_limit_inserted && 200 === $crm_limit_export_status && 5000 === $crm_limit_export_count
+		&& 5000 === (int) ( $crm_limit_audit_data['row_count'] ?? 0 ) && 5000 === (int) ( $crm_limit_audit_data['row_limit'] ?? 0 )
+		&& 'customer_follow_up' === ( $crm_limit_audit_data['purpose'] ?? '' ) && 'assigned_work' === ( $crm_limit_audit_data['reason_code'] ?? '' )
+		&& 'owned_and_unassigned_new' === ( $crm_limit_audit_data['scope'] ?? '' )
+		&& (int) ( $crm_limit_audit_data['filters']['branch_id'] ?? 0 ) === (int) $branch_b['id']
+		&& ! isset( $crm_limit_audit_data['filters']['campaign'] )
+		&& ! str_contains( $crm_limit_audit['after_data'] ?? '', $crm_limit_campaign ),
+		'CRM export permits exactly 5000 scoped rows and audits the selected purpose, reason, scope and safe filters without free-text campaign data.'
+	);
+	$crm_limit_extra_insert = $wpdb->insert(
+		$crm_limit_table,
+		array_combine( explode( ',', $crm_limit_columns ), $crm_limit_row_values ),
+		array( '%d','%d','%d','%s','%s','%s','%d','%s','%s','%s','%s','%s' )
+	);
+	$crm_rejected_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_export_rejected' ) );
+	list( $crm_over_limit_status, $crm_over_limit_body ) = $http_request( '/wp-admin/admin-post.php', $sales_b_http, 'POST', $crm_limit_form, true );
+	$crm_over_limit_audit = $wpdb->get_row( $wpdb->prepare( "SELECT after_data FROM $audit WHERE event_key=%s ORDER BY id DESC LIMIT 1", 'leads.csv_export_rejected' ), ARRAY_A );
+	$crm_over_limit_audit_data = json_decode( $crm_over_limit_audit['after_data'] ?? '', true );
+	adc_check(
+		1 === (int) $crm_limit_extra_insert && 413 === $crm_over_limit_status
+		&& ! str_starts_with( $crm_over_limit_body, "\xEF\xBB\xBF" )
+		&& $crm_rejected_audit_before + 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_export_rejected' ) )
+		&& 5001 === (int) ( $crm_over_limit_audit_data['row_count'] ?? 0 ) && 5000 === (int) ( $crm_over_limit_audit_data['row_limit'] ?? 0 )
+		&& 'row_limit' === ( $crm_over_limit_audit_data['rejection'] ?? '' )
+		&& ! str_contains( $crm_over_limit_audit['after_data'] ?? '', $crm_limit_campaign ),
+		'CRM export rejects 5001 rows without returning a partial CSV and records a PII-minimized rejection event.'
+	);
 	$inventory_export_http = $http_auth( $inventory );
 	list( $crm_export_denied_status, $crm_export_denied_body ) = $http_request( '/wp-admin/admin-post.php', $inventory_export_http, 'POST', array( 'action'=>'adc_export_leads', '_wpnonce'=>trim( $crm_export_nonce ) ), true );
-	adc_check( 403 === $crm_export_denied_status && ! str_contains( $crm_export_denied_body, '+966501234599' ) && ! str_contains( $crm_export_denied_body, 'formula-csv@example.invalid' ), 'CRM CSV export denies a role without lead-view capability before returning customer data.' );
+	adc_check( 403 === $crm_export_denied_status && ! str_contains( $crm_export_denied_body, '+966501234599' ) && ! str_contains( $crm_export_denied_body, 'formula-csv@example.invalid' ), 	'CRM CSV export denies a role without lead-view and explicit export capabilities before returning customer data.' );
 
 	$discount_decision_path = $rest_path( '/auto-dealership/v1/discounts/' . $http_discount_request['id'] . '/decision' );
 	$discounts_table = Schema::table( 'discount_requests' );

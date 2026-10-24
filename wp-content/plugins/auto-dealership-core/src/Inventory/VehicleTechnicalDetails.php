@@ -126,9 +126,9 @@ final class VehicleTechnicalDetails {
 		foreach(array('fuel','transmission','body_type','capacity','usage','equipment')as$field){$view[$field]=$resolved[$field]['label'];}return $view;
 	}
 	public static function boot():void {
-		add_action('admin_menu',static function(){add_submenu_page('adc-area-inventory',self::t('خيارات مواصفات السيارات','Vehicle specification options'),self::t('خيارات المواصفات','Specification options'),'manage_options','adc-vehicle-specifications',array(self::class,'admin'),111);},111);
+		add_action('admin_menu',static function(){add_submenu_page('adc-area-inventory',self::t('خيارات مواصفات السيارات','Vehicle specification options'),self::t('خيارات المواصفات','Specification options'),'manage_options','adc-vehicle-technical-options',array(self::class,'admin'),111);},111);
 		add_action('admin_post_adc_save_technical_options',array(self::class,'save_options'));
-		add_action('admin_enqueue_scripts',static function(){if(in_array($_GET['page']??'',array('adc-car-publishing','adc-vehicle-specifications'),true)){self::assets(true);}});
+		add_action('admin_enqueue_scripts',static function(){if(in_array($_GET['page']??'',array('adc-car-publishing','adc-vehicle-technical-options'),true)){self::assets(true);}});
 		add_action('wp_enqueue_scripts',static function(){if(is_singular('car')){self::assets(false);}});
 	}
 	private static function assets(bool $admin):void {
@@ -149,7 +149,7 @@ final class VehicleTechnicalDetails {
 		$source=self::source($post,array('vehicle'=>PublicCatalog::vehicle_for_post($post)));$legacy_engine=$source['engine_raw'];unset($source['engine_raw']);$source=array_filter($source,static fn($value)=>''!==$value);
 		if($source||$legacy_engine){echo '<details class="adc-technical-variant"><summary>'.esc_html(self::t('بيانات المصدر للمراجعة','Source data for review')).'</summary><ul>';foreach($source as$field=>$value){echo '<li>'.esc_html(self::labels()[$field].': '.$value).'</li>';}if(is_scalar($legacy_engine)&&''!==(string)$legacy_engine){echo '<li>'.esc_html(self::t('سعة المحرك القديمة (حدد الوحدة قبل اعتمادها): ','Historical engine size (confirm its unit first): ').$legacy_engine).'</li>';}echo '</ul></details>';}
 		$variants=self::variants($post);foreach($variants as$key=>$variant){echo '<details class="adc-technical-variant"><summary>'.esc_html(sprintf(self::t('تخصيص الفئة: %1$s · %2$s','Trim overrides: %1$s · %2$s'),$variant['trim'],$variant['year'])).'</summary><p class="description">'.esc_html(self::t('الحقول الفارغة ترث المواصفات الأساسية أعلاه. التخصيص يطبق على جميع ألوان هذه الفئة والموديل.','Empty fields inherit the base specifications above. Overrides apply to all colors of this trim and model year.')).'</p>';self::editor_row('technical_variants['.$key.']',(array)($saved['variants'][$key]??array()),self::t('استخدام المواصفات الأساسية','Use base specifications'));echo '</details>';}
-		if(current_user_can('manage_options')){echo '<p><a href="'.esc_url(admin_url('admin.php?page=adc-vehicle-specifications')).'">'.esc_html(self::t('إدارة الخيارات والترجمات والأيقونات','Manage options, translations and icons')).'</a></p>';}echo '</section>';
+		if(current_user_can('manage_options')){echo '<p><a href="'.esc_url(admin_url('admin.php?page=adc-vehicle-technical-options')).'">'.esc_html(self::t('إدارة الخيارات والترجمات والأيقونات','Manage options, translations and icons')).'</a></p>';}echo '</section>';
 	}
 	public static function options_revision():string {return hash('sha256',maybe_serialize(get_option(self::OPTION,array())));}
 	public static function validate_options($input,$new) {
@@ -179,7 +179,7 @@ final class VehicleTechnicalDetails {
 			if(!$ok){$result=new \WP_Error('adc_technical_stale',self::t('تعذر الحفظ؛ أعد تحميل الصفحة وحاول مجددًا.','Unable to save; reload and try again.'));}
 		}
 		if(is_wp_error($result)){set_transient('adc_technical_options_error_'.get_current_user_id(),$result->get_error_message(),120);}elseif(function_exists('car_dealer_clear_public_page_cache')){\car_dealer_clear_public_page_cache();}
-		wp_safe_redirect(add_query_arg(array('page'=>'adc-vehicle-specifications','saved'=>is_wp_error($result)?'0':'1'),admin_url('admin.php')));exit;
+		wp_safe_redirect(add_query_arg(array('page'=>'adc-vehicle-technical-options','saved'=>is_wp_error($result)?'0':'1'),admin_url('admin.php')));exit;
 	}
 	public static function admin():void {
 		if(!current_user_can('manage_options')){wp_die(esc_html(self::t('غير مسموح.','Access denied.')),403);}$labels=self::labels();$icons=array('fuel'=>self::t('وقود','Fuel'),'electric'=>self::t('كهرباء','Electric'),'hybrid'=>self::t('هجين','Hybrid'),'gear'=>self::t('ناقل الحركة','Transmission'),'engine'=>self::t('محرك','Engine'),'car'=>self::t('سيارة','Car'),'briefcase'=>self::t('استخدام','Use'),'truck'=>self::t('شاحنة','Truck'));

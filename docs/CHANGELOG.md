@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-10-24 — Role-specific admin screen verification
+
+- Verified rendered admin menus and direct screen access for all 14 synthetic development accounts. Fixed an inventory-screen denial caused by the vehicle specification editor and administrator-only technical-options page sharing a WordPress page slug; the admin options screen now uses `adc-vehicle-technical-options`.
+- Added regression checks that every capability-visible navigation page is actually accessible. All 12 dealership-role navigation suites and 234 read-only live UI assertions passed; no business or financial forms were submitted.
+
+## 2026-10-24 — Supplier privacy and schema drift repair
+
+- Restricted supplier legal identity, tax, contact and notes fields to `adc_manage_suppliers`; vehicle cost visibility alone no longer grants access through the supplier directory, including REST v1/v2.
+- Added bounded schema-contract verification and non-backfill repair for same-version schema drift. The active WordPress database's missing acquisition-document provenance column/index were restored and the full schema contract now passes.
+- Read-only media review found no legacy vehicle attachment references or private acquisition-document records. No public media were deleted; per-file review remains necessary before any future removal.
+- The decision owner approved the P-07 access policy on 2026-10-24. Isolated regression passed 1235 database checks and 60 purchasing/archive/release checks.
+- Completed a read-only, anonymized P-08 access baseline: 23 accounts were present, including 22 previously documented synthetic review accounts and one administrator. No direct permission overrides, suspensions, temporary grants or invalid branch assignments were found. The snapshot is not representative of operational staff and made no account changes; see [the P-08 review](./ACCESS-REVIEW-P08-AR.md).
+- Captured every positive capability stored on each currently assigned WordPress role and anonymized account counts. The role-level review highlights broad general-manager grants, combined finance record/verify capabilities, and purchase-order approval on Sales Manager; no account or role was changed. See the [full Arabic capability baseline](./ROLE-CAPABILITY-BASELINE-AR.md).
+
+## 2026-10-24 — Separate purchase-order approval default
+
+- Added the least-privilege `dealership_purchase_approver` role with workspace, order-view and standard approval capabilities.
+- Removed purchase-order approval from the default Sales Manager role while preserving order viewing. A versioned, repeatable migration updates only the uncustomized built-in role; administrator-defined role templates and individual grants remain untouched. Existing accounts are not assigned to the new role automatically.
+- Added isolated regression coverage for the role matrix and migration, translated the new role label, and bumped the plugin version to 1.65.3 so existing sites register the template.
+
 ## 2026-10-23 — Audited CRM lead export
 
 - CRM lead CSV exports now append a minimized audit event with the authenticated actor and row count; customer data and search/filter values are not copied into the audit log.

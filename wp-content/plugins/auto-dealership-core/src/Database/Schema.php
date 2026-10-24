@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.29.0';
+	public const VERSION = '1.30.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -36,6 +36,22 @@ final class Schema {
 				UNIQUE KEY reference_key (reference_key),
 				KEY sale_documents (sale_id,document_kind),
 				KEY parent_id (parent_id)
+			) $collate ENGINE=InnoDB",
+			"CREATE TABLE " . self::table('vehicle_acquisition_documents') . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				vehicle_id bigint(20) unsigned NOT NULL,
+				branch_id bigint(20) unsigned NOT NULL,
+				source_attachment_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				file_name varchar(255) NOT NULL,
+				mime_type varchar(100) NOT NULL,
+				checksum char(64) NOT NULL,
+				file_bytes longblob NOT NULL,
+				uploaded_by bigint(20) unsigned NOT NULL,
+				created_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				KEY vehicle_documents (vehicle_id,id),
+				KEY branch_id (branch_id),
+				KEY source_attachment_id (source_attachment_id)
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table('followup_notifications') . " (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -683,7 +699,7 @@ final class Schema {
 		return self::VERSION === get_option( 'adc_db_version' ) && ! get_option( 'adc_schema_issues', array() );
 	}
 
-	public static function install(): void {
+	public static function install( bool $capture_legacy_quotes = true ): void {
 		global $wpdb;
 		$lock = 'adc_schema_' . substr( hash( 'sha256', DB_NAME . ':' . $wpdb->prefix ), 0, 40 );
 		if ( '1' !== (string) $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 0)', $lock ) ) ) {
@@ -706,7 +722,7 @@ final class Schema {
 				}
 			}
 			$issues = self::verify();
-			if ( ! $issues && ! \AutoDealership\Pricing\QuoteHistory::backfill() ) {
+			if ( ! $issues && $capture_legacy_quotes && ! \AutoDealership\Pricing\QuoteHistory::backfill() ) {
 				$issues[] = 'quotation_versions:backfill_failed';
 			}
 			if ( $issues ) {

@@ -5,6 +5,19 @@
 .adc-role-defaults li { break-inside: avoid; margin-block-end: 6px; }
 .adc-role-defaults[hidden] { display: none; }
 .adc-user-permissions { margin-block: 28px; max-width: 1200px; }
+.adc-organizational-functions { margin-block: 18px; padding: 18px; border: 1px solid var(--ab-control-border); border-radius: 8px; background: var(--ab-surface); }
+.adc-organizational-functions legend { padding-inline: 8px; font-weight: 600; font-size: 15px; }
+.adc-organizational-functions label { display: inline-flex; align-items: flex-start; gap: 6px; margin: 8px 14px 0 0; }
+.adc-organizational-functions input { flex-shrink: 0; margin-top: 3px; }
+.adc-function-capability-review { margin-block: 14px; padding: 12px 16px; border-inline-start: 3px solid var(--ab-action); background: var(--ab-surface); }
+.adc-function-capability-review h3 { margin-block: 0 6px; font-size: 14px; }
+.adc-function-capability-review ul { margin-block: 8px 0; padding-inline-start: 20px; columns: 2 280px; }
+.adc-function-capability-review li { break-inside: avoid; margin-block-end: 5px; }
+.adc-function-capability-review[hidden] { display: none; }
+.adc-function-comparison { margin-block: 14px; padding: 12px 16px; border: 1px solid var(--ab-control-border); border-radius: 6px; background: var(--ab-surface); }
+.adc-function-comparison h3 { margin-block: 0 6px; font-size: 14px; }
+.adc-function-comparison ul { margin-block: 6px 0; padding-inline-start: 20px; }
+.adc-function-comparison[hidden], .adc-function-comparison [hidden] { display: none; }
 .adc-permission-group { margin-block: 18px; padding: 18px; border: 1px solid var(--ab-control-border); border-radius: 8px; background: var(--ab-surface); }
 .adc-permission-group legend { padding-inline: 8px; font-weight: 600; font-size: 15px; }
 .adc-permission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }

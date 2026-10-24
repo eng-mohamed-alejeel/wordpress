@@ -417,10 +417,10 @@ adc_check( $error_is( \AutoDealership\Reports\LeadPerformanceReport::summary( $c
 $crm_report_manager = $make_user( 'crm_report_manager_b', 'dealership_sales_manager', (int) $branch_b['id'] );
 wp_set_current_user( $crm_report_manager );
 $crm_branch_report = \AutoDealership\Reports\LeadPerformanceReport::summary( $crm_report_from, $crm_report_to );
-adc_check( is_array( $crm_branch_report ) && ! array_filter( $crm_branch_report['branches'], static fn( $row ) => (int) $row['branch_id'] !== (int) $branch_b['id'] ) && ! array_filter( $crm_branch_report['employees'], static fn( $row ) => (int) $row['branch_id'] !== (int) $branch_b['id'] ) && ! array_filter( $crm_branch_report['transitions'], static fn( $row ) => (int) $row['branch_id'] !== (int) $branch_b['id'] ), 'CRM branch, employee and historical transition reports include only rows in the manager active branch scope.' );
+adc_check( is_array( $crm_branch_report ) && ! array_filter( $crm_branch_report['branches'], static fn( $row ) => (int) $row['branch_id'] !== (int) $branch_b['id'] ) && ! array_filter( $crm_branch_report['pipeline'], static fn( $row ) => (int) $row['branch_id'] !== (int) $branch_b['id'] ) && ! array_filter( $crm_branch_report['transitions'], static fn( $row ) => (int) $row['branch_id'] !== (int) $branch_b['id'] ) && ! isset( $crm_branch_report['employees'] ) && ! array_filter( array_merge( $crm_branch_report['pipeline'], $crm_branch_report['transitions'] ), static fn( $row ) => array_key_exists( 'owner_user_id', $row ) ), 'CRM branch-level reports stay within the active branch and omit employee identifiers from the report shape.' );
 wp_set_current_user( $admin );
 $crm_global_report = \AutoDealership\Reports\LeadPerformanceReport::summary( $crm_report_from, $crm_report_to );
-adc_check( is_array( $crm_global_report ) && array_key_exists( 'avg_first_contact_seconds', $crm_global_report['totals'] ) && isset( $crm_global_report['pipeline'], $crm_global_report['transitions'] ) && array_filter( $crm_global_report['transitions'], static fn( $row ) => 'assigned' === $row['from_stage'] && 'contacted' === $row['to_stage'] && null !== $row['avg_duration_seconds'] && is_numeric( $row['destination_share_percent'] ) && $row['destination_share_percent'] > 0 && $row['transition_rate_percent'] === $row['destination_share_percent'] ) && array_filter( $crm_global_report['branches'], static fn( $row ) => (int) $row['branch_id'] === (int) $branch_b['id'] ), 'CRM report returns source-exit destination shares alongside historical transition counts and elapsed time.' );
+adc_check( is_array( $crm_global_report ) && array_key_exists( 'avg_first_contact_seconds', $crm_global_report['totals'] ) && isset( $crm_global_report['pipeline'], $crm_global_report['transitions'] ) && array_filter( $crm_global_report['transitions'], static fn( $row ) => 'assigned' === $row['from_stage'] && 'contacted' === $row['to_stage'] && null !== $row['avg_duration_seconds'] && is_numeric( $row['destination_share_percent'] ) && $row['destination_share_percent'] > 0 && $row['transition_rate_percent'] === $row['destination_share_percent'] ) && array_filter( $crm_global_report['branches'], static fn( $row ) => (int) $row['branch_id'] === (int) $branch_b['id'] ) && ! isset( $crm_global_report['employees'] ) && ! array_filter( array_merge( $crm_global_report['pipeline'], $crm_global_report['transitions'] ), static fn( $row ) => array_key_exists( 'owner_user_id', $row ) ), 'CRM report preserves aggregate transition shares and timings without exposing employee identity.' );
 adc_check( $error_is( \AutoDealership\Reports\LeadPerformanceReport::summary( $crm_report_from, gmdate( 'Y-m-d', time() + 400 * DAY_IN_SECONDS ) ), 'adc_lead_report_dates' ), 'CRM performance report rejects invalid or excessive date ranges.' );
 $crm_previous_timezone = get_option( 'timezone_string' );
 update_option( 'timezone_string', 'Asia/Riyadh' );
@@ -466,12 +466,36 @@ ob_start();
 \AutoDealership\Admin\OperationsPages::render_lead_performance();
 $crm_report_html = ob_get_clean();
 $_GET = $crm_report_previous_get;
-adc_check( str_contains( $crm_report_html, 'مؤشرات الفروع' ) && str_contains( $crm_report_html, 'مؤشرات موظفي المبيعات' ) && str_contains( $crm_report_html, 'توزيع المراحل حسب الفرع والموظف' ) && str_contains( $crm_report_html, 'التحولات التاريخية بين المراحل' ) && str_contains( $crm_report_html, 'حصة الوجهة من المغادرين' ) && str_contains( $crm_report_html, 'المنطقة الزمنية للموقع' ) && str_contains( $crm_report_html, 'استعادة سجل المراحل' ), 'CRM performance screen explains cohort metrics, destination-share semantics and backfill status.' );
+adc_check( str_contains( $crm_report_html, 'مؤشرات الفروع' ) && str_contains( $crm_report_html, 'توزيع المراحل حسب الفرع' ) && str_contains( $crm_report_html, 'التحولات التاريخية بين المراحل حسب الفرع' ) && str_contains( $crm_report_html, 'لا تتضمن هوية الموظف' ) && ! str_contains( $crm_report_html, 'مؤشرات موظفي المبيعات' ) && ! str_contains( $crm_report_html, 'الموظف وقت الانتقال' ) && str_contains( $crm_report_html, 'حصة الوجهة من المغادرين' ) && str_contains( $crm_report_html, 'المنطقة الزمنية للموقع' ) && str_contains( $crm_report_html, 'استعادة سجل المراحل' ), 'CRM performance screen exposes only branch-level aggregates and explains its metrics and history coverage.' );
+$crm_marketing_previous_get = $_GET;
+$_GET = array( 'page'=>'adc-marketing-reports', 'period'=>'7days' );
+wp_set_current_user( $crm_marketer );
+ob_start();
+\AutoDealership\Admin\OperationsPages::render_marketing_reports();
+$crm_marketing_report_html = ob_get_clean();
+$_GET = $crm_marketing_previous_get;
+wp_set_current_user( $admin );
+adc_check( str_contains( $crm_marketing_report_html, 'مقاييس الأداء المعروضة مجمعة للحملة' ) && ! str_contains( $crm_marketing_report_html, 'أداء موظفي المبيعات' ) && ! str_contains( $crm_marketing_report_html, 'name="owner_user_id"' ) && ! str_contains( $crm_marketing_report_html, get_userdata( $sales_b )->display_name ), 'Campaign metrics retain campaign-level aggregates without rendering employee names or identifiers.' );
+$crm_crm_previous_get = $_GET;
+$_GET = array( 'page'=>'adc-crm' );
+wp_set_current_user( $sales_b );
+ob_start();
+\AutoDealership\Admin\OperationsPages::render_leads();
+$crm_viewer_without_export_html = ob_get_clean();
+$_GET = $crm_crm_previous_get;
+adc_check(
+	! str_contains( $crm_viewer_without_export_html, 'تصدير النتائج CSV' ),
+	'CRM lead viewers do not see the bulk-export action without its separate capability.'
+);
+wp_set_current_user( $admin );
 $crm_admin_user->add_cap( 'adc_view_own_leads' );
 $crm_admin_user->add_cap( 'adc_view_branch_leads' );
 $crm_admin_user->add_cap( 'adc_manage_branch_leads' );
 $crm_admin_user->add_cap( 'adc_view_marketing_leads' );
 $crm_admin_user->add_cap( 'adc_create_marketing_leads' );
+$crm_admin_user->add_cap( 'adc_export_crm_leads' );
+wp_set_current_user( 0 );
+wp_set_current_user( $admin );
 $crm_crm_previous_get = $_GET;
 $_GET = array( 'page'=>'adc-crm', 'stage'=>'assigned', 'priority'=>'normal', 'branch_id'=>(int) $branch_b['id'], 'source'=>'marketing', 'campaign'=>'Autumn campaign', 'platform'=>'Google', 'created_by'=>(int) $admin, 'owner'=>(int) $sales_b );
 ob_start();
@@ -479,7 +503,18 @@ ob_start();
 $crm_list_html = ob_get_clean();
 $_GET = $crm_crm_previous_get;
 adc_check( 1 === substr_count( $crm_list_html, 'name="idempotency_key"' ) && ! str_contains( $crm_list_html, 'class="card adc-marketing-intake"' ) && str_contains( $crm_list_html, 'data-crm-board-status' ) && str_contains( $crm_list_html, 'data-lead-stage-form' ) && str_contains( $crm_list_html, 'name="campaign" value="Autumn campaign"' ), 'CRM intake is rendered once and the board offers accessible stage controls while retaining marketing filters.' );
-adc_check( str_contains( $crm_list_html, 'campaign=Autumn+campaign' ) && str_contains( $crm_list_html, 'platform=Google' ) && str_contains( $crm_list_html, 'created_by=' . (int) $admin ), 'CRM export links carry the active campaign, platform and creator filters.' );
+adc_check(
+	str_contains( $crm_list_html, '<form method="post"' ) && str_contains( $crm_list_html, 'name="action" value="adc_export_leads"' )
+	&& str_contains( $crm_list_html, 'name="campaign" value="Autumn campaign"' )
+	&& str_contains( $crm_list_html, 'name="platform" value="Google"' )
+	&& str_contains( $crm_list_html, 'name="created_by" value="' . (int) $admin . '"' )
+	&& str_contains( $crm_list_html, 'name="purpose" required' ) && str_contains( $crm_list_html, 'name="reason" required' ),
+	'CRM export form uses POST, carries active filters, and requires purpose and reason.'
+);
+$crm_admin_user->remove_cap( 'adc_export_crm_leads' );
+clean_user_cache( $admin );
+wp_set_current_user( 0 );
+wp_set_current_user( $admin );
 wp_clear_scheduled_hook( 'adc_backfill_lead_stage_history' );
 update_option( 'adc_lead_stage_history_backfill_complete', false, false );
 update_option( 'adc_lead_stage_history_duration_complete', false, false );

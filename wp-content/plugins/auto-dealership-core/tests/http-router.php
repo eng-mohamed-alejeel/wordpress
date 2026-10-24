@@ -152,6 +152,17 @@ if ( '/wp-admin/admin-post.php' === $request_path ) {
 			return str_starts_with( $query, 'INSERT INTO `' . $audit_table . '`' ) ? str_replace( '`' . $audit_table . '`', '`missing_adc_test_audit`', $query ) : $query;
 		} );
 	}
+	if ( 'adc_export_leads' === $action && in_array( $_GET['adc_test_fail_export_query'] ?? '', array( 'count', 'page' ), true ) ) {
+		$lead_table = \AutoDealership\Database\Schema::table( 'leads' );
+		$failure = sanitize_key( $_GET['adc_test_fail_export_query'] );
+		add_filter( 'query', static function ( string $query ) use ( $lead_table, $failure ): string {
+			$matches = 'count' === $failure
+				? str_starts_with( $query, 'SELECT COUNT(*) FROM ' . $lead_table . ' l' )
+				: str_starts_with( $query, 'SELECT l.id,l.customer_id,l.branch_id,' ) && str_contains( $query, ' FROM ' . $lead_table . ' l' );
+			$replace_count = 0;
+			return $matches ? str_replace( $lead_table, 'missing_adc_test_leads', $query, $replace_count ) : $query;
+		} );
+	}
 	do_action( ( is_user_logged_in() ? 'admin_post_' : 'admin_post_nopriv_' ) . $action );
 	http_response_code( 400 );
 	exit;
@@ -173,6 +184,7 @@ if ( in_array( $request_path, array( '/wp-admin/admin.php', '/wp-admin/options-g
 		'adc-platform-setup'=>array( \AutoDealership\Core\ProductSetup::class, 'render' ),
 		'adc-contact'=>array( \AutoDealership\Core\ProductSetup::class, 'render_contact' ),
 		'adc-social-channels'=>array( \AutoDealership\Core\SocialChannels::class, 'admin' ),
+		'adc-portal-operations'=>array( \AutoDealership\Portal\PortalOperations::class, 'render' ),
 		'adc-branch-locations'=>array( \AutoDealership\Core\BranchLocations::class, 'admin' ),
 		'adc-editorial-setup'=>array( \AutoDealership\Admin\EditorialSetupPage::class, 'render' ),
 		'adc-vehicle-acquisition'=>array( \AutoDealership\Admin\VehicleAcquisitionPage::class, 'render' ),

@@ -38,9 +38,21 @@ foreach ( Navigation::groups() as $group ) {
   $registered = in_array( $item['slug'], array_column( $submenu[$parent] ?? array(), 2 ), true );
   if ( $registered !== Navigation::allowed( $item ) ) { throw new RuntimeException( 'Card/menu permission mismatch: ' . $item['slug'] ); }
   if ( ! is_callable( $item['callback'] ) ) { throw new RuntimeException( 'Invalid callback: ' . $item['slug'] ); }
+  if ( Navigation::allowed( $item ) ) {
+   $GLOBALS['plugin_page'] = $item['slug'];
+   $GLOBALS['pagenow'] = 'admin.php';
+   $GLOBALS['parent_file'] = '';
+   $_GET['page'] = $item['slug'];
+   if ( ! user_can_access_admin_page() ) { throw new RuntimeException( 'Visible page is inaccessible: ' . $item['slug'] ); }
+  }
   ++$count;
  }
 }
+$_GET['page'] = 'adc-vehicle-technical-options';
+$GLOBALS['plugin_page'] = 'adc-vehicle-technical-options';
+$GLOBALS['pagenow'] = 'admin.php';
+$GLOBALS['parent_file'] = '';
+if ( user_can_access_admin_page() ) { throw new RuntimeException( 'Specification option page must remain administrator-only.' ); }
 if ( current_user_can( 'adc_change_vehicle_vin' ) && ! current_user_can( 'adc_manage_inventory' ) ) {
  $_GET['page'] = 'adc-inventory-identity';
  $GLOBALS['plugin_page'] = 'adc-inventory-identity';

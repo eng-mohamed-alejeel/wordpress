@@ -135,6 +135,7 @@ final class Navigation {
 				array( 'users.php', \AutoDealership\Core\ProductSetup::t( 'حسابات الموظفين', 'Staff accounts' ), 'list_users' ),
 				array( 'adc-roles', 'Roles and permissions', 'manage_options', RoleManager::class, 'render' ),
 				array( 'adc-access-review', 'Account access review', 'manage_options', AccessReviewPage::class, 'render' ),
+				array( 'adc-policy-profile', 'Company policy profile', 'manage_options', PolicyProfilePage::class, 'render' ),
 			) ),
 			'audit' => array( 'الرقابة والتكاملات', 'dashicons-visibility', array(
 				array( 'adc-audit', 'سجل التدقيق', 'adc_view_audit', AuditPage::class, 'render' ),

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.65.2
+ * Version: 1.65.3
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.65.2' );
+define( 'ADC_VERSION', '1.65.3' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -130,6 +130,7 @@ require_once ADC_PATH . 'src/Admin/OnyxInventoryPage.php';
 \AutoDealership\Admin\OnyxInventoryPage::boot();
 require_once ADC_PATH . 'src/Inventory/VehicleSpecifications.php';
 require_once ADC_PATH . 'src/Inventory/VehicleAcquisitionService.php';
+require_once ADC_PATH . 'src/Inventory/VehicleAcquisitionDocuments.php';
 require_once ADC_PATH . 'src/Inventory/VehicleIntakeService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleIssueService.php';
 require_once ADC_PATH . 'src/Inventory/VehicleReturnService.php';
@@ -203,10 +204,14 @@ require_once ADC_PATH . 'src/Admin/WorkspacePage.php';
 require_once ADC_PATH . 'src/Admin/WorkspaceOverview.php';
 require_once ADC_PATH . 'src/Admin/WorkspaceOverviewView.php';
 require_once ADC_PATH . 'src/Admin/UserPermissions.php';
+require_once ADC_PATH . 'src/Admin/OrganizationalCapabilityMap.php';
 require_once ADC_PATH . 'src/Admin/RoleManager.php';
 require_once ADC_PATH . 'src/Security/AccessPolicy.php';
 register_deactivation_hook( ADC_FILE, array( 'AutoDealership\\Security\\AccessPolicy', 'deactivate' ) );
 require_once ADC_PATH . 'src/Admin/AccessReviewPage.php';
+require_once ADC_PATH . 'src/Admin/PolicyProfileService.php';
+require_once ADC_PATH . 'src/Admin/PolicyProfilePage.php';
+\AutoDealership\Admin\PolicyProfilePage::boot();
 require_once ADC_PATH . 'src/Admin/EditorialSetupPage.php';
 require_once ADC_PATH . 'src/Admin/OperationsPages.php';
 require_once ADC_PATH . 'src/Admin/RequestPage.php';
@@ -429,6 +434,12 @@ add_action( 'plugins_loaded', static function (): void {
 	}
 	if ( get_option( 'adc_db_version' ) !== \AutoDealership\Database\Schema::VERSION && ! get_transient( 'adc_schema_retry_pending' ) ) {
 		\AutoDealership\Database\Schema::install();
+	} elseif ( false === get_transient( 'adc_schema_contract_verified' ) ) {
+		if ( \AutoDealership\Database\Schema::verify() ) {
+			\AutoDealership\Database\Schema::install( false );
+		} else {
+			set_transient( 'adc_schema_contract_verified', 1, 6 * HOUR_IN_SECONDS );
+		}
 	}
 } );
 

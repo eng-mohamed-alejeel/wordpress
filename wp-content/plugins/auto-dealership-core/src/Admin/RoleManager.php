@@ -37,6 +37,21 @@ final class RoleManager {
 		}
 		$role = get_role( $slug );
 		if ( $new ? ( $role || ! str_starts_with( $slug, 'adc_role_' ) ) : ! $role ) { return new \WP_Error( 'adc_role_exists', __( 'The role identifier is unavailable.', 'auto-dealership-core' ) ); }
+		$definitions = get_option( 'adc_role_definitions', array() );
+		if ( ! is_array( $definitions ) ) { $definitions = array(); }
+		$stored_definition = is_array( $definitions[$slug] ?? null ) ? $definitions[$slug] : array();
+		if ( array_key_exists( 'organizational_functions', $input ) ) {
+			$organizational_functions = $input['organizational_functions'];
+		} elseif ( '1' === ( $input['organizational_functions_present'] ?? '0' ) ) {
+			$organizational_functions = array();
+		} else {
+			$organizational_functions = $stored_definition['organizational_functions'] ?? array();
+		}
+		if ( ! is_array( $organizational_functions ) ) { return new \WP_Error( 'adc_role_function', __( 'Choose valid organizational function references.', 'auto-dealership-core' ) ); }
+		foreach ( $organizational_functions as $function_id ) {
+			if ( ! is_string( $function_id ) || ! in_array( $function_id, OrganizationalCapabilityMap::function_ids(), true ) ) { return new \WP_Error( 'adc_role_function', __( 'Choose valid organizational function references.', 'auto-dealership-core' ) ); }
+		}
+		$organizational_functions = array_values( array_unique( $organizational_functions ) );
 		$ar = sanitize_text_field( $ar ); $en = sanitize_text_field( $en );
 		if ( '' === $ar || '' === $en ) { return new \WP_Error( 'adc_role_invalid', __( 'Enter a valid role identifier and both Arabic and English names.', 'auto-dealership-core' ) ); }
 		$before = $role ? $role->capabilities : array();
@@ -45,11 +60,11 @@ final class RoleManager {
 		$next['read'] = true;
 		foreach ( array_unique( $caps ) as $cap ) { $next[$cap] = true; }
 		$impact = self::impact( $slug, $next );
+		$impact['revision'] = hash( 'sha256', wp_json_encode( array( $impact['revision'], $ar, $en, $organizational_functions ) ) );
 		if ( $preview ) { return $impact; }
 		if ( isset( $input['revision'] ) && ( ! is_string( $input['revision'] ) || ! hash_equals( $impact['revision'], $input['revision'] ) ) ) { return new \WP_Error( 'adc_role_stale', __( 'Access changed since the preview. Review the impact again.', 'auto-dealership-core' ) ); }
-		$definitions = get_option( 'adc_role_definitions', array() );
-		$original = $definitions[$slug]['original'] ?? ( $new ? $next : $before );
-		$definitions[$slug] = array( 'ar' => $ar, 'en' => $en, 'caps' => array_values( array_unique( $caps ) ), 'original' => $original );
+		$original = $stored_definition['original'] ?? ( $new ? $next : $before );
+		$definitions[$slug] = array_merge( $stored_definition, array( 'ar' => $ar, 'en' => $en, 'caps' => array_values( array_unique( $caps ) ), 'original' => $original, 'organizational_functions' => $organizational_functions ) );
 		global $wpdb;
 		if ( ! \AutoDealership\Database\Transaction::begin( array( $wpdb->options ) ) ) { return new \WP_Error( 'adc_role_write_failed', __( 'The access change could not be saved.', 'auto-dealership-core' ) ); }
 		if ( $new ) {
@@ -66,7 +81,7 @@ final class RoleManager {
 		$reason = isset( $input['reason'] ) && is_string( $input['reason'] ) ? sanitize_textarea_field( $input['reason'] ) : '';
 		$stored_roles = get_option( wp_roles()->role_key, array() );
 		$verified = ( $stored_roles[$slug]['capabilities'] ?? null ) === $next && get_option( 'adc_role_definitions', array() ) === $definitions;
-		if ( ! \AutoDealership\Database\Transaction::commit( static fn() => $verified && AuditLog::record( $new ? 'security.role_created' : 'security.role_updated', 'role', 0, $reason ?: $slug, array( 'role' => $slug, 'capabilities' => $before ), array( 'role' => $slug, 'ar' => $ar, 'en' => $en, 'capabilities' => $next ) ) ) ) { self::refresh_caches(); return new \WP_Error( 'adc_role_write_failed', __( 'The access change could not be saved.', 'auto-dealership-core' ) ); }
+		if ( ! \AutoDealership\Database\Transaction::commit( static fn() => $verified && AuditLog::record( $new ? 'security.role_created' : 'security.role_updated', 'role', 0, $reason ?: $slug, array( 'role' => $slug, 'capabilities' => $before, 'organizational_functions' => $stored_definition['organizational_functions'] ?? array() ), array( 'role' => $slug, 'ar' => $ar, 'en' => $en, 'capabilities' => $next, 'organizational_functions' => $organizational_functions ) ) ) ) { self::refresh_caches(); return new \WP_Error( 'adc_role_write_failed', __( 'The access change could not be saved.', 'auto-dealership-core' ) ); }
 		return $slug;
 	}
 
@@ -187,16 +202,20 @@ final class RoleManager {
 		foreach ( $roles as $slug => $role ) { echo '<option value="' . esc_attr( $slug ) . '" ' . selected( $slug, $selected, false ) . '>' . esc_html( translate_user_role( $role['name'] ) ) . '</option>'; }
 		echo '</select></label> '; submit_button( __( 'View role', 'auto-dealership-core' ), 'secondary', '', false ); echo '</form>';
 		if ( $selected ) { self::form( $selected, false ); }
-		echo '<hr>'; self::form( '', true ); echo '</div>';
+		echo '<hr>'; self::form( '', true );
+		OrganizationalCapabilityMap::render_reference_panel();
+		echo '</div>';
 	}
 
 	private static function form( string $slug, bool $new ): void {
 		$definitions = get_option( 'adc_role_definitions', array() );
+		if ( ! is_array( $definitions ) ) { $definitions = array(); }
+		$definition = is_array( $definitions[$slug] ?? null ) ? $definitions[$slug] : array();
 		$role = $slug ? get_role( $slug ) : null;
 		$name = $slug ? ( wp_roles()->role_names[$slug] ?? $slug ) : '';
-		$names = $definitions[$slug] ?? array();
+		$names = $definition;
 		if ( $slug && ! $names ) {
-			$source = array( 'car_dealer_customer' => 'Dealership Customer', 'dealership_sales' => 'Dealership Sales', 'dealership_sales_manager' => 'Dealership Sales Manager', 'dealership_general_manager' => 'Dealership General Manager', 'dealership_inventory' => 'Dealership Inventory', 'dealership_finance' => 'Dealership Finance', 'dealership_purchasing' => 'Dealership Purchasing', 'dealership_delivery' => 'Dealership Delivery', 'dealership_customer_service' => 'Dealership Customer Service', 'dealership_marketing' => 'Dealership Marketing', 'dealership_auditor' => 'Dealership Auditor' );
+			$source = array( 'car_dealer_customer' => 'Dealership Customer', 'dealership_sales' => 'Dealership Sales', 'dealership_sales_manager' => 'Dealership Sales Manager', 'dealership_general_manager' => 'Dealership General Manager', 'dealership_inventory' => 'Dealership Inventory', 'dealership_finance' => 'Dealership Finance', 'dealership_purchasing' => 'Dealership Purchasing', 'dealership_purchase_approver' => 'Dealership Purchase Approver', 'dealership_delivery' => 'Dealership Delivery', 'dealership_customer_service' => 'Dealership Customer Service', 'dealership_marketing' => 'Dealership Marketing', 'dealership_auditor' => 'Dealership Auditor' );
 			$catalog = require __DIR__ . '/../../languages/ui.php';
 			$en = $source[$slug] ?? ucwords( str_replace( '_', ' ', $slug ) );
 			$names = array( 'en' => $en, 'ar' => $catalog['ar'][$en] ?? $name );
@@ -213,10 +232,25 @@ final class RoleManager {
 			echo '<input type="hidden" name="clone_loaded" value="0"><p><label>' . esc_html__( 'Copy permissions from role', 'auto-dealership-core' ) . ' <select name="clone_source"><option value="">—</option>';
 			foreach ( get_editable_roles() as $key => $item ) { if ( 'administrator' !== $key ) { echo '<option value="' . esc_attr( $key ) . '">' . esc_html( translate_user_role( $item['name'] ) ) . '</option>'; } } echo '</select></label></p>';
 		}
+		$report = OrganizationalCapabilityMap::report();
+		$selected_functions = array();
+		foreach ( $definition['organizational_functions'] ?? array() as $function_id ) { if ( is_string( $function_id ) && isset( $report['functions'][$function_id] ) ) { $selected_functions[] = $function_id; } }
+		echo '<fieldset class="adc-organizational-functions"><legend>' . esc_html__( 'Organizational function references', 'auto-dealership-core' ) . '</legend><p class="description">' . esc_html__( 'These selections document role alignment only. They do not select or grant permissions. Select only capabilities required for actual tasks; mapped capabilities are contextual references.', 'auto-dealership-core' ) . '</p><input type="hidden" name="organizational_functions_present" value="1">';
+		foreach ( $report['functions'] as $function_id => $function ) {
+			echo '<label><input type="checkbox" name="organizational_functions[]" value="' . esc_attr( $function_id ) . '" ' . checked( in_array( $function_id, $selected_functions, true ), true, false ) . '> ' . esc_html( $function['label'] ) . '</label> ';
+			echo '<section class="adc-function-capability-review" data-function-review="' . esc_attr( $function_id ) . '" hidden><h3>' . esc_html( $function['label'] ) . '</h3><p class="description">' . esc_html__( 'Reference only: an unselected capability is not a recommendation to grant it. Select permissions individually only when required by approved tasks.', 'auto-dealership-core' ) . '</p><ul>';
+			foreach ( $function['capabilities'] as $capability ) {
+				echo '<li data-review-capability="' . esc_attr( $capability['key'] ) . '"><span>' . esc_html__( $capability['label'], 'auto-dealership-core' ) . '</span>: <strong data-review-state></strong></li>';
+			}
+			echo '</ul></section>';
+		}
+		echo '<section class="adc-function-comparison" data-function-comparison hidden><h3>' . esc_html__( 'Read-only role and function comparison', 'auto-dealership-core' ) . '</h3><p class="description">' . esc_html__( 'This compares role defaults only. It does not grant or remove permissions and does not include individual overrides, temporary grants, or data scope.', 'auto-dealership-core' ) . '</p><p data-function-comparison-summary></p><div data-function-comparison-outside hidden><strong>' . esc_html__( 'Selected permissions outside the selected functions', 'auto-dealership-core' ) . '</strong><ul></ul></div></section>';
+		echo '</fieldset>';
 		$groups = array(); foreach ( UserPermissions::catalog() as $cap => $entry ) { $groups[$entry[0]][$cap] = $entry[1]; }
+		$capability_functions = OrganizationalCapabilityMap::capability_function_ids();
 		foreach ( $groups as $group => $caps ) {
 			echo '<fieldset class="adc-permission-group"><legend>' . esc_html__( $group, 'auto-dealership-core' ) . '</legend><div class="adc-permission-grid">';
-			foreach ( $caps as $cap => $label ) { echo '<label><input type="checkbox" name="caps[]" value="' . esc_attr( $cap ) . '" ' . checked( $role && $role->has_cap( $cap ), true, false ) . '> ' . esc_html__( $label, 'auto-dealership-core' ) . '</label>'; }
+			foreach ( $caps as $cap => $label ) { echo '<label data-organizational-functions="' . esc_attr( implode( ',', $capability_functions[$cap] ?? array() ) ) . '"><input type="checkbox" name="caps[]" value="' . esc_attr( $cap ) . '" ' . checked( $role && $role->has_cap( $cap ), true, false ) . '> ' . esc_html__( $label, 'auto-dealership-core' ) . '</label>'; }
 			echo '</div></fieldset>';
 		}
 		echo '<p><label>' . esc_html__( 'Change reason', 'auto-dealership-core' ) . '<br><textarea name="reason" required maxlength="2000" class="large-text" rows="2"></textarea></label></p>';
@@ -232,12 +266,16 @@ final class RoleManager {
 
 	private static function confirmation( array $input, array $impact, string $token ): void {
 		$title = __( 'Review role impact', 'auto-dealership-core' );
-		echo '<div class="wrap"><h1>' . esc_html( $title ) . '</h1><p>' . esc_html__( 'Review these changes before applying them. Users with individual overrides may be unaffected. Role transfers also end active sessions.', 'auto-dealership-core' ) . '</p><p><strong>' . esc_html__( 'Role identifier', 'auto-dealership-core' ) . ':</strong> ' . esc_html( $input['slug'] ) . '</p><p><strong>' . esc_html__( 'Permissions added', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $impact['role_added'] ) ?: '—' ) . '</p><p><strong>' . esc_html__( 'Permissions removed', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $impact['role_removed'] ) ?: '—' ) . '</p><div style="overflow:auto"><table class="widefat striped"><thead><tr>';
+		$function_labels = array();
+		$function_map = OrganizationalCapabilityMap::report()['functions'];
+		foreach ( is_array( $input['organizational_functions'] ?? null ) ? $input['organizational_functions'] : array() as $function_id ) { if ( is_string( $function_id ) && isset( $function_map[$function_id] ) ) { $function_labels[] = $function_map[$function_id]['label']; } }
+		echo '<div class="wrap"><h1>' . esc_html( $title ) . '</h1><p>' . esc_html__( 'Review these changes before applying them. Users with individual overrides may be unaffected. Role transfers also end active sessions.', 'auto-dealership-core' ) . '</p><p><strong>' . esc_html__( 'Role identifier', 'auto-dealership-core' ) . ':</strong> ' . esc_html( $input['slug'] ) . '</p><p><strong>' . esc_html__( 'Organizational function references (not permission grants)', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $function_labels ) ?: __( 'None selected', 'auto-dealership-core' ) ) . '</p><p>' . esc_html__( 'The function references are informational only. Review the manually selected permissions in this impact preview.', 'auto-dealership-core' ) . '</p><p><strong>' . esc_html__( 'Permissions added', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $impact['role_added'] ) ?: '—' ) . '</p><p><strong>' . esc_html__( 'Permissions removed', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $impact['role_removed'] ) ?: '—' ) . '</p><div style="overflow:auto"><table class="widefat striped"><thead><tr>';
 		foreach ( array( 'User', 'Permissions added', 'Permissions removed', 'Individual overrides', 'Temporary permissions' ) as $label ) { echo '<th>' . esc_html__( $label, 'auto-dealership-core' ) . '</th>'; } echo '</tr></thead><tbody>';
 		foreach ( $impact['users'] as $row ) { echo '<tr><td>' . esc_html( $row['name'] ) . '</td><td>' . esc_html( implode( ', ', $row['added'] ) ?: '—' ) . '</td><td>' . esc_html( implode( ', ', $row['removed'] ) ?: '—' ) . '</td><td>' . absint( $row['overrides'] ) . '</td><td>' . absint( $row['temporary'] ) . '</td></tr>'; }
 		if ( ! $impact['users'] ) { echo '<tr><td colspan="5">' . esc_html__( 'No users currently assigned to this role.', 'auto-dealership-core' ) . '</td></tr>'; } echo '</tbody></table></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_save_role' );
-		foreach ( array( 'slug', 'ar', 'en', 'new', 'operation', 'target', 'reason' ) as $key ) { if ( isset( $input[$key] ) && is_string( $input[$key] ) ) { echo '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $input[$key] ) . '">'; } }
+		foreach ( array( 'slug', 'ar', 'en', 'new', 'operation', 'target', 'reason', 'organizational_functions_present' ) as $key ) { if ( isset( $input[$key] ) && is_string( $input[$key] ) ) { echo '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $input[$key] ) . '">'; } }
+		foreach ( is_array( $input['organizational_functions'] ?? null ) ? $input['organizational_functions'] : array() as $function_id ) { if ( is_string( $function_id ) ) { echo '<input type="hidden" name="organizational_functions[]" value="' . esc_attr( $function_id ) . '">'; } }
 		foreach ( $input['caps'] ?? array() as $cap ) { echo '<input type="hidden" name="caps[]" value="' . esc_attr( $cap ) . '">'; }
 		echo '<input type="hidden" name="action" value="adc_save_role"><input type="hidden" name="confirmed" value="1"><input type="hidden" name="preview_token" value="' . esc_attr( $token ) . '"><input type="hidden" name="revision" value="' . esc_attr( $impact['revision'] ) . '">';
 		submit_button( __( 'Apply reviewed changes', 'auto-dealership-core' ) ); echo '<a class="button" href="' . esc_url( admin_url( 'admin.php?page=adc-roles' ) ) . '">' . esc_html__( 'Cancel', 'auto-dealership-core' ) . '</a></form></div>';

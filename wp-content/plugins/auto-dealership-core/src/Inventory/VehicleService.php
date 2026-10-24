@@ -251,6 +251,11 @@ final class VehicleService {
 			$ids = json_decode( (string) $row['gallery_media_ids'], true );
 			$row['gallery_media_ids'] = is_array( $ids ) ? array_values( array_filter( array_map( 'absint', $ids ) ) ) : array();
 		}
+		if ( $row && array_key_exists( 'document_media_ids', $row ) ) {
+			$legacy_ids = json_decode( (string) $row['document_media_ids'], true );
+			$row['legacy_public_document_count'] = is_array( $legacy_ids ) ? count( array_filter( array_map( 'absint', $legacy_ids ) ) ) : 0;
+			unset( $row['document_media_ids'] );
+		}
 		return $row ?: null;
 	}
 

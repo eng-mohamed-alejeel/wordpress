@@ -38,6 +38,30 @@
 قيد التنفيذ أو بانتظار المجدول	Running or waiting for the scheduler
 استعادة سجل المراحل: %1$s. عولج %2$s حدث تدقيق، وأعيد حساب مدد %3$s فرصة؛ مؤشر الأحداث %4$s.	Stage history recovery: %1$s. Processed %2$s audit events and recalculated durations for %3$s leads; event cursor %4$s.
 تعذر حفظ سجل مراحل الطلب.	Unable to save lead stage history.
+هذه خريطة مرجعية للقراءة فقط، وليست قالبًا للأدوار أو توصية بالصلاحيات. اختيار وظيفة لا يمنح قدرات. اختر فقط القدرات اللازمة للمهام الفعلية لكل دور، وراجع التعارضات ونطاق البيانات واختبر التغييرات قبل تطبيقها.	This is a read-only reference, not a role template or permission recommendation. Selecting a function here does not grant capabilities. Choose only task-required capabilities for each role, review conflicts and data scope, and test before changing access.
+الوظيفة التنظيمية	Organizational function
+القدرات الحالية المرتبطة (للمرجع فقط)	Related existing capabilities (reference only)
+توجد عناصر مرجعية لا تظهر في كتالوج القدرات القابلة للتعيين، وتحتاج إلى مراجعة:	Some reference entries do not exist in the assignable capability catalog and require review:
+التصنيفات الأولية مستندة إلى أوصاف القدرات، وتتطلب مراجعة بشرية، ولا توصي بمنح الصلاحيات.	Preliminary classifications are based on capability descriptions, require human review, and do not recommend granting permissions.
+التصنيف الأولي (يتطلب مراجعة بشرية)	Preliminary classification (human review required)
+قراءة / اطلاع	Read / reference
+اعتماد / تحقق	Approval / verification
+تغيير / تنفيذ	Change / operation
+غير مصنف من الوصف	Unclassified from description
+خريطة مرجعية للوظائف التنظيمية	Organizational function reference map
+تغطية القدرات القابلة للتعيين (مراجعة مرجعية)	Assignable capability coverage (reference audit)
+يعرض هذا التقرير الروابط والفجوات الموثقة فقط. تظهر مجموعات الكتالوج كما يحددها المنتج، ولا تحدد ملاءمة الوظيفة أو سياسة الصلاحيات.	This catalog-coverage report identifies documented links and gaps only. Catalog groups are shown as provided by the product; they do not determine job fit or permission policy.
+القدرات القابلة للتعيين	Assignable capabilities
+مرتبطة بوظيفة واحدة على الأقل	Mapped to at least one function
+غير مرتبطة بأي وظيفة	Not mapped to a function
+مشتركة بين عدة وظائف	Shared by multiple functions
+القدرات المرتبطة بوظائف	Capabilities mapped to functions
+قدرات غير مرتبطة بأي وظيفة	Capabilities not mapped to any function
+قدرات مشتركة بين عدة وظائف	Capabilities shared by multiple functions
+لا يوجد	None.
+القدرة	Capability
+مجموعة كتالوج المنتج	Product catalog group
+الوظائف المرتبطة	Related functions
 تعذر تحميل سجل انتقالات CRM.	Unable to load CRM transition history.
 تعذر حساب نسب انتقالات CRM.	Unable to calculate CRM transition rates.
 مفتاح إعادة إرسال الطلب غير صالح.	The request retry key is invalid.
@@ -891,6 +915,35 @@ VIN الجديد	New VIN
 المتابعات المتأخرة	Overdue follow-ups
 تصفية	Filter
 تصدير النتائج CSV	Export results CSV
+غرض تصدير بيانات CRM	CRM data export purpose
+سبب تصدير بيانات CRM	CRM data export reason
+اختر الغرض	Select a purpose
+اختر السبب	Select a reason
+يُسجّل النظام فئتي الغرض والسبب دون نص حر؛ لا تُدخل بيانات العملاء في أي وصف حر.	The purpose and reason categories are recorded without free text; never include customer data in free-text notes.
+تختلف أعمدة الملف حسب الغرض المختار. يُسجّل النظام فئتي الغرض والسبب فقط؛ لا تُدخل بيانات العملاء في وصف حر.	Export columns vary by selected purpose. Only purpose and reason categories are logged; never include customer data in free-text notes.
+تعرض مؤشرات الأداء مجمعة حسب الفرع فقط؛ لا تتضمن هوية الموظف قبل اعتماد الجمهور والغرض.	Performance metrics are aggregated by branch only; employee identity is omitted pending audience and purpose approval.
+مقاييس الأداء المعروضة مجمعة للحملة؛ لا تعرض اسم الموظف أو معرفه قبل اعتماد الجمهور والغرض.	Campaign performance metrics are aggregated; employee names and identifiers are omitted pending audience and purpose approval.
+تعذر تحميل تقارير التسويق.	Could not load marketing reports.
+تعذر تحميل متوسط متابعة الحملات.	Could not load campaign follow-up metric.
+تعذر تحميل مؤشرات المتابعة المتأخرة.	Could not load overdue follow-up metrics.
+توزيع المراحل حسب الفرع	Stage distribution by branch
+التحولات التاريخية بين المراحل حسب الفرع	Historical stage transitions by branch
+متابعة العملاء	Customer follow-up
+تحليل الحملات	Campaign analysis
+تقارير الإدارة	Management reporting
+مراجعة الالتزام	Compliance review
+مراجعة جودة البيانات	Data quality review
+مهمة عمل مسندة	Assigned work
+مراجعة حملة	Campaign review
+طلب إداري	Management request
+متطلب امتثال	Compliance requirement
+تصحيح بيانات	Data correction
+اختر غرضًا وسببًا صالحين من القائمتين.	Select a valid purpose and reason from the lists.
+يتجاوز التصدير الحد التقني البالغ %d صف؛ قلّص التصفية ثم أعد المحاولة.	The export exceeds the technical limit of %d rows; narrow the filters and try again.
+تعذر تسجيل رفض التصدير؛ لم يتم إنشاء الملف.	Could not record the rejected export; no file was created.
+تعذر حساب صفوف التصدير؛ لم يتم إنشاء الملف.	Could not count export rows; no file was created.
+تعذر تحميل صفوف التصدير؛ لم يتم إنشاء الملف.	Could not load export rows; no file was created.
+يجب إرسال طلب التصدير بطريقة POST.	The export request must use POST.
 لوحة مراحل الفرص	Lead stage board
 تصفية حسب المسؤول رقم %d	Filter by owner #%d
 العودة إلى قائمة الفرص	Back to leads
@@ -924,6 +977,7 @@ VIN الجديد	New VIN
 بواسطة	By
 لا تملك صلاحية تغيير مراحل الفرص.	You are not allowed to change lead stages.
 لا تملك صلاحية تصدير الفرص.	You are not allowed to export leads.
+تصدير بيانات فرص العملاء المحتملين (تتضمن معلومات شخصية)	Export CRM lead data (contains personal information)
 لا تملك صلاحية إنشاء فرص تسويقية.	You are not allowed to create marketing leads.
 موافقة التواصل مطلوبة.	Contact consent is required.
 الفرع المحدد غير متاح لصلاحيتك.	The selected branch is outside your access scope.
@@ -1059,6 +1113,9 @@ VIN الجديد	New VIN
 عرض الطلب في حسابي	View request in my account
 عرض جديد	New offer
 عرض للقراءة فقط. لا تتضمن هذه الصفحة أدوات تعديل أو حذف للسجل.	Read-only view. This page has no history editing or deletion controls.
+تفاصيل التغييرات والأسباب النصية مخفية حتى اعتماد ضوابط تنقيحها وإتاحة الوصول إليها.	Change details and free-text reasons are hidden pending approval of redaction and access controls.
+تفاصيل الحدث	Event details
+محجوب لحماية البيانات لحين اعتماد السياسة.	Withheld to protect data pending policy approval.
 عروض الأسعار	Quotations
 عمليات البيع بانتظار الاعتماد	Sales awaiting approval
 عمليات التسليم	Deliveries
@@ -1666,6 +1723,20 @@ VIN الجديد	New VIN
 حالة المركبة	Vehicle condition
 تاريخ المراجعة	Review date
 تاريخ الوصول	Arrival date
+مستندات الاقتناء الخاصة	Private acquisition documents
+تُحفظ مستندات PDF وJPEG وPNG وWebP الجديدة في مخزن خاص، ولا ينزلها إلا الموظفون المخولون ضمن فرع المركبة.	New PDF, JPEG, PNG, or WebP evidence is stored privately and can only be downloaded by authorized staff in the vehicle branch.
+لا تضف هنا معرفات مرفقات عامة جديدة من مكتبة الوسائط. يجب مراجعة المراجع العامة الحالية قبل نقل ملفاتها بأمان.	Do not add new public media-library attachment IDs here. Existing public references require review before their files can be moved safely.
+تعذر تحميل مستندات الاقتناء الخاصة لهذه المركبة.	Private acquisition documents could not be loaded for this vehicle.
+رفع ملف PDF أو صورة خاصة	Upload private PDF or image
+رفع المستند	Upload document
+يتطلب مرفق وسائط عام قديم واحد (%d) المراجعة؛ ولم يُنقل أو يُحذف.	%d legacy public media attachment requires review; it was not moved or deleted.
+تتطلب مرفقات وسائط عامة قديمة عددها %d المراجعة؛ ولم تُنقل أو تُحذف.	%d legacy public media attachments require review; they were not moved or deleted.
+تعذرت معالجة مستند الاقتناء الخاص.	The private acquisition document could not be processed.
+معرفات مكتبة الوسائط العامة لم تعد مقبولة لمستندات الاقتناء. استخدم قسم الرفع الخاص.	Public media-library IDs are no longer accepted for acquisition documents. Use the private upload section.
+نُسخت مستندات الاقتناء القديمة إلى المخزن الخاص. أُبقيت النسخ العامة لمراجعتها على حدة.	Legacy acquisition documents were copied to private storage. Public originals were retained for separate review.
+نسخ المستندات القديمة إلى المخزن الخاص	Copy legacy documents to private storage
+تبقى نسخة عامة عددها %d في مكتبة الوسائط بعد النسخ؛ راجع استخداماتها الأخرى قبل إزالتها.	%d public original remains in the media library after copying; review its other uses before removing it.
+تبقى نسخ عامة عددها %d في مكتبة الوسائط بعد النسخ؛ راجع استخداماتها الأخرى قبل إزالتها.	%d public originals remain in the media library after copying; review their other uses before removing them.
 المورد	Supplier
 الموقع	Location
 صفحات السيارات	Car pages
@@ -1684,6 +1755,7 @@ VIN الجديد	New VIN
 مسؤول المخزون	Dealership Inventory
 مسؤول المالية	Dealership Finance
 مسؤول المشتريات	Dealership Purchasing
+معتمد أوامر الشراء	Dealership Purchase Approver
 مسؤول التسليم	Dealership Delivery
 مسؤول خدمة العملاء	Dealership Customer Service
 مسؤول التسويق	Dealership Marketing
@@ -2024,3 +2096,17 @@ VIN الجديد	New VIN
 أولوية الفرصة غير صالحة.	The lead priority is invalid.
 لا تملك صلاحية تغيير أولوية الفرصة.	You are not allowed to change the lead priority.
 تعذر حفظ أولوية الفرصة.	Unable to save the lead priority.
+مراجع الوظائف التنظيمية	Organizational function references
+تسجل هذه الاختيارات مواءمة الدور فقط، ولا تحدد الصلاحيات أو تمنحها. يؤدي اختيار وظيفة إلى تصفية عرض القدرات المرتبطة بها؛ وتظل الصلاحيات المحددة خارج التصفية قائمة دون تغيير. اختر القدرات اللازمة للمهام الفعلية فقط.	These selections document role alignment only. They do not select or grant permissions. Selecting a function filters the list to related capabilities; checked permissions outside the filter remain unchanged. Select only capabilities required for actual tasks.
+اختر مراجع وظائف تنظيمية صالحة.	Choose valid organizational function references.
+مراجع الوظائف التنظيمية (ليست منحًا للصلاحيات)	Organizational function references (not permission grants)
+لم يتم اختيار أي وظيفة	None selected
+%d صلاحيات محددة خارج تصفية الوظيفة المختارة، وتبقى دون تغيير.	%d selected permissions are outside the selected function filter and remain unchanged.
+مرجع فقط: عدم تحديد الصلاحية ليس توصية بمنحها. اختر الصلاحيات يدويًا فقط إذا كانت لازمة لمهام معتمدة.	Reference only: an unselected capability is not a recommendation to grant it. Select permissions individually only when required by approved tasks.
+محدد يدويًا	Selected manually
+غير محدد (ليس توصية بالمنح)	Not selected (not a grant recommendation)
+مقارنة الدور بالوظائف (للقراءة فقط)	Read-only role and function comparison
+تقارن هذه اللوحة افتراضيات الدور فقط. لا تمنح الصلاحيات ولا تسحبها، ولا تشمل الاستثناءات الفردية أو المنح المؤقتة أو نطاق البيانات.	This compares role defaults only. It does not grant or remove permissions and does not include individual overrides, temporary grants, or data scope.
+الصلاحيات المرتبطة المحددة يدويًا: %1$d؛ المرتبطة غير المحددة: %2$d؛ المحددة خارج الوظائف المختارة: %3$d.	Related capabilities selected manually: %1$d; related but not selected: %2$d; selected outside the chosen functions: %3$d.
+الصلاحيات المحددة خارج الوظائف المختارة	Selected permissions outside the selected functions
+مراجع الوظائف معلوماتية فقط. راجع الصلاحيات المختارة يدويًا في معاينة الأثر.	The function references are informational only. Review the manually selected permissions in this impact preview.

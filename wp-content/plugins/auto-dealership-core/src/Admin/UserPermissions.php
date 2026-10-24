@@ -44,7 +44,7 @@ final class UserPermissions {
 			}
 		}
 		if ( wp_script_is( 'adc-user-permissions', 'enqueued' ) ) {
-			wp_localize_script( 'adc-user-permissions', 'adcPermissionFilters', array( 'search' => __( 'Search permissions', 'auto-dealership-core' ), 'all' => __( 'All permissions', 'auto-dealership-core' ), 'granted' => __( 'Granted only', 'auto-dealership-core' ), 'custom' => __( 'Customized only', 'auto-dealership-core' ), 'denied' => __( 'Denied only', 'auto-dealership-core' ) ) );
+			wp_localize_script( 'adc-user-permissions', 'adcPermissionFilters', array( 'search' => __( 'Search permissions', 'auto-dealership-core' ), 'all' => __( 'All permissions', 'auto-dealership-core' ), 'granted' => __( 'Granted only', 'auto-dealership-core' ), 'custom' => __( 'Customized only', 'auto-dealership-core' ), 'denied' => __( 'Denied only', 'auto-dealership-core' ), 'outsideFunctionFilter' => __( '%d selected permissions are outside the selected function filter and remain unchanged.', 'auto-dealership-core' ), 'selectedManually' => __( 'Selected manually', 'auto-dealership-core' ), 'notSelected' => __( 'Not selected (not a grant recommendation)', 'auto-dealership-core' ), 'functionComparisonSummary' => __( 'Related capabilities selected manually: %1$d; related but not selected: %2$d; selected outside the chosen functions: %3$d.', 'auto-dealership-core' ) ) );
 		}
 	}
 
