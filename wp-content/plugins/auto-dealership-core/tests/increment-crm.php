@@ -16,8 +16,36 @@ use AutoDealership\Privacy\RetentionService;
 use AutoDealership\Security\CustomerScope;
 
 $crm_role_matrix = Capabilities::role_matrix();
+Capabilities::migrate_affiliate_commission_permissions();
+adc_check( '1' === get_option( 'adc_affiliate_commission_permissions_version' ) && ! isset( get_option( 'adc_permission_migration_failures', array() )['affiliate_commissions'] ), 'Affiliate commission permission migration completes and clears any prior warning.' );
 adc_check( in_array( 'adc_assign_marketing_leads', $crm_role_matrix['dealership_sales_manager'], true ) && in_array( 'adc_assign_marketing_leads', $crm_role_matrix['dealership_general_manager'], true ), 'Default sales and general managers receive the dedicated marketing-assignment capability.' );
-adc_check( ! in_array( 'adc_assign_marketing_leads', $crm_role_matrix['dealership_marketing'], true ), 'Marketing cannot assign leads by default.' );
+adc_check( in_array( 'adc_assign_marketing_leads', $crm_role_matrix['dealership_marketing'], true ) && in_array( 'adc_view_marketing_team_leads', $crm_role_matrix['dealership_marketing'], true ), 'Marketing managers can view team-created leads and assign them to sales within their branch scope.' );
+adc_check( in_array( 'adc_manage_affiliate_commissions', $crm_role_matrix['dealership_general_manager'], true ) && in_array( 'adc_manage_affiliate_commissions', $crm_role_matrix['dealership_finance'], true ) && ! in_array( 'adc_manage_affiliate_commissions', $crm_role_matrix['dealership_marketing'], true ), 'Commission configuration and financial review belong to finance and general management, not the marketing manager.' );
+foreach ( array( 'dealership_marketing_staff', 'dealership_marketing_affiliate' ) as $crm_marketing_role_slug ) {
+	$crm_marketing_caps = $crm_role_matrix[$crm_marketing_role_slug] ?? array();
+	$commission_view_correct = 'dealership_marketing_affiliate' === $crm_marketing_role_slug ? in_array( 'adc_view_own_affiliate_commissions', $crm_marketing_caps, true ) && ! in_array( 'adc_manage_affiliate_commissions', $crm_marketing_caps, true ) : ! in_array( 'adc_view_own_affiliate_commissions', $crm_marketing_caps, true );
+	adc_check( in_array( 'adc_create_marketing_leads', $crm_marketing_caps, true ) && in_array( 'adc_view_marketing_leads', $crm_marketing_caps, true ) && in_array( 'adc_add_marketing_activity', $crm_marketing_caps, true ) && ! in_array( 'adc_view_marketing_team_leads', $crm_marketing_caps, true ) && ! in_array( 'adc_assign_marketing_leads', $crm_marketing_caps, true ) && ! in_array( 'adc_manage_newsletter', $crm_marketing_caps, true ) && $commission_view_correct, ucfirst( str_replace( '_', ' ', $crm_marketing_role_slug ) ) . ' receives only lead intake and own-lead follow-up, without manager or newsletter controls.' );
+}
+adc_check( ! in_array( 'adc_moderate_reviews', $crm_role_matrix['dealership_marketing'], true ) && ! in_array( 'adc_publish_reviews', $crm_role_matrix['dealership_marketing'], true ), 'Customer review permissions are not part of the marketing role.' );
+adc_check(
+	in_array( 'negotiation', LeadService::allowed_stage_transitions( 'qualified' ), true )
+	&& in_array( 'finance', LeadService::allowed_stage_transitions( 'qualified' ), true )
+	&& in_array( 'quotation', LeadService::allowed_stage_transitions( 'qualified' ), true )
+	&& in_array( 'won', LeadService::allowed_stage_transitions( 'reserved' ), true ),
+	'CRM can progress from qualification directly to negotiation or finance without making a quotation mandatory.'
+);
+$crm_navigation_previous_user = get_current_user_id();
+$crm_commission_page_allowed = static function ( int $user_id ): bool {
+	wp_set_current_user( $user_id );
+	foreach ( \AutoDealership\Admin\Navigation::groups() as $group ) {
+		foreach ( $group['items'] as $item ) {
+			if ( 'adc-affiliate-commissions' === $item['slug'] ) { return \AutoDealership\Admin\Navigation::allowed( $item ); }
+		}
+	}
+	return false;
+};
+adc_check( $crm_commission_page_allowed( $effective_role_accounts['dealership_marketing_affiliate'] ) && ! $crm_commission_page_allowed( $effective_role_accounts['dealership_marketing_staff'] ) && ! $crm_commission_page_allowed( $effective_role_accounts['dealership_marketing'] ) && $crm_commission_page_allowed( $effective_role_accounts['dealership_finance'] ), 'Commission navigation exposes own statements to affiliates and the administrative ledger only to finance.' );
+wp_set_current_user( $crm_navigation_previous_user );
 adc_check( in_array( 'adc_assign_marketing_leads', Capabilities::assignable_capabilities(), true ), 'Dedicated assignment is available in explicit role and user grants.' );
 adc_check( isset( UserPermissions::catalog()['adc_assign_marketing_leads'] ), 'Dedicated assignment appears in the existing permission editor catalog.' );
 $crm_assignable_caps = Capabilities::assignable_capabilities();
@@ -197,14 +225,32 @@ $crm_marketing_row = is_array( $crm_marketing_result ) ? $wpdb->get_row( $wpdb->
 if ( ! is_array( $crm_marketing_result ) || ! is_array( $crm_marketing_row ) ) { throw new RuntimeException( 'CRM marketing lead fixture creation failed.' ); }
 adc_check( is_array( $crm_marketing_result ) && is_array( $crm_marketing_row ) && 'marketing' === $crm_marketing_row['source'] && 'Autumn campaign' === $crm_marketing_row['campaign'] && 'Google' === $crm_marketing_row['platform'] && 'https://example.invalid/ad' === $crm_marketing_row['ad_url'] && '1' === (string) $crm_marketing_row['consent_marketing'] && (int) $admin === (int) $crm_marketing_row['created_by'] && ! empty( $crm_marketing_row['referred_at'] ) && (int) $sales_b === (int) $crm_marketing_row['owner_user_id'] && 'assigned' === $crm_marketing_row['stage'], 'Marketing lead, campaign attribution, consent and requested branch assignment are created together.' );
 adc_check( 2 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $crm_stage_history WHERE lead_id=%d", (int) $crm_marketing_result['id'] ) ) && 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $crm_activities WHERE lead_id=%d AND type='assignment'", (int) $crm_marketing_result['id'] ) ) && 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE subject_type='lead' AND subject_id=%d AND event_key='lead.created'", (int) $crm_marketing_result['id'] ) ), 'Marketing assignment activities, stage transitions and creation audit are transactionally recorded.' );
+$crm_foreign_marketing_result = LeadService::create_marketing(
+	array_replace( $crm_marketing_input, array( 'name'=>'Out-of-scope marketing lead', 'mobile'=>'+9665000009765', 'branch_id'=>(int) $branch_a['id'], 'idempotency_key'=>wp_generate_uuid4() ) ),
+	array_replace( $crm_marketing_data, array( 'staff_id'=>0 ) )
+);
+if ( ! is_array( $crm_foreign_marketing_result ) ) { throw new RuntimeException( 'Out-of-scope marketing lead fixture creation failed.' ); }
 $crm_marketer = $make_user( 'crm_marketer', 'dealership_marketing', (int) $branch_b['id'] );
 wp_set_current_user( $crm_marketer );
 $crm_marketer_input = array_replace( $crm_marketing_input, array( 'name'=>'Marketing staff lead', 'mobile'=>'+966500000977', 'email'=>'marketing-staff@example.invalid', 'idempotency_key'=>wp_generate_uuid4() ) );
 $crm_marketer_result = LeadService::create_marketing( $crm_marketer_input, array_replace( $crm_marketing_data, array( 'staff_id'=>0 ) ) );
 if ( ! is_array( $crm_marketer_result ) ) { throw new RuntimeException( 'CRM marketing staff lead fixture creation failed.' ); }
 adc_check( current_user_can( 'adc_add_marketing_activity' ) && is_array( LeadService::add_activity( (int) $crm_marketer_result['id'], 'note', 'Marketing follow-up recorded by creator.' ) ), 'Marketing activity capability permits notes on the creator’s own marketing lead.' );
-adc_check( $error_is( LeadService::add_activity( (int) $crm_marketing_result['id'], 'note', 'Must not reach another creator’s lead.' ), 'adc_lead_not_found' ), 'Marketing activity capability cannot modify another user’s marketing lead.' );
+adc_check( is_array( LeadService::add_activity( (int) $crm_marketing_result['id'], 'note', 'Manager follow-up on a team marketing lead.' ) ), 'Marketing manager can add follow-up activity to team leads within the assigned branch.' );
+adc_check( $error_is( LeadService::find_for_current_user( (int) $crm_foreign_marketing_result['id'] ), 'adc_lead_not_found' ) && ! in_array( (int) $crm_foreign_marketing_result['id'], array_map( 'intval', array_column( LeadService::list_for_current_user( 1, 100 ), 'id' ) ), true ), 'Marketing manager cannot read marketing leads outside assigned branches.' );
+adc_check( is_array( LeadService::assign( (int) $crm_marketer_result['id'], $sales_b, 'Assign affiliate lead to sales.' ) ), 'Marketing manager can assign a team marketing lead to an in-branch sales employee.' );
 adc_check( $error_is( LeadService::add_activity( (int) $crm_marketer_result['id'], 'sale', 'Must not record sales events.' ), 'adc_activity_forbidden' ), 'Marketing activity capability cannot record sales workflow events.' );
+foreach ( array( 'dealership_marketing_staff', 'dealership_marketing_affiliate' ) as $crm_role_slug ) {
+	$crm_role_user = $make_user( 'crm_' . $crm_role_slug, $crm_role_slug, (int) $branch_b['id'] );
+	wp_set_current_user( $crm_role_user );
+	$crm_role_lead = LeadService::create_marketing(
+		array_replace( $crm_marketing_input, array( 'name'=>$crm_role_slug . ' lead', 'mobile'=>'+9665000009' . ( 'dealership_marketing_staff' === $crm_role_slug ? '78' : '79' ), 'idempotency_key'=>wp_generate_uuid4() ) ),
+		array_replace( $crm_marketing_data, array( 'staff_id'=>0 ) )
+	);
+	$crm_role_lead_ids = array_map( 'intval', array_column( LeadService::list_for_current_user( 1, 100 ), 'id' ) );
+	adc_check( is_array( $crm_role_lead ) && in_array( (int) $crm_role_lead['id'], $crm_role_lead_ids, true ) && ! in_array( (int) $crm_marketing_result['id'], $crm_role_lead_ids, true ) && ! current_user_can( 'adc_view_marketing_team_leads' ) && ! current_user_can( 'adc_assign_marketing_leads' ), ucfirst( str_replace( '_', ' ', $crm_role_slug ) ) . ' can create and view own leads without seeing other marketers records or assigning sales.' );
+	adc_check( is_array( $crm_role_lead ) && is_array( LeadService::add_activity( (int) $crm_role_lead['id'], 'note', 'Own lead follow-up.' ) ), ucfirst( str_replace( '_', ' ', $crm_role_slug ) ) . ' can follow up their own lead.' );
+}
 wp_set_current_user( $admin );
 $crm_after_marketing = $crm_counts();
 $crm_marketing_retry = LeadService::create_marketing( $crm_marketing_input, $crm_marketing_data );
@@ -357,6 +403,12 @@ adc_check( is_array( LeadService::add_activity( $crm_claim_lead_id, 'call', 'A c
 adc_check( is_wp_error( $with_sql_failure( static fn( $q ) => str_contains( $q, 'INSERT INTO' ) && str_contains( $q, $crm_stage_history ), static fn() => LeadService::record_first_contact( $crm_claim_lead_id, 'call', current_time( 'Y-m-d\TH:i' ), 'Injected history failure', 'This transaction must roll back' ) ) ) && 'assigned' === $wpdb->get_var( $wpdb->prepare( "SELECT stage FROM `$crm_leads` WHERE id=%d", $crm_claim_lead_id ) ) && null === $wpdb->get_var( $wpdb->prepare( "SELECT first_contact_at FROM `$crm_leads` WHERE id=%d", $crm_claim_lead_id ) ), 'A failed stage-history write rolls back the lead stage and first-contact evidence.' );
 $crm_first_contact = LeadService::record_first_contact( $crm_claim_lead_id, 'call', current_time( 'Y-m-d\TH:i' ), 'Reached the customer', 'Discussed vehicle requirements' );
 adc_check( is_array( $crm_first_contact ) && 'contacted' === $wpdb->get_var( $wpdb->prepare( "SELECT stage FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) ) && $crm_first_contact['first_contact_at'] === $wpdb->get_var( $wpdb->prepare( "SELECT first_contact_at FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) ), 'First-contact record stores its typed time and atomically advances stage.' );
+adc_check(
+	is_array( LeadService::update_stage( $crm_claim_lead_id, 'qualified' ) )
+	&& is_array( LeadService::update_stage( $crm_claim_lead_id, 'negotiation' ) )
+	&& 'negotiation' === $wpdb->get_var( $wpdb->prepare( "SELECT stage FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) ),
+	'Lead advances from contacted through qualification directly to negotiation without creating a quotation.'
+);
 adc_check( 2 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM `$crm_stage_history` WHERE lead_id=%d AND ((from_stage='new' AND to_stage='assigned') OR (from_stage='assigned' AND to_stage='contacted'))", $crm_claim_lead_id ) ), 'Claim and first-contact stage changes are captured as ordered historical transitions.' );
 adc_check( 'Reached the customer' === $wpdb->get_var( $wpdb->prepare( "SELECT result FROM " . Schema::table( 'activities' ) . " WHERE id=%d", (int) $crm_first_contact['activity_id'] ) ), 'First-contact outcome is retained as structured activity evidence.' );
 adc_check( $error_is( LeadService::set_priority( $crm_claim_lead_id, 'critical' ), 'adc_invalid_lead_priority' ) && is_array( LeadService::set_priority( $crm_claim_lead_id, 'urgent' ) ) && 'urgent' === $wpdb->get_var( $wpdb->prepare( "SELECT priority FROM $crm_leads WHERE id=%d", $crm_claim_lead_id ) ), 'Lead priority is validated, persisted and ordered using the configured four levels.' );
@@ -502,7 +554,7 @@ ob_start();
 \AutoDealership\Admin\OperationsPages::render_leads();
 $crm_list_html = ob_get_clean();
 $_GET = $crm_crm_previous_get;
-adc_check( 1 === substr_count( $crm_list_html, 'name="idempotency_key"' ) && ! str_contains( $crm_list_html, 'class="card adc-marketing-intake"' ) && str_contains( $crm_list_html, 'data-crm-board-status' ) && str_contains( $crm_list_html, 'data-lead-stage-form' ) && str_contains( $crm_list_html, 'name="campaign" value="Autumn campaign"' ), 'CRM intake is rendered once and the board offers accessible stage controls while retaining marketing filters.' );
+adc_check( 1 === substr_count( $crm_list_html, 'name="idempotency_key"' ) && ! str_contains( $crm_list_html, 'class="card adc-marketing-intake"' ) && str_contains( $crm_list_html, 'data-crm-board-status' ) && str_contains( $crm_list_html, 'data-lead-card' ) && ! str_contains( $crm_list_html, 'data-lead-stage-form' ) && str_contains( $crm_list_html, 'name="campaign" value="Autumn campaign"' ), 'CRM intake is rendered once and the board offers drag-and-drop stage changes without a stage selector while retaining marketing filters.' );
 adc_check(
 	str_contains( $crm_list_html, '<form method="post"' ) && str_contains( $crm_list_html, 'name="action" value="adc_export_leads"' )
 	&& str_contains( $crm_list_html, 'name="campaign" value="Autumn campaign"' )

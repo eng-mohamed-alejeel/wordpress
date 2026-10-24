@@ -16,7 +16,7 @@ final class OrganizationalCapabilityMap {
 		'finance_operations'=>array(
 			'label'=>'Finance operations',
 			'purpose'=>'Financial records, payment recording and verification, and refunds.',
-			'capabilities'=>array( 'adc_view_finance', 'adc_manage_finance', 'adc_record_payments', 'adc_verify_payments', 'adc_record_refunds', 'adc_verify_refunds' ),
+			'capabilities'=>array( 'adc_view_finance', 'adc_manage_finance', 'adc_record_payments', 'adc_verify_payments', 'adc_record_refunds', 'adc_verify_refunds', 'adc_manage_affiliate_commissions' ),
 		),
 		'asset_control'=>array(
 			'label'=>'Asset and inventory control',
@@ -36,7 +36,7 @@ final class OrganizationalCapabilityMap {
 		'marketing_communications'=>array(
 			'label'=>'Marketing and communications',
 			'purpose'=>'Marketing lead workflows, campaign measurement, communication activity, and subscriber operations.',
-			'capabilities'=>array( 'adc_create_marketing_leads', 'adc_view_marketing_leads', 'adc_edit_marketing_lead_identity', 'adc_view_campaign_metrics', 'adc_add_marketing_activity', 'adc_view_marketing_subscribers', 'adc_manage_newsletter' ),
+			'capabilities'=>array( 'adc_create_marketing_leads', 'adc_view_marketing_leads', 'adc_view_marketing_team_leads', 'adc_assign_marketing_leads', 'adc_edit_marketing_lead_identity', 'adc_view_campaign_metrics', 'adc_add_marketing_activity', 'adc_view_marketing_subscribers', 'adc_manage_newsletter', 'adc_view_own_affiliate_commissions' ),
 		),
 		'independent_assurance'=>array(
 			'label'=>'Independent assurance',

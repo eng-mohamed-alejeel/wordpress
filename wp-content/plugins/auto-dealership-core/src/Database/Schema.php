@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.30.0';
+	public const VERSION = '1.31.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -404,6 +404,9 @@ final class Schema {
 				vehicle_id bigint(20) unsigned NOT NULL,
 				branch_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				owner_user_id bigint(20) unsigned NOT NULL,
+				marketing_lead_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				affiliate_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				affiliate_commission_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				base_amount bigint(20) unsigned NOT NULL,
 				source_base_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				margin_amount bigint(20) unsigned NOT NULL DEFAULT 0,

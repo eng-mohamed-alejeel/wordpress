@@ -7,6 +7,7 @@ final class ExtensionSchema {
 		$orders = Schema::table( 'purchase_orders' );
 		$documents = Schema::table( 'document_archive' );
 		$evidence = Schema::table( 'release_evidence' );
+		$affiliate_commissions = Schema::table( 'affiliate_commissions' );
 		return array(
 			"CREATE TABLE $orders (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -63,6 +64,28 @@ final class ExtensionSchema {
 				reviewed_at datetime NULL,
 				PRIMARY KEY  (id),
 				KEY gate_environment (gate_key,status,valid_until)
+			) $collate ENGINE=InnoDB;",
+			"CREATE TABLE $affiliate_commissions (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				sale_id bigint(20) unsigned NOT NULL,
+				quotation_id bigint(20) unsigned NOT NULL,
+				lead_id bigint(20) unsigned NOT NULL,
+				affiliate_user_id bigint(20) unsigned NOT NULL,
+				branch_id bigint(20) unsigned NOT NULL,
+				amount bigint(20) unsigned NOT NULL,
+				status varchar(24) NOT NULL DEFAULT 'pending_review',
+				payment_reference varchar(190) NOT NULL DEFAULT '',
+				reviewed_by bigint(20) unsigned NOT NULL DEFAULT 0,
+				reviewed_at datetime NULL,
+				paid_by bigint(20) unsigned NOT NULL DEFAULT 0,
+				paid_at datetime NULL,
+				created_at datetime NOT NULL,
+				updated_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY sale_id (sale_id),
+				KEY affiliate_status (affiliate_user_id,status),
+				KEY status_created (status,created_at),
+				KEY branch_status (branch_id,status)
 			) $collate ENGINE=InnoDB;"
 		);
 	}

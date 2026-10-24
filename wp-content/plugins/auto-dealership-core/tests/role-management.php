@@ -24,7 +24,11 @@ try {
 	wp_set_current_user( $admin );
 	$matrix = Capabilities::role_matrix();
 	$check( in_array( 'adc_assign_marketing_leads', $matrix['dealership_sales_manager'], true ) && in_array( 'adc_assign_marketing_leads', $matrix['dealership_general_manager'], true ), 'Factory manager roles receive the dedicated lead-assignment capability.' );
-	$check( ! in_array( 'adc_assign_marketing_leads', $matrix['dealership_marketing'], true ), 'Marketing does not receive lead-assignment authority by default.' );
+	$check( in_array( 'adc_assign_marketing_leads', $matrix['dealership_marketing'], true ) && in_array( 'adc_view_marketing_team_leads', $matrix['dealership_marketing'], true ), 'The marketing manager can view team leads and assign marketing leads to sales.' );
+	foreach ( array( 'dealership_marketing_staff', 'dealership_marketing_affiliate' ) as $marketing_role ) {
+		$check( in_array( 'adc_create_marketing_leads', $matrix[$marketing_role], true ) && in_array( 'adc_view_marketing_leads', $matrix[$marketing_role], true ) && ! in_array( 'adc_view_marketing_team_leads', $matrix[$marketing_role], true ) && ! in_array( 'adc_assign_marketing_leads', $matrix[$marketing_role], true ), ucfirst( str_replace( '_', ' ', $marketing_role ) ) . ' is restricted to the marketer own leads.' );
+	}
+	$check( ! in_array( 'adc_moderate_reviews', $matrix['dealership_marketing'], true ) && ! in_array( 'adc_publish_reviews', $matrix['dealership_marketing'], true ), 'Customer-review moderation remains separate from marketing.' );
 	$check( in_array( 'adc_assign_marketing_leads', Capabilities::assignable_capabilities(), true ), 'Dedicated lead assignment is available for explicit role and user grants.' );
 	$input = array( 'slug' => $slug, 'ar' => 'دور اختبار', 'en' => 'Test role', 'caps' => array( 'adc_view_workspace', 'adc_view_inventory' ), 'new' => '1' );
 	$created_role = RoleManager::save_role( $input );

@@ -148,7 +148,7 @@ final class Routes {
 			'permission_callback'=>static fn()=>current_user_can( 'adc_view_finance' ) || current_user_can( 'adc_record_payments' ) || current_user_can( 'adc_verify_payments' ),
 		) );
 		self::route( '/quotations', array(
-			'methods' => 'POST', 'callback' => array( self::class, 'create_quote' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_quotes' ) || current_user_can( 'manage_options' ), 'args' => array( 'customer_id' => array( 'type' => 'integer', 'required' => true ), 'vehicle_id' => array( 'type' => 'integer', 'required' => true ), 'valid_until' => array( 'type' => 'string', 'required' => true, 'format' => 'date' ), 'promotion_code'=>array( 'type'=>'string','maxLength'=>64 ) ),
+			'methods' => 'POST', 'callback' => array( self::class, 'create_quote' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_quotes' ) || current_user_can( 'manage_options' ), 'args' => array( 'customer_id' => array( 'type' => 'integer', 'required' => true ), 'vehicle_id' => array( 'type' => 'integer', 'required' => true ), 'valid_until' => array( 'type' => 'string', 'required' => true, 'format' => 'date' ), 'promotion_code'=>array( 'type'=>'string','maxLength'=>64 ), 'marketing_lead_id'=>array( 'type'=>'integer','minimum'=>0 ) ),
 		) );
 		self::route( '/quotations/(?P<id>\d+)/discounts', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'request_discount' ), 'permission_callback' => static fn() => current_user_can( 'adc_request_discounts' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'amount' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ), 'reason' => array( 'type' => 'string', 'required' => true ) ),
@@ -361,7 +361,7 @@ final class Routes {
 	}
 
 	public static function create_quote( \WP_REST_Request $request ) {
-		return rest_ensure_response( SalesService::create_quote( absint( $request['customer_id'] ), absint( $request['vehicle_id'] ), (string) $request['valid_until'], (string) $request->get_param( 'promotion_code' ) ) );
+		return rest_ensure_response( SalesService::create_quote( absint( $request['customer_id'] ), absint( $request['vehicle_id'] ), (string) $request['valid_until'], (string) $request->get_param( 'promotion_code' ), '', '', absint( $request->get_param( 'marketing_lead_id' ) ) ) );
 	}
 
 	public static function request_discount( \WP_REST_Request $request ) {

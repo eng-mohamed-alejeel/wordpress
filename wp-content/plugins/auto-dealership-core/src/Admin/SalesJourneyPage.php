@@ -94,6 +94,20 @@ final class SalesJourneyPage {
 			foreach ( $data[1] as $row ) { echo '<option value="' . absint( $row['id'] ) . '">' . esc_html( $row['full_name'] ?? ( $row['stock_number'] . ' ' . $row['brand'] . ' ' . $row['model'] ) ) . '</option>'; }
 			echo '</select></label></p>';
 		}
+			$commission_amount = Money::parse( get_option( 'adc_affiliate_commission_amount', 0 ) ) ?? 0;
+			$affiliate_ids = $commission_amount > 0 ? get_users( array( 'role'=>'dealership_marketing_affiliate', 'fields'=>'ID', 'number'=>500 ) ) : array();
+			$referrals = array();
+			if ( $affiliate_ids ) {
+				list( $referral_scope, $referral_args ) = BranchScope::predicate( 'l.branch_id' );
+				$placeholders = implode( ',', array_fill( 0, count( $affiliate_ids ), '%d' ) );
+				$referrals = self::rows(
+					'SELECT l.id,l.customer_id,c.full_name FROM ' . Schema::table( 'leads' ) . ' l INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=l.customer_id WHERE l.created_by IN (' . $placeholders . ') AND l.consent_marketing=1 AND c.merged_into_id IS NULL AND ' . $referral_scope . ' ORDER BY l.id DESC LIMIT 200',
+					array_merge( array_map( 'absint', $affiliate_ids ), $referral_args )
+				);
+			}
+			echo '<p><label>' . esc_html( self::text( 'إحالة مسوّق بالعمولة (اختياري)', 'Affiliate referral (optional)' ) ) . ' <select name="marketing_lead_id"><option value="0">' . esc_html( self::text( 'بدون إحالة', 'No referral' ) ) . '</option>';
+			foreach ( $referrals as $referral ) { echo '<option value="' . absint( $referral['id'] ) . '">' . esc_html( '#' . $referral['id'] . ' — ' . $referral['full_name'] ) . '</option>'; }
+			echo '</select></label> ' . esc_html( self::text( 'تُقبل الإحالة فقط إذا طابق العميل والفرع، وتُثبت العمولة حسب الإعداد الحالي.', 'The referral is accepted only when customer and branch match; the current commission setting is snapshotted.' ) ) . '</p>';
 		self::input( 'valid_until', self::text( 'صالح حتى (UTC)', 'Valid until (UTC)' ), 'date', gmdate( 'Y-m-d', time() + 7 * DAY_IN_SECONDS ) );
 		echo '<p><label>' . esc_html( self::text( 'رمز العرض الترويجي', 'Promotion code' ) ) . ' <input name="promotion_code" maxlength="100"></label></p>';
 		self::button( 'معاينة السعر والضريبة', 'Preview price and tax' );
@@ -181,7 +195,7 @@ final class SalesJourneyPage {
 			$q = $versions[0];
 		}
 		if ( 'preview' === $op ) { nocache_headers(); self::preview( $p ); exit; }
-		if ( 'create' === $op ) { $result = SalesService::create_quote( absint( $p['customer_id'] ?? 0 ), absint( $p['vehicle_id'] ?? 0 ), sanitize_text_field( $p['valid_until'] ?? '' ), sanitize_key( $p['promotion_code'] ?? '' ), sanitize_text_field( $p['idempotency_key'] ?? '' ), sanitize_text_field( $p['preview_signature'] ?? '' ) ); if ( ! is_wp_error( $result ) ) { $id = $result['id']; } }
+		if ( 'create' === $op ) { $result = SalesService::create_quote( absint( $p['customer_id'] ?? 0 ), absint( $p['vehicle_id'] ?? 0 ), sanitize_text_field( $p['valid_until'] ?? '' ), sanitize_key( $p['promotion_code'] ?? '' ), sanitize_text_field( $p['idempotency_key'] ?? '' ), sanitize_text_field( $p['preview_signature'] ?? '' ), absint( $p['marketing_lead_id'] ?? 0 ) ); if ( ! is_wp_error( $result ) ) { $id = $result['id']; } }
 		elseif ( 'discount' === $op || 'deposit' === $op ) {
 			Money::require_sar_form(); $amount = Money::from_sar( $p['amount'] ?? '' );
 			if ( null === $amount ) { wp_die( 'Invalid SAR amount', '', array( 'response'=>400 ) ); }
@@ -206,6 +220,6 @@ final class SalesJourneyPage {
 		echo '<!doctype html><html lang="' . ( 'en' === \AutoDealership\Core\Localization::language() ? 'en' : 'ar' ) . '"><meta charset="utf-8"><title>' . esc_html( self::text( 'معاينة عرض السعر', 'Quotation preview' ) ) . '</title><body><h1>' . esc_html( self::text( 'معاينة عرض السعر', 'Quotation preview' ) ) . '</h1><dl>';
 		foreach ( array( 'base_amount'=>self::text( 'السعر الأساسي', 'Base price' ), 'fee_amount'=>self::text( 'الرسوم', 'Fees' ), 'promotion_amount'=>self::text( 'العرض الترويجي', 'Promotion' ), 'subtotal_amount'=>self::text( 'قبل الضريبة', 'Subtotal' ), 'tax_amount'=>self::text( 'الضريبة', 'Tax' ), 'plate_amount'=>self::text('رسوم اللوحات','Plate fees'), 'final_amount'=>self::text( 'الإجمالي', 'Total' ) ) as $field => $label ) { echo '<dt>' . esc_html( $label ) . '</dt><dd>' . esc_html( Money::display( $amounts[$field] ) ) . '</dd>'; }
 		echo '</dl><p>' . esc_html( self::text( 'يعاد التحقق من السعر والتوفر عند الحفظ.', 'Pricing and availability are revalidated on save.' ) ) . '</p>';
-		self::form( 'create', array( 'customer_id'=>absint( $p['customer_id'] ), 'vehicle_id'=>$v['id'], 'idempotency_key'=>wp_generate_uuid4(), 'preview_signature'=>hash_hmac( 'sha256', wp_json_encode( $amounts ), wp_salt( 'nonce' ) ), 'valid_until'=>sanitize_text_field( $p['valid_until'] ?? '' ), 'promotion_code'=>sanitize_key( $p['promotion_code'] ?? '' ) ) ); self::button( 'حفظ عرض السعر', 'Save quotation' ); echo '</body></html>';
+		self::form( 'create', array( 'customer_id'=>absint( $p['customer_id'] ), 'vehicle_id'=>$v['id'], 'marketing_lead_id'=>absint( $p['marketing_lead_id'] ?? 0 ), 'idempotency_key'=>wp_generate_uuid4(), 'preview_signature'=>hash_hmac( 'sha256', wp_json_encode( $amounts ), wp_salt( 'nonce' ) ), 'valid_until'=>sanitize_text_field( $p['valid_until'] ?? '' ), 'promotion_code'=>sanitize_key( $p['promotion_code'] ?? '' ) ) ); self::button( 'حفظ عرض السعر', 'Save quotation' ); echo '</body></html>';
 	}
 }

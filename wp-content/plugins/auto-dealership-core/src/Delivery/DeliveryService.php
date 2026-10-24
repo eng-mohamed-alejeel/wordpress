@@ -6,6 +6,7 @@ use AutoDealership\Database\Schema;
 use AutoDealership\Inventory\VehicleService;
 use AutoDealership\Payments\PaymentService;
 use AutoDealership\Database\Transaction;
+use AutoDealership\Marketing\AffiliateCommissionService;
 use AutoDealership\Integrations\DomainEventPublisher;
 
 defined( 'ABSPATH' ) || exit;
@@ -202,12 +203,13 @@ final class DeliveryService {
 		$delivery_update = $wpdb->update( $table, array( 'status' => 'delivered', 'delivered_at' => $now, 'updated_at' => $now ), array( 'id' => $delivery_id, 'status' => 'approved' ), array( '%s', '%s', '%s' ), array( '%d', '%s' ) );
 		$vehicle_update = $wpdb->update( Schema::table( 'vehicles' ), array( 'status' => 'delivered', 'updated_at' => $now ), array( 'id' => (int) $row['vehicle_id'], 'status' => 'ready_for_delivery' ), array( '%s', '%s' ), array( '%d', '%s' ) );
 		$sale_update = $wpdb->update( Schema::table( 'sales' ), array( 'status' => 'delivered', 'updated_at' => $now ), array( 'id' => (int) $row['sale_id'], 'status' => 'ready_for_delivery' ), array( '%s', '%s' ), array( '%d', '%s' ) );
+		$commission = 1 === $sale_update ? AffiliateCommissionService::record_delivery( (int) $row['sale_id'] ) : false;
 		$movement = 1 === $vehicle_update ? $wpdb->insert( Schema::table( 'vehicle_movements' ), array( 'vehicle_id' => (int) $row['vehicle_id'], 'from_branch_id' => (int) $row['branch_id'], 'to_branch_id' => (int) $row['branch_id'], 'from_status' => 'ready_for_delivery', 'to_status' => 'delivered', 'actor_user_id' => get_current_user_id(), 'reason' => 'Delivery released #' . $delivery_id, 'created_at' => $now ), array( '%d', '%d', '%d', '%s', '%s', '%d', '%s', '%s' ) ) : false;
-		if ( 1 !== $delivery_update || 1 !== $vehicle_update || 1 !== $sale_update || false === $movement ) {
+		if ( 1 !== $delivery_update || 1 !== $vehicle_update || 1 !== $sale_update || false === $commission || false === $movement ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_delivery_release_failed', __( 'تعذر تسجيل تسليم المركبة.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		if ( ! Transaction::commit( static fn() => AuditLog::record( 'delivery.released', 'delivery', $delivery_id, '', array( 'status' => 'approved' ), array( 'status' => 'delivered', 'released_by' => get_current_user_id() ) ) && AuditLog::record( 'vehicle.status_changed', 'vehicle', (int) $row['vehicle_id'], 'Delivery released', array( 'status' => 'ready_for_delivery' ), array( 'status' => 'delivered' ) ) && DomainEventPublisher::commit( 'delivery.released', $delivery_id, (int) $row['branch_id'], 'delivered' ) ) ) {
+		if ( ! Transaction::commit( static fn() => AuditLog::record( 'delivery.released', 'delivery', $delivery_id, '', array( 'status' => 'approved' ), array( 'status' => 'delivered', 'released_by' => get_current_user_id() ) ) && AuditLog::record( 'vehicle.status_changed', 'vehicle', (int) $row['vehicle_id'], 'Delivery released', array( 'status' => 'ready_for_delivery' ), array( 'status' => 'delivered' ) ) && ( ! is_array( $commission ) || AuditLog::record( 'affiliate_commission.pending_review', 'affiliate_commission', (int) $commission['id'], '', null, array( 'sale_id'=>(int) $row['sale_id'], 'affiliate_user_id'=>(int) $commission['affiliate_user_id'], 'amount'=>(int) $commission['amount'], 'status'=>'pending_review' ) ) ) && DomainEventPublisher::commit( 'delivery.released', $delivery_id, (int) $row['branch_id'], 'delivered' ) ) ) {
 			return new \WP_Error( 'adc_delivery_release_failed', __( 'تعذر توثيق تسليم المركبة.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return array( 'id' => $delivery_id, 'status' => 'delivered', 'delivered_at' => $now );

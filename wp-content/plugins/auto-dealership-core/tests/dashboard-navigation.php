@@ -68,4 +68,16 @@ if ( current_user_can( 'adc_change_vehicle_vin' ) && ! current_user_can( 'adc_ma
  }
  if ( ! user_can_access_admin_page() ) { throw new RuntimeException( 'Legacy inventory URL is inaccessible.' ); }
 }
+$marketing_pages = array();
+$orphans = array_diff( array_column( $submenu['adc-workspace'] ?? array(), 2 ), array( 'adc-workspace' ) );
+if ( $orphans ) { throw new RuntimeException( 'Pages leaked under the workspace menu: ' . implode( ', ', $orphans ) ); }
+foreach ( Navigation::groups() as $group ) {
+ foreach ( $group['items'] as $item ) { if ( Navigation::allowed( $item ) ) { $marketing_pages[] = $item['slug']; } }
+}
+if ( 'dealership_marketing' === $role && ( ! in_array( 'adc-crm', $marketing_pages, true ) || ! in_array( 'adc-marketing-reports', $marketing_pages, true ) || in_array( 'adc-customer-reviews', $marketing_pages, true ) ) ) {
+ throw new RuntimeException( 'Marketing manager CRM/report visibility or review separation is incorrect.' );
+}
+if ( in_array( $role, array( 'dealership_marketing_staff', 'dealership_marketing_affiliate' ), true ) && ( ! in_array( 'adc-crm', $marketing_pages, true ) || in_array( 'adc-marketing-reports', $marketing_pages, true ) || in_array( 'adc-customer-reviews', $marketing_pages, true ) || in_array( 'car-dealer-subscribers', $marketing_pages, true ) || ( 'dealership_marketing_affiliate' === $role && ! in_array( 'adc-affiliate-commissions', $marketing_pages, true ) ) || ( 'dealership_marketing_staff' === $role && in_array( 'adc-affiliate-commissions', $marketing_pages, true ) ) ) ) {
+ throw new RuntimeException( 'Marketing staff or affiliate navigation exceeds own-lead intake and follow-up.' );
+}
 echo "PASS $role: $count page permissions and all group menus.\n";

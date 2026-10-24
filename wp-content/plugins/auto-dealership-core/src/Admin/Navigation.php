@@ -59,7 +59,7 @@ final class Navigation {
 	}
 
 	public static function groups(): array {
-		$leads = array( 'adc_view_own_leads', 'adc_view_branch_leads' );
+		$leads = array( 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_marketing_leads' );
 		$definitions = array(
 			'customers' => array( 'العملاء والمبيعات', 'dashicons-groups', array(
 				array( 'adc-conversations', 'محادثات العملاء', array('manage_options','adc_view_conversations'), \AutoDealership\Portal\PortalAdmin::class, 'conversations' ),
@@ -102,6 +102,7 @@ final class Navigation {
 				array( 'adc-payments', 'تأكيدات السداد', 'adc_view_finance', PaymentPages::class, 'render' ),
 				array( 'adc-refunds', 'المبالغ المستردة', 'adc_view_finance', RefundPage::class, 'render' ),
 				array( 'adc-financial-export', 'التصدير المالي', 'adc_view_finance', FinancialExportPage::class, 'render' ),
+				array( 'adc-affiliate-commissions', \AutoDealership\Core\ProductSetup::t( 'عمولات المسوقين بالعمولة', 'Affiliate commissions' ), array( 'adc_manage_affiliate_commissions', 'adc_view_own_affiliate_commissions' ), AffiliateCommissionPage::class, 'render' ),
 			) ),
 			'delivery' => array( 'التسليم', 'dashicons-clipboard', array(
 				array( 'adc-delivery', 'تجهيز وتسليم المركبات', array( 'adc_approve_delivery', 'adc_confirm_vehicle_vin' ), WorkflowPages::class, 'delivery' ),
@@ -114,10 +115,12 @@ final class Navigation {
 				array( 'adc-editorial-setup', 'إعداد صفحات الموقع', 'manage_options', EditorialSetupPage::class, 'render' ),
 			) ),
 			'marketing' => array( 'التسويق', 'dashicons-megaphone', array(
+				array( 'adc-marketing-reports', \AutoDealership\Core\ProductSetup::t( 'تقارير التسويق', 'Marketing reports' ), 'adc_view_campaign_metrics', OperationsPages::class, 'render_marketing_reports' ),
 				array( 'car-dealer-subscribers', 'مشتركو النشرة البريدية', 'adc_view_marketing_subscribers', EngagementPages::class, 'render_subscribers' ),
 			) ),
 			'reports' => array( 'التقارير', 'dashicons-chart-bar', array(
 				array( 'adc-operational-reports', 'التقارير التشغيلية', 'adc_view_reports', OperationalReportPage::class, 'render' ),
+				array( 'adc-lead-performance', \AutoDealership\Core\ProductSetup::t( 'أداء فرص العملاء', 'CRM performance' ), array( 'manage_options', 'adc_view_reports' ), OperationsPages::class, 'render_lead_performance' ),
 			) ),
 			'settings' => array( 'إعدادات المنصة', 'dashicons-admin-settings', array(
 				array( 'adc-platform-setup', \AutoDealership\Core\ProductSetup::t( 'الهوية والبريد وجاهزية المنصة', 'Identity, email and platform readiness' ), 'manage_options', \AutoDealership\Core\ProductSetup::class, 'render' ),
@@ -180,10 +183,12 @@ final class Navigation {
 			'admin.php?page=adc-approvals' => __( 'الخصومات واعتماد المبيعات والإلغاءات.', 'auto-dealership-core' ),
 			'admin.php?page=adc-finance' => __( 'طلبات التمويل وقراراتها ومراجعها.', 'auto-dealership-core' ),
 			'admin.php?page=adc-payments' => __( 'مراجعة دفعات المبيعات والعربون.', 'auto-dealership-core' ),
+			'admin.php?page=adc-affiliate-commissions' => __( 'متابعة الصفقات المحالة ومراجعة استحقاقات المسوقين بالعمولة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-refunds' => __( 'طلبات الاسترداد وقراراتها.', 'auto-dealership-core' ),
 			'admin.php?page=adc-delivery' => __( 'التجهيز والمستندات والمطابقة والإطلاق.', 'auto-dealership-core' ),
 			'admin.php?page=car-dealer-subscribers' => __( 'إدارة المشتركين والحملات البريدية ونتائج الإرسال.', 'auto-dealership-core' ),
 			'admin.php?page=adc-operational-reports' => __( 'مؤشرات مجمعة ضمن نطاق الصلاحية.', 'auto-dealership-core' ),
+			'admin.php?page=adc-lead-performance' => __( 'أداء فرص العملاء ومصادرها ومراحلها خلال فترة محددة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-audit' => __( 'الأحداث الإدارية والتشغيلية للقراءة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-settings' => __( 'الفروع والسياسات والإعدادات المركزية.', 'auto-dealership-core' ),
 			'admin.php?page=adc-editorial-setup' => __( 'مراجعة الصفحات التعريفية وإنشاء المسودات المفقودة صراحة.', 'auto-dealership-core' ),

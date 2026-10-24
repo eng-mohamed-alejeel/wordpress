@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Quotes, separation-of-duties discount review and controlled sale approval. */
 final class SalesService {
-	public static function create_quote( int $customer_id, int $vehicle_id, string $valid_until, string $promotion_code = '', string $idempotency_key = '', string $preview_signature = '' ) {
+	public static function create_quote( int $customer_id, int $vehicle_id, string $valid_until, string $promotion_code = '', string $idempotency_key = '', string $preview_signature = '', int $marketing_lead_id = 0 ) {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_create_quotes' ) && ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية إنشاء عرض سعر.', 'auto-dealership-core' ), array( 'status' => 403 ) );
@@ -28,7 +28,7 @@ final class SalesService {
 		if ( '' !== $idempotency_key ) {
 			$existing = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . Schema::table( 'quotations' ) . ' WHERE quote_number=%s FOR UPDATE', $quote_number ), ARRAY_A );
 			if ( $existing ) {
-				$allowed = $vehicle && CustomerScope::allows( $customer_id, (int) $vehicle['branch_id'] ) && (int) $existing['owner_user_id'] === get_current_user_id() && (int) $existing['customer_id'] === $customer_id && (int) $existing['vehicle_id'] === $vehicle_id && $existing['valid_until'] === $valid_until && $existing['promotion_code'] === sanitize_key( $promotion_code );
+				$allowed = $vehicle && CustomerScope::allows( $customer_id, (int) $vehicle['branch_id'] ) && (int) $existing['owner_user_id'] === get_current_user_id() && (int) $existing['customer_id'] === $customer_id && (int) $existing['vehicle_id'] === $vehicle_id && $existing['valid_until'] === $valid_until && $existing['promotion_code'] === sanitize_key( $promotion_code ) && (int) $existing['marketing_lead_id'] === $marketing_lead_id;
 				$wpdb->query( 'ROLLBACK' );
 				return $allowed ? array( 'id'=>(int) $existing['id'], 'quote_number'=>$quote_number, 'version'=>(int) $existing['version'], 'status'=>$existing['status'], 'currency'=>'SAR' ) : new \WP_Error( 'adc_quote_replay_conflict', 'Quotation request does not match the original submission.', array( 'status'=>409 ) );
 			}
@@ -37,6 +37,22 @@ final class SalesService {
 		if ( ! $vehicle || ! CustomerScope::allows( $customer_id, (int) $vehicle['branch_id'] ) || 'available' !== $vehicle['status'] || ! $date || $date->format( 'Y-m-d' ) !== $valid_until || $valid_until < gmdate( 'Y-m-d' ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_invalid_quote', __( 'السيارة أو العميل أو تاريخ صلاحية العرض غير صالح.', 'auto-dealership-core' ), array( 'status' => 400 ) );
+		}
+		$affiliate_user_id = 0;
+		$affiliate_commission_amount = 0;
+		if ( $marketing_lead_id > 0 ) {
+			$lead = $wpdb->get_row( $wpdb->prepare( 'SELECT customer_id,branch_id,created_by,consent_marketing FROM ' . Schema::table( 'leads' ) . ' WHERE id=%d FOR UPDATE', $marketing_lead_id ), ARRAY_A );
+			if ( $wpdb->last_error ) {
+				$wpdb->query( 'ROLLBACK' );
+				return new \WP_Error( 'adc_affiliate_referral_unavailable', __( 'تعذر التحقق من الإحالة؛ أعد المحاولة.', 'auto-dealership-core' ), array( 'status'=>503 ) );
+			}
+			$affiliate = $lead ? get_userdata( (int) $lead['created_by'] ) : false;
+			$affiliate_commission_amount = Money::parse( get_option( 'adc_affiliate_commission_amount', 0 ) ) ?? 0;
+			if ( ! $lead || ! $affiliate || ! in_array( 'dealership_marketing_affiliate', (array) $affiliate->roles, true ) || (int) $lead['created_by'] === get_current_user_id() || 1 !== (int) $lead['consent_marketing'] || $customer_id !== (int) $lead['customer_id'] || (int) $vehicle['branch_id'] !== (int) $lead['branch_id'] || $affiliate_commission_amount < 1 ) {
+				$wpdb->query( 'ROLLBACK' );
+				return new \WP_Error( 'adc_invalid_affiliate_referral', __( 'الإحالة غير صالحة أو لم تُضبط قيمة العمولة بعد.', 'auto-dealership-core' ), array( 'status'=>409 ) );
+			}
+			$affiliate_user_id = (int) $lead['created_by'];
 		}
 		$source=\AutoDealership\Inventory\OnyxOperationalPolicy::current($vehicle_id,true);if(is_wp_error($source)){$wpdb->query('ROLLBACK');return $source;}if($source){$vehicle['retail_price']=$source['listed_price'];}
 		$base = Money::parse( $vehicle['retail_price'] );
@@ -57,13 +73,13 @@ final class SalesService {
 			return new \WP_Error( 'adc_quote_preview_changed', __( 'Pricing changed. Preview the quotation again before saving.', 'auto-dealership-core' ), array( 'status'=>409 ) );
 		}
 		$now = current_time( 'mysql', true );
-		$ok = $wpdb->insert( Schema::table( 'quotations' ), array_merge( $amounts, PricingPolicy::seller_snapshot(), array( 'quote_number' => $quote_number, 'customer_id' => $customer_id, 'vehicle_id' => $vehicle_id, 'branch_id' => (int) $vehicle['branch_id'], 'owner_user_id' => get_current_user_id(), 'valid_until' => $valid_until, 'status' => 'approved', 'version' => 1, 'created_at' => $now ) ) );
+		$ok = $wpdb->insert( Schema::table( 'quotations' ), array_merge( $amounts, PricingPolicy::seller_snapshot(), array( 'quote_number' => $quote_number, 'customer_id' => $customer_id, 'vehicle_id' => $vehicle_id, 'branch_id' => (int) $vehicle['branch_id'], 'owner_user_id' => get_current_user_id(), 'marketing_lead_id' => $marketing_lead_id, 'affiliate_user_id' => $affiliate_user_id, 'affiliate_commission_amount' => $affiliate_commission_amount, 'valid_until' => $valid_until, 'status' => 'approved', 'version' => 1, 'created_at' => $now ) ) );
 		if ( false === $ok ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_quote_failed', __( 'تعذر إنشاء عرض السعر.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$id = (int) $wpdb->insert_id;
-		if ( ! Transaction::commit( static fn() => QuoteHistory::capture( $id, 'quotation.created' ) && AuditLog::record( 'quotation.created', 'quotation', $id, '', null, array_merge( $amounts, array( 'vehicle_id' => $vehicle_id, 'customer_id' => $customer_id, 'version' => 1, 'currency' => 'SAR' ) ) ) ) ) {
+		if ( ! Transaction::commit( static fn() => QuoteHistory::capture( $id, 'quotation.created' ) && AuditLog::record( 'quotation.created', 'quotation', $id, '', null, array_merge( $amounts, array( 'vehicle_id' => $vehicle_id, 'customer_id' => $customer_id, 'version' => 1, 'currency' => 'SAR', 'marketing_lead_id'=>$marketing_lead_id, 'affiliate_user_id'=>$affiliate_user_id, 'affiliate_commission_amount'=>$affiliate_commission_amount ) ) ) ) ) {
 			return new \WP_Error( 'adc_quote_failed', __( 'تعذر توثيق عرض السعر.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return array_merge( $amounts, array( 'id' => $id, 'quote_number' => $quote_number, 'version' => 1, 'currency' => 'SAR', 'status' => 'approved' ) );

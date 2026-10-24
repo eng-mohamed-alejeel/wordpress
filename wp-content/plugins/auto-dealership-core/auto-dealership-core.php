@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.65.3
+ * Version: 1.66.0
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.65.3' );
+define( 'ADC_VERSION', '1.66.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -176,6 +176,7 @@ require_once ADC_PATH . 'src/Admin/FinanceCalculatorPage.php';
 require_once ADC_PATH . 'src/Tools/VehicleComparison.php';
 require_once ADC_PATH . 'src/Tools/PublicTools.php';
 require_once ADC_PATH . 'src/Sales/SalesService.php';
+require_once ADC_PATH . 'src/Marketing/AffiliateCommissionService.php';
 require_once ADC_PATH . 'src/Sales/SaleCancellationService.php';
 require_once ADC_PATH . 'src/Payments/PaymentService.php';
 require_once ADC_PATH . 'src/Payments/RefundService.php';
@@ -225,6 +226,7 @@ require_once ADC_PATH . 'src/Admin/SaleCancellationPage.php';
 require_once ADC_PATH . 'src/Admin/TransferPages.php';
 require_once ADC_PATH . 'src/Admin/QuotePages.php';
 require_once ADC_PATH . 'src/Admin/SalesJourneyPage.php';
+require_once ADC_PATH . 'src/Admin/AffiliateCommissionPage.php';
 require_once ADC_PATH . 'src/Admin/CustomerWorkspacePage.php';
 require_once ADC_PATH . 'src/Admin/FollowUpPage.php';
 require_once ADC_PATH . 'src/Content/ReservationPolicyView.php';
@@ -427,6 +429,9 @@ add_action( 'plugins_loaded', static function (): void {
 	\AutoDealership\Core\Capabilities::migrate_purchase_permissions();
 	\AutoDealership\Core\Capabilities::migrate_newsletter_permissions();
 	\AutoDealership\Core\Capabilities::migrate_marketing_permissions();
+	\AutoDealership\Core\Capabilities::migrate_marketing_team_permissions();
+	\AutoDealership\Core\Capabilities::migrate_affiliate_commission_permissions();
+	\AutoDealership\Portal\PortalAccess::migrate_permissions();
 	if ( ! wp_next_scheduled( 'adc_release_stale_lead_claims' ) ) { wp_schedule_event( time() + 10 * MINUTE_IN_SECONDS, 'adc_fifteen_minutes', 'adc_release_stale_lead_claims' ); }
 	if ( get_option( 'adc_roles_version' ) !== ADC_VERSION ) {
 		\AutoDealership\Core\Capabilities::activate();
@@ -489,6 +494,7 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SaleCancellationPag
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\TransferPages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\QuotePages', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SalesJourneyPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AffiliateCommissionPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\CustomerWorkspacePage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\FollowUpPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Operations\\FollowUpNotifications', 'boot' ) );

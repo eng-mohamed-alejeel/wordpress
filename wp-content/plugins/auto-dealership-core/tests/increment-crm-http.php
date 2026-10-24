@@ -353,20 +353,21 @@ $crm_marketer_leads_v2_response = $http_request( $rest_v2_path( $rest_path( '/au
 $crm_marketer_leads_v2_envelope = json_decode( $crm_marketer_leads_v2_response[1], true );
 $crm_marketer_leads_v2 = (array) ( $crm_marketer_leads_v2_envelope['data'] ?? array() );
 $crm_marketer_lead_v2_ids = array_map( 'intval', array_column( $crm_marketer_leads_v2, 'id' ) );
-adc_check( 200 === $crm_marketer_leads_response[0] && in_array( (int) $crm_marketer_result['id'], $crm_marketer_lead_ids, true ) && ! in_array( (int) $crm_marketing_result['id'], $crm_marketer_lead_ids, true ) && 200 === $crm_marketer_leads_v2_response[0] && in_array( (int) $crm_marketer_result['id'], $crm_marketer_lead_v2_ids, true ) && ! in_array( (int) $crm_marketing_result['id'], $crm_marketer_lead_v2_ids, true ), 'Marketing REST listing in v1 and v2 exposes only the current marketer’s lead (HTTP ' . $crm_marketer_leads_response[0] . '/' . $crm_marketer_leads_v2_response[0] . ').' );
+adc_check( 200 === $crm_marketer_leads_response[0] && in_array( (int) $crm_marketer_result['id'], $crm_marketer_lead_ids, true ) && in_array( (int) $crm_marketing_result['id'], $crm_marketer_lead_ids, true ) && ! in_array( (int) $crm_foreign_marketing_result['id'], $crm_marketer_lead_ids, true ) && 200 === $crm_marketer_leads_v2_response[0] && in_array( (int) $crm_marketer_result['id'], $crm_marketer_lead_v2_ids, true ) && in_array( (int) $crm_marketing_result['id'], $crm_marketer_lead_v2_ids, true ) && ! in_array( (int) $crm_foreign_marketing_result['id'], $crm_marketer_lead_v2_ids, true ), 'Marketing manager REST listing in v1 and v2 shows team leads only within assigned branches (HTTP ' . $crm_marketer_leads_response[0] . '/' . $crm_marketer_leads_v2_response[0] . ').' );
 $crm_marketer_activity_path = $rest_path( '/auto-dealership/v1/leads/' . (int) $crm_marketer_result['id'] . '/activities' );
 $crm_marketer_activity_v2_path = $rest_v2_path( $crm_marketer_activity_path );
 $crm_other_marketing_activity_path = $rest_path( '/auto-dealership/v1/leads/' . (int) $crm_marketing_result['id'] . '/activities' );
 adc_check(
 	200 === $http_request( $crm_marketer_activity_path, $crm_marketer_auth )[0]
 	&& 200 === $http_request( $crm_marketer_activity_v2_path, $crm_marketer_auth )[0]
-	&& 404 === $http_request( $crm_other_marketing_activity_path, $crm_marketer_auth )[0]
-	&& 404 === $http_request( $rest_v2_path( $crm_other_marketing_activity_path ), $crm_marketer_auth )[0],
-	'Marketing REST activity history in v1 and v2 follows the same creator-only lead scope.'
+	&& 200 === $http_request( $crm_other_marketing_activity_path, $crm_marketer_auth )[0]
+	&& 200 === $http_request( $rest_v2_path( $crm_other_marketing_activity_path ), $crm_marketer_auth )[0]
+	&& 404 === $http_request( $rest_path( '/auto-dealership/v1/leads/' . (int) $crm_foreign_marketing_result['id'] . '/activities' ), $crm_marketer_auth )[0],
+	'Marketing manager activity history includes team leads in assigned branches but not foreign-branch leads.'
 );
 $crm_marketer_activity_response = $http_request( $crm_marketer_activity_path, $crm_marketer_auth, 'POST', array( 'type'=>'note', 'notes'=>'HTTP marketing activity' ) );
 adc_check( 200 === $crm_marketer_activity_response[0] && 'HTTP marketing activity' === $wpdb->get_var( $wpdb->prepare( "SELECT notes FROM $crm_activities WHERE lead_id=%d AND notes=%s", (int) $crm_marketer_result['id'], 'HTTP marketing activity' ) ), 'Marketing REST activity creation accepts the dedicated capability for the creator’s own lead.' );
-adc_check( 404 === $http_request( $crm_other_marketing_activity_path, $crm_marketer_auth, 'POST', array( 'type'=>'note', 'notes'=>'Must remain hidden' ) )[0], 'Marketing REST activity creation cannot target another creator’s lead.' );
+adc_check( 404 === $http_request( $rest_path( '/auto-dealership/v1/leads/' . (int) $crm_foreign_marketing_result['id'] . '/activities' ), $crm_marketer_auth, 'POST', array( 'type'=>'note', 'notes'=>'Must remain hidden' ) )[0], 'Marketing REST activity creation cannot target a marketing lead from another branch.' );
 $crm_marketing_assignment_path = $rest_path( '/auto-dealership/v1/leads/' . (int) $crm_marketing_result['id'] . '/assignment' );
 $crm_marketing_assignment_response = $http_request( $crm_marketing_assignment_path, $crm_assignment_auth, 'POST', array( 'staff_id'=>$crm_second_sales, 'reason'=>'Scoped REST assignment' ) );
 adc_check( 200 === $crm_marketing_assignment_response[0] && $crm_second_sales === (int) $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE id=%d", (int) $crm_marketing_result['id'] ) ), 'REST permits same-branch marketing assignment with the dedicated capability alone.' );

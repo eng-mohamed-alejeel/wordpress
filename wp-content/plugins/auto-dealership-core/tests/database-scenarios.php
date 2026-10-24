@@ -24,6 +24,7 @@ use AutoDealership\Privacy\RetentionService;
 use AutoDealership\Reports\FinancialExport;
 use AutoDealership\Migration\MigrationInventory;
 use AutoDealership\Reference\ReferenceService;
+use AutoDealership\Marketing\AffiliateCommissionService;
 
 $checks = 0;
 function adc_check( bool $condition, string $message ): void {
@@ -131,8 +132,25 @@ adc_check(
 	&& isset( \AutoDealership\Admin\UserPermissions::catalog()['adc_export_crm_leads'] )
 	&& ! in_array( 'adc_export_crm_leads', $effective_role_matrix['dealership_sales'], true )
 	&& ! in_array( 'adc_export_crm_leads', $effective_role_matrix['dealership_marketing'], true )
-	&& ! user_can( $admin, 'adc_export_crm_leads' ),
-	'CRM export is separately assignable but is not included in factory roles or automatically granted to administrators.'
+	&& user_can( $admin, 'adc_export_crm_leads' ),
+	'CRM export remains withheld from factory staff roles and is granted to administrators for testing and oversight.'
+);
+$admin_role = get_role( 'administrator' );
+$admin_assignable_capabilities = \AutoDealership\Core\Capabilities::assignable_capabilities();
+$admin_content_capabilities = array(
+	'edit_cars', 'edit_others_cars', 'publish_cars', 'read_private_cars',
+	'delete_cars', 'delete_private_cars', 'delete_published_cars', 'delete_others_cars',
+	'edit_private_cars', 'edit_published_cars',
+	'edit_car_offers', 'edit_others_car_offers', 'publish_car_offers', 'read_private_car_offers',
+	'delete_car_offers', 'delete_private_car_offers', 'delete_published_car_offers', 'delete_others_car_offers',
+	'edit_private_car_offers', 'edit_published_car_offers',
+);
+adc_check(
+	$admin_role
+	&& empty( array_diff( \AutoDealership\Core\Capabilities::all_capabilities(), array_keys( array_filter( $admin_role->capabilities ) ) ) )
+	&& empty( array_filter( $admin_assignable_capabilities, static fn( string $capability ): bool => ! user_can( $admin, $capability ) ) )
+	&& empty( array_filter( $admin_content_capabilities, static fn( string $capability ): bool => ! user_can( $admin, $capability ) ) ),
+	'Administrator account effectively holds every registered plugin capability and the primitive custom-content capabilities required by WordPress.'
 );
 foreach ( $effective_role_matrix as $role => $expected_capabilities ) {
 	if ( ! isset( $effective_role_accounts[$role] ) ) {
@@ -155,7 +173,7 @@ foreach ( $effective_role_matrix as $role => $expected_capabilities ) {
 	$matches_matrix = $matches_matrix && ! user_can( $effective_role_accounts[$role], 'manage_options' );
 	adc_check( $matches_matrix, 'Isolated effective-access account matches the unchanged capability baseline for role ' . $role . '.' );
 }
-adc_check( 13 === count( $effective_role_accounts ), 'Isolated effective-access fixtures cover all 13 dealership and customer roles without creating persistent development accounts.' );
+adc_check( 15 === count( $effective_role_accounts ), 'Isolated effective-access fixtures cover all 15 dealership and customer roles without creating persistent development accounts.' );
 wp_set_current_user( $admin );
 $saved_post = $_POST;
 $options_engine = strtoupper( (string) $wpdb->get_var( $wpdb->prepare( 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', $wpdb->options ) ) );
@@ -262,8 +280,20 @@ adc_check( ! CustomerScope::allows( $customer_b, $branch_a['id'] ), 'Other-branc
 $date = gmdate( 'Y-m-d', time() + DAY_IN_SECONDS );
 adc_check( is_wp_error( SalesService::create_quote( $customer_b, $vehicle, $date ) ), 'Quote service rejects foreign customer IDs.' );
 adc_check( is_wp_error( SalesService::create_quote( $customer_a2, $vehicle, $date ) ), 'Quote service rejects another owner customer.' );
-$quote = SalesService::create_quote( $customer_a, $vehicle, $date );
-adc_check( is_array( $quote ), 'Quote creation succeeds for an accessible customer.' );
+$affiliate_user = $effective_role_accounts['dealership_marketing_affiliate'];
+$affiliate_lead_updated = $wpdb->update( Schema::table( 'leads' ), array(
+	'source'=>'referral', 'consent_marketing'=>1, 'created_by'=>$affiliate_user, 'referred_at'=>current_time( 'mysql', true ),
+), array( 'id'=>$lead_a, 'customer_id'=>$customer_a, 'branch_id'=>$branch_a['id'] ), array( '%s','%d','%d','%s' ), array( '%d','%d','%d' ) );
+adc_check( 1 === $affiliate_lead_updated, 'Create a consented synthetic affiliate referral for the matching branch customer.' );
+$affiliate_lead = $lead_a;
+update_option( 'adc_affiliate_commission_amount', 0, false );
+adc_check( is_wp_error( SalesService::create_quote( $customer_a, $vehicle, $date, '', '', '', $affiliate_lead ) ), 'Affiliate referrals cannot be attributed while no commission rate is configured.' );
+update_option( 'adc_affiliate_commission_amount', 250000, false );
+adc_check( is_wp_error( SalesService::create_quote( $customer_a2, $vehicle, $date, '', '', '', $affiliate_lead ) ), 'Affiliate referral cannot be attached to another customer.' );
+$quote = SalesService::create_quote( $customer_a, $vehicle, $date, '', '', '', $affiliate_lead );
+adc_check( is_array( $quote ) && (int) $wpdb->get_var( $wpdb->prepare( 'SELECT affiliate_user_id FROM ' . $quotes . ' WHERE id=%d', $quote['id'] ) ) === $affiliate_user && 250000 === (int) $wpdb->get_var( $wpdb->prepare( 'SELECT affiliate_commission_amount FROM ' . $quotes . ' WHERE id=%d', $quote['id'] ) ), 'Quote locks the verified affiliate attribution and fixed commission snapshot.' );
+update_option( 'adc_affiliate_commission_amount', 400000, false );
+adc_check( 250000 === (int) $wpdb->get_var( $wpdb->prepare( 'SELECT affiliate_commission_amount FROM ' . $quotes . ' WHERE id=%d', $quote['id'] ) ), 'Changing the commission rate does not rewrite an existing quote snapshot.' );
 $input = array( 'vehicle_id' => $vehicle, 'customer_id' => $customer_b, 'idempotency_key' => wp_generate_uuid4() );
 adc_check( is_wp_error( ReservationService::create( $input ) ), 'Reservation service rejects foreign customer IDs.' );
 $input['customer_id'] = $customer_a;
@@ -656,9 +686,24 @@ $wpdb->update( $payments_table, array( 'status' => 'verified' ), array( 'id' => 
 add_filter( 'query', $break_audit );
 adc_check( is_wp_error( DeliveryService::release( $delivery['id'] ) ), 'Audit failure rolls back vehicle release.' );
 remove_filter( 'query', $break_audit );
-adc_check( 'ready_for_delivery' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $vehicles WHERE id = %d", $vehicle ) ), 'Failed release preserves vehicle readiness.' );
+adc_check( 'ready_for_delivery' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $vehicles WHERE id = %d", $vehicle ) ) && '0' === (string) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'affiliate_commissions' ) ), 'Failed release preserves vehicle readiness and rolls back the commission claim.' );
 adc_check( is_array( DeliveryService::release( $delivery['id'] ) ), 'Vehicle releases after full verified settlement, sale, VIN and delivery approvals.' );
 adc_check( is_wp_error( DeliveryService::release( $delivery['id'] ) ), 'Delivered vehicle cannot be released twice.' );
+$commission_table = Schema::table( 'affiliate_commissions' );
+$commission = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $commission_table WHERE sale_id=%d", $sale['id'] ), ARRAY_A );
+adc_check( $commission && 'pending_review' === $commission['status'] && 250000 === (int) $commission['amount'] && $affiliate_user === (int) $commission['affiliate_user_id'], 'Fully paid delivery creates exactly one pending commission using the quote-time affiliate and amount snapshot.' );
+wp_set_current_user( $affiliate_user );
+$affiliate_sales = AffiliateCommissionService::own_sales();
+adc_check( is_array( $affiliate_sales ) && 1 === count( $affiliate_sales ) && (int) $affiliate_sales[0]['sale_id'] === (int) $sale['id'] && 'pending_review' === $affiliate_sales[0]['commission_status'] && array() === AffiliateCommissionService::all_commissions(), 'Affiliate sees only the attributed sale and cannot view the administrative ledger.' );
+adc_check( is_wp_error( AffiliateCommissionService::transition( (int) $commission['id'], 'approved' ) ), 'Affiliate cannot approve own commission.' );
+wp_set_current_user( $finance_other );
+adc_check( array() === AffiliateCommissionService::all_commissions() && is_wp_error( AffiliateCommissionService::transition( (int) $commission['id'], 'approved' ) ), 'Finance staff in another branch cannot see or review the commission.' );
+wp_set_current_user( $finance_verifier );
+adc_check( is_array( AffiliateCommissionService::transition( (int) $commission['id'], 'approved' ) ), 'Authorized finance reviewer approves the delivered, settled commission.' );
+adc_check( is_wp_error( AffiliateCommissionService::transition( (int) $commission['id'], 'paid', '', 'PAYOUT-SELF-REVIEW' ) ), 'The commission reviewer cannot also register its payout.' );
+wp_set_current_user( $finance_recorder );
+adc_check( is_array( AffiliateCommissionService::transition( (int) $commission['id'], 'paid', '', 'PAYOUT-SYNTHETIC-1' ) ), 'A separate finance employee records commission payout with a reference.' );
+adc_check( is_wp_error( AffiliateCommissionService::transition( (int) $commission['id'], 'paid', '', 'PAYOUT-SYNTHETIC-2' ) ), 'Paid commission cannot be paid twice.' );
 wp_set_current_user( $inventory );
 $return_input = array( 'location_id' => $location_reference['id'], 'condition' => 'good', 'odometer' => 120, 'document_reference' => 'RETURN-SYNTHETIC-1', 'reason' => 'Customer return accepted for synthetic verification' );
 adc_check( is_wp_error( VehicleReturnService::receive( $delivery['id'], $return_input ) ), 'Inventory staff cannot authorize a delivered vehicle return.' );
@@ -672,6 +717,7 @@ remove_filter( 'query', $break_audit );
 adc_check( 'delivered' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $vehicles WHERE id=%d", $vehicle ) ) && '0' === (string) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . Schema::table( 'vehicle_returns' ) ), 'Failed return preserves delivery, sale and inventory state.' );
 $vehicle_return = VehicleReturnService::receive( $delivery['id'], $return_input );
 adc_check( is_array( $vehicle_return ) && 'pending_refund' === $vehicle_return['financial_status'] && 'returned' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $vehicles WHERE id=%d", $vehicle ) ), 'Authorized return records the pending refund obligation and returned inventory.' );
+adc_check( 'paid_sale_returned' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $commission_table WHERE id=%d", $commission['id'] ) ), 'A later vehicle return flags an already-paid affiliate commission for financial reconciliation without silently deleting payout history.' );
 adc_check( is_wp_error( VehicleReturnService::receive( $delivery['id'], $return_input ) ), 'A completed delivery return cannot be received twice.' );
 adc_check( is_wp_error( RefundService::request( $vehicle_return['id'], $half, 'bank_transfer', 'REFUND-SYNTHETIC-1' ) ), 'Return manager cannot record a financial refund.' );
 wp_set_current_user( $finance_recorder );
@@ -974,7 +1020,8 @@ try {
 	$assert_http_lead_scope( $service_a, array( $lead_a, $lead_a2 ), array( $lead_b ), 'Customer-service HTTP list is bounded to branch A.' );
 	$assert_http_lead_scope( $service_b, array( $lead_b ), array( $lead_a, $lead_a2 ), 'Customer-service HTTP list is bounded to branch B.' );
 	$assert_http_lead_scope( $effective_role_accounts['dealership_general_manager'], array( $lead_a, $lead_a2 ), array( $lead_b ), 'General-manager HTTP list remains bounded to its assigned branch.' );
-	foreach ( array( 'dealership_chat_adviser', 'dealership_inventory', 'dealership_finance', 'dealership_purchasing', 'dealership_delivery', 'dealership_auditor', 'car_dealer_customer' ) as $role ) {
+	$assert_http_lead_scope( $effective_role_accounts['dealership_chat_adviser'], array(), array( $lead_a, $lead_a2, $lead_b ), 'Chat adviser cannot view leads assigned to sales users.' );
+	foreach ( array( 'dealership_inventory', 'dealership_finance', 'dealership_purchasing', 'dealership_delivery', 'dealership_auditor', 'car_dealer_customer' ) as $role ) {
 		$role_auth = $http_auth( $effective_role_accounts[$role] );
 		$v1 = $read_http_lead_ids( $http_lead_list_path, $role_auth );
 		$v2 = $read_http_lead_ids( $rest_v2_path( $http_lead_list_path ), $role_auth, true );
@@ -1598,18 +1645,26 @@ try {
 	);
 	$admin_export_http = $http_auth( $admin );
 	list( $admin_export_nonce_status, $admin_export_nonce ) = $http_request( '/adc-test-nonce?action=adc_export_leads', $admin_export_http );
+	$admin_export_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) );
 	list( $admin_export_status, $admin_export_body ) = $http_request(
 		'/wp-admin/admin-post.php',
 		$admin_export_http,
 		'POST',
-		array( 'action'=>'adc_export_leads', '_wpnonce'=>trim( $admin_export_nonce ) ),
+		array( 'action'=>'adc_export_leads', '_wpnonce'=>trim( $admin_export_nonce ), 'purpose'=>'customer_follow_up', 'reason'=>'assigned_work' ),
 		true
 	);
+	$admin_export_audit = $wpdb->get_row( $wpdb->prepare( "SELECT actor_user_id,after_data FROM $audit WHERE event_key=%s ORDER BY id DESC LIMIT 1", 'leads.csv_exported' ), ARRAY_A );
+	$admin_export_audit_data = json_decode( $admin_export_audit['after_data'] ?? '', true );
 	adc_check(
-		200 === $admin_export_nonce_status && 403 === $admin_export_status
-		&& ! str_contains( $admin_export_body, 'formula-csv@example.invalid' ),
-		'Site administration alone does not grant the separate bulk CRM export permission (nonce HTTP ' . $admin_export_nonce_status . ', export HTTP ' . $admin_export_status . ').'
+		200 === $admin_export_nonce_status && 200 === $admin_export_status
+		&& str_starts_with( $admin_export_body, "\xEF\xBB\xBF" )
+		&& $admin_export_audit_before + 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) )
+		&& (int) ( $admin_export_audit['actor_user_id'] ?? 0 ) === (int) $admin
+		&& 'customer_follow_up' === ( $admin_export_audit_data['purpose'] ?? '' )
+		&& 'assigned_work' === ( $admin_export_audit_data['reason_code'] ?? '' ),
+		'Administrator can export CRM data with a valid purpose and reason, and the export is audited.'
 	);
+	$crm_export_audit_before = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $audit WHERE event_key=%s", 'leads.csv_exported' ) );
 	(new WP_User( $sales_b ))->add_cap( 'adc_export_crm_leads' );
 	clean_user_cache( $sales_b );
 	$crm_export_missing_purpose = $crm_export_form;

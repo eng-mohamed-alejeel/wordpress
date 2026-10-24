@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-10-24 — CRM pipeline board redesign
+
+- Horizontal scrollable board with a distinct color per stage, live stage counters, empty-column states, and priority, overdue, source and age badges on cards.
+- New leads (under 24 hours) are highlighted with a red pulsing card and a "New" badge; unassigned leads are labelled.
+- Drag and drop now highlights valid target columns, dims invalid ones, updates counters optimistically with rollback on failure, supports touch (long-press) and replaces `prompt()` with a reason dialog. A clear message explains when first contact must be recorded before moving to "Contacted".
+- Permission rules are unchanged: moves remain server-validated.
+- Unassigned new leads can be dragged to "Assigned" by sales staff who may claim them (same rules as the claim button, via `adc_claim_lead_ajax`). CRM board assets are versioned by file modification time to avoid stale caches.
+
+## 2026-10-24 — Marketing team roles, affiliate commissions and CRM access (1.66.0)
+
+- Defined the Marketing Manager, Marketing Employee and Affiliate Marketer defaults. Manager CRM visibility is limited to marketing-created leads inside assigned branches, with in-branch assignment to Sales; the two contributor roles can create, view and follow up only their own leads.
+- Added CRM, campaign reports and role-appropriate navigation; gated stage changes and inaccessible customer-workspace links from marketing-only users. Marketing activity supports the intake sources used by the marketing form.
+- Removed customer-review moderation from the default Marketing role and wired the portal-role migration to revoke its legacy default grants. Review permissions remain available to explicitly authorized moderators.
+- Linked quotations to a consented affiliate-created CRM lead only when customer and branch match; the affiliate identity and configured fixed SAR commission are snapshotted on the quote.
+- Added an auditable commission ledger created only after full verified payment and delivery, finance/general-manager review, maker-checker payout registration, affiliate-only status visibility, and return handling that voids unpaid claims or flags prior payouts for reconciliation.
+- Commission rate defaults to zero, can be changed only by finance/general management, and applies only to new quotations. The affiliate cannot view the administrative ledger, approve their own claim, or register a payout.
+
 ## 2026-10-24 — Role-specific admin screen verification
 
 - Verified rendered admin menus and direct screen access for all 14 synthetic development accounts. Fixed an inventory-screen denial caused by the vehicle specification editor and administrator-only technical-options page sharing a WordPress page slug; the admin options screen now uses `adc-vehicle-technical-options`.
