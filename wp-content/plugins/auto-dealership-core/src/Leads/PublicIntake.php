@@ -67,6 +67,7 @@ final class PublicIntake {
 		$key = strtolower( $input['idempotency_key'] ?? '' );
 		$kind = 'booking' === $compatibility_type ? 'test_drive' : ( $input['request_kind'] ?? 'contact' );
 		if ( null === $branch || null === $post_id || ! in_array( $kind, array( 'contact','finance','finance_request','price_request','offer_request','test_drive','purchase' ), true ) || ( '' !== $key && ! preg_match( '/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/', $key ) ) ) { return self::error( 'adc_invalid_lead', 400 ); }
+		if ( 'purchase' === $kind && empty( $input['purchase_consent'] ) ) { return self::error( 'adc_purchase_consent_required', 400 ); }
 		if ( $post_id ) {
 			if ( ! PublicCatalog::is_post_publicly_eligible( $post_id ) ) { return self::error( 'adc_intake_vehicle_unavailable', 400 ); }
 			$vehicle = $wpdb->get_row( $wpdb->prepare( 'SELECT branch_id,status FROM ' . Schema::table( 'vehicles' ) . ' WHERE public_post_id=%d LIMIT 1', $post_id ), ARRAY_A );
@@ -124,11 +125,19 @@ final class PublicIntake {
 					'adc_rate_limited' => 'Too many requests. Please try again later.',
 					'adc_invalid_booking_time' => 'Choose a vehicle and a future date and time in the site timezone.',
 					'adc_intake_vehicle_unavailable' => 'This vehicle is unavailable for this request.',
+					'adc_purchase_consent_required' => 'Please agree that we may contact you about this purchase request.',
 				)[ $result->get_error_code() ] ?? 'The request could not be saved. Review the details and try again.';
 			}
 			wp_send_json_error( array( 'message'=>$message ), (int) ( $result->get_error_data()['status'] ?? 400 ) );
 		}
 		$data = array( 'message'=>'en' === $language ? 'Your request has been received successfully.' : __( 'تم استلام طلبك بنجاح.', 'auto-dealership-core' ) );
+		if ( 'lead' === $type && 'purchase' === (string) ( $input['request_kind'] ?? '' ) && ! empty( $result['id'] ) ) {
+			$reference = 'PUR-' . str_pad( (string) absint( $result['id'] ), 6, '0', STR_PAD_LEFT );
+			$data['request_reference'] = $reference;
+			$data['message'] = 'en' === $language
+				? sprintf( 'Your purchase request was received. Reference: %s. Our sales team will contact you shortly.', $reference )
+				: sprintf( 'تم استلام طلب الشراء بنجاح. رقم الطلب: %s. سيتواصل معك فريق المبيعات قريبًا.', $reference );
+		}
 		if ( 'booking' === $type ) {
 			$data['booking_id'] = $result['legacy_request_id'];
 			$data['account_url'] = is_user_logged_in() ? esc_url_raw( (string) apply_filters( 'adc_customer_account_url', '', 'customer-bookings' ) ) : '';
@@ -142,7 +151,7 @@ final class PublicIntake {
 	}
 
 	private static function error( string $code, int $status ): \WP_Error {
-		$messages = array( 'adc_rate_limited'=>'تم تجاوز عدد الطلبات المسموح. حاول لاحقًا.', 'adc_invalid_booking_time'=>'اختر سيارة وتاريخًا ووقتًا في المستقبل حسب توقيت الموقع.', 'adc_intake_vehicle_unavailable'=>'السيارة غير متاحة لهذا الطلب.' );
+		$messages = array( 'adc_rate_limited'=>'تم تجاوز عدد الطلبات المسموح. حاول لاحقًا.', 'adc_invalid_booking_time'=>'اختر سيارة وتاريخًا ووقتًا في المستقبل حسب توقيت الموقع.', 'adc_intake_vehicle_unavailable'=>'السيارة غير متاحة لهذا الطلب.', 'adc_purchase_consent_required'=>'يجب الموافقة على تواصل فريق المبيعات معك بخصوص طلب الشراء.' );
 		return new \WP_Error( $code, __( $messages[$code] ?? 'تعذر حفظ الطلب. راجع البيانات أو حاول لاحقًا.', 'auto-dealership-core' ), array( 'status'=>$status ) );
 	}
 }

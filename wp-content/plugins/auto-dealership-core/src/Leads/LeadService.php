@@ -351,7 +351,10 @@ final class LeadService {
 		if ( ! is_string( $raw_key ) || ( '' !== $raw_key && ! preg_match( '/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/i', $raw_key ) ) ) { return new \WP_Error( 'adc_invalid_intake_key', '', array( 'status'=>400 ) ); }
 		$request_key = '' === $raw_key ? null : hash_hmac( 'sha256', get_current_user_id() . '|' . strtolower( $raw_key ), wp_salt( 'auth' ) );
 		// A contact alone is not enough to merge two genuine enquiries. Explicit external IDs opt into safe cross-request deduplication; the idempotency key still protects exact retries.
-		$dedupe_enabled = ! $marketing && '' !== $external_id;
+		// Public enquiries are deduplicated by customer, type and vehicle for a short window.
+		// An explicit external ID remains supported for integrations, while normal website
+		// submissions are protected from repeated clicks/forms without merging old enquiries.
+		$dedupe_enabled = ! $marketing;
 		$payload_hash = $request_key ? hash_hmac( 'sha256', wp_json_encode( array( $identity, $branch_id, $legacy_ref, $initial_activity_notes, $compatibility_type, $input['request_kind'] ?? '', $requested_car_id, $input['date'] ?? '', $input['time'] ?? '', $external_id, $utm_source, $utm_medium, $utm_content, $landing_page, $referrer_url, $marketing ) ), wp_salt( 'auth' ) ) : null;
 		if ( $request_key ) {
 			$replay = self::intake_replay( $request_key, $payload_hash, $compatibility_type );
@@ -460,6 +463,7 @@ final class LeadService {
 			return new \WP_Error( 'adc_lead_failed', __( 'تعذر توثيق الطلب. حاول لاحقًا.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		if ( $compatibility_type && get_current_user_id() ) { do_action( 'adc_customer_account_linked', get_current_user_id(), $customer_id ); }
+		if ( ! \AutoDealership\Operations\FollowUpNotifications::queue_lead_created( $lead_id, (int) $branch_id, (int) $assignment['owner_user_id'], $now ) ) { error_log( 'Auto Dealership Core: unable to queue new public opportunity notification.' ); }
 		$result = array( 'id' => $lead_id, 'status' => 'new' );
 		if ( $compatibility_type ) { $result['legacy_request_id'] = $legacy_id; }
 		return $result;
@@ -473,11 +477,12 @@ final class LeadService {
 		$args = array( $mobile );
 		if ( '' !== $email ) { $match .= ' OR c.email=%s'; $args[] = $email; }
 		$match .= ')';
-		$conditions = array( $match, '(c.account_user_id=0 OR c.account_user_id IS NULL)', 'c.merged_into_id IS NULL', 'l.branch_id=%d', 'l.intake_type=%s', 'l.external_id=%s', $compatibility_type ? 'l.legacy_request_type=%s' : 'l.legacy_request_type IS NULL', 'l.stage NOT IN ("won","lost")', 'l.archived_at IS NULL' );
+		$conditions = array( $match, '(c.account_user_id=0 OR c.account_user_id IS NULL)', 'c.merged_into_id IS NULL', 'l.branch_id=%d', 'l.intake_type=%s', $compatibility_type ? 'l.legacy_request_type=%s' : 'l.legacy_request_type IS NULL', 'l.stage NOT IN ("won","lost")', 'l.archived_at IS NULL' );
 		$args[] = $branch_id;
 		$args[] = $intake_type;
-		$args[] = $external_id;
 		if ( $compatibility_type ) { $args[] = $compatibility_type; }
+		if ( '' !== $external_id ) { $conditions[] = 'l.external_id=%s'; $args[] = $external_id; }
+		else { $conditions[] = 'l.created_at>=%s'; $args[] = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS ); }
 		if ( $requested_car_id ) { $conditions[] = 'l.requested_car_id=%d'; $args[] = $requested_car_id; }
 		else { $conditions[] = 'l.requested_car_id=0'; $conditions[] = 'l.created_at>=%s'; $args[] = gmdate( 'Y-m-d H:i:s', time() - 30 * DAY_IN_SECONDS ); }
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT c.id FROM ' . $customer_table . ' c INNER JOIN ' . $lead_table . ' l ON l.customer_id=c.id WHERE ' . implode( ' AND ', $conditions ) . ' ORDER BY l.id DESC LIMIT 1 FOR UPDATE', $args ), ARRAY_A );
@@ -487,9 +492,11 @@ final class LeadService {
 
 	private static function find_open_duplicate( int $customer_id, string $intake_type, int $requested_car_id, int $branch_id, string $external_id, string $compatibility_type ) {
 		global $wpdb;
-		$conditions = array( 'customer_id=%d', 'branch_id=%d', 'intake_type=%s', 'external_id=%s', $compatibility_type ? 'legacy_request_type=%s' : 'legacy_request_type IS NULL', 'stage NOT IN ("won","lost")', 'archived_at IS NULL' );
-		$args = array( $customer_id, $branch_id, $intake_type, $external_id );
+		$conditions = array( 'customer_id=%d', 'branch_id=%d', 'intake_type=%s', $compatibility_type ? 'legacy_request_type=%s' : 'legacy_request_type IS NULL', 'stage NOT IN ("won","lost")', 'archived_at IS NULL' );
+		$args = array( $customer_id, $branch_id, $intake_type );
 		if ( $compatibility_type ) { $args[] = $compatibility_type; }
+		if ( '' !== $external_id ) { $conditions[] = 'external_id=%s'; $args[] = $external_id; }
+		else { $conditions[] = 'created_at>=%s'; $args[] = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS ); }
 		if ( $requested_car_id ) {
 			$conditions[] = 'requested_car_id=%d';
 			$args[] = $requested_car_id;
