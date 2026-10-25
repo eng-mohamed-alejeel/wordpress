@@ -6,26 +6,84 @@ $monthly = $offer['monthly_payment'];
 $new = $offer['price'];
 $old = $offer['old_price'];
 $car_id = $offer['car_id'];
+$expires = isset( $offer['expires'] ) && is_string( $offer['expires'] ) ? $offer['expires'] : '';
+$summary = trim( (string) get_the_excerpt() );
+$content = trim( (string) get_post_field( 'post_content', get_the_ID() ) );
+$discount_percent = $old > $new && $new > 0 ? (int) round( ( ( $old - $new ) / $old ) * 100 ) : 0;
+$offer_image = get_the_post_thumbnail( get_the_ID(), 'large' );
+if ( ! $offer_image && $car_id ) { $offer_image = get_the_post_thumbnail( $car_id, 'large' ); }
+$canonical_offer_url = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer_catalog_localized_url( (string) get_permalink( get_the_ID() ) ) : (string) get_permalink( get_the_ID() );
+$request_path = wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH );
+$canonical_path = wp_parse_url( $canonical_offer_url, PHP_URL_PATH );
+$is_legacy_offer_url = is_string( $request_path ) && is_string( $canonical_path ) && untrailingslashit( $request_path ) !== untrailingslashit( $canonical_path );
 ?>
-<section class="ab-car-hero ab-offer-single">
+<?php if ( $is_legacy_offer_url ) : ?><script>
+if ( window.history && window.history.replaceState ) {
+	window.history.replaceState( null, document.title, <?php echo wp_json_encode( $canonical_offer_url ); ?> + window.location.hash );
+}
+</script><?php endif; ?>
+<section class="ab-car-hero ab-offer-single" aria-labelledby="offer-title">
 	<div class="container ab-car-hero-grid">
-		<div class="car-single-media"><?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large' ); } else { echo get_the_post_thumbnail( $car_id, 'large' ); } ?></div>
-		<div class="car-single-content">
+		<div class="ab-offer-visual">
+			<div class="ab-offer-media-frame">
+				<?php if ( $offer_image ) : ?>
+					<?php echo $offer_image; ?>
+				<?php else : ?>
+					<div class="offer-hero-placeholder" aria-label="<?php echo esc_attr( car_dealer_text( 'لا توجد صورة للعرض حاليًا', 'No offer image is available yet' ) ); ?>">
+						<?php echo car_dealer_vehicle_placeholder(); ?>
+						<span><?php echo esc_html( car_dealer_text( 'عرض مميز', 'Featured offer' ) ); ?></span>
+					</div>
+				<?php endif; ?>
+			</div>
+			<?php if ( $discount_percent > 0 ) : ?><span class="ab-offer-badge"><?php echo esc_html( car_dealer_text( 'خصم ', 'Save ' ) . $discount_percent . '%' ); ?></span><?php endif; ?>
+			<?php if ( $car_id && get_the_title( $car_id ) ) : ?><p class="ab-offer-vehicle-link"><?php echo esc_html( car_dealer_text( 'على سيارة ', 'For ' ) . get_the_title( $car_id ) ); ?></p><?php endif; ?>
+		</div>
+		<div class="car-single-content ab-offer-content">
 			<p class="eyebrow"><?php echo esc_html( car_dealer_text( 'عرض {site_name}', '{site_name} Offer' ) ); ?></p>
-			<h1><?php the_title(); ?></h1>
-			<?php if ( $old ) : ?><p class="offer-old"><?php echo esc_html( car_dealer_format_price( $old ) ); ?></p><?php endif; ?>
-			<?php if ( $new ) : ?><p class="car-single-price"><?php echo esc_html( car_dealer_format_price( $new ) ); ?></p><?php endif; ?>
+			<h1 id="offer-title"><?php the_title(); ?></h1>
+			<?php if ( $summary ) : ?><p class="ab-offer-summary"><?php echo esc_html( $summary ); ?></p><?php endif; ?>
+			<div class="ab-offer-price-panel">
+				<?php if ( $old ) : ?><p class="offer-old"><span><?php echo esc_html( car_dealer_text( 'السعر السابق', 'Previous price' ) ); ?></span><del><?php echo esc_html( car_dealer_format_price( $old ) ); ?></del></p><?php endif; ?>
+				<?php if ( $new ) : ?><p class="car-single-price"><span><?php echo esc_html( car_dealer_text( 'سعر العرض', 'Offer price' ) ); ?></span><strong><?php echo esc_html( car_dealer_format_price( $new ) ); ?></strong></p><?php endif; ?>
+			</div>
 			<?php if ( $monthly ) : ?><p class="car-monthly"><?php printf( esc_html__( 'قسط يبدأ من %s', 'car-dealer' ), esc_html( car_dealer_format_price( $monthly ) ) ); ?></p><?php endif; ?>
+			<?php if ( '' !== $expires ) : ?><p class="ab-offer-validity"><?php echo esc_html( car_dealer_text( 'ساري حتى ', 'Valid until ' ) . $expires ); ?></p><?php endif; ?>
 			<div class="car-single-actions">
 				<a class="btn btn-primary" href="#offer-lead"><?php esc_html_e( 'احصل على العرض', 'car-dealer' ); ?></a>
 				<?php $wa_link = car_dealer_whatsapp_url( car_dealer_text( 'أريد الاستفادة من عرض: ', 'I would like to ask about this offer: ' ) . get_the_title() ); if ( '#' !== $wa_link ) : ?><a class="btn btn-whatsapp" href="<?php echo esc_url( $wa_link ); ?>" target="_blank" rel="noopener"><?php echo car_dealer_whatsapp_icon(); ?><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a><?php endif; ?>
 			</div>
+			<p class="ab-offer-reassurance"><?php echo esc_html( car_dealer_text( 'أرسل بياناتك وسيتواصل معك فريق المبيعات لتأكيد التفاصيل والتوفر.', 'Send your details and our sales team will confirm availability and next steps.' ) ); ?></p>
 		</div>
 	</div>
 </section>
-<section class="container car-single">
-	<div class="car-description"><?php the_content(); ?><?php if ( function_exists( 'car_dealer_social_share_buttons' ) ) { car_dealer_social_share_buttons(); } ?></div>
-	<div id="offer-lead"><?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $car_id, 'offer_request', __( 'احصل على العرض', 'car-dealer' ), __( 'إرسال الطلب', 'car-dealer' ) ); } ?></div>
+<section class="container ab-offer-details" aria-label="<?php echo esc_attr( car_dealer_text( 'تفاصيل العرض وطلب التواصل', 'Offer details and enquiry' ) ); ?>">
+	<div class="ab-offer-description car-description">
+		<div class="ab-offer-section-heading"><span><?php echo esc_html( car_dealer_text( 'التفاصيل', 'Details' ) ); ?></span><h2><?php echo esc_html( car_dealer_text( 'تفاصيل العرض', 'Offer details' ) ); ?></h2></div>
+		<?php if ( $content ) : ?><?php the_content(); ?><?php else : ?><p><?php echo esc_html( car_dealer_text( 'استفسر عن العرض لمعرفة التفاصيل الكاملة وخيارات التوفر.', 'Contact us to confirm the full offer details and availability options.' ) ); ?></p><?php endif; ?>
+		<?php if ( function_exists( 'car_dealer_social_share_buttons' ) ) : ?><div class="ab-offer-share"><?php car_dealer_social_share_buttons(); ?></div><?php endif; ?>
+	</div>
+	<aside id="offer-lead" class="ab-offer-request-card">
+		<div class="ab-offer-section-heading"><span><?php echo esc_html( car_dealer_text( 'خطوة واحدة', 'One step' ) ); ?></span><h2><?php echo esc_html( car_dealer_text( 'اطلب هذا العرض', 'Request this offer' ) ); ?></h2></div>
+		<p class="ab-offer-form-intro"><?php echo esc_html( car_dealer_text( 'اترك بيانات التواصل وسنعود إليك بأقرب وقت.', 'Leave your contact details and we will get back to you shortly.' ) ); ?></p>
+		<?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $car_id, 'offer_request', __( 'احصل على العرض', 'car-dealer' ), __( 'إرسال الطلب', 'car-dealer' ) ); } ?>
+	</aside>
 </section>
+<script>
+(function () {
+	function focusOfferForm() {
+		if ( '#offer-lead' !== window.location.hash ) { return; }
+		var target = document.getElementById( 'offer-lead' );
+		if ( ! target ) { return; }
+		var header = document.querySelector( '.site-header' );
+		var offset = header ? header.getBoundingClientRect().height + 24 : 96;
+		window.scrollTo( 0, Math.max( 0, target.getBoundingClientRect().top + window.scrollY - offset ) );
+	}
+	if ( 'complete' === document.readyState ) {
+		window.setTimeout( focusOfferForm, 100 );
+	} else {
+		window.addEventListener( 'load', function () { window.setTimeout( focusOfferForm, 100 ); }, { once: true } );
+	}
+})();
+</script>
 <?php endwhile; ?>
 <?php get_footer(); ?>

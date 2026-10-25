@@ -7,10 +7,11 @@ defined( 'ABSPATH' ) || exit;
  * Owns the durable WordPress content contract used by the public dealership site.
  *
  * Operational inventory remains in the plugin tables. The car and offer posts are
- * the editorial/public projection and keep their existing identifiers and URLs.
+ * the editorial/public projection. Existing identifiers and legacy public routes
+ * remain valid while generated vehicle and offer links use stable ASCII paths.
  */
 final class ContentRegistry {
-	public const VERSION = '1.0.0';
+	public const VERSION = '1.2.0';
 	public const OPTION_VERSION = 'adc_content_registry_version';
 
 	private static bool $booted = false;
@@ -25,7 +26,11 @@ final class ContentRegistry {
 		self::$booted = true;
 		add_action( 'init', array( self::class, 'register' ), 5 );
 		add_action( 'admin_init', array( self::class, 'maybe_upgrade_rewrites' ), 5 );
+		add_action( 'template_redirect', array( self::class, 'redirect_legacy_car_request' ), 1 );
 		add_action( 'admin_notices', array( self::class, 'render_collision_notice' ) );
+		add_filter( 'post_type_link', array( self::class, 'content_permalink' ), 10, 4 );
+		add_filter( 'request', array( self::class, 'resolve_clean_offer_request' ), 10, 1 );
+		add_filter( 'request', array( self::class, 'resolve_clean_car_request' ), 10, 1 );
 	}
 
 	/** Stable ownership signal used by replaceable themes. */
@@ -41,8 +46,84 @@ final class ContentRegistry {
 	public static function register(): void {
 		self::register_car();
 		self::register_offer();
+		add_rewrite_rule( '^cars/car-([0-9]+)/?$', 'index.php?post_type=car&p=$matches[1]', 'top' );
+		add_rewrite_rule( '^offers/offer-([0-9]+)/?$', 'index.php?post_type=car_offer&p=$matches[1]', 'top' );
 		self::register_taxonomies();
 		self::register_meta_contracts();
+	}
+
+	/** Use short, stable ASCII URLs for generated vehicle and offer links. */
+	public static function content_permalink( string $url, \WP_Post $post, bool $leavename = false, $sample = null ): string {
+		if ( $post->ID < 1 || ! in_array( $post->post_type, array( 'car', 'car_offer' ), true ) ) {
+			return $url;
+		}
+
+		$base = 'car' === $post->post_type ? 'cars/car-' : 'offers/offer-';
+		return home_url( user_trailingslashit( $base . $post->ID ) );
+	}
+
+	/** Resolve the new public path without invalidating existing Arabic slugs. */
+	public static function resolve_clean_offer_request( array $vars ): array {
+		$slug = $vars['car_offer'] ?? '';
+		if ( ! is_scalar( $slug ) || ! preg_match( '/\Aoffer-([0-9]+)\z/', (string) $slug, $matches ) ) {
+			return $vars;
+		}
+
+		$post_id = absint( $matches[1] );
+		if ( $post_id < 1 || 'car_offer' !== get_post_type( $post_id ) ) {
+			return $vars;
+		}
+
+		$vars['p'] = $post_id;
+		$vars['post_type'] = 'car_offer';
+		unset( $vars['car_offer'], $vars['name'] );
+		return $vars;
+	}
+
+	/** Resolve a stable vehicle path without invalidating existing Arabic slugs. */
+	public static function resolve_clean_car_request( array $vars ): array {
+		$slug = $vars['car'] ?? '';
+		if ( ! is_scalar( $slug ) || ! preg_match( '/\Acar-([0-9]+)\z/', (string) $slug, $matches ) ) {
+			return $vars;
+		}
+
+		$post_id = absint( $matches[1] );
+		if ( $post_id < 1 || 'car' !== get_post_type( $post_id ) ) {
+			return $vars;
+		}
+
+		$vars['p'] = $post_id;
+		$vars['post_type'] = 'car';
+		unset( $vars['car'], $vars['name'] );
+		return $vars;
+	}
+
+	/** Canonicalize old vehicle slugs while preserving their public reachability. */
+	public static function redirect_legacy_car_request(): void {
+		if ( is_admin() || wp_doing_ajax() || is_preview() || is_feed() || ! is_singular( 'car' ) ) {
+			return;
+		}
+
+		$post = get_queried_object();
+		if ( ! $post instanceof \WP_Post || $post->ID < 1 ) {
+			return;
+		}
+
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) && is_string( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+		$current_path = '' !== $request_uri ? wp_parse_url( $request_uri, PHP_URL_PATH ) : '';
+		$canonical    = self::content_permalink( '', $post );
+		$target_path  = wp_parse_url( $canonical, PHP_URL_PATH );
+		if ( ! is_string( $current_path ) || ! is_string( $target_path ) || untrailingslashit( $current_path ) === untrailingslashit( $target_path ) ) {
+			return;
+		}
+
+		$query = wp_parse_url( $request_uri, PHP_URL_QUERY );
+		if ( is_string( $query ) && '' !== $query ) {
+			$canonical .= '?' . $query;
+		}
+
+		wp_safe_redirect( $canonical, 301, 'Auto Dealership Core' );
+		exit;
 	}
 
 	/** Activation is the only unconditional rewrite flush for a fresh install. */
