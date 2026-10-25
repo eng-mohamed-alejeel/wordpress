@@ -11,3 +11,21 @@
 .adc-admin-shell #screen-meta-links .show-settings { border-color: var(--ab-border); border-radius: 0 0 7px 7px; color: var(--ab-muted); }
 .adc-admin-shell .notice { border-radius: 8px; }
 .adc-admin-shell .notice-dismiss:focus-visible { outline: 2px solid var(--ab-action); outline-offset: -4px; }
+
+/* One visible focus contract for plugin-owned controls in light and dark modes. */
+.adc-admin :is(a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [tabindex="0"], [tabindex="-1"]):focus,
+.adc-admin-native :is(a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [tabindex="0"], [tabindex="-1"]):focus {
+	outline: 3px solid var(--ab-focus);
+	outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.adc-admin-shell *,
+	.adc-admin-shell *::before,
+	.adc-admin-shell *::after {
+		animation-duration: .01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: .01ms !important;
+		scroll-behavior: auto !important;
+	}
+}

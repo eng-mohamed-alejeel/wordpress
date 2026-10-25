@@ -39,6 +39,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	unset( $connection );
 	define( 'WP_INSTALLING', true );
 	define( 'WP_ENVIRONMENT_TYPE', 'local' );
+	if ( in_array( getenv( 'ADC_ADMIN_QUERY_BASELINE_ONLY' ), array( '1' ), true ) || in_array( getenv( 'ADC_ADMIN_QUERY_POPULATED_ONLY' ), array( '1' ), true ) ) { define( 'SAVEQUERIES', true ); }
 	if ( '1' === getenv( 'ADC_PERMISSION_GOVERNANCE_ONLY' ) ) { define( 'WP_ADMIN', true ); }
 	define( 'ADC_MAIL_MODE', 'mailpit' ); // Synthetic mail is short-circuited by scenario filters.
 	define( 'WP_HTTP_BLOCK_EXTERNAL', true );
@@ -131,6 +132,8 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 	}
 	if ( '1' === getenv( 'ADC_AUTH_ONLY' ) ) { require __DIR__ . '/authentication-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_WORKSPACE_ONLY' ) ) { require __DIR__ . '/workspace-overview-scenarios.php'; exit; }
+	if ( '1' === getenv( 'ADC_ADMIN_QUERY_BASELINE_ONLY' ) ) { require __DIR__ . '/admin-query-baseline.php'; exit; }
+	if ( '1' === getenv( 'ADC_ADMIN_QUERY_POPULATED_ONLY' ) ) { require __DIR__ . '/admin-query-populated-baseline.php'; exit; }
 	require __DIR__.'/onyx-document-fixture.php';
 	if ( '1' === getenv( 'ADC_JOBS_ONLY' ) ) { require __DIR__ . '/job-runtime-scenarios.php'; exit; }
 	if ( '1' === getenv( 'ADC_PORTAL_ONLY' ) ) { require __DIR__ . '/portal-scenarios.php'; exit; }

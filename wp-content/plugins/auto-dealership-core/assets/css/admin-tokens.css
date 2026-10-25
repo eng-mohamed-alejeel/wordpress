@@ -1,2 +1,30 @@
-.adc-admin-shell { --adc-ink: var(--ab-text); --adc-muted: var(--ab-muted); --adc-accent: var(--ab-action); --adc-border: var(--ab-border); --adc-surface: var(--ab-surface); --adc-soft: var(--ab-bg); --adc-control-height: 42px; --adc-control-radius: 7px; --adc-gap: 16px; }
+.adc-admin-shell {
+  --adc-ink: var(--ab-text);
+  --adc-heading: var(--ab-heading);
+  --adc-muted: var(--ab-muted);
+  --adc-accent: var(--ab-action);
+  --adc-accent-hover: var(--ab-action-hover);
+  --adc-primary: var(--ab-primary);
+  --adc-border: var(--ab-border);
+  --adc-control-border: var(--ab-control-border);
+  --adc-focus: var(--ab-focus);
+  --adc-surface: var(--ab-surface);
+  --adc-soft: var(--ab-soft);
+  --adc-bg: var(--ab-bg);
+  --adc-on-action: var(--ab-on-action);
+  --adc-inverse: var(--ab-inverse);
+  --adc-success: var(--ab-success);
+  --adc-success-bg: var(--ab-success-bg);
+  --adc-warning: var(--ab-warning);
+  --adc-warning-bg: var(--ab-warning-bg);
+  --adc-error: var(--ab-error);
+  --adc-error-bg: var(--ab-error-bg);
+  --adc-info: var(--ab-info);
+  --adc-info-bg: var(--ab-info-bg);
+  --adc-shadow: var(--ab-shadow);
+  --adc-shadow-soft: var(--ab-shadow);
+  --adc-control-height: 42px;
+  --adc-control-radius: 7px;
+  --adc-gap: 16px;
+}
 @media (max-width: 782px) { .adc-admin-shell { --adc-control-height: 44px; } }

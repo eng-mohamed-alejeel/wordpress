@@ -145,6 +145,7 @@ final class Navigation {
 			) ),
 			'audit' => array( 'الرقابة والتكاملات', 'dashicons-visibility', array(
 				array( 'adc-audit', 'سجل التدقيق', 'adc_view_audit', AuditPage::class, 'render' ),
+				array( 'adc-diagnostics', 'صحة الإدارة', 'adc_view_audit', DiagnosticsPage::class, 'render' ),
 				array( 'adc-public-security', 'أمن الواجهة العامة', 'adc_view_audit', SecurityPage::class, 'render' ),
 				array( 'adc-integrations', 'جاهزية التكاملات', 'adc_view_integrations', IntegrationPage::class, 'render' ),
 				array( 'adc-outbox', 'مراقبة المهام', 'adc_view_outbox', OutboxPage::class, 'render' ),
@@ -171,7 +172,7 @@ final class Navigation {
 				'adc-onyx'=>'Onyx inventory', 'adc-inventory'=>'Vehicle management', 'adc-inventory-identity'=>'Receiving, inspection and locations', 'adc-vehicle-vin'=>'Correct vehicle VIN', 'adc-vehicle-specifications'=>'Vehicle specifications', 'adc-vehicle-issues'=>'Holds and maintenance', 'adc-vehicle-returns'=>'Vehicle returns', 'edit.php?post_type=car'=>'Vehicle pages', 'edit-tags.php?taxonomy=car_brand&post_type=car'=>'Vehicle brands', 'edit-tags.php?taxonomy=car_category&post_type=car'=>'Vehicle categories',
 				'adc-suppliers'=>'Suppliers', 'adc-vehicle-acquisition'=>'Vehicle acquisition and costs', 'adc-approvals'=>'Discount and sale approvals', 'adc-sale-cancellations'=>'Sale cancellations', 'adc-finance'=>'Finance requests', 'adc-payments'=>'Payment confirmations', 'adc-refunds'=>'Refunds', 'adc-financial-export'=>'Financial export', 'adc-employee-commissions'=>'Sales employee commissions', 'adc-delivery'=>'Vehicle preparation and delivery',
 				'adc-site-content'=>'Homepage and section content', 'edit.php?post_type=car_offer'=>'Promotional offers', 'edit.php?post_type=page'=>'Website pages', 'upload.php'=>'Media library', 'adc-editorial-setup'=>'Website page setup', 'adc-marketing-reports'=>'Marketing reports', 'car-dealer-subscribers'=>'Newsletter subscribers', 'adc-operational-reports'=>'Operational reports', 'adc-area-reports'=>'Reports overview', 'adc-crm-reports'=>'Detailed CRM reports',
-				'adc-settings'=>'Platform policies and settings', 'adc-finance-calculator'=>'Finance calculator settings', 'adc-catalog-cutover'=>'Catalog reconciliation', 'adc-stored-translations'=>'Data translations', 'users.php'=>'Staff accounts', 'adc-audit'=>'Audit log', 'adc-public-security'=>'Public interface security', 'adc-integrations'=>'Integration readiness', 'adc-outbox'=>'Job monitoring',
+				'adc-settings'=>'Platform policies and settings', 'adc-finance-calculator'=>'Finance calculator settings', 'adc-catalog-cutover'=>'Catalog reconciliation', 'adc-stored-translations'=>'Data translations', 'users.php'=>'Staff accounts', 'adc-audit'=>'Audit log', 'adc-diagnostics'=>'Administration health', 'adc-public-security'=>'Public interface security', 'adc-integrations'=>'Integration readiness', 'adc-outbox'=>'Job monitoring',
 			);
 			$label = $english[ $key ] ?? ucwords( str_replace( array( 'adc-', '-', '_' ), array( '', ' ', ' ' ), $key ) );
 		}
@@ -209,6 +210,7 @@ final class Navigation {
 			'admin.php?page=adc-area-reports' => __( 'ملخص مؤشرات CRM الحالية والوصول السريع للتقارير.', 'auto-dealership-core' ),
 			'admin.php?page=adc-crm-reports' => __( 'أداء فرص العملاء حسب الموظف والفرع والمصدر والحملة وأسباب الخسارة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-audit' => __( 'الأحداث الإدارية والتشغيلية للقراءة.', 'auto-dealership-core' ),
+			'admin.php?page=adc-diagnostics' => __( 'صحة صفحات الإدارة، المهام، والأخطاء المنقحة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-settings' => __( 'الفروع والسياسات والإعدادات المركزية.', 'auto-dealership-core' ),
 			'admin.php?page=adc-editorial-setup' => __( 'مراجعة الصفحات التعريفية وإنشاء المسودات المفقودة صراحة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-stored-translations' => __( 'Original text', 'auto-dealership-core' ) . ' / ' . __( 'Approved translation', 'auto-dealership-core' ),

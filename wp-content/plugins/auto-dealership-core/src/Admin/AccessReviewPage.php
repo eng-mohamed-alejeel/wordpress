@@ -67,22 +67,48 @@ final class AccessReviewPage {
 		if ( ! empty( $summary['generated_at'] ) ) { echo '<p>' . esc_html__( 'Last scheduled review', 'auto-dealership-core' ) . ': ' . esc_html( wp_date( 'Y-m-d H:i', $summary['generated_at'] ) ) . ' — ' . absint( $summary['accounts'] ) . ' / ' . absint( $summary['flagged'] ) . ' ' . esc_html__( 'Accounts needing review', 'auto-dealership-core' ) . '</p>'; }
 		echo '<p>' . esc_html__( 'Reviews run daily. Flags indicate items to review, not confirmed violations. Last login tracking starts when this feature is enabled.', 'auto-dealership-core' ) . '</p>';
 		$search = isset( $_GET['s'] ) && is_string( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
+		$role = isset( $_GET['role'] ) && is_string( $_GET['role'] ) ? sanitize_key( wp_unslash( $_GET['role'] ) ) : '';
+		$role_names = wp_roles()->role_names;
+		if ( $role && ! isset( $role_names[ $role ] ) ) { $role = ''; }
+		$branch_id = absint( is_scalar( $_GET['branch_id'] ?? null ) ? $_GET['branch_id'] : 0 );
+		$branches = BranchService::public_list();
 		$page = max( 1, absint( is_scalar( $_GET['paged'] ?? null ) ? $_GET['paged'] : 1 ) );
-		echo '<form method="get"><input type="hidden" name="page" value="adc-access-review"><label>' . esc_html__( 'Search users', 'auto-dealership-core' ) . ' <input type="search" name="s" value="' . esc_attr( $search ) . '"></label> '; submit_button( __( 'Search', 'auto-dealership-core' ), 'secondary', '', false ); echo '</form>';
+		echo '<form class="adc-access-filters" method="get"><input type="hidden" name="page" value="adc-access-review"><label>' . esc_html__( 'Search users', 'auto-dealership-core' ) . ' <input type="search" name="s" value="' . esc_attr( $search ) . '"></label><label>' . esc_html__( 'Role', 'auto-dealership-core' ) . ' <select name="role"><option value="">' . esc_html__( 'All roles', 'auto-dealership-core' ) . '</option>';
+		foreach ( $role_names as $key => $label ) { echo '<option value="' . esc_attr( $key ) . '" ' . selected( $role, $key, false ) . '>' . esc_html( translate_user_role( $label ) ) . '</option>'; }
+		echo '</select></label><label>' . esc_html__( 'Active branch', 'auto-dealership-core' ) . ' <select name="branch_id"><option value="0">' . esc_html__( 'All branches', 'auto-dealership-core' ) . '</option>';
+		foreach ( $branches as $branch ) { echo '<option value="' . absint( $branch['id'] ) . '" ' . selected( $branch_id, (int) $branch['id'], false ) . '>' . esc_html( $branch['name'] ) . '</option>'; }
+		echo '</select></label> '; submit_button( __( 'Filter accounts', 'auto-dealership-core' ), 'secondary', '', false );
+		if ( $search || $role || $branch_id ) { echo ' <a class="button" href="' . esc_url( admin_url( 'admin.php?page=adc-access-review' ) ) . '">' . esc_html__( 'Clear filters', 'auto-dealership-core' ) . '</a>'; }
+		echo '</form>';
 		$args = array( 'number' => 25, 'paged' => $page, 'orderby' => 'ID', 'order' => 'ASC', 'count_total' => true );
 		if ( $search ) { $args['search'] = '*' . $search . '*'; $args['search_columns'] = array( 'user_login', 'display_name' ); }
+		if ( $role ) { $args['role'] = $role; }
+		if ( $branch_id ) { $args['meta_query'] = array( 'relation' => 'OR', array( 'key' => 'adc_branch_id', 'value' => $branch_id, 'type' => 'NUMERIC' ), array( 'key' => 'adc_branch_ids', 'value' => 'i:' . $branch_id . ';', 'compare' => 'LIKE' ) ); }
 		$query = new \WP_User_Query( $args );
 		echo '<div class="adc-table-scroll"><table class="widefat striped"><thead><tr>';
-		foreach ( array( 'User', 'Roles', 'Account status', 'Last login', 'Review flags', 'Actions' ) as $title ) { echo '<th>' . esc_html__( $title, 'auto-dealership-core' ) . '</th>'; } echo '</tr></thead><tbody>';
+		foreach ( array( 'User', 'Roles', 'Branch scope', 'Account status', 'Last login', 'Review flags', 'Actions' ) as $title ) { echo '<th' . ( 'Branch scope' === $title ? ' data-adc-column="branch-scope"' : '' ) . '>' . esc_html__( $title, 'auto-dealership-core' ) . '</th>'; } echo '</tr></thead><tbody>';
 		foreach ( $query->get_results() as $user ) {
 			$flags = array_map( static fn( $label ) => __( $label, 'auto-dealership-core' ), AccessPolicy::review_flags( $user ) );
 			$last = (int) get_user_meta( $user->ID, 'adc_last_login', true );
-			echo '<tr><td>' . esc_html( $user->display_name . ' (' . $user->user_login . ')' ) . '</td><td>' . esc_html( implode( ', ', array_map( static fn( $role ) => translate_user_role( wp_roles()->role_names[$role] ?? $role ), $user->roles ) ) ) . '</td><td>' . esc_html__( AccessPolicy::suspended( $user->ID ) ? 'Suspended' : 'Active', 'auto-dealership-core' ) . '</td><td>' . esc_html( $last ? wp_date( 'Y-m-d H:i', $last ) : __( 'Not tracked yet', 'auto-dealership-core' ) ) . '</td><td>' . esc_html( implode( ' • ', $flags ) ) . '</td><td><a class="button" href="' . esc_url( add_query_arg( array( 'page' => 'adc-access-review', 'user_id' => $user->ID ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Effective permissions', 'auto-dealership-core' ) . '</a></td></tr>';
+			echo '<tr><td>' . esc_html( $user->display_name . ' (' . $user->user_login . ')' ) . '</td><td>' . esc_html( implode( ', ', array_map( static fn( $role ) => translate_user_role( wp_roles()->role_names[$role] ?? $role ), $user->roles ) ) ) . '</td><td>' . esc_html( self::branch_scope_label( $user ) ) . '</td><td>' . esc_html__( AccessPolicy::suspended( $user->ID ) ? 'Suspended' : 'Active', 'auto-dealership-core' ) . '</td><td>' . esc_html( $last ? wp_date( 'Y-m-d H:i', $last ) : __( 'Not tracked yet', 'auto-dealership-core' ) ) . '</td><td>' . esc_html( implode( ' • ', $flags ) ) . '</td><td><a class="button" href="' . esc_url( add_query_arg( array( 'page' => 'adc-access-review', 'user_id' => $user->ID ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Effective permissions', 'auto-dealership-core' ) . '</a></td></tr>';
 		}
-		if ( ! $query->get_results() ) { echo '<tr><td colspan="6">' . esc_html__( 'No users found.', 'auto-dealership-core' ) . '</td></tr>'; }
+		if ( ! $query->get_results() ) { echo '<tr><td colspan="7">' . esc_html__( 'No users found.', 'auto-dealership-core' ) . '</td></tr>'; }
 		echo '</tbody></table></div>';
-		echo wp_kses_post( paginate_links( array( 'base' => add_query_arg( 'paged', '%#%' ), 'current' => $page, 'total' => max( 1, (int) ceil( $query->get_total() / 25 ) ) ) ) );
+		$pagination = paginate_links( array( 'base' => add_query_arg( array( 'page' => 'adc-access-review', 's' => $search, 'role' => $role, 'branch_id' => $branch_id, 'paged' => '%#%' ), admin_url( 'admin.php' ) ), 'current' => $page, 'total' => max( 1, (int) ceil( $query->get_total() / 25 ) ) ) );
+		echo wp_kses_post( $pagination );
 		echo '<h2>' . esc_html__( 'Financial separation of duties', 'auto-dealership-core' ) . '</h2><p>' . esc_html__( 'Payment recorders cannot verify their own payments. Refund requesters cannot approve their own refunds. Discount requesters cannot decide their own requests. These restrictions also apply to administrators.', 'auto-dealership-core' ) . '</p>';
+	}
+
+	private static function branch_scope_label( \WP_User $user ): string {
+		if ( BranchScope::is_global( $user->ID ) ) { return __( 'All branches', 'auto-dealership-core' ); }
+		$names = array();
+		static $available = null;
+		if ( null === $available ) {
+			$available = array();
+			foreach ( BranchService::public_list() as $branch ) { $available[ (int) $branch['id'] ] = (string) $branch['name']; }
+		}
+		foreach ( BranchScope::assigned_branches( $user->ID ) as $branch_id ) { if ( isset( $available[ (int) $branch_id ] ) ) { $names[] = $available[ (int) $branch_id ]; } }
+		return $names ? implode( ', ', $names ) : __( 'No active branch', 'auto-dealership-core' );
 	}
 
 	private static function user_report( \WP_User $user ): void {

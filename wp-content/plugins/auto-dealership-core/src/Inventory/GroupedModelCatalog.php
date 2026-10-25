@@ -9,6 +9,10 @@ defined('ABSPATH')||exit;
 final class GroupedModelCatalog {
 	/** Mapping snapshots exist only while a bounded catalog page is assembled. */
 	private static array $mapping_snapshot = array();
+	/** Request-local model rows primed for bounded public/editorial reads. */
+	private static array $model_snapshot = array();
+	/** Request-local grouped stock rows keyed by model ID. */
+	private static array $variant_snapshot = array();
 
 	public static function with_mappings(array $post_ids, callable $callback): array {
 		global $wpdb;
@@ -30,7 +34,11 @@ final class GroupedModelCatalog {
 		$enqueue = static function(): void {
 			$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 			$editor = $screen && $screen->post_type === 'car' && self::is_mapped(absint($_GET['post'] ?? 0));
-			if (!$editor && !self::enabled() && !(is_singular('car') && self::is_mapped((int)get_queried_object_id())) && !(is_preview() && is_singular('car'))) { return; }
+			if (is_admin()) {
+				if (!$editor) { return; }
+			} elseif (!$editor && !self::enabled() && !(is_singular('car') && self::is_mapped((int)get_queried_object_id())) && !(is_preview() && is_singular('car'))) {
+				return;
+			}
 			wp_enqueue_style('adc-model-variants', plugin_dir_url(ADC_FILE).'assets/css/model-variants.css', array(), ADC_VERSION);
 			wp_enqueue_script('adc-model-variants', plugin_dir_url(ADC_FILE).'assets/js/model-variants.js', array(), ADC_VERSION, true);
 		};
@@ -62,6 +70,37 @@ final class GroupedModelCatalog {
 		return array('schema_ready'=>true,'operational'=>(int)$wpdb->get_var("SELECT COUNT(*) FROM $stock WHERE present=1"),'eligible'=>$eligible,'published_posts'=>$published,'unmapped_published_posts'=>0,'duplicate_mappings'=>0,'invalid_mappings'=>$invalid,'ready'=>$eligible>0&&$invalid===0&&!$wpdb->last_error);
 	}
 	public static function availability():string{ $v=Schema::table('vehicles');$b=Schema::table('branches');return "s.present=1 AND (s.vehicle_id IS NULL OR EXISTS (SELECT 1 FROM $v gv INNER JOIN $b gb ON gb.id=gv.branch_id AND gb.active=1 WHERE gv.id=s.vehicle_id AND gv.status='available'))"; }
+	/** Prime model and grouped stock rows in two bounded reads before rendering a list. */
+	public static function prime_views(array $post_ids): void {
+		global $wpdb;
+		$ids = array_values( array_unique( array_filter( array_map( 'absint', $post_ids ) ) ) );
+		if ( ! $ids || get_option( 'adc_db_version' ) !== Schema::VERSION ) { return; }
+		$missing = array_values( array_filter( $ids, static fn( int $id ): bool => ! array_key_exists( $id, self::$model_snapshot ) ) );
+		if ( ! $missing ) { return; }
+		$placeholders = implode( ',', array_fill( 0, count( $missing ), '%d' ) );
+		$wpdb->last_error = '';
+		$models = $wpdb->get_results( $wpdb->prepare( 'SELECT id,brand,model,public_post_id FROM ' . Schema::table( 'catalog_models' ) . " WHERE public_post_id IN ($placeholders)", $missing ), ARRAY_A );
+		if ( $wpdb->last_error ) { return; }
+		foreach ( $missing as $post_id ) { self::$model_snapshot[ $post_id ] = null; }
+		$model_ids = array();
+		foreach ( $models ?: array() as $model ) {
+			$post_id = (int) $model['public_post_id'];
+			self::$model_snapshot[ $post_id ] = array( 'id'=>(int) $model['id'], 'brand'=>(string) $model['brand'], 'model'=>(string) $model['model'] );
+			$model_ids[] = (int) $model['id'];
+		}
+		$model_ids = array_values( array_unique( array_filter( $model_ids ) ) );
+		if ( ! $model_ids ) { return; }
+		$model_placeholders = implode( ',', array_fill( 0, count( $model_ids ), '%d' ) );
+		$wpdb->last_error = '';
+		$variants = $wpdb->get_results( $wpdb->prepare( 'SELECT s.model_id,s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price,COUNT(*) available_count,MIN(NULLIF(s.listed_price,0)) min_price,MAX(s.listed_price) max_price FROM ' . Schema::table( 'onyx_stock' ) . " s WHERE s.model_id IN ($model_placeholders) AND " . self::availability() . ' GROUP BY s.model_id,s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price ORDER BY s.model_id,s.model_year DESC,s.trim_name,s.exterior_color,s.listed_price', $model_ids ), ARRAY_A );
+		if ( $wpdb->last_error ) { return; }
+		foreach ( $model_ids as $model_id ) { self::$variant_snapshot[ $model_id ] = array(); }
+		foreach ( $variants ?: array() as $variant ) {
+			$model_id = (int) $variant['model_id'];
+			unset( $variant['model_id'] );
+			self::$variant_snapshot[ $model_id ][] = $variant;
+		}
+	}
 	public static function filter_linked_availability(array $clauses): array {
 		global $wpdb;
 		$models = Schema::table('catalog_models'); $stock = Schema::table('onyx_stock');
@@ -78,8 +117,24 @@ final class GroupedModelCatalog {
 		return $clauses;
 	}
 	public static function view(int $post_id):?array{
-		global $wpdb;$model=$wpdb->get_row($wpdb->prepare('SELECT id,brand,model FROM '.Schema::table('catalog_models').' WHERE public_post_id=%d',$post_id),ARRAY_A);if(!$model){return null;}
-		$variants=$wpdb->get_results($wpdb->prepare('SELECT s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price,COUNT(*) available_count,MIN(NULLIF(s.listed_price,0)) min_price,MAX(s.listed_price) max_price FROM '.Schema::table('onyx_stock').' s WHERE s.model_id=%d AND '.self::availability().' GROUP BY s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price ORDER BY s.model_year DESC,s.trim_name,s.exterior_color,s.listed_price',$model['id']),ARRAY_A);if(!$variants||$wpdb->last_error){return null;}
+		global $wpdb;
+		if ( array_key_exists( $post_id, self::$model_snapshot ) ) { $model = self::$model_snapshot[ $post_id ]; }
+		else {
+			$wpdb->last_error = '';
+			$model = $wpdb->get_row( $wpdb->prepare( 'SELECT id,brand,model FROM ' . Schema::table( 'catalog_models' ) . ' WHERE public_post_id=%d', $post_id ), ARRAY_A );
+			if ( $wpdb->last_error ) { return null; }
+			$model = $model ? array( 'id'=>(int) $model['id'], 'brand'=>(string) $model['brand'], 'model'=>(string) $model['model'] ) : null;
+		}
+		if ( ! $model ) { return null; }
+		$model_id = (int) $model['id'];
+		if ( array_key_exists( $model_id, self::$variant_snapshot ) ) { $variants = self::$variant_snapshot[ $model_id ]; }
+		else {
+			$wpdb->last_error = '';
+			$variants = $wpdb->get_results( $wpdb->prepare( 'SELECT s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price,COUNT(*) available_count,MIN(NULLIF(s.listed_price,0)) min_price,MAX(s.listed_price) max_price FROM ' . Schema::table( 'onyx_stock' ) . ' s WHERE s.model_id=%d AND ' . self::availability() . ' GROUP BY s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price ORDER BY s.model_year DESC,s.trim_name,s.exterior_color,s.listed_price', $model_id ), ARRAY_A );
+			if ( $wpdb->last_error ) { return null; }
+			$variants = $variants ?: array();
+		}
+		if ( ! $variants ) { return null; }
 		$options = array();
 		foreach ($variants as &$variant) {
 			$amounts = PublicVehiclePrice::calculate((int)$variant['listed_price'], $post_id);

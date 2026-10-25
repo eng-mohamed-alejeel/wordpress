@@ -100,9 +100,9 @@
   opacity: 1;
 }
 
-.site :is(input, textarea):read-only:not([type="checkbox"]):not([type="radio"]),
-:is(.adc-admin, .adc-admin-native) .wrap :is(input, textarea):read-only:not(.wp-editor-area),
-.login :is(input, textarea):read-only {
+.site :is(input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="tel"], input[type="url"], input[type="password"], input[type="number"], input[type="date"], input[type="time"], input[type="datetime-local"], textarea):read-only,
+:is(.adc-admin, .adc-admin-native) .wrap :is(input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="tel"], input[type="url"], input[type="password"], input[type="number"], input[type="date"], input[type="time"], input[type="datetime-local"], textarea):read-only:not(.wp-editor-area),
+.login :is(input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="password"], input[type="number"], textarea):read-only {
   border-color: var(--ab-field-border);
   background-color: var(--ab-field-readonly-bg);
   color: var(--ab-muted);

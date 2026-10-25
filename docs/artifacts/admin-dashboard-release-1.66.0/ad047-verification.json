@@ -1,0 +1,54 @@
+{
+  "work_item": "AD-047",
+  "release_version": "1.66.0",
+  "generated_at": "2026-10-25",
+  "scope": "Documentation, release verification and review package; no new dashboard behavior introduced.",
+  "source_commit": "bf365a9c7e3a7e2e832238b9373d8178777fcde8",
+  "working_tree_review_package": {
+    "package": ".tmp/release-packages/auto-dealership-1.66.0-bf365a9c7e3a-review-6486b624.zip",
+    "manifest": ".tmp/release-packages/auto-dealership-1.66.0-bf365a9c7e3a-review-6486b624.zip.manifest.json",
+    "file_count": 387,
+    "sha256": "133e96a6a9e78fad859ba6225d0d55c0d17e9927939d135ab16ac2fdc248a1d4",
+    "extracted_manifest_hashes_verified": true,
+    "unsafe_entries_found": false
+  },
+  "automated_checks": {
+    "php_lint_files": 19,
+    "javascript_syntax_files": 9,
+    "git_diff_check_exit_code": 0,
+    "mobile_role_browser_checks": 880,
+    "accessibility_contract_checks": 295,
+    "axe_scans": 24,
+    "axe_violations": 0,
+    "color_contract_checks": 96,
+    "diagnostics_browser_checks": 56,
+    "diagnostics_browser_failures": 0,
+    "isolated_database_checks": 1282,
+    "isolated_database_source_unchanged": true,
+    "temporary_sessions_removed": true,
+    "temporary_users_remaining": 0
+  },
+  "release_preflight": {
+    "pass": 7,
+    "fail": 10,
+    "manual": 9,
+    "release_ready": false,
+    "known_local_or_business_gates": [
+      "Public origin is still http://localhost.",
+      "One published page references a local/example destination.",
+      "Existing development/customer fixtures remain in the local database.",
+      "Real inventory, warehouse mapping, seller identity, purchase policy and retention policy require business completion.",
+      "Manual legal, security, scheduler, backup, staging and deployment approvals remain open."
+    ]
+  },
+  "manual_gates": {
+    "screen_reader_review": "required_on_staging",
+    "staging_role_matrix_review": "required_before_production",
+    "clean_mariadb_server_on_dedicated_port": "not_available_in_current_XAMPP_environment"
+  },
+  "safety_notes": [
+    "The diagnostics option and diagnostics record option remain NULL after testing.",
+    "The isolated database runner removed only its adc_verify_* database.",
+    "No production or source database data was used for the isolated scenario writes."
+  ]
+}

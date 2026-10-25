@@ -11,10 +11,6 @@ defined('ABSPATH') || exit;
 final class VerificationExperience {
 	private static function t(string $ar,string $en): string { return EmailVerification::t($ar,$en); }
 	public static function boot(): void {
-		add_action('admin_notices',static function(){
-			if(!current_user_can('manage_options')||EmailVerification::public_link_origin()){return;}
-			echo '<div class="notice notice-warning"><p>'.esc_html(self::t('روابط تأكيد البريد واستعادة كلمة المرور تستخدم عنوان الموقع الحالي. العنوان المحلي لا يعمل من أجهزة العملاء؛ اضبط عنوان الموقع العام مع HTTPS عند النشر.','Verification and password reset links use the current site address. A local address is inaccessible from customer devices; configure the public HTTPS site address when deploying.')).' <a href="'.esc_url(admin_url('options-general.php')).'">'.esc_html(self::t('إعدادات عنوان الموقع','Site address settings')).'</a></p></div>';
-		});
 		add_filter('manage_users_columns',static function($columns){$columns['adc_verification']=self::t('تأكيد البريد','Email confirmation');return $columns;});
 		add_filter('manage_users_custom_column',static function($value,$column,$id){return 'adc_verification'===$column && current_user_can('list_users') ? esc_html(self::account_status((int)$id)) : $value;},10,3);
 		add_action('show_user_profile',array(self::class,'profile'));

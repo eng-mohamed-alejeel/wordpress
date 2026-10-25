@@ -1,0 +1,1182 @@
+{
+    "schema": "adc-admin-query-baseline-1",
+    "generated_at": "2026-10-25T18:02:02+00:00",
+    "mode": "source-read-only",
+    "php": "8.2.12",
+    "wordpress": "7.1.3",
+    "database": {
+        "engine": "10.11.19-MariaDB",
+        "prefix": "test_"
+    },
+    "actor": {
+        "role": "administrator",
+        "user_id_hash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+    },
+    "guard": {
+        "writes_blocked_during_render": true,
+        "raw_sql_persisted": false
+    },
+    "table_stats": [
+        {
+            "name": "test_adc_onyx_imports",
+            "rows_estimate": 9,
+            "data_bytes": 409600,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_leads",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 196608,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_vehicles",
+            "rows_estimate": 1,
+            "data_bytes": 16384,
+            "index_bytes": 147456,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_onyx_stock",
+            "rows_estimate": 523,
+            "data_bytes": 16384,
+            "index_bytes": 81920,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_payment_refunds",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 81920,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_comments",
+            "rows_estimate": 1,
+            "data_bytes": 16384,
+            "index_bytes": 81920,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_posts",
+            "rows_estimate": 78,
+            "data_bytes": 16384,
+            "index_bytes": 81920,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_affiliate_commissions",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_audit_events",
+            "rows_estimate": 56,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_customers",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_integration_receipts",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_lead_stage_history",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_outbox",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_portal_reviews",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_portal_threads",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_quotations",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_reservations",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_vehicle_returns",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 65536,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_finance_requests",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_followup_notifications",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_onyx_documents",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_portal_messages",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_purchase_orders",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_quotation_versions",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_reservation_deposits",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_sales",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_vehicle_acquisition_documents",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_vehicle_transfers",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_options",
+            "rows_estimate": 138,
+            "data_bytes": 32768,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_users",
+            "rows_estimate": 2,
+            "data_bytes": 16384,
+            "index_bytes": 49152,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_activities",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_branches",
+            "rows_estimate": 2,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_brands",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_catalog_models",
+            "rows_estimate": 74,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_deliveries",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_delivery_documents",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_discount_requests",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_document_archive",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_locations",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        },
+        {
+            "name": "test_adc_payment_confirmations",
+            "rows_estimate": 0,
+            "data_bytes": 16384,
+            "index_bytes": 32768,
+            "engine": "InnoDB"
+        }
+    ],
+    "pages": {
+        "workspace": {
+            "page": "adc-workspace",
+            "query_count": 1587,
+            "total_query_ms": 109.284,
+            "render_wall_ms": 172.53,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 1575,
+                "test_adc_customers": 10,
+                "test_adc_vehicles": 6,
+                "test_adc_sales": 5,
+                "test_adc_reservations": 3,
+                "test_adc_branches": 2,
+                "test_adc_leads": 2,
+                "test_adc_discount_requests": 1,
+                "test_adc_quotations": 1,
+                "test_adc_payment_confirmations": 1,
+                "test_adc_reservation_deposits": 1,
+                "test_adc_finance_requests": 1,
+                "test_adc_deliveries": 1
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 1575,
+                "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name": 1,
+                "SELECT id,name FROM test_adc_branches WHERE active=? AND ? = ? ORDER BY name,id": 1,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.stage NOT IN ('?','?') AND l.next_action_at<='?'": 1,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.stage='?' AND l.created_at>='?' AND l.created_at<'?'": 1,
+                "SELECT COUNT(*) FROM test_adc_discount_requests d INNER JOIN test_adc_quotations q ON q.id=d.quotation_id INNER JOIN test_adc_vehicles v ON v.id=q.vehicle_id INNER JOIN test_adc_customers c ON c.id=q.customer_id WHERE ? = ? AND d.status='?' AND q.status='?' AND q.valid_until>='?' AND d.requester_user_id<>? AND NOT EXISTS (SELECT ? FROM test_adc_sales sold WHERE sold.quotation_id=q.id) AND d.approval_tier IN ('?','?')": 1,
+                "SELECT COUNT(*) FROM test_adc_sales s INNER JOIN test_adc_vehicles v ON v.id=s.vehicle_id INNER JOIN test_adc_customers c ON c.id=s.customer_id WHERE ? = ? AND s.status='?' AND s.owner_user_id<>?": 1,
+                "SELECT COUNT(*) FROM test_adc_reservations r INNER JOIN test_adc_customers c ON c.id=r.customer_id WHERE ? = ? AND r.status='?' AND r.expires_at>'?' AND r.expires_at<='?'": 1,
+                "SELECT COUNT(*) FROM test_adc_reservations r INNER JOIN test_adc_customers c ON c.id=r.customer_id WHERE ? = ? AND r.status='?' AND r.expires_at<='?'": 1,
+                "SELECT COUNT(*) FROM test_adc_payment_confirmations p INNER JOIN test_adc_sales s ON s.id=p.sale_id INNER JOIN test_adc_vehicles v ON v.id=s.vehicle_id INNER JOIN test_adc_customers c ON c.id=s.customer_id WHERE ? = ? AND p.status='?' AND s.status IN ('?','?') AND p.recorded_by<>? AND s.owner_user_id<>?": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.295,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.236,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.226,
+                    "shape": "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.stage NOT IN ('?','?') AND l.next_action_at<='?'"
+                },
+                {
+                    "ms": 0.219,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.217,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.208,
+                    "shape": "SELECT COUNT(*) FROM test_adc_discount_requests d INNER JOIN test_adc_quotations q ON q.id=d.quotation_id INNER JOIN test_adc_vehicles v ON v.id=q.vehicle_id INNER JOIN test_adc_customers c ON c.id=q.customer_id WHERE ? = ? AND d.status='?' AND q.status='?' AND q.valid_until>='?' AND d.requester_user_id<>? AND NOT EXISTS (SELECT ? FROM test_adc_sales sold WHERE sold.quotation_id=q.id) AND d.approval_tier IN ('?','?')"
+                },
+                {
+                    "ms": 0.201,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.198,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.195,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.195,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "area_reports": {
+            "page": "adc-area-reports",
+            "query_count": 180,
+            "total_query_ms": 12.984,
+            "render_wall_ms": 20.158,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 175,
+                "test_adc_leads": 5,
+                "test_adc_customers": 4
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 175,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 1,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.stage='?' AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 1,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.next_action_at IS NOT NULL AND l.next_action_at<='?' AND l.stage NOT IN ('?','?') AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 1,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.owner_user_id=? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 1,
+                "SELECT COALESCE(SUM(CASE WHEN l.stage='?' AND l.closed_at>='?' THEN l.sale_amount ELSE ? END),?) month_sales_amount,COALESCE(SUM(CASE WHEN l.stage NOT IN ('?','?') THEN l.sale_amount ELSE ? END),?) open_value,SUM(l.stage='?') won_count,SUM(l.stage IN ('?','?')) closed_count FROM test_adc_leads l WHERE ? = ? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.44,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.373,
+                    "shape": "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')"
+                },
+                {
+                    "ms": 0.247,
+                    "shape": "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.stage='?' AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')"
+                },
+                {
+                    "ms": 0.217,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.196,
+                    "shape": "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.next_action_at IS NOT NULL AND l.next_action_at<='?' AND l.stage NOT IN ('?','?') AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')"
+                },
+                {
+                    "ms": 0.186,
+                    "shape": "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.owner_user_id=? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')"
+                },
+                {
+                    "ms": 0.161,
+                    "shape": "SELECT COALESCE(SUM(CASE WHEN l.stage='?' AND l.closed_at>='?' THEN l.sale_amount ELSE ? END),?) month_sales_amount,COALESCE(SUM(CASE WHEN l.stage NOT IN ('?','?') THEN l.sale_amount ELSE ? END),?) open_value,SUM(l.stage='?') won_count,SUM(l.stage IN ('?','?')) closed_count FROM test_adc_leads l WHERE ? = ? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')"
+                },
+                {
+                    "ms": 0.139,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.137,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.134,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "crm_reports": {
+            "page": "adc-crm-reports",
+            "query_count": 1481,
+            "total_query_ms": 125.926,
+            "render_wall_ms": 178.052,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 1462,
+                "test_adc_leads": 17,
+                "test_users": 3,
+                "test_adc_branches": 3,
+                "test_adc_sales": 2,
+                "test_adc_audit_events": 2,
+                "test_usermeta": 1
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 1462,
+                "SELECT l.owner_user_id,COALESCE(u.display_name,'?') employee_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount,COALESCE(SUM(CASE WHEN l.stage='?' THEN s.employee_commission_amount ELSE ? END),?) commission_amount,AVG(CASE WHEN l.stage='?' AND l.closed_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND,l.created_at,l.closed_at)/? ELSE NULL END) avg_close_days FROM test_adc_leads l LEFT JOIN test_users u ON u.ID=l.owner_user_id LEFT JOIN test_adc_sales s ON s.lead_id=l.id WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.owner_user_id,u.display_name ORDER BY sales_amount DESC": 2,
+                "SELECT l.branch_id,COALESCE(b.name,'?') branch_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount,AVG(CASE WHEN l.stage='?' AND l.closed_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND,l.created_at,l.closed_at)/? ELSE NULL END) avg_close_days FROM test_adc_leads l LEFT JOIN test_adc_branches b ON b.id=l.branch_id WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.branch_id,b.name ORDER BY sales_amount DESC": 2,
+                "SELECT l.source source_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount FROM test_adc_leads l WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.source ORDER BY total DESC": 2,
+                "SELECT COALESCE(NULLIF(l.campaign,'?'),'?') campaign_name,COALESCE(NULLIF(l.platform,'?'),'?') platform,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount FROM test_adc_leads l WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY campaign_name,platform ORDER BY total DESC": 2,
+                "SELECT COALESCE(NULLIF(l.lost_reason,'?'),'?') reason,COUNT(*) total FROM test_adc_leads l WHERE ? = ? AND l.stage='?' AND l.created_at>='?' AND l.created_at<'?' GROUP BY reason ORDER BY total DESC": 2,
+                "SELECT COALESCE(NULLIF(l.intake_type,'?'),'?') intake_type_name,COALESCE(NULLIF(l.source,'?'),'?') source_name,COUNT(a.id) duplicate_count,COUNT(DISTINCT a.subject_id) affected_leads FROM test_adc_audit_events a INNER JOIN test_adc_leads l ON l.id=a.subject_id WHERE ? = ? AND a.event_key='?' AND a.subject_type='?' AND a.created_at>='?' AND a.created_at<'?' GROUP BY intake_type_name,source_name ORDER BY duplicate_count DESC,affected_leads DESC": 2,
+                "SELECT COALESCE(NULLIF(l.intake_type,'?'),'?') intake_type_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount,AVG(CASE WHEN l.stage='?' AND l.closed_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND,l.created_at,l.closed_at)/? ELSE NULL END) avg_close_days FROM test_adc_leads l WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY intake_type_name ORDER BY total DESC": 2,
+                "SELECT COALESCE(NULLIF(l.lost_competitor,'?'),'?') competitor,COUNT(*) total,COALESCE(AVG(NULLIF(l.lost_comparative_price,?)),?) comparative_price FROM test_adc_leads l WHERE ? = ? AND l.stage='?' AND l.created_at>='?' AND l.created_at<'?' GROUP BY competitor ORDER BY total DESC": 2,
+                "SHOW FULL COLUMNS FROM `test_adc_leads`": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 12.393,
+                    "shape": "SHOW FULL COLUMNS FROM `test_adc_leads`"
+                },
+                {
+                    "ms": 8.493,
+                    "shape": "SELECT COALESCE(NULLIF(l.lost_reason,'?'),'?') reason,COUNT(*) total FROM test_adc_leads l WHERE ? = ? AND l.stage='?' AND l.created_at>='?' AND l.created_at<'?' GROUP BY reason ORDER BY total DESC"
+                },
+                {
+                    "ms": 2.787,
+                    "shape": "SELECT COALESCE(NULLIF(l.lost_reason,'?'),'?') reason,COUNT(*) total FROM test_adc_leads l WHERE ? = ? AND l.stage='?' AND l.created_at>='?' AND l.created_at<'?' GROUP BY reason ORDER BY total DESC"
+                },
+                {
+                    "ms": 0.628,
+                    "shape": "SELECT l.owner_user_id,COALESCE(u.display_name,'?') employee_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount,COALESCE(SUM(CASE WHEN l.stage='?' THEN s.employee_commission_amount ELSE ? END),?) commission_amount,AVG(CASE WHEN l.stage='?' AND l.closed_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND,l.created_at,l.closed_at)/? ELSE NULL END) avg_close_days FROM test_adc_leads l LEFT JOIN test_users u ON u.ID=l.owner_user_id LEFT JOIN test_adc_sales s ON s.lead_id=l.id WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.owner_user_id,u.display_name ORDER BY sales_amount DESC"
+                },
+                {
+                    "ms": 0.458,
+                    "shape": "SELECT COALESCE(NULLIF(l.intake_type,'?'),'?') intake_type_name,COALESCE(NULLIF(l.source,'?'),'?') source_name,COUNT(a.id) duplicate_count,COUNT(DISTINCT a.subject_id) affected_leads FROM test_adc_audit_events a INNER JOIN test_adc_leads l ON l.id=a.subject_id WHERE ? = ? AND a.event_key='?' AND a.subject_type='?' AND a.created_at>='?' AND a.created_at<'?' GROUP BY intake_type_name,source_name ORDER BY duplicate_count DESC,affected_leads DESC"
+                },
+                {
+                    "ms": 0.441,
+                    "shape": "SELECT COALESCE(NULLIF(l.intake_type,'?'),'?') intake_type_name,COALESCE(NULLIF(l.source,'?'),'?') source_name,COUNT(a.id) duplicate_count,COUNT(DISTINCT a.subject_id) affected_leads FROM test_adc_audit_events a INNER JOIN test_adc_leads l ON l.id=a.subject_id WHERE ? = ? AND a.event_key='?' AND a.subject_type='?' AND a.created_at>='?' AND a.created_at<'?' GROUP BY intake_type_name,source_name ORDER BY duplicate_count DESC,affected_leads DESC"
+                },
+                {
+                    "ms": 0.375,
+                    "shape": "SELECT l.branch_id,COALESCE(b.name,'?') branch_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount,AVG(CASE WHEN l.stage='?' AND l.closed_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND,l.created_at,l.closed_at)/? ELSE NULL END) avg_close_days FROM test_adc_leads l LEFT JOIN test_adc_branches b ON b.id=l.branch_id WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.branch_id,b.name ORDER BY sales_amount DESC"
+                },
+                {
+                    "ms": 0.29,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.278,
+                    "shape": "SELECT l.source source_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount FROM test_adc_leads l WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.source ORDER BY total DESC"
+                },
+                {
+                    "ms": 0.278,
+                    "shape": "SELECT l.owner_user_id,COALESCE(u.display_name,'?') employee_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount,COALESCE(SUM(CASE WHEN l.stage='?' THEN s.employee_commission_amount ELSE ? END),?) commission_amount,AVG(CASE WHEN l.stage='?' AND l.closed_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND,l.created_at,l.closed_at)/? ELSE NULL END) avg_close_days FROM test_adc_leads l LEFT JOIN test_users u ON u.ID=l.owner_user_id LEFT JOIN test_adc_sales s ON s.lead_id=l.id WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.owner_user_id,u.display_name ORDER BY sales_amount DESC"
+                }
+            ]
+        },
+        "operational_reports": {
+            "page": "adc-operational-reports",
+            "query_count": 705,
+            "total_query_ms": 45.917,
+            "render_wall_ms": 69.975,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 690,
+                "test_adc_branches": 15,
+                "test_adc_quotations": 7,
+                "test_adc_sales": 5,
+                "test_adc_reservations": 4,
+                "test_adc_vehicles": 2,
+                "test_adc_leads": 2,
+                "test_adc_payment_refunds": 2,
+                "test_adc_deliveries": 1,
+                "test_adc_vehicle_issues": 1,
+                "test_adc_discount_requests": 1,
+                "test_adc_finance_requests": 1,
+                "test_adc_payment_confirmations": 1,
+                "test_adc_reservation_deposits": 1
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 690,
+                "SELECT v.branch_id,b.name branch_name,v.status,COUNT(*) total,? amount FROM test_adc_vehicles v LEFT JOIN test_adc_branches b ON b.id=v.branch_id WHERE ? = ? GROUP BY v.branch_id,b.name,v.status ORDER BY v.branch_id,v.status": 1,
+                "SELECT l.branch_id,b.name branch_name,l.stage status,COUNT(*) total,? amount FROM test_adc_leads l LEFT JOIN test_adc_branches b ON b.id=l.branch_id WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.branch_id,b.name,l.stage ORDER BY l.branch_id,l.stage": 1,
+                "SELECT r.branch_id,b.name branch_name,r.status,COUNT(*) total,? amount FROM test_adc_reservations r LEFT JOIN test_adc_branches b ON b.id=r.branch_id WHERE ? = ? AND r.created_at>='?' AND r.created_at<'?' GROUP BY r.branch_id,b.name,r.status ORDER BY r.branch_id,r.status": 1,
+                "SELECT q.branch_id,b.name branch_name,q.status,COUNT(*) total,COALESCE(SUM(q.final_amount),?) amount FROM test_adc_quotations q LEFT JOIN test_adc_branches b ON b.id=q.branch_id WHERE ? = ? AND q.created_at>='?' AND q.created_at<'?' GROUP BY q.branch_id,b.name,q.status ORDER BY q.branch_id,q.status": 1,
+                "SELECT q.branch_id,b.name branch_name,s.status,COUNT(*) total,COALESCE(SUM(q.final_amount),?) amount FROM test_adc_sales s INNER JOIN test_adc_quotations q ON q.id=s.quotation_id LEFT JOIN test_adc_branches b ON b.id=q.branch_id WHERE ? = ? AND s.created_at>='?' AND s.created_at<'?' GROUP BY q.branch_id,b.name,s.status ORDER BY q.branch_id,s.status": 1,
+                "SELECT q.branch_id,b.name branch_name,d.status,COUNT(*) total,? amount FROM test_adc_deliveries d INNER JOIN test_adc_sales s ON s.id=d.sale_id INNER JOIN test_adc_quotations q ON q.id=s.quotation_id LEFT JOIN test_adc_branches b ON b.id=q.branch_id WHERE ? = ? AND d.created_at>='?' AND d.created_at<'?' GROUP BY q.branch_id,b.name,d.status ORDER BY q.branch_id,d.status": 1,
+                "SELECT l.branch_id,b.name branch_name,'?' status,COUNT(*) total,? amount FROM test_adc_leads l LEFT JOIN test_adc_branches b ON b.id=l.branch_id WHERE ? = ? AND l.stage NOT IN ('?','?') AND l.next_action_at IS NOT NULL AND l.next_action_at<'?' GROUP BY l.branch_id,b.name": 1,
+                "SELECT r.branch_id,b.name branch_name,'?' status,COUNT(*) total,? amount FROM test_adc_reservations r LEFT JOIN test_adc_branches b ON b.id=r.branch_id WHERE ? = ? AND r.status='?' AND r.expires_at<='?' GROUP BY r.branch_id,b.name": 1,
+                "SELECT v.branch_id,b.name branch_name,'?' status,COUNT(*) total,? amount FROM test_adc_vehicle_issues i INNER JOIN test_adc_vehicles v ON v.id=i.vehicle_id LEFT JOIN test_adc_branches b ON b.id=v.branch_id WHERE ? = ? AND i.status='?' GROUP BY v.branch_id,b.name": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.358,
+                    "shape": "SELECT r.branch_id,b.name branch_name,'?' status,COUNT(*) total,? amount FROM test_adc_reservations r LEFT JOIN test_adc_branches b ON b.id=r.branch_id WHERE ? = ? AND r.status='?' AND r.expires_at<='?' GROUP BY r.branch_id,b.name"
+                },
+                {
+                    "ms": 0.252,
+                    "shape": "SELECT l.branch_id,b.name branch_name,'?' status,COUNT(*) total,? amount FROM test_adc_leads l LEFT JOIN test_adc_branches b ON b.id=l.branch_id WHERE ? = ? AND l.stage NOT IN ('?','?') AND l.next_action_at IS NOT NULL AND l.next_action_at<'?' GROUP BY l.branch_id,b.name"
+                },
+                {
+                    "ms": 0.239,
+                    "shape": "SELECT q.branch_id,b.name branch_name,d.status,COUNT(*) total,? amount FROM test_adc_deliveries d INNER JOIN test_adc_sales s ON s.id=d.sale_id INNER JOIN test_adc_quotations q ON q.id=s.quotation_id LEFT JOIN test_adc_branches b ON b.id=q.branch_id WHERE ? = ? AND d.created_at>='?' AND d.created_at<'?' GROUP BY q.branch_id,b.name,d.status ORDER BY q.branch_id,d.status"
+                },
+                {
+                    "ms": 0.216,
+                    "shape": "SELECT q.branch_id,b.name branch_name,s.status,COUNT(*) total,COALESCE(SUM(q.final_amount),?) amount FROM test_adc_sales s INNER JOIN test_adc_quotations q ON q.id=s.quotation_id LEFT JOIN test_adc_branches b ON b.id=q.branch_id WHERE ? = ? AND s.created_at>='?' AND s.created_at<'?' GROUP BY q.branch_id,b.name,s.status ORDER BY q.branch_id,s.status"
+                },
+                {
+                    "ms": 0.214,
+                    "shape": "SELECT q.branch_id,b.name branch_name,q.status,COUNT(*) total,COALESCE(SUM(q.final_amount),?) amount FROM test_adc_quotations q LEFT JOIN test_adc_branches b ON b.id=q.branch_id WHERE ? = ? AND q.created_at>='?' AND q.created_at<'?' GROUP BY q.branch_id,b.name,q.status ORDER BY q.branch_id,q.status"
+                },
+                {
+                    "ms": 0.211,
+                    "shape": "SELECT v.branch_id,b.name branch_name,v.status,COUNT(*) total,? amount FROM test_adc_vehicles v LEFT JOIN test_adc_branches b ON b.id=v.branch_id WHERE ? = ? GROUP BY v.branch_id,b.name,v.status ORDER BY v.branch_id,v.status"
+                },
+                {
+                    "ms": 0.194,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.188,
+                    "shape": "SELECT v.branch_id,b.name branch_name,'?' status,COUNT(*) total,? amount FROM test_adc_vehicle_issues i INNER JOIN test_adc_vehicles v ON v.id=i.vehicle_id LEFT JOIN test_adc_branches b ON b.id=v.branch_id WHERE ? = ? AND i.status='?' GROUP BY v.branch_id,b.name"
+                },
+                {
+                    "ms": 0.188,
+                    "shape": "SELECT q.branch_id,b.name branch_name,'?' status,COUNT(*) total,? amount FROM test_adc_discount_requests d INNER JOIN test_adc_quotations q ON q.id=d.quotation_id LEFT JOIN test_adc_branches b ON b.id=q.branch_id WHERE ? = ? AND d.status='?' GROUP BY q.branch_id,b.name"
+                },
+                {
+                    "ms": 0.181,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "crm": {
+            "page": "adc-crm",
+            "query_count": 1991,
+            "total_query_ms": 132.98,
+            "render_wall_ms": 201.916,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 1977,
+                "test_adc_leads": 9,
+                "test_adc_customers": 8,
+                "test_adc_branches": 2,
+                "test_users": 2,
+                "test_usermeta": 2,
+                "test_adc_followup_notifications": 1
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 1977,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 3,
+                "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name": 2,
+                "SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE l.intake_type END intake_type,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE l.campaign END campaign,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE l.platform END platform,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN ? ELSE l.created_by END created_by,l.referred_at,l.stage,l.next_action_at,l.claimed_at,l.first_contact_at,l.priority,l.created_at,c.full_name,c.mobile,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE c.email END email,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE c.city END city FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?') ORDER BY FIELD(l.priority,\"urgent\",\"high\",\"normal\",\"low\"),l.created_at ASC LIMIT ? OFFSET ?": 2,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.stage='?' AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 1,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.next_action_at IS NOT NULL AND l.next_action_at<='?' AND l.stage NOT IN ('?','?') AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 1,
+                "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.owner_user_id=? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 1,
+                "SELECT COALESCE(SUM(CASE WHEN l.stage='?' AND l.closed_at>='?' THEN l.sale_amount ELSE ? END),?) month_sales_amount,COALESCE(SUM(CASE WHEN l.stage NOT IN ('?','?') THEN l.sale_amount ELSE ? END),?) open_value,SUM(l.stage='?') won_count,SUM(l.stage IN ('?','?')) closed_count FROM test_adc_leads l WHERE ? = ? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')": 1,
+                "SELECT test_users.ID,test_users.display_name FROM test_users INNER JOIN test_usermeta ON ( test_users.ID = test_usermeta.user_id ) WHERE ?=? AND ( ( ( test_usermeta.meta_key = '?' AND test_usermeta.meta_value LIKE '?' ) ) ) ORDER BY user_login ASC": 1,
+                "SELECT * FROM test_adc_followup_notifications WHERE recipient_id=? AND acknowledged_at IS NULL AND resolved_at IS NULL ORDER BY id DESC LIMIT ?": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.353,
+                    "shape": "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name"
+                },
+                {
+                    "ms": 0.243,
+                    "shape": "SELECT test_users.ID,test_users.display_name FROM test_users INNER JOIN test_usermeta ON ( test_users.ID = test_usermeta.user_id ) WHERE ?=? AND ( ( ( test_usermeta.meta_key = '?' AND test_usermeta.meta_value LIKE '?' ) ) ) ORDER BY user_login ASC LIMIT ?, ?"
+                },
+                {
+                    "ms": 0.213,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.21,
+                    "shape": "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name"
+                },
+                {
+                    "ms": 0.205,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.194,
+                    "shape": "SELECT COUNT(*) FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?')"
+                },
+                {
+                    "ms": 0.194,
+                    "shape": "SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE l.intake_type END intake_type,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE l.campaign END campaign,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE l.platform END platform,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN ? ELSE l.created_by END created_by,l.referred_at,l.stage,l.next_action_at,l.claimed_at,l.first_contact_at,l.priority,l.created_at,c.full_name,c.mobile,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE c.email END email,CASE WHEN l.owner_user_id=? AND l.stage=\"new\" THEN \"\" ELSE c.city END city FROM test_adc_leads l INNER JOIN test_adc_customers c ON c.id=l.customer_id WHERE ? = ? AND l.archived_at IS NULL AND NOT (l.stage IN ('?','?') AND l.closed_at IS NOT NULL AND l.closed_at<'?') ORDER BY FIELD(l.priority,\"urgent\",\"high\",\"normal\",\"low\"),l.created_at ASC LIMIT ? OFFSET ?"
+                },
+                {
+                    "ms": 0.191,
+                    "shape": "SELECT * FROM test_adc_followup_notifications WHERE recipient_id=? AND acknowledged_at IS NULL AND resolved_at IS NULL ORDER BY id DESC LIMIT ?"
+                },
+                {
+                    "ms": 0.189,
+                    "shape": "SELECT test_users.ID,test_users.display_name FROM test_users INNER JOIN test_usermeta ON ( test_users.ID = test_usermeta.user_id ) WHERE ?=? AND ( ( ( test_usermeta.meta_key = '?' AND test_usermeta.meta_value LIKE '?' ) ) ) ORDER BY user_login ASC"
+                },
+                {
+                    "ms": 0.184,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "inventory": {
+            "page": "adc-inventory",
+            "query_count": 287,
+            "total_query_ms": 19.801,
+            "render_wall_ms": 30.823,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 282,
+                "test_adc_onyx_stock": 3,
+                "test_adc_vehicles": 2,
+                "test_adc_branches": 2,
+                "test_adc_catalog_models": 1
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 282,
+                "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name": 2,
+                "SELECT COUNT(*) FROM test_adc_onyx_stock s LEFT JOIN test_adc_vehicles v ON v.id=s.vehicle_id WHERE ?=? AND s.present=?": 1,
+                "SELECT s.*,v.branch_id,v.status operational_status,v.stock_number,v.vin,v.retail_price operational_price,m.public_post_id FROM test_adc_onyx_stock s LEFT JOIN test_adc_vehicles v ON v.id=s.vehicle_id LEFT JOIN test_adc_catalog_models m ON m.id=s.model_id WHERE ?=? AND s.present=? ORDER BY s.brand,s.model,s.trim_name,s.model_year DESC,s.id LIMIT ? OFFSET ?": 1,
+                "SELECT DISTINCT warehouse_name FROM test_adc_onyx_stock WHERE warehouse_name<>'?' ORDER BY warehouse_name": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.714,
+                    "shape": "SELECT DISTINCT warehouse_name FROM test_adc_onyx_stock WHERE warehouse_name<>'?' ORDER BY warehouse_name"
+                },
+                {
+                    "ms": 0.399,
+                    "shape": "SELECT COUNT(*) FROM test_adc_onyx_stock s LEFT JOIN test_adc_vehicles v ON v.id=s.vehicle_id WHERE ?=? AND s.present=?"
+                },
+                {
+                    "ms": 0.379,
+                    "shape": "SELECT s.*,v.branch_id,v.status operational_status,v.stock_number,v.vin,v.retail_price operational_price,m.public_post_id FROM test_adc_onyx_stock s LEFT JOIN test_adc_vehicles v ON v.id=s.vehicle_id LEFT JOIN test_adc_catalog_models m ON m.id=s.model_id WHERE ?=? AND s.present=? ORDER BY s.brand,s.model,s.trim_name,s.model_year DESC,s.id LIMIT ? OFFSET ?"
+                },
+                {
+                    "ms": 0.255,
+                    "shape": "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name"
+                },
+                {
+                    "ms": 0.158,
+                    "shape": "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name"
+                },
+                {
+                    "ms": 0.15,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.145,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.132,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.131,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.13,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "approvals": {
+            "page": "adc-approvals",
+            "query_count": 246,
+            "total_query_ms": 15.965,
+            "render_wall_ms": 24.342,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 244,
+                "test_adc_discount_requests": 2,
+                "test_adc_quotations": 2,
+                "test_adc_customers": 2,
+                "test_adc_vehicles": 2
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 244,
+                "SELECT COUNT(*) FROM (SELECT d.id,d.requested_amount,d.approval_tier,d.margin_before,d.margin_after,d.reason,d.requester_user_id,q.quote_number,q.base_amount,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_discount_requests d INNER JOIN test_adc_quotations q ON q.id=d.quotation_id INNER JOIN test_adc_customers c ON c.id=q.customer_id INNER JOIN test_adc_vehicles v ON v.id=q.vehicle_id WHERE d.status = '?' AND ? = ?) adc_queue_count": 1,
+                "SELECT d.id,d.requested_amount,d.approval_tier,d.margin_before,d.margin_after,d.reason,d.requester_user_id,q.quote_number,q.base_amount,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_discount_requests d INNER JOIN test_adc_quotations q ON q.id=d.quotation_id INNER JOIN test_adc_customers c ON c.id=q.customer_id INNER JOIN test_adc_vehicles v ON v.id=q.vehicle_id WHERE d.status = '?' AND ? = ? ORDER BY d.created_at ASC,d.id ASC LIMIT ? OFFSET ?": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.253,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.246,
+                    "shape": "SELECT COUNT(*) FROM (SELECT d.id,d.requested_amount,d.approval_tier,d.margin_before,d.margin_after,d.reason,d.requester_user_id,q.quote_number,q.base_amount,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_discount_requests d INNER JOIN test_adc_quotations q ON q.id=d.quotation_id INNER JOIN test_adc_customers c ON c.id=q.customer_id INNER JOIN test_adc_vehicles v ON v.id=q.vehicle_id WHERE d.status = '?' AND ? = ?) adc_queue_count"
+                },
+                {
+                    "ms": 0.173,
+                    "shape": "SELECT d.id,d.requested_amount,d.approval_tier,d.margin_before,d.margin_after,d.reason,d.requester_user_id,q.quote_number,q.base_amount,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_discount_requests d INNER JOIN test_adc_quotations q ON q.id=d.quotation_id INNER JOIN test_adc_customers c ON c.id=q.customer_id INNER JOIN test_adc_vehicles v ON v.id=q.vehicle_id WHERE d.status = '?' AND ? = ? ORDER BY d.created_at ASC,d.id ASC LIMIT ? OFFSET ?"
+                },
+                {
+                    "ms": 0.161,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.138,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.131,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.125,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.112,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.09,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.088,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "finance": {
+            "page": "adc-finance",
+            "query_count": 259,
+            "total_query_ms": 17.697,
+            "render_wall_ms": 26.682,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 256,
+                "test_adc_sales": 3,
+                "test_adc_customers": 3,
+                "test_adc_vehicles": 3,
+                "test_adc_finance_requests": 2,
+                "test_adc_quotations": 1
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 256,
+                "SELECT COUNT(*) FROM (SELECT f.id,f.sale_id,f.attempt_number,f.previous_request_id,f.provider,f.requested_amount,f.down_payment,f.term_months,f.monthly_payment,f.status,f.provider_reference,f.decision_reason,f.requested_by,s.vehicle_id,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_finance_requests f INNER JOIN test_adc_sales s ON s.id=f.sale_id INNER JOIN test_adc_customers c ON c.id=s.customer_id INNER JOIN test_adc_vehicles v ON v.id=s.vehicle_id WHERE ?=? AND ? = ?) adc_queue_count": 1,
+                "SELECT f.id,f.sale_id,f.attempt_number,f.previous_request_id,f.provider,f.requested_amount,f.down_payment,f.term_months,f.monthly_payment,f.status,f.provider_reference,f.decision_reason,f.requested_by,s.vehicle_id,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_finance_requests f INNER JOIN test_adc_sales s ON s.id=f.sale_id INNER JOIN test_adc_customers c ON c.id=s.customer_id INNER JOIN test_adc_vehicles v ON v.id=s.vehicle_id WHERE ?=? AND ? = ? ORDER BY f.created_at DESC,f.id DESC LIMIT ? OFFSET ?": 1,
+                "SELECT s.id,s.customer_id,q.final_amount,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_sales s INNER JOIN test_adc_quotations q ON q.id=s.quotation_id INNER JOIN test_adc_customers c ON c.id=s.customer_id INNER JOIN test_adc_vehicles v ON v.id=s.vehicle_id WHERE s.status = '?' AND ? = ? ORDER BY s.id DESC LIMIT ?": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.258,
+                    "shape": "SELECT COUNT(*) FROM (SELECT f.id,f.sale_id,f.attempt_number,f.previous_request_id,f.provider,f.requested_amount,f.down_payment,f.term_months,f.monthly_payment,f.status,f.provider_reference,f.decision_reason,f.requested_by,s.vehicle_id,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_finance_requests f INNER JOIN test_adc_sales s ON s.id=f.sale_id INNER JOIN test_adc_customers c ON c.id=s.customer_id INNER JOIN test_adc_vehicles v ON v.id=s.vehicle_id WHERE ?=? AND ? = ?) adc_queue_count"
+                },
+                {
+                    "ms": 0.211,
+                    "shape": "SELECT f.id,f.sale_id,f.attempt_number,f.previous_request_id,f.provider,f.requested_amount,f.down_payment,f.term_months,f.monthly_payment,f.status,f.provider_reference,f.decision_reason,f.requested_by,s.vehicle_id,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_finance_requests f INNER JOIN test_adc_sales s ON s.id=f.sale_id INNER JOIN test_adc_customers c ON c.id=s.customer_id INNER JOIN test_adc_vehicles v ON v.id=s.vehicle_id WHERE ?=? AND ? = ? ORDER BY f.created_at DESC,f.id DESC LIMIT ? OFFSET ?"
+                },
+                {
+                    "ms": 0.176,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.156,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.152,
+                    "shape": "SELECT s.id,s.customer_id,q.final_amount,c.full_name,v.id translation_vehicle_id,v.brand,v.model FROM test_adc_sales s INNER JOIN test_adc_quotations q ON q.id=s.quotation_id INNER JOIN test_adc_customers c ON c.id=s.customer_id INNER JOIN test_adc_vehicles v ON v.id=s.vehicle_id WHERE s.status = '?' AND ? = ? ORDER BY s.id DESC LIMIT ?"
+                },
+                {
+                    "ms": 0.152,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.148,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.147,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.144,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.138,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "outbox": {
+            "page": "adc-outbox",
+            "query_count": 792,
+            "total_query_ms": 51.903,
+            "render_wall_ms": 78.681,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 783,
+                "test_adc_outbox": 9
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 783,
+                "SELECT COUNT(*) FROM test_adc_outbox WHERE status IN ('?','?','?') AND event_key IN ('?','?','?','?','?','?','?','?') AND created_at<'?'": 3,
+                "SELECT MIN(next_attempt_at) FROM test_adc_outbox WHERE status IN ('?','?')": 3,
+                "SELECT status,COUNT(*) total FROM test_adc_outbox GROUP BY status": 1,
+                "SELECT COUNT(*) FROM test_adc_outbox": 1,
+                "SELECT id,event_key,status,attempts,next_attempt_at,locked_at,completed_at,failed_at,last_error,created_at FROM test_adc_outbox ORDER BY id DESC LIMIT ? OFFSET ?": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.195,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.177,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.176,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.172,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.171,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.166,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.165,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.161,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.158,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.155,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "onyx_inventory": {
+            "page": "adc-onyx",
+            "query_count": 27,
+            "total_query_ms": 17.785,
+            "render_wall_ms": 19.964,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 14,
+                "test_adc_onyx_stock": 3,
+                "test_adc_onyx_imports": 1,
+                "test_posts": 1,
+                "test_adc_catalog_models": 1
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 14,
+                "SHOW TABLE STATUS LIKE '?'": 9,
+                "SELECT COUNT(*) FROM test_adc_onyx_stock WHERE present=?": 1,
+                "SELECT * FROM test_adc_onyx_stock WHERE present=? ORDER BY id DESC LIMIT ? OFFSET ?": 1,
+                "SELECT id,file_name,import_mode,status,created_at FROM test_adc_onyx_imports ORDER BY id DESC LIMIT ?": 1,
+                "SELECT (SELECT COUNT(*) FROM test_adc_onyx_stock WHERE present=?) available, (SELECT COUNT(*) FROM test_adc_onyx_stock WHERE present=?) sold, (SELECT COUNT(DISTINCT p.ID) FROM test_posts p INNER JOIN test_adc_catalog_models m ON m.public_post_id=p.ID WHERE p.post_type='?' AND p.post_status='?') published": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 2.141,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.85,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.674,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.534,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.522,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.503,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.496,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.494,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.492,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 0.509,
+                    "shape": "SELECT * FROM test_adc_onyx_stock WHERE present=? ORDER BY id DESC LIMIT ? OFFSET ?"
+                }
+            ]
+        },
+        "access_review": {
+            "page": "adc-access-review",
+            "query_count": 444,
+            "total_query_ms": 30.397,
+            "render_wall_ms": 46.623,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 440,
+                "test_adc_branches": 2,
+                "test_users": 1
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 440,
+                "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name": 2,
+                "SELECT SQL_CALC_FOUND_ROWS test_users.ID FROM test_users WHERE ?=? ORDER BY ID ASC LIMIT ?, ?": 1,
+                "SELECT FOUND_ROWS()": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.245,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.221,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.181,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.179,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.172,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.169,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.163,
+                    "shape": "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name"
+                },
+                {
+                    "ms": 0.159,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.154,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.151,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "settings": {
+            "page": "adc-settings",
+            "query_count": 593,
+            "total_query_ms": 39.042,
+            "render_wall_ms": 58.898,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 586,
+                "test_adc_vehicles": 5,
+                "test_posts": 4,
+                "test_adc_branches": 2
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 586,
+                "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name": 1,
+                "SELECT COUNT(*) FROM test_adc_vehicles": 1,
+                "SELECT COUNT(*) FROM test_posts WHERE post_type='?' AND post_status='?'": 1,
+                "SELECT COUNT(*) FROM test_posts p WHERE p.post_type='?' AND p.post_status='?' AND NOT EXISTS (SELECT ? FROM test_adc_vehicles v WHERE v.public_post_id=p.ID)": 1,
+                "SELECT COUNT(*) FROM (SELECT public_post_id FROM test_adc_vehicles WHERE public_post_id>? GROUP BY public_post_id HAVING COUNT(*)>?) adc_duplicates": 1,
+                "SELECT COUNT(*) FROM test_adc_vehicles v LEFT JOIN test_posts p ON p.ID=v.public_post_id WHERE v.public_post_id>? AND (p.ID IS NULL OR p.post_type<>'?' OR p.post_status<>'?')": 1,
+                "SELECT COUNT(*) FROM test_adc_vehicles v INNER JOIN test_adc_branches b ON b.id=v.branch_id AND b.active=? INNER JOIN test_posts p ON p.ID=v.public_post_id AND p.post_type='?' AND p.post_status='?' WHERE v.status='?' AND NOT EXISTS (SELECT ? FROM test_adc_vehicles adc_duplicate WHERE adc_duplicate.public_post_id=v.public_post_id AND adc_duplicate.id<>v.id)": 1
+            },
+            "slowest_queries": [
+                {
+                    "ms": 0.224,
+                    "shape": "SELECT COUNT(*) FROM test_adc_vehicles v INNER JOIN test_adc_branches b ON b.id=v.branch_id AND b.active=? INNER JOIN test_posts p ON p.ID=v.public_post_id AND p.post_type='?' AND p.post_status='?' WHERE v.status='?' AND NOT EXISTS (SELECT ? FROM test_adc_vehicles adc_duplicate WHERE adc_duplicate.public_post_id=v.public_post_id AND adc_duplicate.id<>v.id)"
+                },
+                {
+                    "ms": 0.21,
+                    "shape": "SELECT COUNT(*) FROM test_posts p WHERE p.post_type='?' AND p.post_status='?' AND NOT EXISTS (SELECT ? FROM test_adc_vehicles v WHERE v.public_post_id=p.ID)"
+                },
+                {
+                    "ms": 0.171,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.17,
+                    "shape": "SELECT id,code,name,city FROM test_adc_branches WHERE active = ? ORDER BY city,name"
+                },
+                {
+                    "ms": 0.162,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.149,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.145,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.142,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.141,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                },
+                {
+                    "ms": 0.138,
+                    "shape": "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?"
+                }
+            ]
+        },
+        "platform_readiness": {
+            "page": "adc-platform-setup",
+            "query_count": 204,
+            "total_query_ms": 47.237,
+            "render_wall_ms": 59.695,
+            "write_blocked": false,
+            "render_error": "",
+            "table_query_count": {
+                "test_options": 162,
+                "test_posts": 16,
+                "test_adc_branches": 5,
+                "test_adc_catalog_models": 5,
+                "test_adc_onyx_stock": 4,
+                "test_adc_vehicles": 3,
+                "test_adc_outbox": 2,
+                "test_postmeta": 2,
+                "test_adc_portal_reviews": 2,
+                "test_adc_portal_review_versions": 2,
+                "test_adc_release_evidence": 1
+            },
+            "repeated_shapes": {
+                "SELECT option_value FROM test_options WHERE option_name = '?' LIMIT ?": 162,
+                "SELECT ID, post_name, post_parent, post_type FROM test_posts WHERE post_name IN ('?') AND post_type IN ('?','?')": 10,
+                "SHOW TABLE STATUS LIKE '?'": 9,
+                "SELECT id FROM test_adc_branches WHERE active=? ORDER BY id ASC LIMIT ?": 2,
+                "SELECT test_posts.ID FROM test_posts INNER JOIN test_postmeta ON ( test_posts.ID = test_postmeta.post_id ) WHERE ?=? AND ( ( test_postmeta.meta_key = '?' AND test_postmeta.meta_value = '?' ) ) AND test_posts.post_type = '?' AND ((test_posts.post_status = '?')) GROUP BY test_posts.ID ORDER BY test_posts.post_date DESC LIMIT ?, ?": 2,
+                "SELECT test_posts.ID FROM test_posts WHERE ?=? AND test_posts.post_type = '?' AND ((test_posts.post_status = '?')) ORDER BY test_posts.post_date DESC LIMIT ?, ?": 2,
+                "SELECT id FROM test_adc_catalog_models WHERE public_post_id=?": 2,
+                "SELECT id,brand,model FROM test_adc_catalog_models WHERE public_post_id=?": 2,
+                "SELECT s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price,COUNT(*) available_count,MIN(NULLIF(s.listed_price,?)) min_price,MAX(s.listed_price) max_price FROM test_adc_onyx_stock s WHERE s.model_id=? AND s.present=? AND (s.vehicle_id IS NULL OR EXISTS (SELECT ? FROM test_adc_vehicles gv INNER JOIN test_adc_branches gb ON gb.id=gv.branch_id AND gb.active=? WHERE gv.id=s.vehicle_id AND gv.status='?')) GROUP BY s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price ORDER BY s.model_year DESC,s.trim_name,s.exterior_color,s.listed_price": 2,
+                "SELECT r.id,v.rating,v.display_name,v.body,v.locale,v.created_at FROM test_adc_portal_reviews r JOIN test_adc_portal_review_versions v ON v.id=r.public_version AND v.review_id=r.id WHERE r.consent=? AND r.public_version>? AND r.status<>'?' ORDER BY r.updated_at DESC,r.id DESC LIMIT ?": 2
+            },
+            "slowest_queries": [
+                {
+                    "ms": 12.609,
+                    "shape": "SELECT r.id,v.rating,v.display_name,v.body,v.locale,v.created_at FROM test_adc_portal_reviews r JOIN test_adc_portal_review_versions v ON v.id=r.public_version AND v.review_id=r.id WHERE r.consent=? AND r.public_version>? AND r.status<>'?' ORDER BY r.updated_at DESC,r.id DESC LIMIT ?"
+                },
+                {
+                    "ms": 2.888,
+                    "shape": "SELECT r.id,v.rating,v.display_name,v.body,v.locale,v.created_at FROM test_adc_portal_reviews r JOIN test_adc_portal_review_versions v ON v.id=r.public_version AND v.review_id=r.id WHERE r.consent=? AND r.public_version>? AND r.status<>'?' ORDER BY r.updated_at DESC,r.id DESC LIMIT ?"
+                },
+                {
+                    "ms": 1.654,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.647,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.631,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.587,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.576,
+                    "shape": "SHOW TABLES LIKE '?'"
+                },
+                {
+                    "ms": 1.565,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.537,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                },
+                {
+                    "ms": 1.526,
+                    "shape": "SHOW TABLE STATUS LIKE '?'"
+                }
+            ]
+        }
+    }
+}

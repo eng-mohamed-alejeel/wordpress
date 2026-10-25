@@ -105,7 +105,7 @@
 :is(.adc-admin, .adc-admin-native) { background: var(--ab-bg); color: var(--ab-text); }
 :is(.adc-admin, .adc-admin-native) #wpbody-content { color: var(--ab-text); }
 :is(.adc-admin, .adc-admin-native) .wrap :is(h1, h2, h3, h4, th, label) { color: var(--ab-heading); }
-:is(.adc-admin, .adc-admin-native) .wrap a:where(:not(.button):not(.page-title-action):not(.nav-tab-active)) { color: var(--ab-link); }
+:is(.adc-admin, .adc-admin-native) .wrap a:where(:not(.button):not(.page-title-action):not(.nav-tab-active)):not(.adc-area-card):not(.adc-workspace-card):not(.adc-overview-metric) { color: var(--ab-link); }
 :is(.adc-admin, .adc-admin-native) :is(.subsubsub, .subsubsub .count) { color: var(--ab-muted); }
 :is(.adc-admin, .adc-admin-native) .wrap .subsubsub a.current { color: var(--ab-link); }
 :is(.adc-admin, .adc-admin-native) .wrap .subsubsub a.current .count { color: var(--ab-muted); }

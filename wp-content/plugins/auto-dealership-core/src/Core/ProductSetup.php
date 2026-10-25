@@ -22,7 +22,9 @@ final class ProductSetup {
 		add_action( 'admin_menu', static function (): void { add_submenu_page( 'options-general.php', self::t( 'إعداد المنصة', 'Platform setup' ), self::t( 'إعداد المنصة', 'Platform setup' ), 'manage_options', 'adc-platform-setup', array( self::class, 'render' ) ); } );
 		add_action( 'admin_post_adc_platform_setup', array( self::class, 'submit' ) );
 		add_action( 'admin_notices', static function (): void {
-			if ( ! current_user_can( 'manage_options' ) || get_option( self::PROFILE, false ) || get_option( 'car_dealer_public_setup_version', false ) ) { return; }
+			global $pagenow;
+			$page = isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+			if ( ! current_user_can( 'manage_options' ) || get_option( self::PROFILE, false ) || get_option( 'car_dealer_public_setup_version', false ) || 'options-general.php' === $pagenow || in_array( $page, array( 'adc-platform-setup', 'adc-contact', 'adc-social-channels', 'adc-branch-locations', 'adc-editorial-setup', 'adc-settings' ), true ) ) { return; }
 			echo '<div class="notice notice-info"><p><a href="' . esc_url( self::url() ) . '">' . esc_html( self::t( 'ابدأ إعداد منصتك: الهوية والبريد والصفحات.', 'Set up your platform: identity, email and pages.' ) ) . '</a></p></div>';
 		} );
 		add_action( 'update_option_blogname', static function ( $old, $name ): void {
@@ -436,6 +438,9 @@ final class ProductSetup {
 			'limit'=>array('تم بلوغ أحد حدود الإرسال لدى مزود البريد.','The provider sending limit was reached.'),
 			'other'=>array('لم يقبل مزود البريد الرسالة. تحقق من الإعدادات ثم أعد الاختبار.','The provider did not accept the message. Check settings and test again.')
 		);
+		$config = function_exists( 'adc_product_mail_config' ) ? adc_product_mail_config() : array();
+		$valid = 'mailpit' === ( $config['mode'] ?? '' ) ? ! empty( $config['local'] ) : ! empty( $config['valid'] );
+		if ( ! $valid ) { echo '<div id="adc-mail-configuration-notice" class="notice notice-error inline"><p>' . esc_html( 'البريد متوقف: يجب ضبط إعدادات SMTP لهذه البيئة. / Mail is disabled: configure SMTP for this environment.' ) . '</p></div>'; }
 		echo '<div class="notice notice-info inline"><p>'.esc_html(get_option('adc_product_mail_dashboard',false)?self::t('مصدر الإعدادات الفعّال: إعداد المنصة.','Active settings source: Platform setup.'):self::t('تُستخدم إعدادات الخادم حتى تحفظ إعدادات هذه الشاشة.','Server settings apply until you save this screen.')).'</p><p>'.esc_html(''!==self::mail_setting('ADC_SMTP_PASSWORD','')?self::t('كلمة مرور محفوظة؛ اترك الحقل فارغًا للاحتفاظ بها.','A password is saved; leave the field blank to keep it.'):self::t('لم تُحفظ كلمة مرور في إعداد المنصة بعد.','No password has been saved in Platform setup yet.')).'</p>';
 		if(isset($last['status'])) { echo '<p>'.esc_html('accepted'===$last['status']?self::t('آخر إرسال: قبله خادم البريد. هذا لا يؤكد وصوله إلى صندوق الوارد.','Last send: accepted by the mail server. This does not confirm inbox delivery.'):self::t(...($messages[$last['kind']??'other']??$messages['other']))).' '.esc_html(isset($last['time'])?get_date_from_gmt($last['time'],'Y-m-d H:i'):'').'</p>'; }
 		echo '</div>';
@@ -523,6 +528,9 @@ final class ProductSetup {
 		echo '<div class="wrap" dir="' . ( 'en' === Localization::language() ? 'ltr' : 'rtl' ) . '"><h1>' . esc_html( ( $contact ? self::t( 'بيانات التواصل العامة', 'Public contact details' ) : self::t( 'إعداد المنصة', 'Platform setup' ) ) ) . '</h1><p>' . esc_html( $contact ? self::t( 'بيانات التواصل المعروضة للزوار وصفحات الموقع. تُدار حسابات الشبكات وواتساب من قسم حسابات التواصل الاجتماعي، وبيانات البائع التجارية من إعدادات التسعير.', 'Public contact details used on site pages. Manage social accounts and WhatsApp in Social accounts, and commercial seller details in pricing settings.' ) : self::t( 'هوية المنشأة وإرسال البريد وجاهزية التشغيل. لكل مجموعة إعداداتها المستقلة، وتبقى البيانات الحالية محفوظة.', 'Business identity, email delivery and operational readiness. Each group has its own settings; existing data is preserved.' ) ) . '</p>';
 		$error = get_transient( 'adc_setup_error_' . get_current_user_id() ); if ( $error ) { delete_transient( 'adc_setup_error_' . get_current_user_id() ); echo '<div class="notice notice-error"><p>' . esc_html( $error ) . '</p></div>'; }
 		if ( get_transient( 'adc_setup_success_' . get_current_user_id() ) ) { delete_transient( 'adc_setup_success_' . get_current_user_id() ); echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( self::t( 'تم تنفيذ الإجراء بنجاح.', 'Action completed successfully.' ) ) . '</p></div>'; }
+		if ( ! $contact && 'readiness' !== $section && ! \AutoDealership\Accounts\EmailVerification::public_link_origin() ) {
+			echo '<div id="adc-verification-origin-notice" class="notice notice-warning inline"><p>' . esc_html( self::t( 'روابط تأكيد البريد واستعادة كلمة المرور تستخدم عنوان الموقع الحالي. العنوان المحلي لا يعمل من أجهزة العملاء؛ اضبط عنوان الموقع العام مع HTTPS عند النشر.', 'Verification and password reset links use the current site address. A local address is inaccessible from customer devices; configure the public HTTPS site address when deploying.' ) ) . ' <a href="' . esc_url( admin_url( 'options-general.php' ) ) . '">' . esc_html( self::t( 'إعدادات عنوان الموقع', 'Site address settings' ) ) . '</a></p></div>';
+		}
 		if ( ! $contact ) { echo '<nav class="nav-tab-wrapper" aria-label="' . esc_attr( self::t( 'خطوات الإعداد', 'Setup steps' ) ) . '">'; foreach ( $labels as $key=>$label ) { echo '<a class="nav-tab' . ( $key === $section ? ' nav-tab-active' : '' ) . '" href="' . esc_url( self::url( $key ) ) . '">' . esc_html( $label ) . '</a>'; } echo '</nav>'; }
 		if ( in_array( $section, array( 'identity', 'appearance', 'mail' ), true ) ) {
 			self::form( $section ); echo '<table class="form-table" role="presentation">';

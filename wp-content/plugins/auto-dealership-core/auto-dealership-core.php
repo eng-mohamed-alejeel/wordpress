@@ -90,6 +90,7 @@ require_once ADC_PATH . 'src/Database/SchemaGuard.php';
 require_once ADC_PATH . 'src/Operations/OutboxService.php';
 require_once ADC_PATH . 'src/Operations/FollowUpNotifications.php';
 require_once ADC_PATH . 'src/Operations/JobRuntime.php';
+require_once ADC_PATH . 'src/Operations/AdminDiagnostics.php';
 \AutoDealership\Operations\JobRuntime::boot();
 require_once ADC_PATH . 'src/Sales/OnyxDocuments.php';
 require_once ADC_PATH . 'src/Integrations/AdapterContract.php';
@@ -197,6 +198,7 @@ require_once ADC_PATH . 'src/Admin/SettingsPage.php';
 require_once ADC_PATH . 'src/Admin/ProfitMarginPage.php';
 \AutoDealership\Admin\ProfitMarginPage::boot();
 require_once ADC_PATH . 'src/Admin/AuditPage.php';
+require_once ADC_PATH . 'src/Admin/DiagnosticsPage.php';
 require_once ADC_PATH . 'src/Admin/OutboxPage.php';
 require_once ADC_PATH . 'src/Admin/IntegrationPage.php';
 require_once ADC_PATH . 'src/Admin/SecurityPage.php';
@@ -451,6 +453,9 @@ add_action( 'plugins_loaded', static function (): void {
 
 add_action( 'admin_notices', static function (): void {
 	if ( current_user_can( 'manage_options' ) && get_option( 'adc_db_version' ) !== \AutoDealership\Database\Schema::VERSION ) {
+		$page = isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		$section = isset( $_GET['section'] ) && is_string( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : '';
+		if ( 'adc-outbox' === $page || ( 'adc-platform-setup' === $page && 'readiness' === $section ) ) { return; }
 		echo '<div class="notice notice-error"><p>' . esc_html__( 'تعذر التحقق من بنية قاعدة بيانات منصة المعرض. راجع فحص الجداول والفهارس قبل تنفيذ العمليات التشغيلية.', 'auto-dealership-core' ) . '</p></div>';
 	}
 } );
@@ -476,6 +481,7 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Inventory\\PublicCatalog',
 add_action( 'car_dealer_engagement_created', array( 'AutoDealership\\Leads\\LeadService', 'capture_theme_request' ), 10, 2 );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SettingsPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\StoredTranslationsPage', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Operations\\AdminDiagnostics', 'boot' ), 1 );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AuditPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OutboxPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\IntegrationPage', 'boot' ) );

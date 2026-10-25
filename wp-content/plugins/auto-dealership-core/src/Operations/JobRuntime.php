@@ -40,7 +40,6 @@ final class JobRuntime {
         add_action('wp_ajax_adc_jobs_tick',array(self::class,'ajax_tick'));
         add_action('wp_ajax_adc_jobs_probe',array(self::class,'ajax_probe'));
         add_action('admin_post_adc_jobs_settings',array(self::class,'save'));
-        add_action('admin_notices',array(self::class,'notice'));
         add_filter('site_status_tests',static function($tests){$tests['direct']['adc_job_runtime']=array('label'=>self::t('تشغيل مهام المنصة','Platform job execution'),'test'=>array(self::class,'health_test'));return $tests;});
         if(defined('WP_CLI')&&constant('WP_CLI')&&class_exists('WP_CLI')){
             \WP_CLI::add_command('adc jobs status',static function(){\WP_CLI::log(wp_json_encode(self::status(),JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));});
@@ -155,7 +154,7 @@ final class JobRuntime {
         update_option('adc_jobs_transport',$results,false);wp_send_json_success($results);
     }
     public static function assets(): void {
-        if(!current_user_can('manage_options')){return;}
+        if(!current_user_can('manage_options')||'adc-outbox'!==($_GET['page']??'')){return;}
         wp_enqueue_script('adc-job-runtime',plugins_url('assets/js/job-runtime.js',ADC_FILE),array(),ADC_VERSION,true);
         wp_localize_script('adc-job-runtime','adcJobRuntime',array('url'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('adc_job_runtime'),'rest'=>rest_url('wp/v2/types/post?context=edit'),'restNonce'=>wp_create_nonce('wp_rest'),'enabled'=>self::browser_allowed(),'initial'=>self::status(),'strings'=>array('running'=>self::t('جارٍ فحص التشغيل…','Checking execution…'),'offline'=>self::t('تعذر الاتصال. سيعاد الفحص عند عودة الاتصال.','Connection unavailable; checks resume when connected.'),'browser'=>self::t('التشغيل البديل متاح أثناء فتح لوحة الإدارة فقط؛ يلزم Cron من الخادم للعمل المستمر.','Fallback runs while this dashboard is open. Server Cron is required for continuous execution.'),'server'=>self::t('وضع مجدول الخادم؛ التشغيل البديل متوقف.','Server scheduler mode; browser fallback is off.'),'held'=>self::t('رسائل قديمة معلّقة للمراجعة: ','Old messages held for review: '),'probe'=>self::t('نتيجة الفحص','Diagnostic result'),'last'=>self::t('آخر تشغيل للعامل: ','Last worker run: '),'notRun'=>self::t('لم يُرصد بعد','Not observed yet'),'source'=>self::t('المصدر: ','Source: '),'due'=>self::t('مهام مستحقة: ','Due jobs: '),'failed'=>self::t('تعذر إتمام الفحص.','Could not complete the check.'))));
     }
@@ -168,7 +167,7 @@ final class JobRuntime {
         wp_safe_redirect(admin_url('admin.php?page=adc-outbox'));exit;
     }
     public static function notice(): void {
-        if(!current_user_can('manage_options')||!in_array($_GET['page']??'',array('adc-outbox','adc-platform-setup','adc-workspace','adc-integrations'),true)){return;}
+        if(!current_user_can('manage_options')||'adc-outbox'!==($_GET['page']??'')){return;}
         if('adc-outbox'===($_GET['page']??'')){
             $notice=get_transient('adc_job_settings_notice_'.get_current_user_id());delete_transient('adc_job_settings_notice_'.get_current_user_id());
             if(is_array($notice)){echo '<div class="notice '.(!empty($notice['ok'])?'notice-success':'notice-error').' is-dismissible"><p>'.esc_html(!empty($notice['ok'])?self::t('تم حفظ طريقة التشغيل.','Execution mode saved.'):self::t('تعذر حفظ طريقة التشغيل أو تسجيل التدقيق. لم يُعتمد التغيير.','Execution mode could not be saved or audited; the change was not applied.')).'</p></div>';}

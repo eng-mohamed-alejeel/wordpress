@@ -35,6 +35,7 @@ final class OutboxPage {
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'مراقبة المهام والطابور', 'auto-dealership-core' ); ?></h1>
+			<?php \AutoDealership\Operations\JobRuntime::notice(); ?>
 			<?php \AutoDealership\Operations\JobRuntime::panel(); ?>
 			<?php self::notice(); ?>
 			<?php if ( is_wp_error( $counts ) || is_wp_error( $events ) ) : ?>

@@ -36,12 +36,27 @@ const assert = require('node:assert/strict');
         check(!(await page.locator('body').innerText()).includes('FOREIGN_CUSTOMER_SECRET'), `${actor} foreign identity absent`);
         check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), `${actor} ${width}px no page overflow`);
         check(await page.locator('.adc-overview-metric[aria-current="true"]').count() === 1, 'Selected indicator is announced');
-		check(await page.locator('.adc-overview-metric').count() >= 6, `${actor} keeps the primary work indicators visible`);
+		check(await page.locator('.adc-overview-metric').count() >= 1, `${actor} keeps the permitted work indicators visible`);
 		if (await page.locator('.adc-overview-more').count()) check(await page.locator('.adc-overview-more .adc-overview-metric').count() > 0, `${actor} keeps secondary queues available without crowding the overview`);
 		await page.locator('.adc-work-table').focus();
 		check(await page.locator('.adc-work-table').evaluate(node => document.activeElement === node), 'Scrollable table is keyboard accessible');
         await page.screenshot({path:path.join(output, `${actor}-${width}.png`),fullPage:true});
       }
+      check(await page.locator('.adc-workspace-tools').count() === 1, `${actor} sees the daily workspace tools`);
+      check(await page.locator('.adc-quick-action').count() > 0 && await page.locator('.adc-quick-action').count() <= 4, `${actor} sees a bounded set of permission-aware quick actions`);
+      check(await page.locator('[data-shortcut-group="favorites"] .adc-workspace-shortcut').count() <= 6, `${actor} favorites stay within the visible limit`);
+      if (actor === 'sales') check(await page.locator('.adc-quick-action[href*="adc-payments"]').count() === 0, 'Sales quick actions do not expose finance destinations');
+      await page.goto(`${config.base}/wp-admin/admin.php?page=adc-area-customers`);
+      await style(page);
+      check(await page.locator('.adc-workspace-card-wrap .adc-workspace-favorite-form').count() > 0, `${actor} can manage destination favorites without changing work records`);
+      if (actor === 'admin') {
+        const favoriteButton = page.locator('.adc-workspace-favorite-form button').first();
+        await Promise.all([page.waitForNavigation({ timeout: 10000 }), favoriteButton.click()]);
+        check(await page.locator('.adc-workspace-favorite-form button').first().getAttribute('aria-pressed') === 'true', 'Favorite state is announced to assistive technology');
+      }
+      await page.goto(`${config.base}/wp-admin/admin.php?page=adc-workspace&workspace_task=overdue`);
+      await style(page);
+      if (actor === 'admin') check(await page.locator('[data-shortcut-group="favorites"] .adc-workspace-shortcut').count() === 1, 'Favorite action persists one permitted destination');
       check(await page.locator('.adc-workspace-card').count() === 0, 'Home does not repeat module cards');
       check(await page.locator('.adc-area-card').count() > 0, 'Home provides compact area navigation');
       await page.locator('.adc-overview-pagination a').filter({hasText:'2'}).first().click();

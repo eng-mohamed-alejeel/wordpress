@@ -96,12 +96,3 @@ add_action( 'wp_mail_failed', static function ( $error ) {
 	error_log( '[AutoBrands mail] failed code=' . sanitize_key( (string) $error->get_error_code() ) );
 } );
 add_action('wp_mail_succeeded',static function(): void { update_option('adc_product_mail_result',array('status'=>'accepted','kind'=>'','time'=>gmdate('Y-m-d H:i:s')),false); });
-
-add_action( 'admin_notices', static function () {
-	if ( ! current_user_can( 'manage_options' ) ) { return; }
-	$config = adc_product_mail_config();
-	$valid = 'mailpit' === $config['mode'] ? $config['local'] : $config['valid'];
-	if ( ! $valid ) {
-		echo '<div class="notice notice-error"><p>' . esc_html( 'البريد متوقف: يجب ضبط إعدادات SMTP لهذه البيئة. / Mail is disabled: configure SMTP for this environment.' ) . '</p></div>';
-	}
-} );

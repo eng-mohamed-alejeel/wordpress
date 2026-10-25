@@ -1,0 +1,1789 @@
+{
+    "schema": "adc-admin-query-explain-1",
+    "generated_at": "2026-10-25T18:03:47+00:00",
+    "mode": "source-read-only",
+    "php": "8.2.12",
+    "wordpress": "7.1.3",
+    "database": {
+        "engine": "10.4.32-MariaDB",
+        "prefix": "wp_"
+    },
+    "guard": {
+        "writes_blocked_during_render": true,
+        "write_observed": false,
+        "raw_sql_persisted": false
+    },
+    "render_errors": {
+        "operational_reports": "renderer failed",
+        "approvals": "renderer failed",
+        "finance": "renderer failed",
+        "onyx_inventory": "renderer failed",
+        "access_review": "renderer failed",
+        "settings": "renderer failed",
+        "platform_readiness": "renderer failed"
+    },
+    "candidate_count": 28,
+    "plans": [
+        {
+            "shape": "SELECT COUNT(*) FROM wp_adc_catalog_models m INNER JOIN wp_posts p ON p.ID=m.public_post_id AND p.post_type='?' AND p.post_status='?' WHERE EXISTS (SELECT ? FROM wp_adc_onyx_stock s WHERE s.model_id=m.id AND s.present=? AND (s.vehicle_id IS NULL OR EXISTS (SELECT ? FROM wp_adc_vehicles gv INNER JOIN wp_adc_branches gb ON gb.id=gv.branch_id AND gb.active=? WHERE gv.id=s.vehicle_id AND gv.status='?')))",
+            "count": 1,
+            "total_ms": 0.559,
+            "max_ms": 0.559,
+            "routes": [
+                "settings"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "m",
+                    "type": "index",
+                    "possible_keys": "PRIMARY,public_post_id",
+                    "key": "public_post_id",
+                    "key_len": "9",
+                    "ref": "",
+                    "rows": 74,
+                    "filtered": null,
+                    "extra": "Using where; Using index"
+                },
+                {
+                    "table": "<subquery2>",
+                    "type": "eq_ref",
+                    "possible_keys": "distinct_key",
+                    "key": "distinct_key",
+                    "key_len": "8",
+                    "ref": "func",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                },
+                {
+                    "table": "p",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,type_status_date,type_status_author",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.m.public_post_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                },
+                {
+                    "table": "s",
+                    "type": "ALL",
+                    "possible_keys": "vehicle_id,model_present",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 523,
+                    "filtered": null,
+                    "extra": "Using where"
+                },
+                {
+                    "table": "gv",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,branch_status,catalog",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.s.vehicle_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                },
+                {
+                    "table": "gb",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,active_city",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.gv.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT s.*,v.branch_id,v.status operational_status,v.stock_number,v.vin,v.retail_price operational_price,m.public_post_id FROM wp_adc_onyx_stock s LEFT JOIN wp_adc_vehicles v ON v.id=s.vehicle_id LEFT JOIN wp_adc_catalog_models m ON m.id=s.model_id WHERE ?=? AND s.present=? ORDER BY s.brand,s.model,s.trim_name,s.model_year DESC,s.id LIMIT ? OFFSET ?",
+            "count": 1,
+            "total_ms": 4.553,
+            "max_ms": 4.553,
+            "routes": [
+                "inventory"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "s",
+                    "type": "ALL",
+                    "possible_keys": "",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 523,
+                    "filtered": null,
+                    "extra": "Using where; Using filesort"
+                },
+                {
+                    "table": "v",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.s.vehicle_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                },
+                {
+                    "table": "m",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.s.model_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                }
+            ]
+        },
+        {
+            "shape": "SELECT s.model_id,s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price,COUNT(*) available_count,MIN(NULLIF(s.listed_price,?)) min_price,MAX(s.listed_price) max_price FROM wp_adc_onyx_stock s WHERE s.model_id IN (?,?,?,?,?) AND s.present=? AND (s.vehicle_id IS NULL OR EXISTS (SELECT ? FROM wp_adc_vehicles gv INNER JOIN wp_adc_branches gb ON gb.id=gv.branch_id AND gb.active=? WHERE gv.id=s.vehicle_id AND gv.status='?')) GROUP BY s.model_id,s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price ORDER BY s.model_id,s.model_year DESC,s.trim_name,s.exterior_color,s.listed_price",
+            "count": 1,
+            "total_ms": 0.492,
+            "max_ms": 0.492,
+            "routes": [
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "s",
+                    "type": "range",
+                    "possible_keys": "vehicle_id,model_present",
+                    "key": "model_present",
+                    "key_len": "9",
+                    "ref": "",
+                    "rows": 26,
+                    "filtered": null,
+                    "extra": "Using index condition; Using where; Using temporary; Using filesort"
+                },
+                {
+                    "table": "gv",
+                    "type": "ref",
+                    "possible_keys": "PRIMARY,branch_status,arrival_status,catalog",
+                    "key": "catalog",
+                    "key_len": "130",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using index condition"
+                },
+                {
+                    "table": "gb",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,active_city",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.gv.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT COUNT(*) FROM wp_adc_onyx_stock s WHERE s.present=? AND (s.vehicle_id IS NULL OR EXISTS (SELECT ? FROM wp_adc_vehicles gv INNER JOIN wp_adc_branches gb ON gb.id=gv.branch_id AND gb.active=? WHERE gv.id=s.vehicle_id AND gv.status='?'))",
+            "count": 1,
+            "total_ms": 0.395,
+            "max_ms": 0.395,
+            "routes": [
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "s",
+                    "type": "ALL",
+                    "possible_keys": "vehicle_id",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 523,
+                    "filtered": null,
+                    "extra": "Using where"
+                },
+                {
+                    "table": "gv",
+                    "type": "ref",
+                    "possible_keys": "PRIMARY,branch_status,arrival_status,catalog",
+                    "key": "catalog",
+                    "key_len": "130",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using index condition"
+                },
+                {
+                    "table": "gb",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,active_city",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.gv.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT s.model_id,s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price,COUNT(*) available_count,MIN(NULLIF(s.listed_price,?)) min_price,MAX(s.listed_price) max_price FROM wp_adc_onyx_stock s WHERE s.model_id IN (?,?,?) AND s.present=? AND (s.vehicle_id IS NULL OR EXISTS (SELECT ? FROM wp_adc_vehicles gv INNER JOIN wp_adc_branches gb ON gb.id=gv.branch_id AND gb.active=? WHERE gv.id=s.vehicle_id AND gv.status='?')) GROUP BY s.model_id,s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price ORDER BY s.model_id,s.model_year DESC,s.trim_name,s.exterior_color,s.listed_price",
+            "count": 1,
+            "total_ms": 0.38,
+            "max_ms": 0.38,
+            "routes": [
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "s",
+                    "type": "range",
+                    "possible_keys": "vehicle_id,model_present",
+                    "key": "model_present",
+                    "key_len": "9",
+                    "ref": "",
+                    "rows": 4,
+                    "filtered": null,
+                    "extra": "Using index condition; Using where; Using temporary; Using filesort"
+                },
+                {
+                    "table": "gv",
+                    "type": "ref",
+                    "possible_keys": "PRIMARY,branch_status,arrival_status,catalog",
+                    "key": "catalog",
+                    "key_len": "130",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using index condition"
+                },
+                {
+                    "table": "gb",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,active_city",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.gv.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price,COUNT(*) available_count,MIN(NULLIF(s.listed_price,?)) min_price,MAX(s.listed_price) max_price FROM wp_adc_onyx_stock s WHERE s.model_id=? AND s.present=? AND (s.vehicle_id IS NULL OR EXISTS (SELECT ? FROM wp_adc_vehicles gv INNER JOIN wp_adc_branches gb ON gb.id=gv.branch_id AND gb.active=? WHERE gv.id=s.vehicle_id AND gv.status='?')) GROUP BY s.model_year,s.trim_name,s.exterior_color,s.interior_color,s.listed_price ORDER BY s.model_year DESC,s.trim_name,s.exterior_color,s.listed_price",
+            "count": 1,
+            "total_ms": 0.322,
+            "max_ms": 0.322,
+            "routes": [
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "s",
+                    "type": "ref",
+                    "possible_keys": "vehicle_id,model_present",
+                    "key": "model_present",
+                    "key_len": "9",
+                    "ref": "const,const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where; Using temporary; Using filesort"
+                },
+                {
+                    "table": "gv",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,branch_status,arrival_status,catalog",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "func",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                },
+                {
+                    "table": "gb",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,active_city",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.gv.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT v.id,v.stock_number,v.brand,v.model,v.trim_name,v.model_year,v.condition_key,v.branch_id,v.status,v.body_type,v.fuel_type,v.transmission,v.mileage,v.retail_price,v.currency,v.exterior_color,v.interior_color,v.engine_size,v.origin_country,v.drivetrain,v.video_url,v.warranty,v.interior_features,v.exterior_features,v.safety_features,v.doors,v.seats,v.horsepower,v.cylinders,v.gallery_media_ids,b.name branch_name,b.city branch_city,v.public_post_id FROM wp_adc_vehicles v INNER JOIN wp_adc_branches b ON b.id=v.branch_id AND b.active=? INNER JOIN wp_posts p ON p.ID=v.public_post_id AND p.post_type='?' AND p.post_status='?' WHERE v.public_post_id=? AND v.status='?' AND NOT EXISTS (SELECT ? FROM wp_adc_vehicles adc_duplicate WHERE adc_duplicate.public_post_id=v.public_post_id AND adc_duplicate.id<>v.id) LIMIT ?",
+            "count": 1,
+            "total_ms": 0.292,
+            "max_ms": 0.292,
+            "routes": [
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "p",
+                    "type": "const",
+                    "possible_keys": "PRIMARY,type_status_date,type_status_author",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                },
+                {
+                    "table": "v",
+                    "type": "ref",
+                    "possible_keys": "branch_status,catalog,public_post_id",
+                    "key": "catalog",
+                    "key_len": "130",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using index condition; Using where"
+                },
+                {
+                    "table": "b",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,active_city",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.v.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                },
+                {
+                    "table": "adc_duplicate",
+                    "type": "ref",
+                    "possible_keys": "public_post_id",
+                    "key": "public_post_id",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.v.public_post_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where; Using index"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT r.id,v.rating,v.display_name,v.body,v.locale,v.created_at FROM wp_adc_portal_reviews r JOIN wp_adc_portal_review_versions v ON v.id=r.public_version AND v.review_id=r.id WHERE r.consent=? AND r.public_version>? AND r.status<>'?' ORDER BY r.updated_at DESC,r.id DESC LIMIT ?",
+            "count": 2,
+            "total_ms": 12.423,
+            "max_ms": 9.085,
+            "routes": [
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "v",
+                    "type": "range",
+                    "possible_keys": "PRIMARY,review_versions",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where; Using temporary; Using filesort"
+                },
+                {
+                    "table": "r",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,public_version",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.v.review_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT DISTINCT s.exterior_color FROM wp_adc_onyx_stock s INNER JOIN wp_adc_catalog_models m ON m.id=s.model_id WHERE m.public_post_id=? ORDER BY s.exterior_color",
+            "count": 21,
+            "total_ms": 4.936,
+            "max_ms": 0.369,
+            "routes": [
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "m",
+                    "type": "const",
+                    "possible_keys": "PRIMARY,public_post_id",
+                    "key": "public_post_id",
+                    "key_len": "9",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using index; Using temporary; Using filesort"
+                },
+                {
+                    "table": "s",
+                    "type": "ref",
+                    "possible_keys": "model_present",
+                    "key": "model_present",
+                    "key_len": "8",
+                    "ref": "const",
+                    "rows": 2,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT COALESCE(NULLIF(l.intake_type,'?'),'?') intake_type_name,COALESCE(NULLIF(l.source,'?'),'?') source_name,COUNT(a.id) duplicate_count,COUNT(DISTINCT a.subject_id) affected_leads FROM wp_adc_audit_events a INNER JOIN wp_adc_leads l ON l.id=a.subject_id WHERE ? = ? AND a.event_key='?' AND a.subject_type='?' AND a.created_at>='?' AND a.created_at<'?' GROUP BY intake_type_name,source_name ORDER BY duplicate_count DESC,affected_leads DESC",
+            "count": 2,
+            "total_ms": 0.966,
+            "max_ms": 0.494,
+            "routes": [
+                "crm_reports"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "a",
+                    "type": "ref|filter",
+                    "possible_keys": "subject,event_created",
+                    "key": "subject|event_created",
+                    "key_len": "242|407",
+                    "ref": "const",
+                    "rows": 30,
+                    "filtered": null,
+                    "extra": "Using index condition; Using where; Using temporary; Using filesort; Using rowid filter"
+                },
+                {
+                    "table": "l",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.a.subject_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                }
+            ]
+        },
+        {
+            "shape": "SELECT COUNT(*) FROM wp_adc_onyx_stock s LEFT JOIN wp_adc_vehicles v ON v.id=s.vehicle_id WHERE ?=? AND s.present=?",
+            "count": 1,
+            "total_ms": 0.38,
+            "max_ms": 0.38,
+            "routes": [
+                "inventory"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "s",
+                    "type": "ALL",
+                    "possible_keys": "",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 523,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT l.branch_id,COALESCE(b.name,'?') branch_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount,AVG(CASE WHEN l.stage='?' AND l.closed_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND,l.created_at,l.closed_at)/? ELSE NULL END) avg_close_days FROM wp_adc_leads l LEFT JOIN wp_adc_branches b ON b.id=l.branch_id WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.branch_id,b.name ORDER BY sales_amount DESC",
+            "count": 2,
+            "total_ms": 0.549,
+            "max_ms": 0.321,
+            "routes": [
+                "crm_reports"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "l",
+                    "type": "ALL",
+                    "possible_keys": "",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 3,
+                    "filtered": null,
+                    "extra": "Using where; Using temporary; Using filesort"
+                },
+                {
+                    "table": "b",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.l.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                }
+            ]
+        },
+        {
+            "shape": "SELECT wp_posts.ID FROM wp_posts INNER JOIN wp_postmeta ON ( wp_posts.ID = wp_postmeta.post_id ) WHERE ?=? AND ( ( wp_postmeta.meta_key = '?' AND wp_postmeta.meta_value = '?' ) ) AND wp_posts.post_type = '?' AND ((wp_posts.post_status = '?')) GROUP BY wp_posts.ID ORDER BY wp_posts.post_date DESC LIMIT ?, ?",
+            "count": 2,
+            "total_ms": 0.596,
+            "max_ms": 0.308,
+            "routes": [
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "wp_postmeta",
+                    "type": "ref",
+                    "possible_keys": "post_id,meta_key",
+                    "key": "meta_key",
+                    "key_len": "767",
+                    "ref": "const",
+                    "rows": 3,
+                    "filtered": null,
+                    "extra": "Using where; Using temporary; Using filesort"
+                },
+                {
+                    "table": "wp_posts",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,type_status_date,type_status_author",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.wp_postmeta.post_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT l.branch_id,b.name branch_name,'?' status,COUNT(*) total,? amount FROM wp_adc_leads l LEFT JOIN wp_adc_branches b ON b.id=l.branch_id WHERE ? = ? AND l.stage NOT IN ('?','?') AND l.next_action_at IS NOT NULL AND l.next_action_at<'?' GROUP BY l.branch_id,b.name",
+            "count": 1,
+            "total_ms": 0.281,
+            "max_ms": 0.281,
+            "routes": [
+                "operational_reports"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "l",
+                    "type": "ALL",
+                    "possible_keys": "claim_expiry,archive_state",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 3,
+                    "filtered": null,
+                    "extra": "Using where; Using temporary; Using filesort"
+                },
+                {
+                    "table": "b",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.l.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                }
+            ]
+        },
+        {
+            "shape": "SELECT v.branch_id,b.name branch_name,'?' status,COUNT(*) total,? amount FROM wp_adc_vehicle_issues i INNER JOIN wp_adc_vehicles v ON v.id=i.vehicle_id LEFT JOIN wp_adc_branches b ON b.id=v.branch_id WHERE ? = ? AND i.status='?' GROUP BY v.branch_id,b.name",
+            "count": 1,
+            "total_ms": 0.281,
+            "max_ms": 0.281,
+            "routes": [
+                "operational_reports"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "i",
+                    "type": "index",
+                    "possible_keys": "vehicle_status",
+                    "key": "vehicle_status",
+                    "key_len": "74",
+                    "ref": "",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where; Using index; Using temporary; Using filesort"
+                },
+                {
+                    "table": "v",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.i.vehicle_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                },
+                {
+                    "table": "b",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.v.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                }
+            ]
+        },
+        {
+            "shape": "SELECT COUNT(*) FROM wp_adc_catalog_models m INNER JOIN wp_posts p ON p.ID=m.public_post_id AND p.post_type='?' AND p.post_status='?'",
+            "count": 1,
+            "total_ms": 0.239,
+            "max_ms": 0.239,
+            "routes": [
+                "settings"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "m",
+                    "type": "index",
+                    "possible_keys": "public_post_id",
+                    "key": "public_post_id",
+                    "key_len": "9",
+                    "ref": "",
+                    "rows": 74,
+                    "filtered": null,
+                    "extra": "Using where; Using index"
+                },
+                {
+                    "table": "p",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY,type_status_date,type_status_author",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.m.public_post_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT COUNT(*) FROM wp_adc_catalog_models m LEFT JOIN wp_posts p ON p.ID=m.public_post_id WHERE m.public_post_id IS NOT NULL AND (p.ID IS NULL OR p.post_type<>'?')",
+            "count": 1,
+            "total_ms": 0.227,
+            "max_ms": 0.227,
+            "routes": [
+                "settings"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "m",
+                    "type": "index",
+                    "possible_keys": "public_post_id",
+                    "key": "public_post_id",
+                    "key_len": "9",
+                    "ref": "",
+                    "rows": 74,
+                    "filtered": null,
+                    "extra": "Using where; Using index"
+                },
+                {
+                    "table": "p",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.m.public_post_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT v.branch_id,b.name branch_name,v.status,COUNT(*) total,? amount FROM wp_adc_vehicles v LEFT JOIN wp_adc_branches b ON b.id=v.branch_id WHERE ? = ? GROUP BY v.branch_id,b.name,v.status ORDER BY v.branch_id,v.status",
+            "count": 1,
+            "total_ms": 0.213,
+            "max_ms": 0.213,
+            "routes": [
+                "operational_reports"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "v",
+                    "type": "index",
+                    "possible_keys": "",
+                    "key": "branch_status",
+                    "key_len": "138",
+                    "ref": "",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using index; Using temporary; Using filesort"
+                },
+                {
+                    "table": "b",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.v.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                }
+            ]
+        },
+        {
+            "shape": "SELECT l.branch_id,b.name branch_name,l.stage status,COUNT(*) total,? amount FROM wp_adc_leads l LEFT JOIN wp_adc_branches b ON b.id=l.branch_id WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.branch_id,b.name,l.stage ORDER BY l.branch_id,l.stage",
+            "count": 1,
+            "total_ms": 0.209,
+            "max_ms": 0.209,
+            "routes": [
+                "operational_reports"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "l",
+                    "type": "ALL",
+                    "possible_keys": "",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 3,
+                    "filtered": null,
+                    "extra": "Using where; Using temporary; Using filesort"
+                },
+                {
+                    "table": "b",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.l.branch_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                }
+            ]
+        },
+        {
+            "shape": "SELECT COALESCE(NULLIF(l.lost_reason,'?'),'?') reason,COUNT(*) total FROM wp_adc_leads l WHERE ? = ? AND l.stage='?' AND l.created_at>='?' AND l.created_at<'?' GROUP BY reason ORDER BY total DESC",
+            "count": 2,
+            "total_ms": 11.212,
+            "max_ms": 8.124,
+            "routes": [
+                "crm_reports"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "l",
+                    "type": "ref",
+                    "possible_keys": "claim_expiry,archive_state",
+                    "key": "claim_expiry",
+                    "key_len": "130",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using index condition; Using where; Using temporary; Using filesort"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT option_value FROM wp_options WHERE option_name = '?' LIMIT ?",
+            "count": 43,
+            "total_ms": 5.965,
+            "max_ms": 0.291,
+            "routes": [
+                "workspace",
+                "area_reports",
+                "crm",
+                "inventory",
+                "outbox",
+                "access_review",
+                "settings",
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "wp_options",
+                    "type": "const",
+                    "possible_keys": "option_name",
+                    "key": "option_name",
+                    "key_len": "766",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                }
+            ]
+        },
+        {
+            "shape": "SELECT post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id IN (?) ORDER BY meta_id ASC",
+            "count": 30,
+            "total_ms": 5.24,
+            "max_ms": 0.34,
+            "routes": [
+                "workspace",
+                "inventory",
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "wp_postmeta",
+                    "type": "ref",
+                    "possible_keys": "post_id",
+                    "key": "post_id",
+                    "key_len": "8",
+                    "ref": "const",
+                    "rows": 5,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT * FROM wp_posts WHERE ID = ? LIMIT ?",
+            "count": 30,
+            "total_ms": 4.834,
+            "max_ms": 0.313,
+            "routes": [
+                "workspace",
+                "inventory",
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "wp_posts",
+                    "type": "const",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                }
+            ]
+        },
+        {
+            "shape": "SELECT DISTINCT warehouse_name FROM wp_adc_onyx_stock WHERE warehouse_name<>'?' ORDER BY warehouse_name",
+            "count": 1,
+            "total_ms": 0.736,
+            "max_ms": 0.736,
+            "routes": [
+                "inventory"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "wp_adc_onyx_stock",
+                    "type": "ALL",
+                    "possible_keys": "",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 523,
+                    "filtered": null,
+                    "extra": "Using where; Using temporary; Using filesort"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT l.owner_user_id,COALESCE(u.display_name,'?') employee_name,COUNT(*) total,SUM(l.stage='?') won,SUM(l.stage='?') lost,COALESCE(SUM(CASE WHEN l.stage='?' THEN l.sale_amount ELSE ? END),?) sales_amount,COALESCE(SUM(CASE WHEN l.stage='?' THEN s.employee_commission_amount ELSE ? END),?) commission_amount,AVG(CASE WHEN l.stage='?' AND l.closed_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND,l.created_at,l.closed_at)/? ELSE NULL END) avg_close_days FROM wp_adc_leads l LEFT JOIN wp_users u ON u.ID=l.owner_user_id LEFT JOIN wp_adc_sales s ON s.lead_id=l.id WHERE ? = ? AND l.created_at>='?' AND l.created_at<'?' GROUP BY l.owner_user_id,u.display_name ORDER BY sales_amount DESC",
+            "count": 2,
+            "total_ms": 0.901,
+            "max_ms": 0.614,
+            "routes": [
+                "crm_reports"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "l",
+                    "type": "ALL",
+                    "possible_keys": "",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 3,
+                    "filtered": null,
+                    "extra": "Using where; Using temporary; Using filesort"
+                },
+                {
+                    "table": "u",
+                    "type": "eq_ref",
+                    "possible_keys": "PRIMARY",
+                    "key": "PRIMARY",
+                    "key_len": "8",
+                    "ref": "wp-autobrands.l.owner_user_id",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": ""
+                },
+                {
+                    "table": "s",
+                    "type": "ALL",
+                    "possible_keys": "lead_id",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where; Using join buffer (flat, BNL join)"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT id,code,name,city FROM wp_adc_branches WHERE active = ? ORDER BY city,name",
+            "count": 8,
+            "total_ms": 1.779,
+            "max_ms": 0.329,
+            "routes": [
+                "workspace",
+                "crm_reports",
+                "crm",
+                "inventory",
+                "access_review",
+                "settings"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "wp_adc_branches",
+                    "type": "ALL",
+                    "possible_keys": "active_city",
+                    "key": "",
+                    "key_len": "",
+                    "ref": "",
+                    "rows": 2,
+                    "filtered": null,
+                    "extra": "Using where; Using filesort"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT ID, post_name, post_parent, post_type FROM wp_posts WHERE post_name IN ('?') AND post_type IN ('?','?')",
+            "count": 10,
+            "total_ms": 1.595,
+            "max_ms": 0.285,
+            "routes": [
+                "platform_readiness"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "wp_posts",
+                    "type": "ref",
+                    "possible_keys": "post_name,type_status_date,type_status_author",
+                    "key": "post_name",
+                    "key_len": "766",
+                    "ref": "const",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "shape": "SELECT id,stock_number,brand,model,model_year,status FROM wp_adc_vehicles WHERE branch_id=? AND status IN ('?','?') ORDER BY stock_number LIMIT ?",
+            "count": 3,
+            "total_ms": 0.909,
+            "max_ms": 0.386,
+            "routes": [
+                "crm"
+            ],
+            "explain_status": "ok",
+            "plan": [
+                {
+                    "table": "wp_adc_vehicles",
+                    "type": "index",
+                    "possible_keys": "branch_status,catalog",
+                    "key": "stock_number",
+                    "key_len": "258",
+                    "ref": "",
+                    "rows": 1,
+                    "filtered": null,
+                    "extra": "Using where"
+                }
+            ]
+        }
+    ],
+    "index_inventory": {
+        "wp_adc_onyx_stock": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 523
+            },
+            {
+                "key": "source_identifier",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "source_identifier",
+                "cardinality": 523
+            },
+            {
+                "key": "vehicle_id",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "vehicle_id",
+                "cardinality": 2
+            },
+            {
+                "key": "model_present",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "model_id",
+                "cardinality": 174
+            },
+            {
+                "key": "model_present",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "present",
+                "cardinality": 174
+            },
+            {
+                "key": "supplier_id",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "supplier_id",
+                "cardinality": 52
+            },
+            {
+                "key": "last_import_id",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "last_import_id",
+                "cardinality": 2
+            }
+        ],
+        "wp_adc_catalog_models": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 74
+            },
+            {
+                "key": "model_key",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "model_key",
+                "cardinality": 74
+            },
+            {
+                "key": "public_post_id",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "public_post_id",
+                "cardinality": 74
+            }
+        ],
+        "wp_adc_vehicles": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 0
+            },
+            {
+                "key": "vin",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "vin",
+                "cardinality": 0
+            },
+            {
+                "key": "stock_number",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "stock_number",
+                "cardinality": 0
+            },
+            {
+                "key": "branch_status",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "branch_id",
+                "cardinality": 0
+            },
+            {
+                "key": "branch_status",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "status",
+                "cardinality": 0
+            },
+            {
+                "key": "brand_id",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "brand_id",
+                "cardinality": 0
+            },
+            {
+                "key": "location_id",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "location_id",
+                "cardinality": 0
+            },
+            {
+                "key": "supplier_id",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "supplier_id",
+                "cardinality": 0
+            },
+            {
+                "key": "arrival_status",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "arrival_date",
+                "cardinality": 0
+            },
+            {
+                "key": "arrival_status",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "status",
+                "cardinality": 0
+            },
+            {
+                "key": "catalog",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "status",
+                "cardinality": 0
+            },
+            {
+                "key": "catalog",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "brand",
+                "cardinality": 0
+            },
+            {
+                "key": "catalog",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "model_year",
+                "cardinality": 0
+            },
+            {
+                "key": "public_post_id",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "public_post_id",
+                "cardinality": 0
+            }
+        ],
+        "wp_adc_branches": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 2
+            },
+            {
+                "key": "code",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "code",
+                "cardinality": 2
+            },
+            {
+                "key": "active_city",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "active",
+                "cardinality": 2
+            },
+            {
+                "key": "active_city",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "city",
+                "cardinality": 2
+            }
+        ],
+        "wp_adc_leads": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 3
+            },
+            {
+                "key": "legacy_request",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "legacy_request_type",
+                "cardinality": 3
+            },
+            {
+                "key": "legacy_request",
+                "non_unique": 0,
+                "sequence": 2,
+                "column": "legacy_request_id",
+                "cardinality": 3
+            },
+            {
+                "key": "public_request_key",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "public_request_key",
+                "cardinality": 3
+            },
+            {
+                "key": "customer_id",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "customer_id",
+                "cardinality": 3
+            },
+            {
+                "key": "pipeline",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "branch_id",
+                "cardinality": 3
+            },
+            {
+                "key": "pipeline",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "stage",
+                "cardinality": 3
+            },
+            {
+                "key": "pipeline",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "owner_user_id",
+                "cardinality": 3
+            },
+            {
+                "key": "campaign",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "campaign",
+                "cardinality": 3
+            },
+            {
+                "key": "created_by",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "created_by",
+                "cardinality": 3
+            },
+            {
+                "key": "source",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "source",
+                "cardinality": 3
+            },
+            {
+                "key": "claim_expiry",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "stage",
+                "cardinality": 3
+            },
+            {
+                "key": "claim_expiry",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "claimed_at",
+                "cardinality": 3
+            },
+            {
+                "key": "claim_expiry",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "first_contact_at",
+                "cardinality": 3
+            },
+            {
+                "key": "first_contact",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "first_contact_at",
+                "cardinality": 3
+            },
+            {
+                "key": "archive_state",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "stage",
+                "cardinality": 3
+            },
+            {
+                "key": "archive_state",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "archived_at",
+                "cardinality": 3
+            },
+            {
+                "key": "archive_state",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "closed_at",
+                "cardinality": 3
+            },
+            {
+                "key": "external_lookup",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "source",
+                "cardinality": 3
+            },
+            {
+                "key": "external_lookup",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "external_id",
+                "cardinality": 3
+            },
+            {
+                "key": "duplicate_intake",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "customer_id",
+                "cardinality": 3
+            },
+            {
+                "key": "duplicate_intake",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "intake_type",
+                "cardinality": 3
+            },
+            {
+                "key": "duplicate_intake",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "requested_car_id",
+                "cardinality": 3
+            },
+            {
+                "key": "duplicate_intake",
+                "non_unique": 1,
+                "sequence": 4,
+                "column": "stage",
+                "cardinality": 3
+            }
+        ],
+        "wp_adc_activities": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 30
+            },
+            {
+                "key": "lead_date",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "lead_id",
+                "cardinality": 10
+            },
+            {
+                "key": "lead_date",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "created_at",
+                "cardinality": 30
+            },
+            {
+                "key": "next_action_at",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "next_action_at",
+                "cardinality": 2
+            }
+        ],
+        "wp_adc_lead_stage_history": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 30
+            },
+            {
+                "key": "audit_event_id",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "audit_event_id",
+                "cardinality": 2
+            },
+            {
+                "key": "lead_history",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "lead_id",
+                "cardinality": 10
+            },
+            {
+                "key": "lead_history",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "changed_at",
+                "cardinality": 30
+            },
+            {
+                "key": "lead_history",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "id",
+                "cardinality": 30
+            },
+            {
+                "key": "branch_transition",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "branch_id",
+                "cardinality": 6
+            },
+            {
+                "key": "branch_transition",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "changed_at",
+                "cardinality": 30
+            },
+            {
+                "key": "branch_transition",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "to_stage",
+                "cardinality": 30
+            },
+            {
+                "key": "owner_transition",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "owner_user_id",
+                "cardinality": 10
+            },
+            {
+                "key": "owner_transition",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "changed_at",
+                "cardinality": 30
+            },
+            {
+                "key": "owner_transition",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "to_stage",
+                "cardinality": 30
+            }
+        ],
+        "wp_adc_portal_reviews": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 0
+            },
+            {
+                "key": "context_key",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "context_key",
+                "cardinality": 0
+            },
+            {
+                "key": "customer_updated",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "user_id",
+                "cardinality": 0
+            },
+            {
+                "key": "customer_updated",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "updated_at",
+                "cardinality": 0
+            },
+            {
+                "key": "branch_status",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "branch_id",
+                "cardinality": 0
+            },
+            {
+                "key": "branch_status",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "status",
+                "cardinality": 0
+            },
+            {
+                "key": "branch_status",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "id",
+                "cardinality": 0
+            },
+            {
+                "key": "public_version",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "public_version",
+                "cardinality": 0
+            }
+        ],
+        "wp_adc_portal_review_versions": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 0
+            },
+            {
+                "key": "review_versions",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "review_id",
+                "cardinality": 0
+            },
+            {
+                "key": "review_versions",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "id",
+                "cardinality": 0
+            }
+        ],
+        "wp_adc_audit_events": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "id",
+                "cardinality": 1511
+            },
+            {
+                "key": "subject",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "subject_type",
+                "cardinality": 24
+            },
+            {
+                "key": "subject",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "subject_id",
+                "cardinality": 755
+            },
+            {
+                "key": "actor_created",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "actor_user_id",
+                "cardinality": 8
+            },
+            {
+                "key": "actor_created",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "created_at",
+                "cardinality": 503
+            },
+            {
+                "key": "event_created",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "event_key",
+                "cardinality": 75
+            },
+            {
+                "key": "event_created",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "created_at",
+                "cardinality": 1511
+            },
+            {
+                "key": "correlation_id",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "correlation_id",
+                "cardinality": 1511
+            }
+        ],
+        "wp_options": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "option_id",
+                "cardinality": 242
+            },
+            {
+                "key": "option_name",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "option_name",
+                "cardinality": 242
+            },
+            {
+                "key": "autoload",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "autoload",
+                "cardinality": 6
+            }
+        ],
+        "wp_posts": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "ID",
+                "cardinality": 111
+            },
+            {
+                "key": "post_name",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "post_name",
+                "cardinality": 111
+            },
+            {
+                "key": "type_status_date",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "post_type",
+                "cardinality": 22
+            },
+            {
+                "key": "type_status_date",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "post_status",
+                "cardinality": 27
+            },
+            {
+                "key": "type_status_date",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "post_date",
+                "cardinality": 55
+            },
+            {
+                "key": "type_status_date",
+                "non_unique": 1,
+                "sequence": 4,
+                "column": "ID",
+                "cardinality": 111
+            },
+            {
+                "key": "post_parent",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "post_parent",
+                "cardinality": 6
+            },
+            {
+                "key": "post_author",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "post_author",
+                "cardinality": 4
+            },
+            {
+                "key": "type_status_author",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "post_type",
+                "cardinality": 22
+            },
+            {
+                "key": "type_status_author",
+                "non_unique": 1,
+                "sequence": 2,
+                "column": "post_status",
+                "cardinality": 27
+            },
+            {
+                "key": "type_status_author",
+                "non_unique": 1,
+                "sequence": 3,
+                "column": "post_author",
+                "cardinality": 27
+            }
+        ],
+        "wp_postmeta": [
+            {
+                "key": "PRIMARY",
+                "non_unique": 0,
+                "sequence": 1,
+                "column": "meta_id",
+                "cardinality": 251
+            },
+            {
+                "key": "post_id",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "post_id",
+                "cardinality": 251
+            },
+            {
+                "key": "meta_key",
+                "non_unique": 1,
+                "sequence": 1,
+                "column": "meta_key",
+                "cardinality": 62
+            }
+        ]
+    }
+}

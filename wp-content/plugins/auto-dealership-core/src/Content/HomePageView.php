@@ -54,7 +54,11 @@ final class HomePageView {
 		);
 		if ( $meta ) { $args['meta_query'] = array( $meta ); }
 		$query = new \WP_Query( $args );
-		return array_values( array_filter( array_map( 'intval', $query->posts ), static function ( int $post_id ): bool {
+		$post_ids = array_map( 'intval', $query->posts );
+		if ( $post_ids && \AutoDealership\Inventory\GroupedModelCatalog::enabled() ) {
+			\AutoDealership\Inventory\GroupedModelCatalog::prime_views( $post_ids );
+		}
+		return array_values( array_filter( $post_ids, static function ( int $post_id ): bool {
 			return null !== PublicVehicleView::for_post( $post_id );
 		} ) );
 	}

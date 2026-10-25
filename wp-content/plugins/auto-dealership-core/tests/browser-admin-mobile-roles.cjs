@@ -108,10 +108,20 @@ const { spawn } = require('node:child_process');
             const home = await evaluate(`(() => ({
                 direction: document.querySelector('.adc-workspace')?.dir,
                 areas: [...document.querySelectorAll('.adc-area-card')].map(a => { const u=new URL(a.href); return u.pathname.replace(/^\\/wordpress\\/wp-admin\\//, '') + u.search; }),
-                text: document.body.innerText
+                text: document.body.innerText,
+                accessContext: !!document.querySelector('[data-adc-access-context="1"]'),
+                currentPermissions: !!document.querySelector('.adc-access-permissions'),
+                accessModes: [...document.querySelectorAll('.adc-access-mode')].map(node => node.textContent.trim()).filter(Boolean),
+                contextKeys: [...document.querySelectorAll('.adc-access-context-card')].map(node => node.dataset.contextKey),
+                exposesInternalCapabilities: /\\badc_[a-z0-9_]+\\b/i.test(document.body.innerText)
             }))()`);
             check(home.direction === 'rtl', `${role} workspace keeps Arabic direction`);
             check(home.areas.length > 0, `${role} exposes only permitted mobile areas`);
+            check(home.accessContext, `${role} exposes a read-only access context`);
+            check(home.currentPermissions, `${role} exposes current permissions by module`);
+            check(home.accessModes.length > 0, `${role} labels permitted access modes`);
+            check(['role', 'primary-branch', 'additional-branches', 'ownership', 'status'].every(key => home.contextKeys.includes(key)), `${role} exposes complete scope context`);
+            check(!home.exposesInternalCapabilities, `${role} does not expose internal capability names`);
             check(!/adc-area-(settings|audit)/.test(home.areas.join(' ')) || ['dealership_general_manager','dealership_auditor'].includes(role), `${role} does not expose unexpected restricted areas`);
             await call('Page.captureScreenshot', { format: 'png' }).then(r => fs.writeFileSync(path.join(captures, `ad033-${role}-workspace-390.png`), Buffer.from(r.data, 'base64')));
             for (const area of home.areas) {
