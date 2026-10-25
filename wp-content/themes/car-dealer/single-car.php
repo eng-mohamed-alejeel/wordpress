@@ -63,6 +63,7 @@ while ( have_posts() ) :
 					<a class="btn btn-primary" href="#request-price"><?php esc_html_e( 'اطلب السعر', 'car-dealer' ); ?></a>
 					<a class="btn btn-outline" href="#book-drive"><?php esc_html_e( 'احجز تجربة قيادة', 'car-dealer' ); ?></a>
 					<a class="btn btn-outline" href="#finance-request"><?php esc_html_e( 'اطلب تمويل', 'car-dealer' ); ?></a>
+					<a class="btn btn-outline" href="#purchase-request"><?php echo esc_html( car_dealer_text( 'طلب شراء', 'Request to purchase' ) ); ?></a>
 					<a class="btn btn-outline" href="#finance-calculator"><?php echo esc_html(car_dealer_text('حاسبة التمويل','Finance calculator')); ?></a>
 					<?php $wa_link = car_dealer_whatsapp_url( $wa_message ); if ( '#' !== $wa_link ) : ?><a class="btn btn-whatsapp" href="<?php echo esc_url( $wa_link ); ?>" target="_blank" rel="noopener"><?php echo car_dealer_whatsapp_icon(); ?><?php esc_html_e( 'تواصل واتساب', 'car-dealer' ); ?></a><?php endif; ?>
 					<?php if ( function_exists( 'car_dealer_comparison_button' ) ) { car_dealer_comparison_button( $id ); } ?>
@@ -128,6 +129,12 @@ while ( have_posts() ) :
 			</div>
 		</details>
 		<?php endforeach; ?>
+		<details id="purchase-request" data-car-panel data-panel-title="<?php echo esc_attr( car_dealer_text( 'طلب شراء', 'Request to purchase' ) ); ?>">
+			<summary><?php echo esc_html( car_dealer_text( 'طلب شراء', 'Request to purchase' ) ); ?></summary>
+			<div data-car-panel-content>
+				<?php if ( function_exists( 'car_dealer_lead_form' ) ) { car_dealer_lead_form( $id, 'purchase', car_dealer_text( 'طلب شراء المركبة', 'Request to purchase this vehicle' ), car_dealer_text( 'إرسال طلب الشراء', 'Send purchase request' ) ); } ?>
+			</div>
+		</details>
 	</section>
 <?php endwhile; ?>
 <?php get_footer(); ?>
