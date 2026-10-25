@@ -118,7 +118,7 @@ final class OperationsPages {
 		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) ) {
 			wp_die( esc_html__( 'لا تملك صلاحية عرض الفرص.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );
 		}
-		$filters = array( 'search' => $_GET['s'] ?? '', 'stage' => $_GET['stage'] ?? '', 'priority'=>$_GET['priority'] ?? '', 'branch_id'=>absint( $_GET['branch_id'] ?? 0 ), 'source' => $_GET['source'] ?? '', 'campaign' => $_GET['campaign'] ?? '', 'platform' => $_GET['platform'] ?? '', 'created_by' => absint( $_GET['created_by'] ?? 0 ), 'overdue' => ! empty( $_GET['overdue'] ), 'from'=>$_GET['from'] ?? '', 'to'=>$_GET['to'] ?? '', 'archived'=>$_GET['archived'] ?? '' );
+		$filters = array( 'search' => $_GET['s'] ?? '', 'stage' => $_GET['stage'] ?? '', 'priority'=>$_GET['priority'] ?? '', 'branch_id'=>absint( $_GET['branch_id'] ?? 0 ), 'source' => $_GET['source'] ?? '', 'intake_type' => $_GET['intake_type'] ?? '', 'utm_source' => $_GET['utm_source'] ?? '', 'campaign' => $_GET['campaign'] ?? '', 'platform' => $_GET['platform'] ?? '', 'created_by' => absint( $_GET['created_by'] ?? 0 ), 'overdue' => ! empty( $_GET['overdue'] ), 'from'=>$_GET['from'] ?? '', 'to'=>$_GET['to'] ?? '', 'archived'=>$_GET['archived'] ?? '' );
 		if ( isset( $_GET['owner'] ) && '' !== (string) $_GET['owner'] ) { $filters['owner'] = absint( $_GET['owner'] ); }
 		$filter_branches = array_values( array_filter( BranchService::public_list(), static fn( $branch ) => BranchScope::allows( (int) $branch['id'] ) ) );
 		$is_sales_employee = current_user_can( 'adc_manage_own_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' );
@@ -307,7 +307,7 @@ final class OperationsPages {
 
 	private static function crm_filter_query_args(): array {
 		$args = array();
-		foreach ( array( 's'=>'text', 'stage'=>'key', 'priority'=>'key', 'source'=>'key', 'campaign'=>'text', 'platform'=>'text' ) as $key=>$type ) {
+		foreach ( array( 's'=>'text', 'stage'=>'key', 'priority'=>'key', 'source'=>'key', 'intake_type'=>'key', 'utm_source'=>'text', 'campaign'=>'text', 'platform'=>'text' ) as $key=>$type ) {
 			if ( ! isset( $_GET[$key] ) || ! is_scalar( $_GET[$key] ) ) { continue; }
 			$value = wp_unslash( (string) $_GET[$key] );
 			$args[$key] = 'key' === $type ? sanitize_key( $value ) : sanitize_text_field( $value );
@@ -364,12 +364,17 @@ final class OperationsPages {
 	}
 
 	private static function render_marketing_filters(): void {
-		if ( ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { return; }
+		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { return; }
 		echo '<form method="get" action="' . esc_url( admin_url( 'admin.php' ) ) . '" class="adc-marketing-filters"><input type="hidden" name="page" value="adc-crm">';
-		foreach ( array( 's', 'stage', 'priority', 'branch_id', 'owner', 'source', 'overdue', 'from', 'to', 'archived' ) as $key ) {
+		echo '<label>' . esc_html__( 'نوع الطلب', 'auto-dealership-core' ) . ' <select name="intake_type"><option value="">' . esc_html__( 'كل أنواع الطلبات', 'auto-dealership-core' ) . '</option>';
+		foreach ( array( 'contact'=>'تواصل', 'finance'=>'تمويل', 'finance_request'=>'طلب تمويل', 'price_request'=>'طلب سعر', 'offer_request'=>'طلب عرض', 'test_drive'=>'تجربة قيادة', 'purchase'=>'طلب شراء', 'message'=>'رسالة', 'booking'=>'حجز', 'marketing'=>'تسويق' ) as $type_key => $type_label ) {
+			echo '<option value="' . esc_attr( $type_key ) . '" ' . selected( sanitize_key( $_GET['intake_type'] ?? '' ), $type_key, false ) . '>' . esc_html__( $type_label, 'auto-dealership-core' ) . '</option>';
+		}
+		echo '</select></label> <label>' . esc_html__( 'مصدر UTM', 'auto-dealership-core' ) . ' <input name="utm_source" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['utm_source'] ?? '' ) ) ) . '" placeholder="google / instagram"></label>';
+		foreach ( array( 's', 'stage', 'priority', 'branch_id', 'owner', 'source', 'intake_type', 'utm_source', 'overdue', 'from', 'to', 'archived' ) as $key ) {
 			if ( ! isset( $_GET[$key] ) || ! is_scalar( $_GET[$key] ) || ( 'owner' === $key && '' === (string) $_GET[$key] ) ) { continue; }
 			$raw_value = (string) wp_unslash( $_GET[$key] );
-			$value = in_array( $key, array( 's', 'from', 'to' ), true ) ? sanitize_text_field( $raw_value ) : ( in_array( $key, array( 'stage', 'priority', 'source', 'archived' ), true ) ? sanitize_key( $raw_value ) : absint( $raw_value ) );
+			$value = in_array( $key, array( 's', 'from', 'to', 'utm_source' ), true ) ? sanitize_text_field( $raw_value ) : ( in_array( $key, array( 'stage', 'priority', 'source', 'intake_type', 'archived' ), true ) ? sanitize_key( $raw_value ) : absint( $raw_value ) );
 			echo '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '">';
 		}
 		echo '<label>' . esc_html__( 'الحملة', 'auto-dealership-core' ) . ' <input name="campaign" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['campaign'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'المنصة', 'auto-dealership-core' ) . ' <input name="platform" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['platform'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'منشئ الفرصة', 'auto-dealership-core' ) . ' <input type="number" min="1" name="created_by" value="' . absint( $_GET['created_by'] ?? 0 ) . '"></label> <label>' . esc_html__( 'من تاريخ', 'auto-dealership-core' ) . ' <input type="date" name="from" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['from'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'إلى تاريخ', 'auto-dealership-core' ) . ' <input type="date" name="to" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['to'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'السجلات المؤرشفة', 'auto-dealership-core' ) . ' <select name="archived"><option value="">' . esc_html__( 'النشطة فقط', 'auto-dealership-core' ) . '</option><option value="1" ' . selected( sanitize_key( $_GET['archived'] ?? '' ), '1', false ) . '>' . esc_html__( 'المؤرشفة فقط', 'auto-dealership-core' ) . '</option><option value="all" ' . selected( sanitize_key( $_GET['archived'] ?? '' ), 'all', false ) . '>' . esc_html__( 'الكل', 'auto-dealership-core' ) . '</option></select></label> <button class="button">' . esc_html__( 'تصفية التسويق', 'auto-dealership-core' ) . '</button></form>';
@@ -465,6 +470,7 @@ final class OperationsPages {
 		$lead = LeadService::find_for_current_user( $lead_id );
 		if ( is_wp_error( $lead ) ) { echo '<p role="alert">' . esc_html( $lead->get_error_message() ) . '</p>'; return; }
 		echo '<section class="card adc-crm-lead-summary"><h2>' . esc_html__( 'ملخص الفرصة', 'auto-dealership-core' ) . '</h2><dl><dt>' . esc_html__( 'العميل', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['full_name'] ) . '</dd><dt>' . esc_html__( 'الجوال', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['mobile'] ) . '</dd><dt>' . esc_html__( 'البريد', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['email'] ?: '—' ) . '</dd><dt>' . esc_html__( 'الحملة', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['campaign'] ?: '—' ) . '</dd><dt>' . esc_html__( 'المنصة', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['platform'] ?: '—' ) . '</dd><dt>' . esc_html__( 'المرحلة', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( \AutoDealership\Core\Localization::label( (string) $lead['stage'] ) ) . '</dd><dt>' . esc_html__( 'المتابعة التالية', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['next_action_at'] ?: '—' ) . '</dd></dl></section>';
+		echo '<section class="card adc-crm-attribution"><h2>' . esc_html__( 'مصدر الطلب', 'auto-dealership-core' ) . '</h2><dl><dt>' . esc_html__( 'نوع الطلب', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['intake_type'] ?: '—' ) . '</dd><dt>' . esc_html__( 'مصدر UTM', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['utm_source'] ?: '—' ) . '</dd><dt>' . esc_html__( 'وسيط UTM', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['utm_medium'] ?: '—' ) . '</dd><dt>' . esc_html__( 'محتوى UTM', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['utm_content'] ?: '—' ) . '</dd><dt>' . esc_html__( 'المعرّف الخارجي', 'auto-dealership-core' ) . '</dt><dd>' . esc_html( $lead['external_id'] ?: '—' ) . '</dd></dl></section>';
 		$read_only_new = 0 === (int) $lead['owner_user_id'] && ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_marketing_leads' );
 		if ( $read_only_new ) {
 			echo '<p class="description">' . esc_html__( 'هذه فرصة جديدة غير مسندة؛ تتاح إجراءات المتابعة بعد إسنادها إليك.', 'auto-dealership-core' ) . '</p>';
@@ -737,10 +743,10 @@ final class OperationsPages {
 
 	private static function crm_export_filters( array $post ): array {
 		$filters = array();
-		foreach ( array( 's' => 'search', 'campaign' => 'campaign', 'platform' => 'platform' ) as $input_key => $filter_key ) {
+		foreach ( array( 's' => 'search', 'utm_source' => 'utm_source', 'campaign' => 'campaign', 'platform' => 'platform' ) as $input_key => $filter_key ) {
 			if ( isset( $post[$input_key] ) && is_scalar( $post[$input_key] ) ) { $filters[$filter_key] = sanitize_text_field( (string) $post[$input_key] ); }
 		}
-		foreach ( array( 'stage', 'priority', 'source' ) as $key ) {
+		foreach ( array( 'stage', 'priority', 'source', 'intake_type' ) as $key ) {
 			if ( isset( $post[$key] ) && is_scalar( $post[$key] ) ) { $filters[$key] = sanitize_key( (string) $post[$key] ); }
 		}
 		foreach ( array( 'branch_id', 'created_by' ) as $key ) {
@@ -764,7 +770,7 @@ final class OperationsPages {
 			$scope = 'assigned_branches';
 			$branch_ids = array_values( array_filter( BranchScope::assigned_branches(), array( BranchScope::class, 'is_active' ) ) );
 		}
-		$safe_filter_keys = array( 'stage', 'priority', 'branch_id', 'source', 'created_by', 'owner', 'overdue' );
+		$safe_filter_keys = array( 'stage', 'priority', 'branch_id', 'source', 'intake_type', 'utm_source', 'created_by', 'owner', 'overdue' );
 		return array(
 			'purpose' => $purpose,
 			'reason_code' => $reason,

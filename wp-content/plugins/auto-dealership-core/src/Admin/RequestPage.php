@@ -18,6 +18,8 @@ final class RequestPage {
 		$labels = RequestWorkflow::allowed_statuses( $request['type'], $request['status'] );
 		$return_page = in_array( $return_page, array( 'adc-crm', 'car-dealer-messages', 'car-dealer-bookings' ), true ) ? $return_page : 'adc-crm';
 		echo '<section class="card"><h3>' . esc_html__( 'متابعة طلب العميل', 'auto-dealership-core' ) . ' #' . absint( $request['request_id'] ) . '</h3>';
+		$crm_url = add_query_arg( array( 'page'=>'adc-crm', 'lead_id'=>$lead_id ), admin_url( 'admin.php' ) );
+		echo '<p><a class="button" href="' . esc_url( $crm_url ) . '">' . esc_html__( 'فتح الفرصة في CRM', 'auto-dealership-core' ) . '</a></p>';
 		if ( ! $request['can_edit'] ) {
 			echo '<p>' . esc_html__( $labels[$request['status']] ?? $request['status'], 'auto-dealership-core' ) . '</p><p>' . nl2br( esc_html( $request['customer_reply'] ) ) . '</p>';
 			if ( 'booking' === $request['type'] ) { echo '<p>' . esc_html( $request['requested_date'] . ' ' . $request['requested_time'] . ' (' . wp_timezone_string() . ')' ) . '</p>'; }

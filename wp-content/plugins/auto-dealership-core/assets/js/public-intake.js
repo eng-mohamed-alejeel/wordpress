@@ -59,6 +59,17 @@
         node.appendChild(link);
     }
 
+    function appendAttribution(data) {
+        const params = new URLSearchParams(window.location.search || '');
+        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'external_id'].forEach(key => {
+            if (!data.get(key) && params.get(key)) data.append(key, params.get(key).slice(0, key === 'utm_source' || key === 'utm_medium' ? 120 : 190));
+        });
+        if (!data.get('campaign') && data.get('utm_campaign')) data.append('campaign', data.get('utm_campaign'));
+        if (!data.get('platform') && data.get('utm_source')) data.append('platform', data.get('utm_source').slice(0, 80));
+        if (!data.get('landing_page')) data.append('landing_page', window.location.href.slice(0, 500));
+        if (!data.get('referrer_url') && document.referrer) data.append('referrer_url', document.referrer.slice(0, 500));
+    }
+
     document.addEventListener('submit', function (event) {
         const form = event.target;
         if (!(form instanceof HTMLFormElement) || !form.matches(selector)) return;
@@ -68,6 +79,7 @@
 
         requestKey(form);
         const data = new FormData(form);
+        appendAttribution(data);
         data.append('action', form.dataset.action || '');
         data.append('nonce', config.nonce || '');
         form.dataset.adcSubmitting = '1';

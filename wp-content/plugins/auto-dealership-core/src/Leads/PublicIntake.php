@@ -55,7 +55,7 @@ final class PublicIntake {
 	public static function submit( array $input, string $compatibility_type = '' ) {
 		global $wpdb;
 		if ( ! Schema::is_ready() ) { return self::error( 'adc_schema_unavailable', 503 ); }
-		foreach ( array( 'website'=>200, 'message'=>4000, 'request_kind'=>32, 'date'=>10, 'time'=>5, 'idempotency_key'=>36 ) as $key => $limit ) {
+		foreach ( array( 'website'=>200, 'message'=>4000, 'request_kind'=>32, 'date'=>10, 'time'=>5, 'idempotency_key'=>36, 'external_id'=>190, 'utm_source'=>120, 'utm_medium'=>120, 'utm_campaign'=>190, 'utm_content'=>190, 'campaign'=>190, 'platform'=>80, 'landing_page'=>500, 'referrer_url'=>500 ) as $key => $limit ) {
 			if ( isset( $input[$key] ) && ( ! is_string( $input[$key] ) || mb_strlen( $input[$key] ) > $limit ) ) { return self::error( 'adc_invalid_lead', 400 ); }
 		}
 		if ( ! empty( $input['website'] ) || ! in_array( $compatibility_type, array( '', 'message','booking' ), true ) ) { return self::error( 'adc_invalid_lead', 400 ); }
@@ -99,7 +99,7 @@ final class PublicIntake {
 		if ( '' !== $message ) { $context .= "\n" . $message; }
 		$rate = PublicRequestGuard::consume( 'intake' );
 		if ( is_wp_error( $rate ) ) { return $rate; }
-		return LeadService::create_public( array_merge( $identity, array( 'branch_id'=>$branch, 'idempotency_key'=>$key, 'request_kind'=>$kind, 'car_id'=>$post_id, 'date'=>$date, 'time'=>$time, 'message'=>$message ) ), null, $context, $compatibility_type );
+		return LeadService::create_public( array_merge( $input, $identity, array( 'branch_id'=>$branch, 'idempotency_key'=>$key, 'request_kind'=>$kind, 'car_id'=>$post_id, 'date'=>$date, 'time'=>$time, 'message'=>$message ) ), null, $context, $compatibility_type );
 	}
 
 	/** Theme adapter retains nonce, logged-in identity and existing response shape. */

@@ -10,6 +10,7 @@ defined( 'ABSPATH' ) || exit;
 
 final class LeadService {
 	private const SOURCES = array( 'website', 'whatsapp', 'phone', 'walk_in', 'instagram', 'tiktok', 'snapchat', 'google', 'referral', 'campaign', 'other' );
+	private const INTAKE_TYPES = array( 'contact', 'finance', 'finance_request', 'price_request', 'offer_request', 'test_drive', 'purchase', 'message', 'booking', 'marketing' );
 	private const STAGE_TRANSITIONS = array(
 		'new' => array( 'lost' ),
 		'assigned' => array( 'contacted', 'lost' ),
@@ -77,6 +78,7 @@ final class LeadService {
 			$campaign['ad_url'] ? 'Ad URL: ' . $campaign['ad_url'] : '',
 			sanitize_textarea_field( (string) ( $campaign['notes'] ?? '' ) ),
 		) ) ) );
+		$input['request_kind'] = 'marketing';
 		return self::create_public( $input, null, $notes, '', $campaign );
 	}
 
@@ -305,9 +307,18 @@ final class LeadService {
 		$name = $identity['name']; $mobile = $identity['mobile']; $email = $identity['email'];
 		$branch_id = \AutoDealership\Pricing\Money::parse( $input['branch_id'] ?? 0 );
 		$source = 'website';
-		$campaign = '';
-		$platform = '';
+		$campaign = sanitize_text_field( (string) ( $input['campaign'] ?? $input['utm_campaign'] ?? '' ) );
+		$platform = sanitize_text_field( (string) ( $input['platform'] ?? $input['utm_source'] ?? '' ) );
 		$ad_url = '';
+		$intake_type = sanitize_key( (string) ( $input['request_kind'] ?? ( $compatibility_type ?: 'contact' ) ) );
+		$intake_type = '' !== $intake_type ? substr( $intake_type, 0, 32 ) : 'contact';
+		$requested_car_id = absint( $input['car_id'] ?? 0 );
+		$external_id = sanitize_text_field( (string) ( $input['external_id'] ?? '' ) );
+		$utm_source = sanitize_text_field( (string) ( $input['utm_source'] ?? '' ) );
+		$utm_medium = sanitize_text_field( (string) ( $input['utm_medium'] ?? '' ) );
+		$utm_content = sanitize_text_field( (string) ( $input['utm_content'] ?? '' ) );
+		$landing_page = esc_url_raw( (string) ( $input['landing_page'] ?? '' ) );
+		$referrer_url = esc_url_raw( (string) ( $input['referrer_url'] ?? '' ) );
 		$created_by = 0;
 		$referred_at = null;
 		$marketing_staff_id = 0;
@@ -339,7 +350,9 @@ final class LeadService {
 		$raw_key = $input['idempotency_key'] ?? '';
 		if ( ! is_string( $raw_key ) || ( '' !== $raw_key && ! preg_match( '/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/i', $raw_key ) ) ) { return new \WP_Error( 'adc_invalid_intake_key', '', array( 'status'=>400 ) ); }
 		$request_key = '' === $raw_key ? null : hash_hmac( 'sha256', get_current_user_id() . '|' . strtolower( $raw_key ), wp_salt( 'auth' ) );
-		$payload_hash = $request_key ? hash_hmac( 'sha256', wp_json_encode( array( $identity, $branch_id, $legacy_ref, $initial_activity_notes, $compatibility_type, $input['request_kind'] ?? '', $input['car_id'] ?? 0, $input['date'] ?? '', $input['time'] ?? '', $marketing ) ), wp_salt( 'auth' ) ) : null;
+		// A contact alone is not enough to merge two genuine enquiries. Explicit external IDs opt into safe cross-request deduplication; the idempotency key still protects exact retries.
+		$dedupe_enabled = ! $marketing && '' !== $external_id;
+		$payload_hash = $request_key ? hash_hmac( 'sha256', wp_json_encode( array( $identity, $branch_id, $legacy_ref, $initial_activity_notes, $compatibility_type, $input['request_kind'] ?? '', $requested_car_id, $input['date'] ?? '', $input['time'] ?? '', $external_id, $utm_source, $utm_medium, $utm_content, $landing_page, $referrer_url, $marketing ) ), wp_salt( 'auth' ) ) : null;
 		if ( $request_key ) {
 			$replay = self::intake_replay( $request_key, $payload_hash, $compatibility_type );
 			if ( null !== $replay ) { return $replay; }
@@ -363,10 +376,30 @@ final class LeadService {
 		if ( $compatibility_type && get_current_user_id() ) {
 			$customer_id = CustomerIdentity::account_customer( $identity );
 			if ( is_wp_error( $customer_id ) ) { $wpdb->query( 'ROLLBACK' ); return $customer_id; }
+		} elseif ( $dedupe_enabled ) {
+			$customer_id = self::reusable_public_customer( $mobile, $email, (int) $branch_id, $intake_type, $requested_car_id, $external_id, $compatibility_type );
+			if ( $customer_id < 0 ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_lead_failed', 'Unable to check the existing customer safely.', array( 'status'=>503 ) ); }
+			if ( ! $customer_id ) {
+				$ok = $wpdb->insert( Schema::table( 'customers' ), array( 'full_name'=>$name, 'mobile'=>$mobile, 'email'=>$email, 'city'=>$identity['city'], 'consent_marketing'=>$identity['consent_marketing'] ? 1 : 0, 'consent_at'=>$identity['consent_marketing'] ? $now : null, 'created_at'=>$now, 'updated_at'=>$now ) );
+				if ( false === $ok ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_lead_failed', __( 'تعذر حفظ الطلب. حاول لاحقًا.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
+				$customer_id = (int) $wpdb->insert_id;
+			}
 		} else {
 			$ok = $wpdb->insert( Schema::table( 'customers' ), array( 'full_name'=>$name, 'mobile'=>$mobile, 'email'=>$email, 'city'=>$identity['city'], 'consent_marketing'=>$identity['consent_marketing'] ? 1 : 0, 'consent_at'=>$identity['consent_marketing'] ? $now : null, 'created_at'=>$now, 'updated_at'=>$now ) );
 			if ( false === $ok ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_lead_failed', __( 'تعذر حفظ الطلب. حاول لاحقًا.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
 			$customer_id = (int) $wpdb->insert_id;
+		}
+		$duplicate = $dedupe_enabled ? self::find_open_duplicate( $customer_id, $intake_type, $requested_car_id, (int) $branch_id, $external_id, $compatibility_type ) : null;
+		if ( is_wp_error( $duplicate ) ) { $wpdb->query( 'ROLLBACK' ); return $duplicate; }
+		if ( $duplicate ) {
+			$note = trim( 'Repeated public enquiry was attached to this open opportunity.' . ( $initial_activity_notes ? "\n" . $initial_activity_notes : '' ) );
+			$activity = $wpdb->insert( Schema::table( 'activities' ), array( 'lead_id'=>(int) $duplicate['id'], 'actor_user_id'=>0, 'type'=>'note', 'notes'=>sanitize_textarea_field( $note ), 'created_at'=>$now ), array( '%d','%d','%s','%s','%s' ) );
+			$updated = false !== $wpdb->update( Schema::table( 'leads' ), array( 'updated_at'=>$now ), array( 'id'=>(int) $duplicate['id'] ), array( '%s' ), array( '%d' ) );
+			$audited = $activity && $updated && Transaction::commit( static fn() => AuditLog::record( 'lead.duplicate_intake', 'lead', (int) $duplicate['id'], 'Repeated public enquiry attached to an open opportunity', null, array( 'intake_type'=>$intake_type, 'requested_car_id'=>$requested_car_id ) ) );
+			if ( ! $audited ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_lead_failed', 'Unable to record the repeated enquiry safely.', array( 'status'=>500 ) ); }
+			$result = array( 'id'=>(int) $duplicate['id'], 'status'=>'duplicate', 'duplicate'=>true, 'reused'=>true );
+			if ( $compatibility_type && $compatibility_type === (string) $duplicate['legacy_request_type'] ) { $result['legacy_request_id'] = (int) $duplicate['legacy_request_id']; }
+			return $result;
 		}
 		if ( $compatibility_table ) {
 			$row = array( 'user_id'=>get_current_user_id(), 'car_id'=>(int) ( $input['car_id'] ?? 0 ), 'name'=>$name, 'email'=>$email, 'phone'=>$mobile, 'status'=>'booking' === $compatibility_type ? 'pending' : 'new', 'customer_reply'=>'', 'created_at'=>current_time( 'mysql' ) );
@@ -381,8 +414,8 @@ final class LeadService {
 		}
 		$legacy_type = isset( $legacy_ref['type'] ) && in_array( $legacy_ref['type'], array( 'message', 'booking' ), true ) ? $legacy_ref['type'] : null;
 		$legacy_id = $legacy_type && ! empty( $legacy_ref['id'] ) ? absint( $legacy_ref['id'] ) : null;
-		$lead_data = array( 'customer_id'=>$customer_id, 'branch_id'=>$branch_id, 'owner_user_id'=>$assignment['owner_user_id'], 'source'=>$source, 'stage'=>$assignment['stage'], 'lost_reason'=>'', 'legacy_request_type'=>$legacy_type, 'legacy_request_id'=>$legacy_id, 'claimed_at'=>$assignment['claimed_at'], 'created_at'=>$now, 'updated_at'=>$now, 'public_request_key'=>$request_key, 'public_payload_hash'=>$payload_hash );
-		$lead_formats = array( '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s' );
+		$lead_data = array( 'customer_id'=>$customer_id, 'branch_id'=>$branch_id, 'owner_user_id'=>$assignment['owner_user_id'], 'source'=>$source, 'intake_type'=>$intake_type, 'requested_car_id'=>$requested_car_id, 'external_id'=>$external_id, 'utm_source'=>$utm_source, 'utm_medium'=>$utm_medium, 'utm_content'=>$utm_content, 'landing_page'=>$landing_page, 'referrer_url'=>$referrer_url, 'stage'=>$assignment['stage'], 'lost_reason'=>'', 'legacy_request_type'=>$legacy_type, 'legacy_request_id'=>$legacy_id, 'claimed_at'=>$assignment['claimed_at'], 'created_at'=>$now, 'updated_at'=>$now, 'public_request_key'=>$request_key, 'public_payload_hash'=>$payload_hash );
+		$lead_formats = array( '%d', '%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s' );
 		if ( $marketing ) {
 			$lead_data = array_merge( $lead_data, array( 'campaign'=>$campaign, 'platform'=>$platform, 'ad_url'=>$ad_url, 'consent_marketing'=>1, 'created_by'=>$created_by, 'referred_at'=>$referred_at ) );
 			$lead_formats = array_merge( $lead_formats, array( '%s', '%s', '%s', '%d', '%d', '%s' ) );
@@ -430,6 +463,44 @@ final class LeadService {
 		$result = array( 'id' => $lead_id, 'status' => 'new' );
 		if ( $compatibility_type ) { $result['legacy_request_id'] = $legacy_id; }
 		return $result;
+	}
+
+	private static function reusable_public_customer( string $mobile, string $email, int $branch_id, string $intake_type, int $requested_car_id, string $external_id, string $compatibility_type ): int {
+		global $wpdb;
+		$customer_table = Schema::table( 'customers' );
+		$lead_table = Schema::table( 'leads' );
+		$match = '(c.mobile=%s';
+		$args = array( $mobile );
+		if ( '' !== $email ) { $match .= ' OR c.email=%s'; $args[] = $email; }
+		$match .= ')';
+		$conditions = array( $match, '(c.account_user_id=0 OR c.account_user_id IS NULL)', 'c.merged_into_id IS NULL', 'l.branch_id=%d', 'l.intake_type=%s', 'l.external_id=%s', $compatibility_type ? 'l.legacy_request_type=%s' : 'l.legacy_request_type IS NULL', 'l.stage NOT IN ("won","lost")', 'l.archived_at IS NULL' );
+		$args[] = $branch_id;
+		$args[] = $intake_type;
+		$args[] = $external_id;
+		if ( $compatibility_type ) { $args[] = $compatibility_type; }
+		if ( $requested_car_id ) { $conditions[] = 'l.requested_car_id=%d'; $args[] = $requested_car_id; }
+		else { $conditions[] = 'l.requested_car_id=0'; $conditions[] = 'l.created_at>=%s'; $args[] = gmdate( 'Y-m-d H:i:s', time() - 30 * DAY_IN_SECONDS ); }
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT c.id FROM ' . $customer_table . ' c INNER JOIN ' . $lead_table . ' l ON l.customer_id=c.id WHERE ' . implode( ' AND ', $conditions ) . ' ORDER BY l.id DESC LIMIT 1 FOR UPDATE', $args ), ARRAY_A );
+		if ( $wpdb->last_error ) { return -1; }
+		return $row ? (int) $row['id'] : 0;
+	}
+
+	private static function find_open_duplicate( int $customer_id, string $intake_type, int $requested_car_id, int $branch_id, string $external_id, string $compatibility_type ) {
+		global $wpdb;
+		$conditions = array( 'customer_id=%d', 'branch_id=%d', 'intake_type=%s', 'external_id=%s', $compatibility_type ? 'legacy_request_type=%s' : 'legacy_request_type IS NULL', 'stage NOT IN ("won","lost")', 'archived_at IS NULL' );
+		$args = array( $customer_id, $branch_id, $intake_type, $external_id );
+		if ( $compatibility_type ) { $args[] = $compatibility_type; }
+		if ( $requested_car_id ) {
+			$conditions[] = 'requested_car_id=%d';
+			$args[] = $requested_car_id;
+		} else {
+			$conditions[] = 'requested_car_id=0';
+			$conditions[] = 'created_at>=%s';
+			$args[] = gmdate( 'Y-m-d H:i:s', time() - 30 * DAY_IN_SECONDS );
+		}
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT id,legacy_request_type,legacy_request_id FROM ' . Schema::table( 'leads' ) . ' WHERE ' . implode( ' AND ', $conditions ) . ' ORDER BY id DESC LIMIT 1 FOR UPDATE', $args ), ARRAY_A );
+		if ( $wpdb->last_error ) { return new \WP_Error( 'adc_lead_failed', 'Unable to check duplicate opportunities safely.', array( 'status'=>503 ) ); }
+		return $row ?: null;
 	}
 
 	private static function intake_replay( string $key, string $hash, string $compatibility_type ) {
@@ -519,6 +590,10 @@ final class LeadService {
 		}
 		$source = sanitize_key( (string) ( $filters['source'] ?? '' ) );
 		if ( '' !== $source && in_array( $source, self::SOURCES, true ) ) { $where .= ' AND l.source=%s'; $args[] = $source; }
+		$intake_type = sanitize_key( (string) ( $filters['intake_type'] ?? '' ) );
+		if ( '' !== $intake_type && in_array( $intake_type, self::INTAKE_TYPES, true ) ) { $where .= ' AND l.intake_type=%s'; $args[] = $intake_type; }
+		$utm_source = sanitize_text_field( (string) ( $filters['utm_source'] ?? '' ) );
+		if ( '' !== $utm_source ) { $where .= ' AND l.utm_source LIKE %s'; $args[] = '%' . $wpdb->esc_like( $utm_source ) . '%'; }
 		$campaign = trim( (string) ( $filters['campaign'] ?? '' ) ); if ( '' !== $campaign ) { $where .= ' AND l.campaign LIKE %s'; $args[] = '%' . $wpdb->esc_like( $campaign ) . '%'; }
 		$platform_raw = (string) ( $filters['platform'] ?? '' );
 		$platform = function_exists( 'sanitize_text_field' ) ? \sanitize_text_field( $platform_raw ) : preg_replace( '/[^\p{L}\p{N} _.-]/u', '', $platform_raw );
@@ -538,7 +613,7 @@ final class LeadService {
 		}
 		$args[] = $per_page;
 		$args[] = ( $page - 1 ) * $per_page;
-		$sql = 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.campaign END campaign,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.platform END platform,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN 0 ELSE l.created_by END created_by,l.referred_at,l.stage,l.next_action_at,l.claimed_at,l.first_contact_at,l.priority,l.created_at,c.full_name,c.mobile,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.email END email,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.city END city FROM ' . $lead_table . ' l INNER JOIN ' . $customer_table . ' c ON c.id=l.customer_id' . $where . ' ORDER BY FIELD(l.priority,"urgent","high","normal","low"),l.created_at ASC LIMIT %d OFFSET %d';
+		$sql = 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.intake_type END intake_type,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.campaign END campaign,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.platform END platform,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN 0 ELSE l.created_by END created_by,l.referred_at,l.stage,l.next_action_at,l.claimed_at,l.first_contact_at,l.priority,l.created_at,c.full_name,c.mobile,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.email END email,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.city END city FROM ' . $lead_table . ' l INNER JOIN ' . $customer_table . ' c ON c.id=l.customer_id' . $where . ' ORDER BY FIELD(l.priority,"urgent","high","normal","low"),l.created_at ASC LIMIT %d OFFSET %d';
 		return $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
 	}
 
@@ -560,6 +635,10 @@ final class LeadService {
 		}
 		$source = sanitize_key( (string) ( $filters['source'] ?? '' ) );
 		if ( '' !== $source && in_array( $source, self::SOURCES, true ) ) { $where .= ' AND l.source=%s'; $args[] = $source; }
+		$intake_type = sanitize_key( (string) ( $filters['intake_type'] ?? '' ) );
+		if ( '' !== $intake_type && in_array( $intake_type, self::INTAKE_TYPES, true ) ) { $where .= ' AND l.intake_type=%s'; $args[] = $intake_type; }
+		$utm_source = sanitize_text_field( (string) ( $filters['utm_source'] ?? '' ) );
+		if ( '' !== $utm_source ) { $where .= ' AND l.utm_source LIKE %s'; $args[] = '%' . $wpdb->esc_like( $utm_source ) . '%'; }
 		$campaign = trim( (string) ( $filters['campaign'] ?? '' ) ); if ( '' !== $campaign ) { $where .= ' AND l.campaign LIKE %s'; $args[] = '%' . $wpdb->esc_like( $campaign ) . '%'; }
 		$platform = sanitize_text_field( (string) ( $filters['platform'] ?? '' ) ); if ( '' !== $platform ) { $where .= ' AND l.platform=%s'; $args[] = $platform; }
 		if ( ! empty( $filters['created_by'] ) ) { $where .= ' AND l.created_by=%d'; $args[] = absint( $filters['created_by'] ); }
@@ -629,8 +708,7 @@ final class LeadService {
 		self::append_marketing_visibility_scope( $scope, $args );
 		if ( ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) { $scope .= " AND (l.owner_user_id=%d OR (l.owner_user_id=0 AND l.stage='new'))"; $args[] = get_current_user_id(); }
 		$args[] = $lead_id;
-				$args[] = $lead_id;
-				$row = $wpdb->get_row( $wpdb->prepare( 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.campaign END campaign,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.platform END platform,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN 0 ELSE l.created_by END created_by,l.referred_at,l.stage,l.next_action_at,l.claimed_at,l.first_contact_at,l.priority,l.created_at,l.updated_at,c.full_name,c.mobile,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.email END email,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.city END city FROM ' . Schema::table( 'leads' ) . ' l INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=l.customer_id WHERE ' . $scope . ' AND l.id=%d', $args ), ARRAY_A );
+				$row = $wpdb->get_row( $wpdb->prepare( 'SELECT l.id,l.customer_id,l.branch_id,l.owner_user_id,l.source,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.intake_type END intake_type,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.external_id END external_id,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.utm_source END utm_source,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.utm_medium END utm_medium,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.utm_content END utm_content,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.landing_page END landing_page,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.referrer_url END referrer_url,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.campaign END campaign,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE l.platform END platform,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN 0 ELSE l.created_by END created_by,l.referred_at,l.stage,l.next_action_at,l.claimed_at,l.first_contact_at,l.priority,l.created_at,l.updated_at,c.full_name,c.mobile,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.email END email,CASE WHEN l.owner_user_id=0 AND l.stage="new" THEN "" ELSE c.city END city FROM ' . Schema::table( 'leads' ) . ' l INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=l.customer_id WHERE ' . $scope . ' AND l.id=%d', $args ), ARRAY_A );
 		return $row ?: new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status'=>404 ) );
 	}
 

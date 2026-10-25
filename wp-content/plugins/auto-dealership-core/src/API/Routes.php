@@ -198,6 +198,11 @@ final class Routes {
 				'message'=>array( 'type'=>'string', 'maxLength'=>4000 ), 'request_kind'=>array( 'type'=>'string' ),
 				'car_id'=>array( 'type'=>'integer', 'minimum'=>0 ), 'date'=>array( 'type'=>'string' ), 'time'=>array( 'type'=>'string' ),
 				'website'=>array( 'type'=>'string' ), 'idempotency_key'=>array( 'type'=>'string', 'maxLength'=>36 ),
+				'external_id'=>array( 'type'=>'string', 'maxLength'=>190 ), 'utm_source'=>array( 'type'=>'string', 'maxLength'=>120 ),
+				'utm_medium'=>array( 'type'=>'string', 'maxLength'=>120 ), 'utm_campaign'=>array( 'type'=>'string', 'maxLength'=>190 ),
+				'utm_content'=>array( 'type'=>'string', 'maxLength'=>190 ), 'campaign'=>array( 'type'=>'string', 'maxLength'=>190 ),
+				'platform'=>array( 'type'=>'string', 'maxLength'=>80 ), 'landing_page'=>array( 'type'=>'string', 'maxLength'=>500 ),
+				'referrer_url'=>array( 'type'=>'string', 'maxLength'=>500 ),
 			) ),
 			array( 'methods' => 'GET', 'callback' => array( self::class, 'list_leads' ), 'permission_callback' => static fn() => current_user_can( 'adc_view_own_leads' ) || current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'adc_view_marketing_leads' ) || current_user_can( 'manage_options' ), 'args' => array( 'page' => array( 'type' => 'integer', 'minimum' => 1 ), 'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 100 ) ) ),
 		) );

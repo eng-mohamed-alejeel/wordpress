@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.36.0';
+	public const VERSION = '1.38.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -317,6 +317,14 @@ final class Schema {
 				campaign varchar(190) NOT NULL DEFAULT '',
 				platform varchar(80) NOT NULL DEFAULT '',
 				ad_url varchar(500) NOT NULL DEFAULT '',
+				intake_type varchar(32) NOT NULL DEFAULT 'contact',
+				requested_car_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				external_id varchar(190) NOT NULL DEFAULT '',
+				utm_source varchar(120) NOT NULL DEFAULT '',
+				utm_medium varchar(120) NOT NULL DEFAULT '',
+				utm_content varchar(190) NOT NULL DEFAULT '',
+				landing_page varchar(500) NOT NULL DEFAULT '',
+				referrer_url varchar(500) NOT NULL DEFAULT '',
 				consent_marketing tinyint(1) NOT NULL DEFAULT 0,
 				created_by bigint(20) unsigned NOT NULL DEFAULT 0,
 				referred_at datetime NULL,
@@ -347,6 +355,8 @@ final class Schema {
 				KEY first_contact (first_contact_at),
 				KEY archive_state (stage,archived_at,closed_at),
 				KEY campaign (campaign),
+				KEY duplicate_intake (customer_id,intake_type,requested_car_id,stage),
+				KEY external_lookup (source,external_id),
 				KEY created_by (created_by),
 				KEY source (source)
 			) $collate ENGINE=InnoDB",

@@ -23,6 +23,12 @@
 - Fixed the marketing-lead intake inline script escaping so CRM pages load without a browser syntax error; tightened Kanban overflow containment and kept the dealership workspace ahead of system-admin tools for administrators.
 - Fixed CRM lead-detail modal flicker by ignoring the iframe's initial blank-document load before counting post-submit navigations.
 - Added server-side critical modal styles so the WordPress dashboard shell is hidden before the lead-detail iframe paints, preventing the initial dashboard flash.
+- Fixed scoped CRM lead-detail lookup and added a direct "Open in CRM" link to linked message and booking request panels.
+- Added compatible public-intake attribution storage (request type, external ID, UTM source/medium/content, landing page and referrer) with automatic capture from website-form URLs; campaign/platform reporting now includes attributed website enquiries (schema 1.37.0).
+- Added CRM filtering by public request type and UTM source; the filters persist through pagination and authorized CRM exports.
+- Added safe public-intake duplicate handling (schema 1.38.0): explicit external IDs can reuse an open generic website opportunity for the same customer, request type, branch and vehicle, append an audited activity, and never merge closed or legacy-linked requests.
+- Added duplicate-intake analysis to the detailed CRM reports: dashboard KPI, breakdown by request type and source, and a dedicated UTF-8 CSV export.
+- Added conversion analysis by public request type with win rate, sales value, average close time and a dedicated CSV export.
 
 ## 2026-10-25 — Close-out of won and lost leads
 

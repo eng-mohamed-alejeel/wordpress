@@ -211,8 +211,11 @@ adc_check( $crm_account === (int) $wpdb->get_var( "SELECT account_user_id FROM $
 $crm_second = $crm_submit( array_replace( $crm_account_input, array( 'idempotency_key'=>wp_generate_uuid4(), 'consent_marketing'=>false ) ) );
 adc_check( is_array( $crm_second ) && $crm_linked_id === $crm_customer_id( $crm_second ) && '1' === $wpdb->get_var( "SELECT consent_marketing FROM $customers WHERE id=$crm_linked_id" ), 'Further authenticated enquiries reuse the customer without silently withdrawing consent.' );
 adc_check( $error_is( $crm_submit( array_replace( $crm_account_input, array( 'name'=>'Forged account', 'idempotency_key'=>wp_generate_uuid4() ) ) ), 'adc_identity_changed' ), 'Account linking rejects identity that differs from the locked WordPress account.' );
-$crm_generic = $crm_submit( array_replace( $crm_account_input, array( 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+$crm_generic = $crm_submit( array_replace( $crm_account_input, array( 'idempotency_key'=>wp_generate_uuid4(), 'external_id'=>'crm-repeatable-contact' ) ), '' );
 adc_check( is_array( $crm_generic ) && $crm_customer_id( $crm_generic ) !== $crm_linked_id && null === $wpdb->get_var( $wpdb->prepare( "SELECT account_user_id FROM $customers WHERE id=%d", $crm_customer_id( $crm_generic ) ) ), 'Generic REST-style intake never claims an account even with matching contact data.' );
+$crm_generic_before_duplicate = $crm_counts();
+$crm_generic_duplicate = $crm_submit( array_replace( $crm_account_input, array( 'idempotency_key'=>wp_generate_uuid4(), 'external_id'=>'crm-repeatable-contact' ) ), '' );
+adc_check( is_array( $crm_generic_duplicate ) && ! empty( $crm_generic_duplicate['duplicate'] ) && (int) $crm_generic_duplicate['id'] === (int) $crm_generic['id'] && array( 0,0,0,0,1,1 ) === array_map( static fn( $a, $b ) => $a - $b, $crm_counts(), $crm_generic_before_duplicate ), 'A repeated generic enquiry with an external ID reuses the open opportunity and records one follow-up activity.' );
 
 wp_set_current_user( $admin );
 $crm_admin_user = new WP_User( $admin );
