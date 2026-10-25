@@ -168,7 +168,6 @@ require_once ADC_PATH . 'src/Pricing/PricingPolicy.php';
 require_once ADC_PATH . 'src/Pricing/QuoteHistory.php';
 require_once ADC_PATH . 'src/Pricing/QuoteDocument.php';
 require_once ADC_PATH . 'src/Pricing/DocumentArchive.php';
-require_once ADC_PATH . 'src/Pricing/ArchivedQuotationTemplate.php';
 require_once ADC_PATH . 'src/Pricing/ArchivedQuotationTemplateV2.php';
 require_once ADC_PATH . 'src/Tools/FinanceConfiguration.php';
 require_once ADC_PATH . 'src/Tools/LoanCalculator.php';

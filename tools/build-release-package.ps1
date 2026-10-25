@@ -13,6 +13,7 @@ $runtimePaths = @(
     'wp-content/plugins/auto-dealership-core/readme.txt',
     'wp-content/plugins/auto-dealership-core/languages',
     'wp-content/plugins/auto-dealership-core/src',
+    'wp-content/plugins/auto-dealership-core/bin/run-jobs.php',
     'wp-content/plugins/auto-dealership-core/resources',
     'wp-content/themes/car-dealer/assets',
     'wp-content/themes/car-dealer/inc',
@@ -52,6 +53,8 @@ $trackedFiles = @(& git -C $repo ls-tree -r --name-only HEAD -- $runtimePaths)
 if ($ReviewWorkingTree) {
     $allFiles = @(& git -C $repo ls-files --cached --others --exclude-standard -- $paths)
     $trackedFiles = @(& git -C $repo ls-files --cached --others --exclude-standard -- $runtimePaths)
+    $allFiles = @($allFiles | Where-Object { Test-Path -LiteralPath (Join-Path $repo $_) -PathType Leaf })
+    $trackedFiles = @($trackedFiles | Where-Object { Test-Path -LiteralPath (Join-Path $repo $_) -PathType Leaf })
 }
 if ($LASTEXITCODE -ne 0 -or $trackedFiles.Count -eq 0) { throw 'Cannot list runtime files.' }
 $runtimeSet = @{}
@@ -107,7 +110,6 @@ $required = @(
     'wp-content/plugins/auto-dealership-core/languages/permissions.php',
     'wp-content/plugins/auto-dealership-core/src/Database/ExtensionSchema.php',
     'wp-content/plugins/auto-dealership-core/src/Admin/PurchaseOrderPage.php',
-    'wp-content/plugins/auto-dealership-core/src/Pricing/ArchivedQuotationTemplate.php',
     'wp-content/plugins/auto-dealership-core/src/Pricing/ArchivedQuotationTemplateV2.php',
     'wp-content/plugins/auto-dealership-core/src/Sales/OnyxDocuments.php',
     'wp-content/plugins/auto-dealership-core/src/Operations/FollowUpNotifications.php',
