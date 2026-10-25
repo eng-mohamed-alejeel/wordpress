@@ -24,7 +24,7 @@ final class Navigation {
 	}
 
 	public static function hide_wordpress_menu(): void {
-		if ( current_user_can( 'adc_view_workspace' ) ) { remove_menu_page( 'index.php' ); }
+		if ( current_user_can( 'adc_view_workspace' ) && ! self::is_system_admin() ) { remove_menu_page( 'index.php' ); }
 		if ( self::is_system_admin() ) { return; }
 		foreach ( self::wordpress_pages() as $page ) { remove_menu_page( $page ); }
 	}
@@ -102,6 +102,7 @@ final class Navigation {
 				array( 'adc-payments', 'تأكيدات السداد', 'adc_view_finance', PaymentPages::class, 'render' ),
 				array( 'adc-refunds', 'المبالغ المستردة', 'adc_view_finance', RefundPage::class, 'render' ),
 				array( 'adc-financial-export', 'التصدير المالي', 'adc_view_finance', FinancialExportPage::class, 'render' ),
+				array( 'adc-employee-commissions', 'عمولات موظفي المبيعات', 'manage_options', SettingsPage::class, 'render_employee_commissions_page' ),
 				array( 'adc-affiliate-commissions', \AutoDealership\Core\ProductSetup::t( 'عمولات المسوقين بالعمولة', 'Affiliate commissions' ), array( 'adc_manage_affiliate_commissions', 'adc_view_own_affiliate_commissions' ), AffiliateCommissionPage::class, 'render' ),
 			) ),
 			'delivery' => array( 'التسليم', 'dashicons-clipboard', array(
@@ -120,7 +121,8 @@ final class Navigation {
 			) ),
 			'reports' => array( 'التقارير', 'dashicons-chart-bar', array(
 				array( 'adc-operational-reports', 'التقارير التشغيلية', 'adc_view_reports', OperationalReportPage::class, 'render' ),
-				array( 'adc-lead-performance', \AutoDealership\Core\ProductSetup::t( 'أداء فرص العملاء', 'CRM performance' ), array( 'manage_options', 'adc_view_reports' ), OperationsPages::class, 'render_lead_performance' ),
+				array( 'adc-area-reports', 'النظرة العامة للتقارير', array( 'manage_options', 'adc_view_reports' ), OperationsPages::class, 'render_area_reports' ),
+				array( 'adc-crm-reports', 'تقارير CRM التفصيلية', array( 'manage_options', 'adc_view_reports' ), AreaReportsPage::class, 'render' ),
 			) ),
 			'settings' => array( 'إعدادات المنصة', 'dashicons-admin-settings', array(
 				array( 'adc-platform-setup', \AutoDealership\Core\ProductSetup::t( 'الهوية والبريد وجاهزية المنصة', 'Identity, email and platform readiness' ), 'manage_options', \AutoDealership\Core\ProductSetup::class, 'render' ),
@@ -188,7 +190,8 @@ final class Navigation {
 			'admin.php?page=adc-delivery' => __( 'التجهيز والمستندات والمطابقة والإطلاق.', 'auto-dealership-core' ),
 			'admin.php?page=car-dealer-subscribers' => __( 'إدارة المشتركين والحملات البريدية ونتائج الإرسال.', 'auto-dealership-core' ),
 			'admin.php?page=adc-operational-reports' => __( 'مؤشرات مجمعة ضمن نطاق الصلاحية.', 'auto-dealership-core' ),
-			'admin.php?page=adc-lead-performance' => __( 'أداء فرص العملاء ومصادرها ومراحلها خلال فترة محددة.', 'auto-dealership-core' ),
+			'admin.php?page=adc-area-reports' => __( 'ملخص مؤشرات CRM الحالية والوصول السريع للتقارير.', 'auto-dealership-core' ),
+			'admin.php?page=adc-crm-reports' => __( 'أداء فرص العملاء حسب الموظف والفرع والمصدر والحملة وأسباب الخسارة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-audit' => __( 'الأحداث الإدارية والتشغيلية للقراءة.', 'auto-dealership-core' ),
 			'admin.php?page=adc-settings' => __( 'الفروع والسياسات والإعدادات المركزية.', 'auto-dealership-core' ),
 			'admin.php?page=adc-editorial-setup' => __( 'مراجعة الصفحات التعريفية وإنشاء المسودات المفقودة صراحة.', 'auto-dealership-core' ),

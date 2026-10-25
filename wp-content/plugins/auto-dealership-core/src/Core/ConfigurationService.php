@@ -18,7 +18,7 @@ final class ConfigurationService {
 		'adc_sales_manager_discount_limit', 'adc_general_manager_discount_limit',
 		'adc_seller_name', 'adc_seller_tax_number', 'adc_seller_address', 'adc_seller_phone',
 		'adc_delivery_required_documents', 'adc_default_branch_id', 'adc_privacy_retention_days',
-		'adc_public_catalog_mode', 'adc_lead_assignment_mode', 'adc_lead_claim_timeout_minutes', 'adc_lead_daily_cap',
+		'adc_public_catalog_mode', 'adc_lead_assignment_mode', 'adc_lead_claim_timeout_minutes', 'adc_lead_daily_cap', 'adc_lead_archive_days', 'adc_lead_stale_days', 'adc_employee_commission_type', 'adc_employee_commission_value',
 	);
 	private const DELIVERY_DOCUMENTS = array( 'invoice', 'customer_identity', 'vehicle_registration', 'insurance', 'handover_form', 'finance_clearance' );
 
@@ -52,7 +52,11 @@ final class ConfigurationService {
 		$assignment_mode = $input['lead_assignment_mode'] ?? get_option( 'adc_lead_assignment_mode', 'manual' );
 		$claim_timeout = filter_var( $input['lead_claim_timeout_minutes'] ?? get_option( 'adc_lead_claim_timeout_minutes', 30 ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 5, 'max_range' => 1440 ) ) );
 		$daily_cap = filter_var( $input['lead_daily_cap'] ?? get_option( 'adc_lead_daily_cap', 0 ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 0, 'max_range' => 500 ) ) );
-		if ( ! is_string( $assignment_mode ) || ! in_array( $assignment_mode, array( 'manual', 'manager', 'round_robin' ), true ) || false === $claim_timeout || false === $daily_cap ) {
+		$archive_days = filter_var( $input['lead_archive_days'] ?? get_option( 'adc_lead_archive_days', 30 ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 0, 'max_range' => 3650 ) ) );
+		$stale_days = filter_var( $input['lead_stale_days'] ?? get_option( 'adc_lead_stale_days', 7 ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1, 'max_range' => 365 ) ) );
+		$employee_commission_type = sanitize_key( (string) ( $input['employee_commission_type'] ?? get_option( 'adc_employee_commission_type', 'none' ) ) );
+		$employee_commission_value = absint( $input['employee_commission_value'] ?? get_option( 'adc_employee_commission_value', 0 ) );
+		if ( ! is_string( $assignment_mode ) || ! in_array( $assignment_mode, array( 'manual', 'manager', 'round_robin' ), true ) || false === $claim_timeout || false === $daily_cap || false === $archive_days || false === $stale_days || ! in_array( $employee_commission_type, array( 'none', 'fixed', 'percentage' ), true ) || $employee_commission_value > ( 'percentage' === $employee_commission_type ? 10000 : 100000000 ) ) {
 			return new \WP_Error( 'adc_invalid_lead_policy', __( 'Lead assignment mode or claim timeout is invalid.', 'auto-dealership-core' ), array( 'status' => 400 ) );
 		}
 		if ( PublicCatalog::MODE_MODELS === $catalog_mode && PublicCatalog::MODE_MODELS !== $current_catalog_mode ) {
@@ -109,6 +113,10 @@ final class ConfigurationService {
 			'adc_lead_assignment_mode' => $assignment_mode,
 			'adc_lead_claim_timeout_minutes' => $claim_timeout,
 			'adc_lead_daily_cap' => $daily_cap,
+			'adc_lead_archive_days' => $archive_days,
+			'adc_lead_stale_days' => $stale_days,
+			'adc_employee_commission_type' => $employee_commission_type,
+			'adc_employee_commission_value' => 'none' === $employee_commission_type ? 0 : $employee_commission_value,
 		);
 		if ( $before === $after ) { return array( 'updated' => false ); }
 		foreach ( $after as $key => $value ) { update_option( $key, $value, false ); }
@@ -188,6 +196,10 @@ final class ConfigurationService {
 			'adc_lead_assignment_mode' => sanitize_key( (string) get_option( 'adc_lead_assignment_mode', 'manual' ) ),
 			'adc_lead_claim_timeout_minutes' => absint( get_option( 'adc_lead_claim_timeout_minutes', 30 ) ),
 			'adc_lead_daily_cap' => absint( get_option( 'adc_lead_daily_cap', 0 ) ),
+			'adc_lead_archive_days' => absint( get_option( 'adc_lead_archive_days', 30 ) ),
+			'adc_lead_stale_days' => absint( get_option( 'adc_lead_stale_days', 7 ) ),
+			'adc_employee_commission_type' => sanitize_key( (string) get_option( 'adc_employee_commission_type', 'none' ) ),
+			'adc_employee_commission_value' => absint( get_option( 'adc_employee_commission_value', 0 ) ),
 		);
 	}
 

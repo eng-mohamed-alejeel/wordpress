@@ -27,6 +27,12 @@ final class LeadService {
 		return self::STAGE_TRANSITIONS[ sanitize_key( $from ) ] ?? array();
 	}
 
+	public static function inventory_options( int $branch_id ): array {
+		global $wpdb;
+		if ( $branch_id < 1 ) { return array(); }
+		return $wpdb->get_results( $wpdb->prepare( "SELECT id,stock_number,brand,model,model_year,status FROM " . Schema::table( 'vehicles' ) . " WHERE branch_id=%d AND status IN ('available','reserved') ORDER BY stock_number LIMIT 100", $branch_id ), ARRAY_A ) ?: array();
+	}
+
 	public static function stage_keys(): array {
 		return self::STAGE_TRANSITIONS;
 	}
@@ -523,6 +529,7 @@ final class LeadService {
 			$where .= " AND l.next_action_at IS NOT NULL AND l.next_action_at<=%s AND l.stage NOT IN ('won','lost')";
 			$args[] = current_time( 'mysql', true );
 		}
+		self::append_lifecycle_filters( $where, $args, $filters );
 		if ( ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) {
 			if ( ! current_user_can( 'adc_view_branch_leads' ) ) {
 				$where .= " AND (l.owner_user_id=%d OR (l.owner_user_id=0 AND l.stage='new'))";
@@ -558,18 +565,61 @@ final class LeadService {
 		if ( ! empty( $filters['created_by'] ) ) { $where .= ' AND l.created_by=%d'; $args[] = absint( $filters['created_by'] ); }
 		if ( ! empty( $filters['overdue'] ) ) { $where .= " AND l.next_action_at IS NOT NULL AND l.next_action_at<=%s AND l.stage NOT IN ('won','lost')"; $args[] = current_time( 'mysql', true ); }
 		if ( array_key_exists( 'owner', $filters ) ) { $where .= ' AND l.owner_user_id=%d'; $args[] = absint( $filters['owner'] ); }
+		self::append_lifecycle_filters( $where, $args, $filters );
 		if ( ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) && ! current_user_can( 'adc_view_branch_leads' ) ) { $where .= " AND (l.owner_user_id=%d OR (l.owner_user_id=0 AND l.stage='new'))"; $args[] = get_current_user_id(); }
 		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $lead_table . ' l INNER JOIN ' . $customer_table . ' c ON c.id=l.customer_id' . $where, $args ) );
 	}
 
+	private static function append_lifecycle_filters( string &$where, array &$args, array $filters ): void {
+		global $wpdb;
+		$from = isset( $filters['from'] ) && is_scalar( $filters['from'] ) ? (string) $filters['from'] : ''; $to = isset( $filters['to'] ) && is_scalar( $filters['to'] ) ? (string) $filters['to'] : '';
+		if ( preg_match( '/\A\d{4}-\d{2}-\d{2}\z/', $from ) ) { $where .= ' AND l.created_at>=%s'; $args[] = $from . ' 00:00:00'; }
+		if ( preg_match( '/\A\d{4}-\d{2}-\d{2}\z/', $to ) ) { $where .= ' AND l.created_at<%s'; $args[] = gmdate( 'Y-m-d H:i:s', strtotime( $to . ' +1 day' ) ); }
+		$archived = isset( $filters['archived'] ) && is_scalar( $filters['archived'] ) ? strtolower( (string) $filters['archived'] ) : ''; $days = max( 0, (int) get_option( 'adc_lead_archive_days', 30 ) );
+		if ( 'all' !== $archived ) {
+			if ( '1' === $archived ) { $where .= ' AND (l.archived_at IS NOT NULL'; if ( $days > 0 ) { $where .= " OR (l.stage IN ('won','lost') AND l.closed_at IS NOT NULL AND l.closed_at<%s)"; $args[] = gmdate( 'Y-m-d H:i:s', time() - $days * 86400 ); } $where .= ')'; }
+			else { $where .= ' AND l.archived_at IS NULL'; if ( $days > 0 ) { $where .= " AND NOT (l.stage IN ('won','lost') AND l.closed_at IS NOT NULL AND l.closed_at<%s)"; $args[] = gmdate( 'Y-m-d H:i:s', time() - $days * 86400 ); } }
+		}
+	}
+
 	public static function pipeline_summary(): array {
+		global $wpdb;
 		$base = array();
 		$total = self::count_for_current_user();
 		$base['total'] = $total;
 		$base['new'] = self::count_for_current_user( array( 'stage' => 'new' ) );
 		$base['overdue'] = self::count_for_current_user( array( 'overdue' => true ) );
 		$base['unassigned'] = self::count_for_current_user( array( 'owner' => 0 ) );
+		list( $scope, $args ) = BranchScope::predicate( 'l.branch_id' );
+		self::append_marketing_visibility_scope( $scope, $args );
+		$month_start = gmdate( 'Y-m-01 00:00:00' );
+		$metric_where = ' WHERE ' . $scope; $metric_args = $args; self::append_lifecycle_filters( $metric_where, $metric_args, array() );
+		$metrics = $wpdb->get_row( $wpdb->prepare( "SELECT COALESCE(SUM(CASE WHEN l.stage='won' AND l.closed_at>=%s THEN l.sale_amount ELSE 0 END),0) month_sales_amount,COALESCE(SUM(CASE WHEN l.stage NOT IN ('won','lost') THEN l.sale_amount ELSE 0 END),0) open_value,SUM(l.stage='won') won_count,SUM(l.stage IN ('won','lost')) closed_count FROM " . Schema::table( 'leads' ) . " l$metric_where", array_merge( array( $month_start ), $metric_args ) ), ARRAY_A );
+		$base['month_sales_amount'] = (int) ( $metrics['month_sales_amount'] ?? 0 );
+		$base['open_value'] = (int) ( $metrics['open_value'] ?? 0 );
+		$base['conversion_percent'] = ( (int) ( $metrics['closed_count'] ?? 0 ) > 0 ) ? round( 100 * (int) ( $metrics['won_count'] ?? 0 ) / (int) $metrics['closed_count'], 1 ) : 0;
 		return $base;
+	}
+
+	/** Monthly sales goal and achieved value for a sales employee. */
+	public static function monthly_goal_progress( int $user_id = 0 ): array {
+		global $wpdb;
+		$user_id = $user_id > 0 ? $user_id : get_current_user_id();
+		$goal = absint( get_user_meta( $user_id, 'adc_monthly_sales_goal', true ) );
+		$start = gmdate( 'Y-m-01 00:00:00' );
+		$end = gmdate( 'Y-m-01 00:00:00', strtotime( '+1 month', strtotime( $start ) ) );
+		$achieved = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(sale_amount),0) FROM ' . Schema::table( 'leads' ) . " WHERE owner_user_id=%d AND stage='won' AND closed_at>=%s AND closed_at<%s", $user_id, $start, $end ) );
+		$count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . Schema::table( 'leads' ) . " WHERE owner_user_id=%d AND stage='won' AND closed_at>=%s AND closed_at<%s", $user_id, $start, $end ) );
+		return array( 'goal' => $goal, 'achieved' => $achieved, 'won_count' => $count, 'percent' => $goal > 0 ? min( 100, round( 100 * $achieved / $goal, 1 ) ) : 0 );
+	}
+
+	/** Persist the archive state so old closed leads are not evaluated on every CRM request. */
+	public static function archive_closed_leads(): int {
+		global $wpdb;
+		$days = absint( get_option( 'adc_lead_archive_days', 30 ) );
+		if ( $days < 1 ) { return 0; }
+		$cutoff = gmdate( 'Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS );
+		return max( 0, (int) $wpdb->query( $wpdb->prepare( "UPDATE " . Schema::table( 'leads' ) . " SET archived_at=%s,updated_at=%s WHERE archived_at IS NULL AND stage IN ('won','lost') AND closed_at IS NOT NULL AND closed_at<%s", current_time( 'mysql', true ), current_time( 'mysql', true ), $cutoff ) ) );
 	}
 
 	public static function find_for_current_user( int $lead_id ) {
@@ -672,7 +722,7 @@ final class LeadService {
 		return array( 'id'=>$lead_id, 'stage'=>'contacted', 'activity_id'=>$activity_id, 'first_contact_at'=>$occurred_at );
 	}
 
-	public static function update_stage( int $lead_id, string $to, string $reason = '' ) {
+	public static function update_stage( int $lead_id, string $to, string $reason = '', int $sale_amount = 0, int $vehicle_id = 0, string $payment_method = '', string $invoice_reference = '', string $next_action_at = '', string $lost_competitor = '', int $lost_comparative_price = 0 ) {
 		global $wpdb;
 		$user_id = get_current_user_id();
 		$to = sanitize_key( $to );
@@ -687,10 +737,24 @@ final class LeadService {
 			return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$table = Schema::table( 'leads' );
-		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id,stage,first_contact_at,lost_reason FROM $table WHERE id = %d FOR UPDATE", $lead_id ), ARRAY_A );
+		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,customer_id,branch_id,owner_user_id,stage,first_contact_at,lost_reason,legacy_request_type,legacy_request_id FROM $table WHERE id = %d FOR UPDATE", $lead_id ), ARRAY_A );
 		if ( ! $lead || ! BranchScope::can_manage_lead( $lead ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_lead_not_found', __( 'الفرصة غير موجودة أو لا تملك صلاحية الوصول إليها.', 'auto-dealership-core' ), array( 'status' => 404 ) );
+		}
+		$vehicle_id = absint( $vehicle_id );
+		$payment_method = sanitize_key( $payment_method );
+		$invoice_reference = sanitize_text_field( $invoice_reference );
+		$lost_competitor = sanitize_text_field( $lost_competitor );
+		$lost_comparative_price = absint( $lost_comparative_price );
+		$recontact_at = null;
+		if ( 'lost' === $to && '' !== trim( $next_action_at ) ) {
+			$recontact_timestamp = strtotime( sanitize_text_field( $next_action_at ) );
+			if ( false === $recontact_timestamp || $recontact_timestamp <= current_time( 'timestamp', true ) ) {
+				$wpdb->query( 'ROLLBACK' );
+				return new \WP_Error( 'adc_invalid_recontact_date', __( 'يجب أن يكون موعد إعادة التواصل في المستقبل.', 'auto-dealership-core' ), array( 'status' => 400 ) );
+			}
+			$recontact_at = gmdate( 'Y-m-d H:i:s', $recontact_timestamp );
 		}
 		$from = $lead['stage'];
 		if ( ! in_array( $to, self::STAGE_TRANSITIONS[ $from ] ?? array(), true ) ) {
@@ -705,11 +769,54 @@ final class LeadService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_reopen_forbidden', __( 'إعادة فتح الفرصة المفقودة تتطلب صلاحية المدير وسببًا موثقًا.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
+		if ( 'won' === $to ) {
+			if ( $sale_amount < 1 || ! in_array( $payment_method, array( 'cash', 'bank', 'card', 'finance', 'other' ), true ) ) {
+				$wpdb->query( 'ROLLBACK' );
+				return new \WP_Error( 'adc_sale_details_required', __( 'مبلغ البيع وطريقة الدفع والمركبة مطلوبة لإغلاق الفرصة.', 'auto-dealership-core' ), array( 'status' => 400 ) );
+			}
+			$legacy_table = $wpdb->prefix . 'car_dealer_' . ( 'booking' === (string) $lead['legacy_request_type'] ? 'bookings' : 'messages' );
+			$legacy_vehicle = ( $lead['legacy_request_id'] && in_array( (string) $lead['legacy_request_type'], array( 'booking', 'message' ), true ) ) ? (int) $wpdb->get_var( $wpdb->prepare( "SELECT car_id FROM $legacy_table WHERE id=%d", (int) $lead['legacy_request_id'] ) ) : 0;
+			if ( ! $vehicle_id && $legacy_vehicle ) { $vehicle_id = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'vehicles' ) . ' WHERE public_post_id=%d', $legacy_vehicle ) ); }
+			$vehicle = $wpdb->get_row( $wpdb->prepare( 'SELECT id,branch_id,status FROM ' . Schema::table( 'vehicles' ) . ' WHERE id=%d FOR UPDATE', $vehicle_id ), ARRAY_A );
+			if ( ! $vehicle || (int) $vehicle['branch_id'] !== (int) $lead['branch_id'] || ! in_array( $vehicle['status'], array( 'available', 'reserved' ), true ) ) {
+				$wpdb->query( 'ROLLBACK' );
+				return new \WP_Error( 'adc_sale_vehicle_required', __( 'اختر مركبة متاحة من مخزون فرع الفرصة.', 'auto-dealership-core' ), array( 'status' => 409 ) );
+			}
+			$active_reservation = $wpdb->get_row( $wpdb->prepare( "SELECT id,customer_id,deposit_amount,payment_reference FROM " . Schema::table( 'reservations' ) . " WHERE vehicle_id=%d AND status='confirmed' ORDER BY id DESC LIMIT 1 FOR UPDATE", $vehicle_id ), ARRAY_A );
+			if ( ( 'reserved' === $vehicle['status'] && ! $active_reservation ) || ( $active_reservation && (int) $active_reservation['customer_id'] !== (int) $lead['customer_id'] ) ) {
+				$wpdb->query( 'ROLLBACK' );
+				return new \WP_Error( 'adc_sale_vehicle_reserved', __( 'المركبة محجوزة لعميل آخر أو لا يملك النظام حجزًا صالحًا لها.', 'auto-dealership-core' ), array( 'status' => 409 ) );
+			}
+			$now = current_time( 'mysql', true );
+			if ( $active_reservation ) {
+				$wpdb->update( Schema::table( 'reservations' ), array( 'status'=>'cancelled', 'deposit_refund_status'=>( (int) $active_reservation['deposit_amount'] > 0 ? 'pending_refund' : 'no_refund_due' ), 'updated_at'=>$now ), array( 'id'=>(int) $active_reservation['id'], 'status'=>'confirmed' ), array( '%s','%s','%s' ), array( '%d','%s' ) );
+			}
+			$vehicle_changed = $wpdb->update( Schema::table( 'vehicles' ), array( 'status'=>'sold', 'updated_at'=>$now ), array( 'id'=>$vehicle_id, 'status'=>$vehicle['status'] ), array( '%s','%s' ), array( '%d','%s' ) );
+			$movement = 1 === $vehicle_changed ? $wpdb->insert( Schema::table( 'vehicle_movements' ), array( 'vehicle_id'=>$vehicle_id, 'from_branch_id'=>(int) $lead['branch_id'], 'to_branch_id'=>(int) $lead['branch_id'], 'from_status'=>$vehicle['status'], 'to_status'=>'sold', 'actor_user_id'=>$user_id, 'reason'=>'Lead #' . $lead_id . ' won', 'created_at'=>$now ), array( '%d','%d','%d','%s','%s','%d','%s','%s' ) ) : false;
+			$commission_type = sanitize_key( (string) get_option( 'adc_employee_commission_type', 'none' ) );
+			$commission_value = absint( get_option( 'adc_employee_commission_value', 0 ) );
+			$employee_commission_amount = 'fixed' === $commission_type ? $commission_value : ( 'percentage' === $commission_type ? (int) round( $sale_amount * min( 10000, $commission_value ) / 10000 ) : 0 );
+			$employee_commission_status = $employee_commission_amount > 0 ? 'pending_review' : 'disabled';
+			$sale = $wpdb->insert( Schema::table( 'sales' ), array( 'quotation_id'=>0, 'reservation_id'=>(int) ( $active_reservation['id'] ?? 0 ), 'customer_id'=>(int) $lead['customer_id'], 'vehicle_id'=>$vehicle_id, 'status'=>'approved', 'owner_user_id'=>(int) $lead['owner_user_id'], 'lead_id'=>$lead_id, 'sale_amount'=>$sale_amount, 'payment_method'=>$payment_method, 'employee_commission_amount'=>$employee_commission_amount, 'employee_commission_status'=>$employee_commission_status, 'invoice_reference'=>$invoice_reference, 'approved_by'=>$user_id, 'created_at'=>$now, 'updated_at'=>$now ), array( '%d','%d','%d','%d','%s','%d','%d','%d','%s','%d','%s','%s','%d','%s','%s' ) );
+			if ( 1 !== $vehicle_changed || false === $movement || 1 !== $sale ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_sale_creation_failed', __( 'تعذر إنشاء سجل البيع وتحديث المخزون.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
+		}
 		$now = current_time( 'mysql', true );
 		$changes = array( 'stage'=>$to, 'updated_at'=>$now );
 		$formats = array( '%s', '%s' );
-		if ( 'lost' === $to ) { $changes['lost_reason'] = $reason; $formats[] = '%s'; }
+		if ( 'lost' === $to ) { $changes['lost_reason'] = $reason; $formats[] = '%s'; $changes['lost_competitor'] = $lost_competitor; $formats[] = '%s'; $changes['lost_comparative_price'] = $lost_comparative_price; $formats[] = '%d'; $changes['next_action_at'] = $recontact_at; $formats[] = '%s'; }
+		if ( in_array( $to, array( 'won', 'lost' ), true ) ) { $changes['closed_at'] = $now; $formats[] = '%s'; }
+		if ( 'won' === $to ) { $changes['next_action_at'] = null; $formats[] = '%s'; }
+		if ( 'won' === $to ) { $changes['sale_amount'] = max( 0, $sale_amount ); $formats[] = '%d'; }
+		if ( 'new' === $to ) { $changes['closed_at'] = null; $formats[] = '%s'; $changes['next_action_at'] = null; $formats[] = '%s'; }
 		if ( 'new' === $to ) { $changes['owner_user_id'] = 0; $changes['claimed_at'] = null; $formats[] = '%d'; $formats[] = '%s'; }
+		if ( 'lost' === $to ) {
+			$release = $wpdb->get_row( $wpdb->prepare( "SELECT id,vehicle_id,deposit_amount,payment_reference FROM " . Schema::table( 'reservations' ) . " WHERE vehicle_id IN (SELECT id FROM " . Schema::table( 'vehicles' ) . " WHERE branch_id=%d AND status='reserved') AND customer_id=%d AND status='confirmed' ORDER BY id DESC LIMIT 1 FOR UPDATE", (int) $lead['branch_id'], (int) $lead['customer_id'] ), ARRAY_A );
+			if ( $release ) {
+				$release_status = ( (int) $release['deposit_amount'] > 0 || '' !== $release['payment_reference'] ) ? 'hold' : 'available';
+				$wpdb->update( Schema::table( 'reservations' ), array( 'status'=>'cancelled', 'deposit_refund_status'=>( $release_status === 'hold' ? 'pending_refund' : 'no_refund_due' ), 'updated_at'=>$now ), array( 'id'=>(int) $release['id'], 'status'=>'confirmed' ), array( '%s','%s','%s' ), array( '%d','%s' ) );
+				$wpdb->update( Schema::table( 'vehicles' ), array( 'status'=>$release_status, 'updated_at'=>$now ), array( 'id'=>(int) $release['vehicle_id'], 'status'=>'reserved' ), array( '%s','%s' ), array( '%d','%s' ) );
+			}
+		}
 		$updated = $wpdb->update( $table, $changes, array( 'id' => $lead_id ), $formats, array( '%d' ) );
 		$history = 1 === $updated && self::record_stage_transition( $lead_id, (int) $lead['branch_id'], 'new' === $to ? 0 : (int) $lead['owner_user_id'], $user_id, $from, $to, $now );
 		$activity = $wpdb->insert( Schema::table( 'activities' ), array( 'lead_id' => $lead_id, 'actor_user_id' => $user_id, 'type' => 'stage_change', 'notes' => $reason, 'created_at' => $now ), array( '%d', '%d', '%s', '%s', '%s' ) );
@@ -720,6 +827,7 @@ final class LeadService {
 		if ( ! Transaction::commit( static fn() => AuditLog::record( 'lead.stage_changed', 'lead', $lead_id, $reason, array( 'stage' => $from ), array( 'stage' => $to ) ) ) ) {
 			return new \WP_Error( 'adc_lead_update_failed', __( 'تعذر توثيق تحديث الفرصة.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
+		if ( in_array( $to, array( 'won', 'lost' ), true ) && ! \AutoDealership\Operations\FollowUpNotifications::queue_lead_closed( $lead_id, (int) $lead['branch_id'], (int) $lead['owner_user_id'], $to, $now ) ) { error_log( 'Auto Dealership Core: failed to queue lead close notification #' . $lead_id ); }
 		return array( 'id' => $lead_id, 'stage' => $to );
 	}
 
@@ -861,8 +969,9 @@ final class LeadService {
 		}
 		$lead_table = Schema::table( 'leads' );
 		$lead = $wpdb->get_row( $wpdb->prepare( "SELECT id,branch_id,owner_user_id,source,created_by FROM $lead_table WHERE id = %d FOR UPDATE", $lead_id ), ARRAY_A );
-		$created_by_current_user = $lead && get_current_user_id() === (int) $lead['created_by'];
-		$created_by_marketing_team = $lead && current_user_can( 'adc_view_marketing_team_leads' ) && (int) $lead['created_by'] > 0;
+		$created_by = $lead ? (int) ( $lead['created_by'] ?? 0 ) : 0;
+		$created_by_current_user = $lead && get_current_user_id() === $created_by;
+		$created_by_marketing_team = $lead && current_user_can( 'adc_view_marketing_team_leads' ) && $created_by > 0;
 		$can_add_to_marketing_lead = $marketing_activity_only && $lead && ( $created_by_current_user || $created_by_marketing_team ) && BranchScope::allows( (int) $lead['branch_id'] );
 		if ( ! $lead || ( ! $can_add_to_marketing_lead && ! BranchScope::can_manage_lead( $lead ) ) ) {
 			$wpdb->query( 'ROLLBACK' );

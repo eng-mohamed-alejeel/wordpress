@@ -192,6 +192,8 @@ require_once ADC_PATH . 'src/Privacy/RetentionService.php';
 require_once ADC_PATH . 'src/Reports/FinancialExport.php';
 require_once ADC_PATH . 'src/Reports/OperationalReport.php';
 require_once ADC_PATH . 'src/Reports/LeadPerformanceReport.php';
+require_once ADC_PATH . 'src/Admin/AreaReportsPage.php';
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AreaReportsPage', 'boot' ) );
 require_once ADC_PATH . 'src/Admin/SettingsPage.php';
 require_once ADC_PATH . 'src/Admin/ProfitMarginPage.php';
 \AutoDealership\Admin\ProfitMarginPage::boot();
@@ -537,6 +539,9 @@ add_action( 'init', static function (): void {
 	if ( ! wp_next_scheduled( 'adc_scan_followups' ) ) {
 		wp_schedule_event( time() + 5 * MINUTE_IN_SECONDS, 'adc_five_minutes', 'adc_scan_followups' );
 	}
+	if ( ! wp_next_scheduled( 'adc_archive_closed_leads' ) ) {
+		wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'adc_archive_closed_leads' );
+	}
 	if ( ! wp_next_scheduled( 'adc_prune_request_limits' ) ) {
 		wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', 'adc_prune_request_limits' );
 	}
@@ -547,6 +552,7 @@ add_action( 'adc_process_outbox', array( 'AutoDealership\\Operations\\OutboxServ
 add_action( 'adc_release_stale_lead_claims', array( 'AutoDealership\\Leads\\LeadService', 'release_stale_claims' ) );
 add_action( 'adc_release_stale_lead_claims', array( 'AutoDealership\\Leads\\LeadService', 'distribute_pending' ), 20 );
 add_action( 'adc_prune_request_limits', array( 'AutoDealership\\Security\\PublicRequestGuard', 'prune' ) );
+add_action( 'adc_archive_closed_leads', array( 'AutoDealership\\Leads\\LeadService', 'archive_closed_leads' ) );
 register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_expire_reservations' );
 	wp_clear_scheduled_hook( 'adc_privacy_retention' );
@@ -554,6 +560,7 @@ register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_mail_wake' );
 	wp_clear_scheduled_hook( 'adc_verification_prune' );
 	wp_clear_scheduled_hook( 'adc_scan_followups' );
+	wp_clear_scheduled_hook( 'adc_archive_closed_leads' );
 	wp_clear_scheduled_hook( 'adc_prune_request_limits' );
 } );
 

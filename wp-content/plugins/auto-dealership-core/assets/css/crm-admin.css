@@ -5,13 +5,15 @@
 .adc-crm-summary strong{font-size:24px;line-height:1.3}
 .adc-crm-lead-summary dl{display:grid;grid-template-columns:max-content 1fr max-content 1fr;gap:10px 18px;margin:0}
 .adc-crm-lead-summary dt{font-weight:600}.adc-crm-lead-summary dd{margin:0}
-.adc-crm-board{--adc-tone:#646970;position:relative;margin:20px 0}
+.adc-crm-board{--adc-tone:#646970;position:relative;margin:20px 0;max-width:100%;min-width:0;overflow:hidden}
 .adc-crm-board-status{min-height:22px;margin:0 0 8px;padding:0 4px;color:#50575e;font-size:13px}
 .adc-crm-board-status.notice-error{color:#b32d2e;font-weight:600}
 .adc-crm-board-status.is-success{color:#007017}
-.adc-crm-board-track{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding:4px 2px 16px;scroll-snap-type:x proximity}
+.adc-crm-board-track{display:flex;gap:14px;align-items:flex-start;max-width:100%;min-width:0;box-sizing:border-box;overflow:auto;padding:4px 2px 16px;scroll-snap-type:x proximity}
 .adc-crm-board-column{--tone:#646970;--tone-bg:#f6f7f7;flex:0 0 272px;min-height:220px;padding:0 10px 10px;background:var(--tone-bg);border:1px solid #dcdcde;border-top:4px solid var(--tone);border-radius:10px;scroll-snap-align:start;transition:box-shadow .15s,background-color .15s,opacity .15s}
 .adc-crm-board-column h2{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;margin:0 -10px 10px;padding:10px;color:var(--tone);border-bottom:1px solid rgba(0,0,0,.06)}
+.adc-crm-board-column h2 .adc-crm-column-toggle{margin-inline-start:auto;color:var(--tone);font-size:12px;text-decoration:none}
+.adc-crm-board-column.is-collapsed .adc-crm-board-card,.adc-crm-board-column.is-collapsed .adc-crm-board-empty{display:none}
 .adc-crm-stage-count{min-width:24px;padding:1px 8px;border-radius:999px;background:var(--tone);color:#fff;font-size:12px;font-weight:700;text-align:center}
 .adc-crm-board-empty{display:none;padding:18px 8px;border:1px dashed #c3c4c7;border-radius:8px;color:#787c82;font-size:12px;text-align:center}
 .adc-crm-board-column:not(:has([data-lead-card])) .adc-crm-board-empty{display:block}

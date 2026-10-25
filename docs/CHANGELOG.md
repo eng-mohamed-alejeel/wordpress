@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-10-25 — Employee sales commissions
+
+- Added dashboard-managed employee commission policy: disabled, fixed SAR amount, or percentage in basis points.
+- Winning leads snapshot the calculated commission on the sale record; managers can review, approve, void and mark payouts from CRM settings, with commission totals in performance reporting (schema 1.34.0).
+- Employee commission policy and ledger are now exposed under the Finance menu at `adc-employee-commissions`; CRM settings remain focused on lead assignment.
+- CRM now supports created-date filters and an archive view; closed leads older than the configured archive period are hidden by default and can be shown with the archive filter.
+- Added monthly sales goals per sales employee in CRM settings, with automatic current-month achievement and progress bars in the CRM dashboard.
+- Moved monthly sales goal management to its own Settings tab at `admin.php?page=adc-settings&section=goals`; CRM settings now only contain lead distribution and archive controls.
+- Added configurable stale-lead alerts and overdue follow-up alerts for owners and branch managers; alerts appear in the CRM dashboard and link directly to the lead.
+- Closed leads are now persisted with `archived_at` by a daily scheduled archive job (schema 1.35.0), while the archive filter remains backward-compatible for existing records.
+- Added the organized CRM report center at `admin.php?page=adc-area-reports` with period, branch, employee and source filters plus employee, branch, source and loss-reason breakdowns.
+- Added campaign/platform analysis and an aggregate CSV export to the CRM report center; the existing CRM export remains the detailed lead-record export.
+- Added visual performance bars and automatic comparison cards against the equivalent previous period in the CRM report center.
+- Separated the CRM detailed reports into `admin.php?page=adc-crm-reports`; `admin.php?page=adc-area-reports` is now the overview dashboard.
+- Fixed CRM report CSV downloads by moving export to a nonce-protected `admin-post.php` request before admin HTML output.
+- Improved CRM report CSV formatting: UTF-8 BOM, standard comma delimiter, RFC-style quoted fields, CRLF rows, Arabic headers, and a consistent column structure.
+- Employee CSV export now contains one employee per row with all employee metrics in fixed columns; mixed branch/source/loss rows were removed from this export.
+- Added separate CSV exports for branches, sources, campaigns/platforms and loss reasons, each with its own fixed row structure.
+- Added commission-status filtering to the CRM reports and employee export; sales and lead counts remain unchanged while commission totals follow the selected status.
+- Hardened CRM report validation with a maximum 366-day range and added a visible total-commission KPI that respects the selected commission status.
+- Fixed the marketing-lead intake inline script escaping so CRM pages load without a browser syntax error; tightened Kanban overflow containment and kept the dealership workspace ahead of system-admin tools for administrators.
+- Fixed CRM lead-detail modal flicker by ignoring the iframe's initial blank-document load before counting post-submit navigations.
+- Added server-side critical modal styles so the WordPress dashboard shell is hidden before the lead-detail iframe paints, preventing the initial dashboard flash.
+
+## 2026-10-25 — Close-out of won and lost leads
+
+- Dragging a lead to "Won" asks for the vehicle, sale amount in SAR, payment method, optional contract/invoice reference and notes; "Lost" asks for a standard reason category plus details.
+- A won lead now creates an approved sale record, marks the selected branch vehicle as sold, and closes its matching reservation; a lost lead cancels its matching reservation and preserves any deposit refund workflow.
+- Leads now store `closed_at` and `sale_amount` (schema 1.32.0); reopening a lost lead clears `closed_at`.
+- CRM now queues close notifications for the assigned employee and branch managers, and exposes monthly sales, conversion rate, open pipeline value, sales totals and average close duration in the dashboard/report.
+
 ## 2026-10-24 — New leads visible to all branches; first-contact dialog on drag
 
 - Sales reps now see unassigned `new` leads from every branch; claiming or assigning moves the lead to the rep's branch, and it is visible to everyone again when it returns to `new`.
@@ -564,3 +595,5 @@
 - Added append-oriented audit event schema and writer with correlation IDs.
 - Added repository audit, database design, RBAC, workflow, API, security, operations and phased roadmap documentation.
 - Existing theme features and pre-existing worktree modifications remain active and unchanged.
+- CRM: added professional lost-lead recontact scheduling, competitor/comparative-price capture, and default-collapsed closed columns; closed opportunities remain closed until a manager reopens them.
+- CRM: scheduled reminders now include due recontact dates on lost leads, and loss CSV exports include competitor and comparative-price analysis.

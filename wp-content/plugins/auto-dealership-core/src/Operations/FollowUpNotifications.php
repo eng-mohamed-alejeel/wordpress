@@ -13,11 +13,15 @@ final class FollowUpNotifications {
 	private const CLAIM_EXPIRED_NOTE = 'Claim expired before first contact; returned to shared queue';
 
 	public static function label(string $type): string {
-		$labels=array('lead'=>array('متابعة فرصة','Lead follow-up'),'claim_expired'=>array('انتهاء مهلة استلام فرصة','Lead claim expired'),'discount'=>array('اعتماد خصم','Discount approval'),'sale'=>array('اعتماد بيع','Sale approval'),'reservation'=>array('حجز منتهي','Expired reservation'),'refund'=>array('استرداد متأخر','Overdue refund'),'outbox'=>array('مهمة آلية متعثرة','Failed background job'));
+		if('lost_recontact'===$type){return \AutoDealership\Core\Localization::language()==='en'?'Lost lead recontact':'إعادة تواصل مع فرصة خاسرة';}
+		if('lead_closed'===$type){return \AutoDealership\Core\Localization::language()==='en'?'Lead closed':'إغلاق فرصة';}
+		$labels=array('lead'=>array('متابعة فرصة','Lead follow-up'),'stale_lead'=>array('فرصة راكدة','Stale lead'),'claim_expired'=>array('انتهاء مهلة استلام فرصة','Lead claim expired'),'discount'=>array('اعتماد خصم','Discount approval'),'sale'=>array('اعتماد بيع','Sale approval'),'reservation'=>array('حجز منتهي','Expired reservation'),'refund'=>array('استرداد متأخر','Overdue refund'),'outbox'=>array('مهمة آلية متعثرة','Failed background job'));
 		return $labels[$type][\AutoDealership\Core\Localization::language()==='en'?1:0]??$type;
 	}
 	public static function url(array $row): string {
-		$targets=array('lead'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'claim_expired'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'discount'=>array('page'=>'adc-approvals','section'=>'discounts'),'sale'=>array('page'=>'adc-onyx-documents','sale_id'=>$row['source_id']),'reservation'=>array('page'=>'adc-sales-journey','section'=>'reservations','reservation_id'=>$row['source_id']),'refund'=>array('page'=>'adc-refunds'),'outbox'=>array('page'=>'adc-outbox'));
+		if('lost_recontact'===($row['source_type']??'')){return add_query_arg(array('page'=>'adc-crm','lead_id'=>(int)$row['source_id']),admin_url('admin.php'));}
+		if('lead_closed'===($row['source_type']??'')){return add_query_arg(array('page'=>'adc-crm','lead_id'=>(int)$row['source_id']),admin_url('admin.php'));}
+		$targets=array('lead'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'stale_lead'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'claim_expired'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'discount'=>array('page'=>'adc-approvals','section'=>'discounts'),'sale'=>array('page'=>'adc-onyx-documents','sale_id'=>$row['source_id']),'reservation'=>array('page'=>'adc-sales-journey','section'=>'reservations','reservation_id'=>$row['source_id']),'refund'=>array('page'=>'adc-refunds'),'outbox'=>array('page'=>'adc-outbox'));
 		return add_query_arg($targets[$row['source_type']]??array('page'=>'adc-follow-ups'),admin_url('admin.php'));
 	}
 	public static function boot(): void {
@@ -51,7 +55,9 @@ final class FollowUpNotifications {
 		$approval=gmdate('Y-m-d H:i:s',time()-DAY_IN_SECONDS);
 		$refund=gmdate('Y-m-d H:i:s',time()-min(720,max(1,absint(get_option('adc_reservation_refund_hours',72))))*HOUR_IN_SECONDS);
 		return array(
+			'lost_recontact'=>array('SELECT l.id,l.branch_id,l.owner_user_id,l.next_action_at due_at FROM '.Schema::table('leads')." l WHERE l.stage='lost' AND l.next_action_at IS NOT NULL AND l.next_action_at<=%s",array($now),'adc_view_own_leads','adc_view_branch_leads'),
 			'lead'=>array('SELECT l.id,l.branch_id,l.owner_user_id,l.next_action_at due_at FROM '.Schema::table('leads')." l WHERE l.stage NOT IN ('won','lost') AND l.next_action_at<=%s",array($now),'adc_view_own_leads','adc_view_branch_leads'),
+			'stale_lead'=>array('SELECT l.id,l.branch_id,l.owner_user_id,COALESCE(MAX(a.created_at),l.updated_at,l.created_at) due_at FROM '.Schema::table('leads').' l LEFT JOIN '.Schema::table('activities').' a ON a.lead_id=l.id WHERE l.stage NOT IN (\'won\',\'lost\') GROUP BY l.id,l.branch_id,l.owner_user_id,l.updated_at,l.created_at HAVING due_at<=%s',array(gmdate('Y-m-d H:i:s',time()-max(1,absint(get_option('adc_lead_stale_days',7)))*DAY_IN_SECONDS)),'adc_view_own_leads','adc_view_branch_leads'),
 			'claim_expired'=>array('SELECT a.lead_id id,h.branch_id,h.owner_user_id,a.created_at due_at FROM '.Schema::table('activities').' a INNER JOIN '.Schema::table('lead_stage_history').' h ON h.lead_id=a.lead_id AND h.changed_at=a.created_at AND h.from_stage=\'assigned\' AND h.to_stage=\'new\' AND h.owner_user_id>0 WHERE a.type=\'assignment\' AND a.notes=%s',array(self::CLAIM_EXPIRED_NOTE),'adc_view_own_leads','adc_view_branch_leads'),
 			'discount'=>array('SELECT d.id,q.branch_id,0 owner_user_id,d.created_at due_at FROM '.Schema::table('discount_requests').' d INNER JOIN '.Schema::table('quotations')." q ON q.id=d.quotation_id WHERE d.status='pending' AND d.created_at<=%s",array($approval),'adc_review_discounts','adc_review_discounts'),
 			'sale'=>array('SELECT s.id,v.branch_id,0 owner_user_id,s.created_at due_at FROM '.Schema::table('sales').' s INNER JOIN '.Schema::table('vehicles')." v ON v.id=s.vehicle_id WHERE s.status='pending_approval' AND s.created_at<=%s",array($approval),'adc_approve_sales','adc_approve_sales'),
@@ -62,11 +68,21 @@ final class FollowUpNotifications {
 	}
 
 	private static function allowed(array $row,int $user_id,bool $manager=false): bool {
+		if('lead_closed'===(string)($row['source_type']??'')){return BranchScope::allows((int)$row['branch_id'],$user_id)&&($manager?user_can($user_id,'adc_view_branch_leads'):((int)$row['owner_user_id']===$user_id&&user_can($user_id,'adc_view_own_leads')));}
 		$source=self::sources()[$row['source_type']]??null;
 		if(!$source||!BranchScope::allows((int)$row['branch_id'],$user_id)){return false;}
 		if(user_can($user_id,'manage_options')){return true;}
 		if($manager||!(int)$row['owner_user_id']){return user_can($user_id,$source[3]);}
 		return (int)$row['owner_user_id']===$user_id&&user_can($user_id,$source[2]);
+	}
+
+	/** Queue a durable close notification for the lead owner and branch managers. */
+	public static function queue_lead_closed(int $lead_id,int $branch_id,int $owner_user_id,string $stage,string $closed_at): bool {
+		global $wpdb;$recipients=array();$base=array('source_type'=>'lead_closed','branch_id'=>$branch_id,'owner_user_id'=>$owner_user_id);
+		if($owner_user_id>0&&self::allowed($base,$owner_user_id)){$recipients[$owner_user_id]=0;}
+		foreach(get_users(array('fields'=>'ID')) as $user_id){$user_id=(int)$user_id;if($user_id!==$owner_user_id&&self::allowed($base,$user_id,true)){$recipients[$user_id]=1;}}
+		foreach($recipients as $recipient=>$level){$key=hash('sha256',implode('|',array('lead_closed',$lead_id,$closed_at,$recipient,$level)));$table=Schema::table('followup_notifications');$insert=$wpdb->query($wpdb->prepare("INSERT IGNORE INTO $table (notification_key,source_type,source_id,branch_id,owner_user_id,recipient_id,level,due_at,created_at) VALUES (%s,'lead_closed',%d,%d,%d,%d,%d,%s,%s)",$key,$lead_id,$branch_id,$owner_user_id,$recipient,$level,$closed_at,current_time('mysql',true)));if(false===$insert){return false;}if(0===$insert){continue;}$id=(int)$wpdb->insert_id;$queued=OutboxService::enqueue('followup.notify',array('subject_type'=>'followup_notification','subject_id'=>$id,'recipient_type'=>'user','recipient_id'=>$recipient,'branch_id'=>$branch_id),$key);if(is_wp_error($queued)||!AuditLog::record('followup.queued','followup_notification',$id,'Lead closed notification',null,array('recipient_id'=>$recipient,'level'=>$level,'lead_id'=>$lead_id,'stage'=>$stage))){return false;}}
+		return true;
 	}
 
 	public static function run(): void {
@@ -139,6 +155,8 @@ final class FollowUpNotifications {
 
 	private static function current(array $row) {
 		global $wpdb;
+		if('lost_recontact'===(string)$row['source_type']){$lead=$wpdb->get_row($wpdb->prepare('SELECT id,branch_id,owner_user_id,stage,next_action_at FROM '.Schema::table('leads').' WHERE id=%d',(int)$row['source_id']),ARRAY_A);return $lead&&'lost'===$lead['stage']&&(string)$lead['next_action_at']===(string)$row['due_at']&&(int)$lead['branch_id']===(int)$row['branch_id'];}
+		if('lead_closed'===(string)$row['source_type']){$lead=$wpdb->get_row($wpdb->prepare('SELECT id,branch_id,owner_user_id,stage,closed_at FROM '.Schema::table('leads').' WHERE id=%d',(int)$row['source_id']),ARRAY_A);return $lead&&in_array($lead['stage'],array('won','lost'),true)&&(string)$lead['closed_at']===(string)$row['due_at']&&(int)$lead['branch_id']===(int)$row['branch_id'];}
 		$source=self::sources()[$row['source_type']]??null;
 		if(!$source){return false;}
 		if('claim_expired'===$row['source_type']){

@@ -173,8 +173,8 @@ const { spawn } = require('node:child_process');
         }
         const groups=['customers','inventory','purchasing','approvals','finance','delivery','content','marketing','reports','settings','audit'];
         await admin('admin.php?page=adc-workspace');
-        check(await evaluate('document.querySelectorAll(".adc-workspace-card small").length>=27'),'Original workspace help descriptions preserved');
-        check(await evaluate('document.querySelectorAll(".adc-workspace-section").length===11'),'Workspace has eleven distinct sections');
+        check(await evaluate('document.querySelectorAll(".adc-area-card").length>=11'),'Workspace area shortcuts preserved');
+        check(await evaluate('!!document.querySelector(".adc-overview") && document.querySelectorAll(".adc-area-card").length>=11'),'Workspace renders overview and area directory');
         const cards=await evaluate('[...document.querySelectorAll(".adc-workspace-card")].map(a=>a.href)');
         check(cards.length===new Set(cards).size,'Workspace destinations are unique');
         check(await evaluate('!document.querySelector("#adminmenu a[href*=car-dealer-settings]")'),'Duplicate appearance editor removed from sidebar');

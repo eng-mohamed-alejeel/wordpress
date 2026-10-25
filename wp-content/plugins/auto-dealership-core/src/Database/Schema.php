@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.31.0';
+	public const VERSION = '1.36.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -322,10 +322,15 @@ final class Schema {
 				referred_at datetime NULL,
 				stage varchar(32) NOT NULL DEFAULT 'new',
 				lost_reason text NOT NULL,
+				lost_competitor varchar(190) NOT NULL DEFAULT '',
+				lost_comparative_price bigint(20) unsigned NOT NULL DEFAULT 0,
 				next_action_at datetime NULL,
 				claimed_at datetime NULL,
 				first_contact_at datetime NULL,
 				first_contact_activity_id bigint(20) unsigned NULL,
+				closed_at datetime NULL,
+				archived_at datetime NULL,
+				sale_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				priority varchar(16) NOT NULL DEFAULT 'normal',
 				legacy_request_type varchar(16) NULL,
 				legacy_request_id bigint(20) unsigned NULL,
@@ -340,6 +345,7 @@ final class Schema {
 				KEY pipeline (branch_id,stage,owner_user_id),
 				KEY claim_expiry (stage,claimed_at,first_contact_at),
 				KEY first_contact (first_contact_at),
+				KEY archive_state (stage,archived_at,closed_at),
 				KEY campaign (campaign),
 				KEY created_by (created_by),
 				KEY source (source)
@@ -502,12 +508,19 @@ final class Schema {
 				vehicle_id bigint(20) unsigned NOT NULL,
 				status varchar(32) NOT NULL DEFAULT 'pending_approval',
 				owner_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				lead_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				sale_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				payment_method varchar(24) NOT NULL DEFAULT '',
+				employee_commission_amount bigint(20) unsigned NOT NULL DEFAULT 0,
+				employee_commission_status varchar(20) NOT NULL DEFAULT 'disabled',
+				employee_commission_reference varchar(100) NOT NULL DEFAULT '',
 				invoice_reference varchar(100) NOT NULL DEFAULT '',
 				approved_by bigint(20) unsigned NOT NULL DEFAULT 0,
 				created_at datetime NOT NULL,
 				updated_at datetime NOT NULL,
 				PRIMARY KEY  (id),
 				KEY status_created (status,created_at),
+				KEY lead_id (lead_id),
 				KEY vehicle_id (vehicle_id)
 			) $collate ENGINE=InnoDB",
 			"CREATE TABLE " . self::table( 'delivery_documents' ) . " (

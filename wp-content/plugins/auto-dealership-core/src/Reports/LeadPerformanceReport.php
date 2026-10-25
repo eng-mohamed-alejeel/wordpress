@@ -27,7 +27,7 @@ final class LeadPerformanceReport {
 		$end_at = $end->modify( '+1 day' )->setTimezone( $utc )->format( 'Y-m-d H:i:s' );
 		$now = current_time( 'mysql', true );
 		$lead_table = Schema::table( 'leads' );
-		$aggregate = "SELECT l.branch_id,COALESCE(b.name,'') branch_name,COUNT(*) total,SUM(l.stage='new') new_count,SUM(l.first_contact_at IS NOT NULL) first_contact_count,SUM(l.first_contact_at IS NOT NULL AND l.first_contact_at>=l.created_at) valid_first_contact_count,AVG(CASE WHEN l.first_contact_at IS NOT NULL AND l.first_contact_at>=l.created_at THEN TIMESTAMPDIFF(SECOND,l.created_at,l.first_contact_at) ELSE NULL END) avg_first_contact_seconds,SUM(l.next_action_at IS NOT NULL AND l.next_action_at<=%s AND l.stage NOT IN ('won','lost')) overdue_count,SUM(l.stage='won') won_count,SUM(l.stage='lost') lost_count FROM $lead_table l LEFT JOIN " . Schema::table( 'branches' ) . " b ON b.id=l.branch_id WHERE $scope AND l.created_at>=%s AND l.created_at<%s GROUP BY l.branch_id,b.name ORDER BY l.branch_id";
+		$aggregate = "SELECT l.branch_id,COALESCE(b.name,'') branch_name,COUNT(*) total,SUM(l.stage='new') new_count,SUM(l.first_contact_at IS NOT NULL) first_contact_count,SUM(l.first_contact_at IS NOT NULL AND l.first_contact_at>=l.created_at) valid_first_contact_count,AVG(CASE WHEN l.first_contact_at IS NOT NULL AND l.first_contact_at>=l.created_at THEN TIMESTAMPDIFF(SECOND,l.created_at,l.first_contact_at) ELSE NULL END) avg_first_contact_seconds,SUM(l.next_action_at IS NOT NULL AND l.next_action_at<=%s AND l.stage NOT IN ('won','lost')) overdue_count,SUM(l.stage='won') won_count,SUM(l.stage='lost') lost_count,COALESCE(SUM(CASE WHEN l.stage='won' THEN l.sale_amount ELSE 0 END),0) sales_amount,COALESCE(SUM(CASE WHEN l.stage='won' THEN s.employee_commission_amount ELSE 0 END),0) employee_commission_amount,AVG(CASE WHEN l.closed_at IS NOT NULL THEN TIMESTAMPDIFF(SECOND,l.created_at,l.closed_at) ELSE NULL END) avg_close_seconds FROM $lead_table l LEFT JOIN " . Schema::table( 'sales' ) . " s ON s.lead_id=l.id LEFT JOIN " . Schema::table( 'branches' ) . " b ON b.id=l.branch_id WHERE $scope AND l.created_at>=%s AND l.created_at<%s GROUP BY l.branch_id,b.name ORDER BY l.branch_id";
 		$rows = $wpdb->get_results( $wpdb->prepare( $aggregate, array_merge( array( $now ), $scope_args, array( $start_at, $end_at ) ) ), ARRAY_A );
 		if ( $wpdb->last_error ) { error_log( 'Auto Dealership Core: CRM performance report query failed: ' . $wpdb->last_error ); return new \WP_Error( 'adc_lead_report_unavailable', __( 'تعذر تحميل تقرير أداء CRM.', 'auto-dealership-core' ), array( 'status'=>503 ) ); }
 
@@ -50,26 +50,34 @@ final class LeadPerformanceReport {
 		}
 
 		$branches = array();
-		$totals = array( 'total'=>0, 'new'=>0, 'first_contact'=>0, 'overdue'=>0, 'won'=>0, 'lost'=>0, 'avg_first_contact_seconds'=>null );
+		$totals = array( 'total'=>0, 'new'=>0, 'first_contact'=>0, 'overdue'=>0, 'won'=>0, 'lost'=>0, 'sales_amount'=>0, 'employee_commission_amount'=>0, 'avg_first_contact_seconds'=>null, 'avg_close_seconds'=>null );
 		$weighted_seconds = 0.0;
+		$weighted_close_seconds = 0.0;
+		$close_count = 0;
 		foreach ( $rows as $row ) {
-			foreach ( array( 'branch_id','total','new_count','first_contact_count','valid_first_contact_count','overdue_count','won_count','lost_count' ) as $key ) { $row[$key] = (int) $row[$key]; }
+			foreach ( array( 'branch_id','total','new_count','first_contact_count','valid_first_contact_count','overdue_count','won_count','lost_count','sales_amount','employee_commission_amount' ) as $key ) { $row[$key] = (int) $row[$key]; }
 			$row['avg_first_contact_seconds'] = null === $row['avg_first_contact_seconds'] ? null : (float) $row['avg_first_contact_seconds'];
+			$row['avg_close_seconds'] = null === $row['avg_close_seconds'] ? null : (float) $row['avg_close_seconds'];
 			$branch_key = (int) $row['branch_id'];
 			if ( ! isset( $branches[$branch_key] ) ) {
-				$branches[$branch_key] = array( 'branch_id'=>$row['branch_id'], 'branch_name'=>$row['branch_name'], 'total'=>0, 'new_count'=>0, 'first_contact_count'=>0, 'valid_first_contact_count'=>0, 'avg_first_contact_seconds'=>null, 'overdue_count'=>0, 'won_count'=>0, 'lost_count'=>0, '_weighted_seconds'=>0.0 );
+				$branches[$branch_key] = array( 'branch_id'=>$row['branch_id'], 'branch_name'=>$row['branch_name'], 'total'=>0, 'new_count'=>0, 'first_contact_count'=>0, 'valid_first_contact_count'=>0, 'avg_first_contact_seconds'=>null, 'avg_close_seconds'=>null, 'overdue_count'=>0, 'won_count'=>0, 'lost_count'=>0, 'sales_amount'=>0, 'employee_commission_amount'=>0, '_weighted_seconds'=>0.0, '_weighted_close_seconds'=>0.0, '_close_count'=>0 );
 			}
-			foreach ( array( 'total', 'new_count', 'first_contact_count', 'valid_first_contact_count', 'overdue_count', 'won_count', 'lost_count' ) as $key ) { $branches[$branch_key][$key] += $row[$key]; }
+			foreach ( array( 'total', 'new_count', 'first_contact_count', 'valid_first_contact_count', 'overdue_count', 'won_count', 'lost_count', 'sales_amount', 'employee_commission_amount' ) as $key ) { $branches[$branch_key][$key] += $row[$key]; }
 			if ( null !== $row['avg_first_contact_seconds'] ) { $branches[$branch_key]['_weighted_seconds'] += $row['avg_first_contact_seconds'] * $row['valid_first_contact_count']; }
 			foreach ( array( 'total'=>'total', 'new_count'=>'new', 'first_contact_count'=>'first_contact', 'overdue_count'=>'overdue', 'won_count'=>'won', 'lost_count'=>'lost' ) as $source => $target ) { $totals[$target] += $row[$source]; }
 			if ( null !== $row['avg_first_contact_seconds'] ) { $weighted_seconds += $row['avg_first_contact_seconds'] * $row['valid_first_contact_count']; }
+			if ( null !== $row['avg_close_seconds'] ) { $branches[$branch_key]['_weighted_close_seconds'] += $row['avg_close_seconds'] * $row['won_count']; $branches[$branch_key]['_close_count'] += $row['won_count']; $weighted_close_seconds += $row['avg_close_seconds'] * $row['won_count']; $close_count += $row['won_count']; }
+			$totals['sales_amount'] += $row['sales_amount'];
+			$totals['employee_commission_amount'] += $row['employee_commission_amount'];
 		}
 		$valid_contact_count = array_sum( array_column( $rows, 'valid_first_contact_count' ) );
 		if ( $valid_contact_count > 0 ) { $totals['avg_first_contact_seconds'] = $weighted_seconds / $valid_contact_count; }
+		if ( $close_count > 0 ) { $totals['avg_close_seconds'] = $weighted_close_seconds / $close_count; }
 		foreach ( $branches as &$branch ) {
 			if ( $branch['valid_first_contact_count'] > 0 ) { $branch['avg_first_contact_seconds'] = $branch['_weighted_seconds'] / $branch['valid_first_contact_count']; }
+			if ( $branch['_close_count'] > 0 ) { $branch['avg_close_seconds'] = $branch['_weighted_close_seconds'] / $branch['_close_count']; }
 			unset( $branch['valid_first_contact_count'] );
-			unset( $branch['_weighted_seconds'] );
+			unset( $branch['_weighted_seconds'], $branch['_weighted_close_seconds'], $branch['_close_count'] );
 		}
 		unset( $branch );
 		foreach ( $pipeline as &$item ) { $item['branch_id'] = (int) $item['branch_id']; $item['total'] = (int) $item['total']; }

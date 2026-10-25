@@ -511,7 +511,11 @@ $crm_older_stage_date = gmdate( 'Y-m-d H:i:s', time() - 5 * DAY_IN_SECONDS );
 $crm_history_order_newer = $wpdb->insert( $crm_stage_history, array( 'lead_id'=>(int) $crm_history_order_lead['id'], 'branch_id'=>(int) $branch_b['id'], 'from_stage'=>'new', 'to_stage'=>'assigned', 'changed_at'=>$crm_recent_stage_date ), array( '%d', '%d', '%s', '%s', '%s' ) );
 $crm_history_order_older = $wpdb->insert( $crm_stage_history, array( 'lead_id'=>(int) $crm_history_order_lead['id'], 'branch_id'=>(int) $branch_b['id'], 'from_stage'=>'', 'to_stage'=>'new', 'changed_at'=>$crm_older_stage_date ), array( '%d', '%d', '%s', '%s', '%s' ) );
 if ( 1 !== $crm_history_order_newer || 1 !== $crm_history_order_older ) { throw new RuntimeException( 'CRM stage-duration history fixtures failed.' ); }
-$crm_history_order_update = LeadService::update_stage( (int) $crm_history_order_lead['id'], 'lost', 'Synthetic loss for duration test' );
+$crm_recontact_at = gmdate( 'Y-m-d H:i:s', time() + 10 * DAY_IN_SECONDS );
+$crm_history_order_update = LeadService::update_stage( (int) $crm_history_order_lead['id'], 'lost', 'Synthetic loss for duration test', 0, 0, '', '', $crm_recontact_at, 'Competitor fixture', 123450 );
+$crm_loss_fixture = $wpdb->get_row( $wpdb->prepare( "SELECT next_action_at,lost_competitor,lost_comparative_price FROM $crm_leads WHERE id=%d", (int) $crm_history_order_lead['id'] ), ARRAY_A );
+adc_check( is_array( $crm_loss_fixture ) && $crm_recontact_at === $crm_loss_fixture['next_action_at'] && 'Competitor fixture' === $crm_loss_fixture['lost_competitor'] && 123450 === (int) $crm_loss_fixture['lost_comparative_price'], 'Lost leads retain an optional future recontact date, competitor and comparative price without reopening the opportunity.' );
+adc_check( ! empty( $wpdb->get_var( $wpdb->prepare( "SELECT closed_at FROM $crm_leads WHERE id=%d", (int) $crm_history_order_lead['id'] ) ) ), 'Closing a lead as lost stamps its closed_at time.' );
 $crm_history_order_row_id = (int) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $crm_stage_history WHERE lead_id=%d ORDER BY id DESC LIMIT 1", (int) $crm_history_order_lead['id'] ) );
 $crm_expected_duration = time() - $crm_recent_stage_timestamp;
 $crm_live_duration = (int) $wpdb->get_var( $wpdb->prepare( "SELECT duration_seconds FROM $crm_stage_history WHERE id=%d", $crm_history_order_row_id ) );

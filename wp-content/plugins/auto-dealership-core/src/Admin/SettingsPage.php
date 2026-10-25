@@ -17,6 +17,8 @@ final class SettingsPage {
 		} );
 		add_action( 'admin_menu', array( self::class, 'menu' ) );
 		add_action( 'admin_post_adc_save_settings', array( self::class, 'save' ) );
+		add_action( 'admin_post_adc_employee_commission_status', array( self::class, 'employee_commission_status' ) );
+		add_action( 'admin_post_adc_save_lead_goals', array( self::class, 'save_lead_goals' ) );
 		add_action( 'admin_post_adc_create_branch', array( self::class, 'create_branch' ) );
 		add_action( 'show_user_profile', array( self::class, 'branch_field' ) );
 		add_action( 'edit_user_profile', array( self::class, 'branch_field' ) );
@@ -30,10 +32,11 @@ final class SettingsPage {
 
 	public static function sections(): array {
 		return array(
+			'goals' => array( 'أهداف المبيعات الشهرية', array() ),
 			'pricing' => array( 'التسعير والضرائب', array( 'vat_rate_bps', 'vat_percent', 'sales_manager_discount_limit', 'general_manager_discount_limit', 'pricing_fee_amount', 'promotion_code', 'promotion_type', 'promotion_value', 'promotion_starts_at', 'promotion_ends_at', 'seller_name', 'seller_tax_number', 'seller_phone', 'seller_address' ) ),
 			'reservations' => array( 'الحجز والعربون', array( 'reservation_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'reservation_refund_hours' ) ),
 			'branches' => array( 'فروع التشغيل', array( 'default_branch_id' ) ),
-			'crm' => array( 'توزيع العملاء المحتملين', array( 'lead_assignment_mode', 'lead_daily_cap', 'lead_claim_timeout_minutes' ) ),
+			'crm' => array( 'توزيع العملاء المحتملين', array( 'lead_assignment_mode', 'lead_daily_cap', 'lead_claim_timeout_minutes', 'lead_archive_days', 'lead_stale_days' ) ),
 			'delivery' => array( 'سياسة التسليم', array( 'delivery_required_documents' ) ),
 			'privacy' => array( 'الاحتفاظ بالبيانات', array( 'privacy_retention_days' ) ),
 			'catalog' => array( 'مصدر الكتالوج', array( 'public_catalog_mode' ) ),
@@ -65,6 +68,10 @@ final class SettingsPage {
 		$lead_assignment_mode = sanitize_key( (string) get_option( 'adc_lead_assignment_mode', 'manual' ) );
 		$lead_claim_timeout = min( 1440, max( 5, absint( get_option( 'adc_lead_claim_timeout_minutes', 30 ) ) ) );
 		$lead_daily_cap = min( 500, absint( get_option( 'adc_lead_daily_cap', 0 ) ) );
+		$lead_archive_days = min( 3650, absint( get_option( 'adc_lead_archive_days', 30 ) ) );
+		$lead_stale_days = min( 365, max( 1, absint( get_option( 'adc_lead_stale_days', 7 ) ) ) );
+		$employee_commission_type = sanitize_key( (string) get_option( 'adc_employee_commission_type', 'none' ) );
+		$employee_commission_value = absint( get_option( 'adc_employee_commission_value', 0 ) );
 		$retention_days = absint( get_option( 'adc_privacy_retention_days', 0 ) );
 		$catalog_mode = PublicCatalog::mode();
 		$catalog_readiness = PublicCatalog::readiness();
@@ -78,6 +85,7 @@ final class SettingsPage {
 			<?php if ( isset( $_GET['branch_error'] ) ) : ?><div class="notice notice-error"><p><?php esc_html_e( 'تعذر إنشاء الفرع. تحقق من صحة الرمز وعدم تكراره.', 'auto-dealership-core' ); ?></p></div><?php endif; ?>
 			<nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e( 'أقسام الإعدادات', 'auto-dealership-core' ); ?>"><?php foreach ( self::sections() as $key => $definition ) : ?><a class="nav-tab <?php echo $key === $section ? 'nav-tab-active' : ''; ?>" <?php if ( $key === $section ) { echo 'aria-current="page"'; } ?> href="<?php echo esc_url( add_query_arg( array( 'page' => 'adc-settings', 'section' => $key ), admin_url( 'admin.php' ) ) ); ?>"><?php echo esc_html__( $definition[0], 'auto-dealership-core' ); ?></a><?php endforeach; ?></nav>
 			<h2><?php echo esc_html__( self::sections()[$section][0], 'auto-dealership-core' ); ?></h2>
+			<?php if ( 'goals' === $section ) { self::render_sales_goals_page(); echo '</div>'; return; } ?>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="adc_save_settings"><input type="hidden" name="settings_section" value="<?php echo esc_attr( $section ); ?>"><input type="hidden" name="adc_money_unit" value="SAR">
 				<?php wp_nonce_field( 'adc_save_settings' ); ?>
@@ -109,6 +117,11 @@ final class SettingsPage {
 					<?php endif; ?></td></tr>
 					<tr><th scope="row"><label for="adc_lead_claim_timeout_minutes"><?php esc_html_e( 'مهلة المطالبة بالدقائق', 'auto-dealership-core' ); ?></label></th><td><input id="adc_lead_claim_timeout_minutes" name="lead_claim_timeout_minutes" type="number" min="5" max="1440" value="<?php echo esc_attr( $lead_claim_timeout ); ?>"><p class="description"><?php esc_html_e( 'تُعاد الفرصة المسندة إلى القائمة المشتركة إذا لم يُسجّل الموظف أول تواصل قبل انتهاء المهلة؛ من 5 إلى 1440 دقيقة.', 'auto-dealership-core' ); ?></p></td></tr>
 					<?php endif; ?>
+					<?php if ( in_array( 'employee_commission_type', $fields, true ) ) : ?>
+					<tr><th scope="row"><label for="adc_employee_commission_type"><?php esc_html_e( 'عمولة موظف المبيعات', 'auto-dealership-core' ); ?></label></th><td><select id="adc_employee_commission_type" name="employee_commission_type"><option value="none" <?php selected( $employee_commission_type, 'none' ); ?>><?php esc_html_e( 'معطلة', 'auto-dealership-core' ); ?></option><option value="fixed" <?php selected( $employee_commission_type, 'fixed' ); ?>><?php esc_html_e( 'مبلغ ثابت لكل بيع', 'auto-dealership-core' ); ?></option><option value="percentage" <?php selected( $employee_commission_type, 'percentage' ); ?>><?php esc_html_e( 'نسبة من مبلغ البيع', 'auto-dealership-core' ); ?></option></select> <input id="adc_employee_commission_value" name="employee_commission_value" type="number" min="0" max="100000000" step="<?php echo 'percentage' === $employee_commission_type ? '1' : '0.01'; ?>" value="<?php echo esc_attr( 'fixed' === $employee_commission_type ? \AutoDealership\Pricing\Money::decimal( $employee_commission_value ) : $employee_commission_value ); ?>"><p class="description"><?php esc_html_e( 'المبلغ بالريال، أو النسبة بنقاط الأساس؛ 1500 تعني 15%. تحفظ العمولة وقت إغلاق البيع ولا تتغير بتغيير الإعداد لاحقًا.', 'auto-dealership-core' ); ?></p></td></tr>
+					<?php endif; ?>
+					<?php if ( in_array( 'lead_archive_days', $fields, true ) ) : ?><tr><th scope="row"><label for="adc_lead_archive_days"><?php esc_html_e( 'مدة أرشفة الفرص المغلقة (يوم)', 'auto-dealership-core' ); ?></label></th><td><input id="adc_lead_archive_days" name="lead_archive_days" type="number" min="0" max="3650" value="<?php echo esc_attr( $lead_archive_days ); ?>"><p class="description"><?php esc_html_e( 'تُخفى الفرص الناجحة والخاسرة الأقدم من هذه المدة من العرض الافتراضي، مع إمكانية عرضها من فلتر «المؤرشفة». الصفر يعطل الأرشفة.', 'auto-dealership-core' ); ?></p></td></tr><?php endif; ?>
+					<?php if ( in_array( 'lead_stale_days', $fields, true ) ) : ?><tr><th scope="row"><label for="adc_lead_stale_days"><?php esc_html_e( 'مدة اعتبار الفرصة راكدة (يوم)', 'auto-dealership-core' ); ?></label></th><td><input id="adc_lead_stale_days" name="lead_stale_days" type="number" min="1" max="365" value="<?php echo esc_attr( $lead_stale_days ); ?>"><p class="description"><?php esc_html_e( 'يرسل النظام تنبيهًا عند عدم وجود نشاط أو متابعة للفرصة خلال هذه المدة، مع تصعيد التنبيه للمدير.', 'auto-dealership-core' ); ?></p></td></tr><?php endif; ?>
 					<?php if ( in_array( 'privacy_retention_days', $fields, true ) ) : ?>
 					<tr><th scope="row"><label for="adc_privacy_retention_days"><?php esc_html_e( 'مدة الاحتفاظ ببيانات الهوية (يوم)', 'auto-dealership-core' ); ?></label></th><td><input id="adc_privacy_retention_days" name="privacy_retention_days" type="number" min="0" max="3650" value="<?php echo esc_attr( $retention_days ); ?>"><p class="description"><?php esc_html_e( '0 يعطل الإخفاء المجدول. أي قيمة مفعلة يجب أن تكون بين 30 و3650 يومًا وبعد اعتماد السياسة النظامية.', 'auto-dealership-core' ); ?></p></td></tr>
 					<?php endif; ?>
@@ -155,6 +168,59 @@ final class SettingsPage {
 		<?php
 	}
 
+	public static function render_employee_commissions_page(): void {
+		if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية الوصول.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
+		$type = sanitize_key( (string) get_option( 'adc_employee_commission_type', 'none' ) ); $value = absint( get_option( 'adc_employee_commission_value', 0 ) );
+		echo '<div class="wrap" dir="' . ( 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl' ) . '"><h1>' . esc_html__( 'عمولات موظفي المبيعات', 'auto-dealership-core' ) . '</h1><p>' . esc_html__( 'إدارة قاعدة العمولة ومراجعة واعتماد وصرف استحقاقات موظفي المبيعات.', 'auto-dealership-core' ) . '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="adc_save_settings"><input type="hidden" name="settings_section" value="crm"><input type="hidden" name="adc_money_unit" value="SAR">'; wp_nonce_field( 'adc_save_settings' );
+		echo '<table class="form-table"><tr><th><label for="adc_employee_commission_type">' . esc_html__( 'قاعدة العمولة', 'auto-dealership-core' ) . '</label></th><td><select id="adc_employee_commission_type" name="employee_commission_type"><option value="none" ' . selected( $type, 'none', false ) . '>' . esc_html__( 'معطلة', 'auto-dealership-core' ) . '</option><option value="fixed" ' . selected( $type, 'fixed', false ) . '>' . esc_html__( 'مبلغ ثابت لكل بيع', 'auto-dealership-core' ) . '</option><option value="percentage" ' . selected( $type, 'percentage', false ) . '>' . esc_html__( 'نسبة من مبلغ البيع', 'auto-dealership-core' ) . '</option></select> <input name="employee_commission_value" type="number" min="0" step="' . ( 'percentage' === $type ? '1' : '0.01' ) . '" value="' . esc_attr( 'fixed' === $type ? \AutoDealership\Pricing\Money::decimal( $value ) : $value ) . '"><p class="description">' . esc_html__( 'النسبة بنقاط الأساس؛ 1500 تعني 15%. تحفظ العمولة عند إغلاق البيع.', 'auto-dealership-core' ) . '</p></td></tr></table>'; submit_button( __( 'حفظ سياسة العمولة', 'auto-dealership-core' ) ); echo '</form>';
+		self::render_employee_commissions(); echo '</div>';
+	}
+
+	public static function render_sales_goals_page(): void {
+		if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية الوصول.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
+		?><p><?php esc_html_e( 'حدد قيمة المبيعات المستهدفة لكل موظف. يظهر الإنجاز تلقائيًا في لوحة CRM ويُحتسب من المبيعات المغلقة في الشهر الحالي.', 'auto-dealership-core' ); ?></p>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_save_lead_goals"><?php wp_nonce_field( 'adc_save_lead_goals' ); ?>
+		<table class="widefat striped" style="max-width:760px"><thead><tr><th><?php esc_html_e( 'الموظف', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الهدف الشهري (SAR)', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
+		<?php $goal_staff = get_users( array( 'role' => 'dealership_sales', 'number' => 100, 'orderby' => 'display_name' ) ); foreach ( $goal_staff as $goal_user ) : ?><tr><td><?php echo esc_html( $goal_user->display_name ); ?></td><td><input type="number" min="0" step="0.01" name="goals[<?php echo absint( $goal_user->ID ); ?>]" value="<?php echo esc_attr( \AutoDealership\Pricing\Money::decimal( absint( get_user_meta( $goal_user->ID, 'adc_monthly_sales_goal', true ) ) ) ); ?>"></td></tr><?php endforeach; ?>
+		<?php if ( ! $goal_staff ) : ?><tr><td colspan="2"><?php esc_html_e( 'لا يوجد موظفو مبيعات حاليًا.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?></tbody></table>
+		<?php submit_button( __( 'حفظ الأهداف', 'auto-dealership-core' ), 'primary' ); ?></form><?php
+	}
+
+	private static function render_employee_commissions(): void {
+		global $wpdb;
+		$rows = $wpdb->get_results( 'SELECT s.id,s.owner_user_id,s.sale_amount,s.employee_commission_amount,s.employee_commission_status,s.created_at,u.display_name,v.stock_number FROM ' . \AutoDealership\Database\Schema::table( 'sales' ) . ' s LEFT JOIN ' . $wpdb->users . ' u ON u.ID=s.owner_user_id LEFT JOIN ' . \AutoDealership\Database\Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id WHERE s.employee_commission_amount>0 ORDER BY s.id DESC LIMIT 200', ARRAY_A ) ?: array();
+		echo '<hr><h2>' . esc_html__( 'سجل عمولات موظفي المبيعات', 'auto-dealership-core' ) . '</h2><p class="description">' . esc_html__( 'تُحسب العمولة عند إغلاق البيع وفق الإعداد الحالي، وتبقى قيمة البيع القديمة ثابتة عند تغيير الإعداد.', 'auto-dealership-core' ) . '</p>';
+		if ( ! $rows ) { echo '<p>' . esc_html__( 'لا توجد عمولات مسجلة حتى الآن.', 'auto-dealership-core' ) . '</p>'; return; }
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'البيع', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'الموظف', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'السيارة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المبلغ', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'العمولة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'الحالة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'الإجراء', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		$labels = array( 'pending_review'=>'بانتظار المراجعة', 'approved'=>'معتمدة للصرف', 'paid'=>'مصروفة', 'void'=>'ملغاة', 'disabled'=>'معطلة' );
+		foreach ( $rows as $row ) {
+			$status = (string) $row['employee_commission_status'];
+			echo '<tr><td>#' . absint( $row['id'] ) . '</td><td>' . esc_html( $row['display_name'] ?: '#' . $row['owner_user_id'] ) . '</td><td>' . esc_html( $row['stock_number'] ?: '—' ) . '</td><td>' . esc_html( \AutoDealership\Pricing\Money::display( (int) $row['sale_amount'] ) ) . '</td><td>' . esc_html( \AutoDealership\Pricing\Money::display( (int) $row['employee_commission_amount'] ) ) . '</td><td>' . esc_html( $labels[$status] ?? $status ) . '</td><td>';
+			if ( 'pending_review' === $status ) { self::commission_action( (int) $row['id'], 'approved', 'اعتماد العمولة' ); self::commission_action( (int) $row['id'], 'void', 'إلغاء العمولة', true ); }
+			elseif ( 'approved' === $status ) { self::commission_action( (int) $row['id'], 'paid', 'تسجيل الصرف', false, true ); self::commission_action( (int) $row['id'], 'void', 'إلغاء العمولة', true ); }
+			echo '</td></tr>';
+		}
+		echo '</tbody></table>';
+	}
+
+	private static function commission_action( int $sale_id, string $target, string $label, bool $reason = false, bool $reference = false ): void {
+		echo '<form style="display:inline-block;margin:2px" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">'; wp_nonce_field( 'adc_employee_commission_' . $target . '_' . $sale_id ); echo '<input type="hidden" name="action" value="adc_employee_commission_status"><input type="hidden" name="sale_id" value="' . absint( $sale_id ) . '"><input type="hidden" name="target" value="' . esc_attr( $target ) . '">';
+		if ( $reason ) { echo '<input type="text" name="reason" maxlength="500" required placeholder="' . esc_attr__( 'السبب', 'auto-dealership-core' ) . '">'; }
+		if ( $reference ) { echo '<input type="text" name="payment_reference" maxlength="100" required placeholder="' . esc_attr__( 'مرجع الصرف', 'auto-dealership-core' ) . '">'; }
+		echo '<button class="button">' . esc_html__( $label, 'auto-dealership-core' ) . '</button></form> ';
+	}
+
+	public static function employee_commission_status(): void {
+		$sale_id = absint( $_POST['sale_id'] ?? 0 ); $target = sanitize_key( wp_unslash( $_POST['target'] ?? '' ) ); check_admin_referer( 'adc_employee_commission_' . $target . '_' . $sale_id );
+		if ( ! current_user_can( 'manage_options' ) || ! in_array( $target, array( 'approved','paid','void' ), true ) ) { wp_die( esc_html__( 'عملية العمولة غير مسموحة.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
+		global $wpdb; $row = $wpdb->get_row( $wpdb->prepare( 'SELECT employee_commission_status FROM ' . \AutoDealership\Database\Schema::table( 'sales' ) . ' WHERE id=%d', $sale_id ), ARRAY_A ); $expected = 'approved' === $target ? 'pending_review' : ( 'paid' === $target ? 'approved' : ( in_array( (string) ( $row['employee_commission_status'] ?? '' ), array( 'pending_review','approved' ), true ) ? (string) $row['employee_commission_status'] : '' ) );
+		if ( ! $row || '' === $expected || (string) $row['employee_commission_status'] !== $expected || ( 'paid' === $target && '' === trim( (string) ( $_POST['payment_reference'] ?? '' ) ) ) ) { wp_die( esc_html__( 'حالة العمولة لا تسمح بهذا الإجراء.', 'auto-dealership-core' ), '', array( 'response'=>409 ) ); }
+		$changes = array( 'employee_commission_status'=>$target, 'updated_at'=>current_time( 'mysql', true ) ); $formats = array( '%s','%s' ); if ( 'paid' === $target ) { $changes['employee_commission_reference'] = sanitize_text_field( wp_unslash( $_POST['payment_reference'] ?? '' ) ); $formats[] = '%s'; }
+		$ok = $wpdb->update( \AutoDealership\Database\Schema::table( 'sales' ), $changes, array( 'id'=>$sale_id, 'employee_commission_status'=>$expected ), $formats, array( '%d','%s' ) );
+		if ( 1 !== $ok || ! \AutoDealership\Audit\AuditLog::record( 'employee_commission.' . $target, 'sale', $sale_id, sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? $_POST['payment_reference'] ?? '' ) ), array( 'status'=>$expected ), array( 'status'=>$target ) ) ) { wp_die( esc_html__( 'تعذر حفظ قرار العمولة.', 'auto-dealership-core' ), '', array( 'response'=>500 ) ); }
+		wp_safe_redirect( add_query_arg( array( 'page'=>'adc-employee-commissions','updated'=>'1' ), admin_url( 'admin.php' ) ) ); exit;
+	}
+
 	public static function save(): void {
 		\AutoDealership\Pricing\Money::require_sar_form();
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -174,10 +240,21 @@ final class SettingsPage {
 				wp_die( esc_html__( 'Percentage values use basis points; 1500 means 15%.', 'auto-dealership-core' ), '', array( 'response'=>400 ) );
 			}
 		}
-		$values = \AutoDealership\Pricing\Money::form_values( $input, array_merge( array( 'sales_manager_discount_limit','general_manager_discount_limit','pricing_fee_amount' ), 'fixed' === ( $_POST['promotion_type'] ?? '' ) ? array( 'promotion_value' ) : array(), 'fixed' === ( $_POST['reservation_deposit_type'] ?? '' ) ? array( 'reservation_deposit_value' ) : array() ) );
+		$values = \AutoDealership\Pricing\Money::form_values( $input, array_merge( array( 'sales_manager_discount_limit','general_manager_discount_limit','pricing_fee_amount' ), 'fixed' === ( $_POST['promotion_type'] ?? '' ) ? array( 'promotion_value' ) : array(), 'fixed' === ( $_POST['reservation_deposit_type'] ?? '' ) ? array( 'reservation_deposit_value' ) : array(), 'fixed' === ( $_POST['employee_commission_type'] ?? '' ) ? array( 'employee_commission_value' ) : array() ) );
 		$result = $section ? ConfigurationService::update_section( $values, self::sections()[$section][1] ) : ConfigurationService::update( $values );
 		wp_safe_redirect( add_query_arg( is_wp_error( $result ) ? 'error' : 'updated', '1', add_query_arg( 'section', $section ?: 'pricing', admin_url( 'admin.php?page=adc-settings' ) ) ) );
 		exit;
+	}
+
+	public static function save_lead_goals(): void {
+		if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية حفظ الأهداف.', 'auto-dealership-core' ), '', array( 'response' => 403 ) ); }
+		check_admin_referer( 'adc_save_lead_goals' );
+		$goals = isset( $_POST['goals'] ) && is_array( $_POST['goals'] ) ? wp_unslash( $_POST['goals'] ) : array();
+		foreach ( get_users( array( 'role' => 'dealership_sales', 'number' => 100, 'fields' => array( 'ID' ) ) ) as $staff ) {
+			$user_id = (int) $staff->ID; $value = isset( $goals[ $user_id ] ) ? \AutoDealership\Pricing\Money::from_sar( $goals[ $user_id ] ) : 0;
+			update_user_meta( $user_id, 'adc_monthly_sales_goal', max( 0, (int) $value ) );
+		}
+		wp_safe_redirect( add_query_arg( array( 'page' => 'adc-settings', 'section' => 'crm', 'updated' => '1' ), admin_url( 'admin.php' ) ) ); exit;
 	}
 
 	public static function create_branch(): void {

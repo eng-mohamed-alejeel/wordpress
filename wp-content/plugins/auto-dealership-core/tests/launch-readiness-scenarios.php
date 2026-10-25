@@ -87,6 +87,7 @@ $owner=array_values(array_filter($rows,static fn($r)=>(int)$r['recipient_id']===
 $assert(count($owner)===1&&count($managers)===1&&(int)$managers[0]['level']===1,'Overdue lead notifies its owner and escalates to its branch manager');
 $assert(!array_filter($rows,static fn($r)=>(int)$r['recipient_id']===$foreign),'Escalation excludes foreign branch managers');
 Alerts::scan();$assert((int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE source_type='lead' AND source_id=%d",$lead))===count($rows),'Repeated scan does not duplicate reminders');
+$lost_due=gmdate('Y-m-d H:i:s',time()-3600);$wpdb->update(Schema::table('leads'),array('stage'=>'lost','next_action_at'=>$lost_due),array('id'=>$lead));Alerts::scan();$lost_rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE source_type='lost_recontact' AND source_id=%d",$lead),ARRAY_A);$assert(count($lost_rows)>=1&&array_filter($lost_rows,static fn($r)=>(int)$r['recipient_id']===$staff),'Lost lead recontact date queues a scoped reminder after closure');$wpdb->update(Schema::table('leads'),array('stage'=>'new','next_action_at'=>null),array('id'=>$lead));
 wp_set_current_user($foreign);$assert(is_wp_error(Alerts::acknowledge((int)$owner[0]['id'])),'Another recipient cannot acknowledge a staff alert');
 wp_set_current_user($staff);$assert(is_array(Alerts::acknowledge((int)$owner[0]['id'])),'Assigned staff acknowledgement persists with audit');
 $assert(is_array(Alerts::acknowledge((int)$owner[0]['id'])),'Acknowledgement replay is idempotent');

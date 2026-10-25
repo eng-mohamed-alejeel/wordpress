@@ -45,6 +45,20 @@
 		});
 	}
 
+	document.addEventListener('click', function (event) {
+		var toggle = event.target.closest && event.target.closest('[data-collapse-stage]');
+		if (!toggle) {
+			return;
+		}
+		var column = toggle.closest('[data-lead-stage]');
+		if (!column) {
+			return;
+		}
+		var collapsed = column.classList.toggle('is-collapsed');
+		toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+		toggle.textContent = collapsed ? 'عرض' : 'طي';
+	});
+
 	function markTargets(card) {
 		var allowed = allowedStages(card) || [];
 		var root = board();
@@ -110,6 +124,99 @@
 		});
 	}
 
+	function askClose(won, vehicles) {
+		return new Promise(function (resolve) {
+			var dialog = document.createElement('dialog');
+			dialog.className = 'adc-crm-board-dialog';
+			var form = document.createElement('form');
+			form.method = 'dialog';
+			function field(text, control) {
+				var label = document.createElement('label');
+				label.textContent = text;
+				label.style.cssText = 'display:block;font-weight:600;margin-bottom:8px';
+				control.style.cssText = 'display:block;width:100%;font-weight:400';
+				label.appendChild(control);
+				form.appendChild(label);
+				return control;
+			}
+			var title = document.createElement('p');
+			title.textContent = won ? 'تأكيد إغلاق الفرصة كناجحة (لا يمكن التراجع)' : 'إغلاق الفرصة كخاسرة';
+			title.style.fontWeight = '700';
+			form.appendChild(title);
+			var amount = document.createElement('input');
+			var category = document.createElement('select');
+			var ref = document.createElement('input');
+			var payment = document.createElement('select');
+			var vehicle = document.createElement('select');
+			var recontact = document.createElement('input');
+			var competitor = document.createElement('input');
+			var comparativePrice = document.createElement('input');
+			if (won) {
+				(vehicles || []).forEach(function (item) { var option = document.createElement('option'); option.value = item.id; option.textContent = item.stock_number + ' — ' + (item.brand || '') + ' ' + (item.model || '') + ' (' + item.status + ')'; vehicle.appendChild(option); });
+				vehicle.required = true;
+				field('السيارة المباعة', vehicle);
+				amount.type = 'number';
+				amount.min = '1';
+				amount.step = '0.01';
+				amount.required = true;
+				field('مبلغ البيع', amount);
+				[['cash', 'نقدي'], ['bank', 'تحويل بنكي'], ['card', 'بطاقة'], ['finance', 'تمويل'], ['other', 'أخرى']].forEach(function (item) { var option = document.createElement('option'); option.value = item[0]; option.textContent = item[1]; payment.appendChild(option); });
+				field('طريقة الدفع', payment);
+				ref.maxLength = 100;
+				field('رقم العقد أو الفاتورة (اختياري)', ref);
+			} else {
+				[['السعر مرتفع', 'السعر'], ['اشترى من منافس', 'منافس'], ['العميل لا يرد', 'لا يرد'], ['التمويل مرفوض', 'تمويل'], ['غير جاد في الشراء', 'غير جاد'], ['السيارة غير متوفرة', 'غير متوفرة'], ['أخرى', 'أخرى']].forEach(function (item) {
+					var option = document.createElement('option');
+					option.value = item[1];
+					option.textContent = item[0];
+					category.appendChild(option);
+				});
+				recontact.type = 'datetime-local';
+				field('موعد إعادة التواصل (اختياري)', recontact);
+				competitor.maxLength = 190;
+				field('اسم المنافس (اختياري)', competitor);
+				comparativePrice.type = 'number';
+				comparativePrice.min = '0';
+				comparativePrice.step = '0.01';
+				field('السعر المقارن بالريال (اختياري)', comparativePrice);
+				field('سبب الخسارة', category);
+			}
+			var notes = document.createElement('textarea');
+			notes.rows = 3;
+			notes.maxLength = 400;
+			notes.required = !won;
+			field(won ? 'ملاحظات (اختياري)' : 'تفاصيل السبب', notes);
+			var menu = document.createElement('menu');
+			var cancel = document.createElement('button');
+			cancel.type = 'button';
+			cancel.className = 'button';
+			cancel.textContent = 'إلغاء';
+			var ok = document.createElement('button');
+			ok.type = 'submit';
+			ok.className = 'button button-primary';
+			ok.textContent = won ? 'تأكيد البيع' : 'تأكيد الخسارة';
+			menu.appendChild(cancel);
+			menu.appendChild(ok);
+			form.appendChild(menu);
+			dialog.appendChild(form);
+			document.body.appendChild(dialog);
+			var value = null;
+			cancel.addEventListener('click', function () { dialog.close(); });
+			form.addEventListener('submit', function () {
+				var text = notes.value.trim();
+				value = won
+					? { reason: (ref.value.trim() ? 'عقد/فاتورة: ' + ref.value.trim() + '. ' : '') + text, sale_amount: Math.round(parseFloat(amount.value || '0') * 100), vehicle_id: vehicle.value, payment_method: payment.value, invoice_reference: ref.value.trim() }
+					: { reason: '[' + category.value + '] ' + text, next_action_at: recontact.value, lost_competitor: competitor.value.trim(), lost_comparative_price: Math.round(parseFloat(comparativePrice.value || '0') * 100) };
+			});
+			dialog.addEventListener('close', function () {
+				document.body.removeChild(dialog);
+				resolve(value);
+			});
+			dialog.showModal();
+			(won ? amount : category).focus();
+		});
+	}
+
 	function requestStage(card, targetStage) {
 		if (card.dataset.pending === '1') {
 			return;
@@ -123,6 +230,14 @@
 			askContact().then(function (data) {
 				if (data) {
 					sendMove(card, targetStage, '', data);
+				}
+			});
+			return;
+		}
+		if (targetStage === 'won' || targetStage === 'lost') {
+			askClose(targetStage === 'won', JSON.parse(card.dataset.vehicles || '[]')).then(function (data) {
+				if (data) {
+					sendMove(card, targetStage, data.reason, null, data.sale_amount, data.vehicle_id, data.payment_method, data.invoice_reference, data.next_action_at, data.lost_competitor, data.lost_comparative_price);
 				}
 			});
 			return;
@@ -267,7 +382,7 @@
 		});
 	}
 
-	function sendMove(card, targetStage, reason, contact) {
+	function sendMove(card, targetStage, reason, contact, saleAmount, vehicleId, paymentMethod, invoiceReference, nextActionAt, lostCompetitor, lostComparativePrice) {
 		if (card.dataset.pending === '1') {
 			return;
 		}
@@ -293,6 +408,13 @@
 				: { action: 'adc_claim_lead_ajax', nonce: cfg.nonce, lead_id: card.dataset.leadId };
 		} else {
 			payload = { action: 'adc_move_lead_stage', nonce: cfg.nonce, lead_id: card.dataset.leadId, stage: targetStage, reason: reason };
+			if (saleAmount) { payload.sale_amount = saleAmount; }
+			if (vehicleId) { payload.vehicle_id = vehicleId; }
+			if (paymentMethod) { payload.payment_method = paymentMethod; }
+			if (invoiceReference) { payload.invoice_reference = invoiceReference; }
+			if (nextActionAt) { payload.next_action_at = nextActionAt; }
+			if (lostCompetitor) { payload.lost_competitor = lostCompetitor; }
+			if (lostComparativePrice) { payload.lost_comparative_price = lostComparativePrice; }
 		}
 
 		fetch(cfg.ajaxUrl, {
@@ -478,8 +600,14 @@
 		var frame = document.createElement('iframe');
 		frame.className = 'adc-crm-details-frame';
 		frame.title = title;
-		frame.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'adc_modal=1';
+		var frameUrl = url + (url.indexOf('?') < 0 ? '?' : '&') + 'adc_modal=1';
+		var loads = 0;
 		frame.addEventListener('load', function () {
+			var currentUrl = '';
+			try { currentUrl = frame.contentDocument && frame.contentDocument.URL ? frame.contentDocument.URL : ''; } catch (error) {}
+			if (!currentUrl || currentUrl === 'about:blank') {
+				return;
+			}
 			loads += 1;
 			if (loads > 1) {
 				dialog.close();
@@ -488,7 +616,7 @@
 		dialog.appendChild(bar);
 		dialog.appendChild(frame);
 		document.body.appendChild(dialog);
-		var loads = 0;
+		frame.src = frameUrl;
 		close.addEventListener('click', function () { dialog.close(); });
 		dialog.addEventListener('click', function (event) {
 			if (event.target === dialog) {

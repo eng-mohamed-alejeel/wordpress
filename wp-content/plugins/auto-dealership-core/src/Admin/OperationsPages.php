@@ -36,6 +36,10 @@ final class OperationsPages {
 		add_action( 'admin_post_adc_record_first_contact', array( self::class, 'record_first_contact' ) );
 		add_action( 'admin_post_adc_update_lead_priority', array( self::class, 'update_lead_priority' ) );
 		add_action( 'admin_post_adc_add_activity', array( self::class, 'add_activity' ) );
+		add_action( 'admin_head', static function(): void {
+			if ( 'adc-crm' !== ( $_GET['page'] ?? '' ) || empty( $_GET['adc_modal'] ) || ! absint( $_GET['lead_id'] ?? 0 ) ) { return; }
+			echo '<style id="adc-crm-modal-critical">html,html body{background:#fff!important;margin-top:0!important;padding-top:0!important}html #wpadminbar,html #adminmenumain,html #adminmenuback,html #adminmenuwrap,html #wpfooter,html .adc-crm-back,html .adc-admin-header,html .update-nag,html .notice.update-nag{display:none!important}html #wpcontent{margin-inline-start:0!important;margin-left:0!important;padding-left:0!important}</style>';
+		} );
 	}
 
 	public static function menu(): void {
@@ -54,7 +58,6 @@ final class OperationsPages {
 			add_submenu_page( 'adc-workspace', __( 'CRM Leads', 'auto-dealership-core' ), __( 'CRM Leads', 'auto-dealership-core' ), $lead_capability, 'adc-crm', array( self::class, 'render_leads' ) );
 		}
 		if ( current_user_can( 'adc_view_campaign_metrics' ) || current_user_can( 'manage_options' ) ) { add_submenu_page( 'adc-workspace', __( 'Marketing reports', 'auto-dealership-core' ), __( 'Marketing reports', 'auto-dealership-core' ), current_user_can( 'adc_view_campaign_metrics' ) ? 'adc_view_campaign_metrics' : 'manage_options', 'adc-marketing-reports', array( self::class, 'render_marketing_reports' ) ); }
-		if ( current_user_can( 'adc_view_reports' ) || current_user_can( 'manage_options' ) ) { $report_capability = current_user_can( 'adc_view_reports' ) ? 'adc_view_reports' : 'manage_options'; add_submenu_page( 'adc-workspace', __( 'CRM performance', 'auto-dealership-core' ), __( 'CRM performance', 'auto-dealership-core' ), $report_capability, 'adc-lead-performance', array( self::class, 'render_lead_performance' ) ); }
 	}
 
 	public static function render(): void {
@@ -115,7 +118,7 @@ final class OperationsPages {
 		if ( ! current_user_can( 'adc_view_own_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) ) {
 			wp_die( esc_html__( 'لا تملك صلاحية عرض الفرص.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );
 		}
-		$filters = array( 'search' => $_GET['s'] ?? '', 'stage' => $_GET['stage'] ?? '', 'priority'=>$_GET['priority'] ?? '', 'branch_id'=>absint( $_GET['branch_id'] ?? 0 ), 'source' => $_GET['source'] ?? '', 'campaign' => $_GET['campaign'] ?? '', 'platform' => $_GET['platform'] ?? '', 'created_by' => absint( $_GET['created_by'] ?? 0 ), 'overdue' => ! empty( $_GET['overdue'] ) );
+		$filters = array( 'search' => $_GET['s'] ?? '', 'stage' => $_GET['stage'] ?? '', 'priority'=>$_GET['priority'] ?? '', 'branch_id'=>absint( $_GET['branch_id'] ?? 0 ), 'source' => $_GET['source'] ?? '', 'campaign' => $_GET['campaign'] ?? '', 'platform' => $_GET['platform'] ?? '', 'created_by' => absint( $_GET['created_by'] ?? 0 ), 'overdue' => ! empty( $_GET['overdue'] ), 'from'=>$_GET['from'] ?? '', 'to'=>$_GET['to'] ?? '', 'archived'=>$_GET['archived'] ?? '' );
 		if ( isset( $_GET['owner'] ) && '' !== (string) $_GET['owner'] ) { $filters['owner'] = absint( $_GET['owner'] ); }
 		$filter_branches = array_values( array_filter( BranchService::public_list(), static fn( $branch ) => BranchScope::allows( (int) $branch['id'] ) ) );
 		$is_sales_employee = current_user_can( 'adc_manage_own_leads' ) && ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' );
@@ -169,10 +172,19 @@ final class OperationsPages {
 		}
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>"><?php $in_modal = ! empty( $_GET['adc_modal'] ) && absint( $_GET['lead_id'] ?? 0 ); ?><?php if ( ! $in_modal ) : ?><h1><?php esc_html_e( 'فرص العملاء CRM', 'auto-dealership-core' ); ?></h1><?php endif; ?><?php self::notice(); ?>
-			<?php if ( ! $in_modal ) { self::render_marketing_intake_v2(); } ?>
+			<?php if ( ! $in_modal ) { self::render_marketing_intake_v3(); } ?>
 			<?php if ( ! $in_modal ) { self::render_marketing_filters(); } ?>
 			<?php if ( ! $in_modal ) : ?>
-			<div class="adc-crm-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0"><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['total'] ) ); ?></strong><br><?php esc_html_e( 'إجمالي الفرص', 'auto-dealership-core' ); ?></div><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['new'] ) ); ?></strong><br><?php esc_html_e( 'فرص جديدة', 'auto-dealership-core' ); ?></div><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['overdue'] ) ); ?></strong><br><?php esc_html_e( 'متابعات متأخرة', 'auto-dealership-core' ); ?></div><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['unassigned'] ) ); ?></strong><br><?php esc_html_e( 'غير مسندة', 'auto-dealership-core' ); ?></div></div>
+			<div class="adc-crm-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0"><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['total'] ) ); ?></strong><br><?php esc_html_e( 'إجمالي الفرص', 'auto-dealership-core' ); ?></div><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['new'] ) ); ?></strong><br><?php esc_html_e( 'فرص جديدة', 'auto-dealership-core' ); ?></div><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['overdue'] ) ); ?></strong><br><?php esc_html_e( 'متابعات متأخرة', 'auto-dealership-core' ); ?></div><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['unassigned'] ) ); ?></strong><br><?php esc_html_e( 'غير مسندة', 'auto-dealership-core' ); ?></div><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['month_sales_amount'] / 100, 2 ) ); ?> SAR</strong><br><?php esc_html_e( 'مبيعات الشهر', 'auto-dealership-core' ); ?></div><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['conversion_percent'], 1 ) ); ?>%</strong><br><?php esc_html_e( 'نسبة التحويل', 'auto-dealership-core' ); ?></div><div class="card"><strong><?php echo esc_html( number_format_i18n( $summary['open_value'] / 100, 2 ) ); ?> SAR</strong><br><?php esc_html_e( 'قيمة الفرص المفتوحة', 'auto-dealership-core' ); ?></div></div>
+			<?php
+			self::render_crm_alerts();
+			$goal_staff = current_user_can( 'adc_view_branch_leads' ) || current_user_can( 'manage_options' ) ? get_users( array( 'role' => 'dealership_sales', 'number' => 100, 'orderby' => 'display_name' ) ) : array( wp_get_current_user() );
+			if ( $goal_staff ) :
+				echo '<section class="card adc-crm-goals"><h2>' . esc_html__( 'الأهداف الشهرية', 'auto-dealership-core' ) . '</h2><div style="display:grid;gap:12px">';
+				foreach ( $goal_staff as $goal_user ) { $goal = LeadService::monthly_goal_progress( (int) $goal_user->ID ); if ( $goal['goal'] < 1 && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { continue; } $label = esc_html( $goal_user->display_name ); $value = esc_html( number_format_i18n( $goal['achieved'] / 100, 2 ) . ' / ' . number_format_i18n( $goal['goal'] / 100, 2 ) . ' SAR' ); echo '<div><strong>' . $label . '</strong><div style="height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;margin:5px 0"><span style="display:block;height:100%;width:' . esc_attr( $goal['percent'] ) . '%;background:#2271b1"></span></div><small>' . $value . ' — ' . esc_html( number_format_i18n( $goal['percent'], 1 ) ) . '% (' . esc_html( number_format_i18n( $goal['won_count'] ) ) . ' ' . esc_html__( 'مبيعات', 'auto-dealership-core' ) . ')</small></div>'; }
+				echo '</div></section>';
+			endif;
+			?>
 						<?php
 						$mode_labels = array(
 							'manual' => array( __( 'استلام ذاتي', 'auto-dealership-core' ), __( 'يستلم موظف المبيعات الفرص الجديدة 							بسحبها إلى «مُسندة».', 'auto-dealership-core' ) ),
@@ -224,8 +236,8 @@ final class OperationsPages {
 					?>
 					<div class="adc-crm-board-track">
 					<?php foreach ( array( 'new', 'assigned', 'contacted', 'qualified', 'quotation', 'finance', 'negotiation', 'reserved', 'won', 'lost' ) as $board_stage ) : ?>
-						<div class="adc-crm-board-column" data-lead-stage="<?php echo esc_attr( $board_stage ); ?>" data-stage-tone="<?php echo esc_attr( $board_stage ); ?>">
-							<h2><span class="adc-crm-stage-name"><?php echo esc_html( \AutoDealership\Core\Localization::label( $board_stage ) ); ?></span><span class="adc-crm-stage-count" data-stage-count><?php echo esc_html( number_format_i18n( (int) ( $board_stage_counts[ $board_stage ] ?? 0 ) ) ); ?></span></h2>
+						<div class="adc-crm-board-column<?php echo in_array( $board_stage, array( 'won', 'lost' ), true ) ? ' is-collapsed' : ''; ?>" data-lead-stage="<?php echo esc_attr( $board_stage ); ?>" data-stage-tone="<?php echo esc_attr( $board_stage ); ?>"<?php echo in_array( $board_stage, array( 'won', 'lost' ), true ) ? ' data-collapsible="1"' : ''; ?>>
+							<h2><span class="adc-crm-stage-name"><?php echo esc_html( \AutoDealership\Core\Localization::label( $board_stage ) ); ?></span><span class="adc-crm-stage-count" data-stage-count><?php echo esc_html( number_format_i18n( (int) ( $board_stage_counts[ $board_stage ] ?? 0 ) ) ); ?></span><?php if ( in_array( $board_stage, array( 'won', 'lost' ), true ) ) : ?><button type="button" class="button-link adc-crm-column-toggle" data-collapse-stage="<?php echo esc_attr( $board_stage ); ?>" aria-expanded="false"><?php esc_html_e( 'عرض', 'auto-dealership-core' ); ?></button><?php endif; ?></h2>
 							<div class="adc-crm-board-empty"><?php esc_html_e( 'لا توجد فرص', 'auto-dealership-core' ); ?></div>
 							<?php foreach ( $board_leads as $board_lead ) : ?>
 								<?php if ( $board_stage !== $board_lead['stage'] ) { continue; } ?>
@@ -249,7 +261,7 @@ final class OperationsPages {
 								if ( $can_claim ) { $allowed_stages = array( 'assigned' ); }
 								$can_drag = $can_claim || ( $can_move_leads && (bool) $allowed_stages );
 								?>
-								<article class="adc-crm-board-card<?php echo $is_fresh ? ' is-fresh' : ''; ?><?php echo $is_overdue ? ' is-overdue' : ''; ?>" tabindex="0" draggable="<?php echo $can_drag ? 'true' : 'false'; ?>" data-lead-card data-lead-id="<?php echo absint( $board_lead['id'] ); ?>" data-stage="<?php echo esc_attr( $board_lead['stage'] ); ?>" data-priority="<?php echo esc_attr( $lead_priority ); ?>" data-needs-contact="<?php echo $needs_first_contact ? '1' : '0'; ?>"<?php echo $assign_staff ? ' data-assign-staff="' . esc_attr( wp_json_encode( $assign_staff ) ) . '"' : ''; ?> data-allowed="<?php echo esc_attr( wp_json_encode( $allowed_stages ) ); ?>">
+								<article class="adc-crm-board-card<?php echo $is_fresh ? ' is-fresh' : ''; ?><?php echo $is_overdue ? ' is-overdue' : ''; ?>" tabindex="0" draggable="<?php echo $can_drag ? 'true' : 'false'; ?>" data-lead-card data-lead-id="<?php echo absint( $board_lead['id'] ); ?>" data-stage="<?php echo esc_attr( $board_lead['stage'] ); ?>" data-branch-id="<?php echo absint( $board_lead['branch_id'] ); ?>" data-vehicles="<?php echo esc_attr( wp_json_encode( LeadService::inventory_options( (int) $board_lead['branch_id'] ) ) ); ?>" data-priority="<?php echo esc_attr( $lead_priority ); ?>" data-needs-contact="<?php echo $needs_first_contact ? '1' : '0'; ?>"<?php echo $assign_staff ? ' data-assign-staff="' . esc_attr( wp_json_encode( $assign_staff ) ) . '"' : ''; ?> data-allowed="<?php echo esc_attr( wp_json_encode( $allowed_stages ) ); ?>">
 									<header class="adc-crm-card-head"><strong><?php echo esc_html( $board_lead['full_name'] ); ?></strong><span class="adc-crm-card-id">#<?php echo absint( $board_lead['id'] ); ?></span></header>
 									<div class="adc-crm-card-badges">
 										<?php if ( $is_fresh ) : ?><span class="adc-crm-badge adc-crm-badge-fresh"><?php esc_html_e( 'جديدة', 'auto-dealership-core' ); ?></span><?php endif; ?>
@@ -285,6 +297,14 @@ final class OperationsPages {
 		<?php
 	}
 
+	public static function render_area_reports(): void {
+		if ( ! current_user_can( 'adc_view_reports' ) && ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية عرض التقارير.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
+		$summary = LeadService::pipeline_summary(); $dir = 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl';
+		echo '<div class="wrap" dir="' . esc_attr( $dir ) . '"><h1>' . esc_html__( 'النظرة العامة للتقارير', 'auto-dealership-core' ) . '</h1><p>' . esc_html__( 'ملخص سريع لأداء CRM الحالي. استخدم التقارير التفصيلية للتحليل حسب الموظف والفرع والمصدر.', 'auto-dealership-core' ) . '</p><div class="adc-crm-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:16px 0">';
+		foreach ( array( 'total'=>'إجمالي الفرص', 'new'=>'فرص جديدة', 'overdue'=>'متابعات متأخرة', 'unassigned'=>'غير مسندة', 'month_sales_amount'=>'مبيعات الشهر', 'conversion_percent'=>'نسبة التحويل', 'open_value'=>'قيمة الفرص المفتوحة' ) as $key => $label ) { $value = in_array( $key, array( 'month_sales_amount', 'open_value' ), true ) ? number_format_i18n( $summary[$key] / 100, 2 ) . ' SAR' : ( 'conversion_percent' === $key ? number_format_i18n( $summary[$key], 1 ) . '%' : number_format_i18n( $summary[$key] ) ); echo '<div class="card"><strong>' . esc_html( $value ) . '</strong><br>' . esc_html__( $label, 'auto-dealership-core' ) . '</div>'; }
+		echo '</div><section class="card"><h2>' . esc_html__( 'الوصول السريع', 'auto-dealership-core' ) . '</h2><p><a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=adc-crm-reports' ) ) . '">' . esc_html__( 'فتح تقارير CRM التفصيلية', 'auto-dealership-core' ) . '</a> <a class="button" href="' . esc_url( admin_url( 'admin.php?page=adc-crm' ) ) . '">' . esc_html__( 'فتح لوحة الفرص', 'auto-dealership-core' ) . '</a></p></section></div>';
+	}
+
 	private static function crm_filter_query_args(): array {
 		$args = array();
 		foreach ( array( 's'=>'text', 'stage'=>'key', 'priority'=>'key', 'source'=>'key', 'campaign'=>'text', 'platform'=>'text' ) as $key=>$type ) {
@@ -295,12 +315,39 @@ final class OperationsPages {
 		foreach ( array( 'branch_id', 'created_by' ) as $key ) {
 			if ( isset( $_GET[$key] ) && is_scalar( $_GET[$key] ) ) { $args[$key] = absint( $_GET[$key] ); }
 		}
+		foreach ( array( 'from', 'to' ) as $key ) { if ( isset( $_GET[$key] ) && is_scalar( $_GET[$key] ) ) { $args[$key] = sanitize_text_field( (string) wp_unslash( $_GET[$key] ) ); } }
+		if ( isset( $_GET['archived'] ) && is_scalar( $_GET['archived'] ) ) { $args['archived'] = sanitize_key( (string) $_GET['archived'] ); }
 		if ( isset( $_GET['owner'] ) && is_scalar( $_GET['owner'] ) && '' !== (string) $_GET['owner'] ) { $args['owner'] = absint( $_GET['owner'] ); }
 		if ( ! empty( $_GET['overdue'] ) ) { $args['overdue'] = 1; }
 		foreach ( array( 'paged', 'queue_page', 'board_page' ) as $key ) {
 			if ( isset( $_GET[$key] ) && is_scalar( $_GET[$key] ) ) { $args[$key] = max( 1, absint( $_GET[$key] ) ); }
 		}
 		return $args;
+	}
+
+	private static function render_crm_alerts(): void {
+		$alerts = \AutoDealership\Operations\FollowUpNotifications::inbox();
+		if ( ! $alerts ) { return; }
+		echo '<section class="notice notice-warning" style="padding:10px 14px"><h2 style="margin:0 0 8px">' . esc_html__( 'تنبيهات CRM', 'auto-dealership-core' ) . '</h2><ul style="margin:0">';
+		foreach ( array_slice( $alerts, 0, 10 ) as $alert ) {
+			$label = \AutoDealership\Operations\FollowUpNotifications::label( (string) $alert['source_type'] );
+			echo '<li><a href="' . esc_url( \AutoDealership\Operations\FollowUpNotifications::url( $alert ) ) . '">' . esc_html( $label . ' #' . (int) $alert['source_id'] ) . '</a> — ' . esc_html( wp_date( 'Y-m-d H:i', strtotime( $alert['due_at'] . ' UTC' ) ) ) . ( (int) $alert['level'] ? ' — ' . esc_html__( 'تصعيد للمدير', 'auto-dealership-core' ) : '' ) . '</li>';
+		}
+		echo '</ul><p style="margin-bottom:0"><a href="' . esc_url( admin_url( 'admin.php?page=adc-follow-ups' ) ) . '">' . esc_html__( 'فتح صندوق التنبيهات والإقرار', 'auto-dealership-core' ) . '</a></p></section>';
+	}
+
+	private static function render_marketing_intake_v3(): void {
+		if ( ! current_user_can( 'adc_create_marketing_leads' ) ) { return; }
+		echo '<details class="card adc-marketing-intake-v2"><summary>' . esc_html__( 'إضافة فرصة من فريق التسويق', 'auto-dealership-core' ) . '</summary><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="adc_create_marketing_lead"><input type="hidden" name="idempotency_key" value="' . esc_attr( wp_generate_uuid4() ) . '">';
+		wp_nonce_field( 'adc_create_marketing_lead' );
+		echo '<p><label>' . esc_html__( 'اسم العميل', 'auto-dealership-core' ) . ' <input name="name" required></label> <label>' . esc_html__( 'الجوال', 'auto-dealership-core' ) . ' <input name="mobile" required></label> <label>' . esc_html__( 'البريد', 'auto-dealership-core' ) . ' <input type="email" name="email"></label> <label>' . esc_html__( 'المدينة', 'auto-dealership-core' ) . ' <input name="city"></label></p>';
+		echo '<p><label>' . esc_html__( 'الفرع', 'auto-dealership-core' ) . ' <select name="branch_id"><option value="0" data-branch="' . absint( BranchScope::assigned_branch() ) . '">' . esc_html__( 'الفرع الافتراضي', 'auto-dealership-core' ) . '</option>';
+		foreach ( BranchService::public_list() as $branch ) { if ( ! BranchScope::allows( (int) $branch['id'] ) ) { continue; } echo '<option value="' . absint( $branch['id'] ) . '">' . esc_html( $branch['name'] ) . '</option>'; }
+		echo '</select></label> <label>' . esc_html__( 'الحملة', 'auto-dealership-core' ) . ' <input name="campaign" required></label> <label>' . esc_html__( 'المنصة', 'auto-dealership-core' ) . ' <input name="platform" required></label></p>';
+		echo '<p><label>' . esc_html__( 'المصدر', 'auto-dealership-core' ) . ' <select name="source"><option value="marketing">Marketing</option><option value="whatsapp">WhatsApp</option><option value="phone">Phone</option><option value="walk_in">Walk-in</option></select></label> <label>' . esc_html__( 'موظف المبيعات', 'auto-dealership-core' ) . ' <select name="staff_id"><option value="0">' . esc_html__( 'إسناد لاحقاً', 'auto-dealership-core' ) . '</option>';
+		foreach ( get_users( array( 'role'=>'dealership_sales', 'number'=>-1, 'fields'=>array( 'ID','display_name' ) ) ) as $staff ) { $staff_branch = BranchScope::assigned_branch( (int) $staff->ID ); if ( ! BranchScope::allows( $staff_branch ) ) { continue; } echo '<option data-branch="' . absint( $staff_branch ) . '" value="' . absint( $staff->ID ) . '">' . esc_html( $staff->display_name ) . '</option>'; }
+		echo '</select></label></p><p><label>' . esc_html__( 'رابط الإعلان', 'auto-dealership-core' ) . ' <input type="url" name="ad_url"></label> <label>' . esc_html__( 'ملاحظات', 'auto-dealership-core' ) . ' <textarea name="notes" rows="2"></textarea></label></p><p><label><input type="checkbox" name="consent_marketing" value="1" required> ' . esc_html__( 'تم الحصول على موافقة العميل للتواصل', 'auto-dealership-core' ) . '</label></p><button class="button button-primary">' . esc_html__( 'إنشاء الفرصة', 'auto-dealership-core' ) . '</button></form></details>';
+		echo "<script>(function(){var b=document.querySelector('.adc-marketing-intake-v2 select[name=branch_id]'),s=document.querySelector('.adc-marketing-intake-v2 select[name=staff_id]');if(!b||!s)return;function f(){var branch=b.value||b.options[0].dataset.branch||'0';Array.prototype.forEach.call(s.options,function(o){if(!o.value)return;o.hidden=o.dataset.branch!==branch;});if(s.selectedOptions[0]&&s.selectedOptions[0].hidden)s.value='0';}b.addEventListener('change',f);f();})();</script>";
 	}
 
 	private static function render_marketing_intake_v2(): void {
@@ -317,15 +364,15 @@ final class OperationsPages {
 	}
 
 	private static function render_marketing_filters(): void {
-		if ( ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'manage_options' ) ) { return; }
+		if ( ! current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_view_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { return; }
 		echo '<form method="get" action="' . esc_url( admin_url( 'admin.php' ) ) . '" class="adc-marketing-filters"><input type="hidden" name="page" value="adc-crm">';
-		foreach ( array( 's', 'stage', 'priority', 'branch_id', 'owner', 'source', 'overdue' ) as $key ) {
+		foreach ( array( 's', 'stage', 'priority', 'branch_id', 'owner', 'source', 'overdue', 'from', 'to', 'archived' ) as $key ) {
 			if ( ! isset( $_GET[$key] ) || ! is_scalar( $_GET[$key] ) || ( 'owner' === $key && '' === (string) $_GET[$key] ) ) { continue; }
 			$raw_value = (string) wp_unslash( $_GET[$key] );
-			$value = 's' === $key ? sanitize_text_field( $raw_value ) : ( in_array( $key, array( 'stage', 'priority', 'source' ), true ) ? sanitize_key( $raw_value ) : absint( $raw_value ) );
+			$value = in_array( $key, array( 's', 'from', 'to' ), true ) ? sanitize_text_field( $raw_value ) : ( in_array( $key, array( 'stage', 'priority', 'source', 'archived' ), true ) ? sanitize_key( $raw_value ) : absint( $raw_value ) );
 			echo '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '">';
 		}
-		echo '<label>' . esc_html__( 'الحملة', 'auto-dealership-core' ) . ' <input name="campaign" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['campaign'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'المنصة', 'auto-dealership-core' ) . ' <input name="platform" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['platform'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'منشئ الفرصة', 'auto-dealership-core' ) . ' <input type="number" min="1" name="created_by" value="' . absint( $_GET['created_by'] ?? 0 ) . '"></label> <button class="button">' . esc_html__( 'تصفية التسويق', 'auto-dealership-core' ) . '</button></form>';
+		echo '<label>' . esc_html__( 'الحملة', 'auto-dealership-core' ) . ' <input name="campaign" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['campaign'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'المنصة', 'auto-dealership-core' ) . ' <input name="platform" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['platform'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'منشئ الفرصة', 'auto-dealership-core' ) . ' <input type="number" min="1" name="created_by" value="' . absint( $_GET['created_by'] ?? 0 ) . '"></label> <label>' . esc_html__( 'من تاريخ', 'auto-dealership-core' ) . ' <input type="date" name="from" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['from'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'إلى تاريخ', 'auto-dealership-core' ) . ' <input type="date" name="to" value="' . esc_attr( sanitize_text_field( wp_unslash( $_GET['to'] ?? '' ) ) ) . '"></label> <label>' . esc_html__( 'السجلات المؤرشفة', 'auto-dealership-core' ) . ' <select name="archived"><option value="">' . esc_html__( 'النشطة فقط', 'auto-dealership-core' ) . '</option><option value="1" ' . selected( sanitize_key( $_GET['archived'] ?? '' ), '1', false ) . '>' . esc_html__( 'المؤرشفة فقط', 'auto-dealership-core' ) . '</option><option value="all" ' . selected( sanitize_key( $_GET['archived'] ?? '' ), 'all', false ) . '>' . esc_html__( 'الكل', 'auto-dealership-core' ) . '</option></select></label> <button class="button">' . esc_html__( 'تصفية التسويق', 'auto-dealership-core' ) . '</button></form>';
 	}
 
 	public static function render_lead_performance(): void {
@@ -351,6 +398,8 @@ final class OperationsPages {
 		foreach ( array( 'total'=>'إجمالي الفرص', 'new'=>'جديدة', 'first_contact'=>'تم أول تواصل', 'overdue'=>'متابعات متأخرة', 'won'=>'مباعة', 'lost'=>'خاسرة' ) as $key=>$label ) {
 			echo '<div class="card"><strong>' . esc_html( number_format_i18n( (int) $totals[$key] ) ) . '</strong><br>' . esc_html__( $label, 'auto-dealership-core' ) . '</div>';
 		}
+		echo '<div class="card"><strong>' . esc_html( number_format_i18n( (int) $totals['sales_amount'] / 100, 2 ) ) . ' SAR</strong><br>' . esc_html__( 'قيمة المبيعات', 'auto-dealership-core' ) . '</div>';
+		echo '<div class="card"><strong>' . esc_html( number_format_i18n( (int) $totals['employee_commission_amount'] / 100, 2 ) ) . ' SAR</strong><br>' . esc_html__( 'عمولات الموظفين', 'auto-dealership-core' ) . '</div>';
 		$avg_minutes = null === $totals['avg_first_contact_seconds'] ? null : (float) $totals['avg_first_contact_seconds'] / MINUTE_IN_SECONDS;
 		echo '</div><p class="description">' . esc_html( sprintf( __( 'متوسط الزمن من إنشاء الفرصة إلى أول تواصل: %s دقيقة', 'auto-dealership-core' ), null === $avg_minutes ? '—' : number_format_i18n( $avg_minutes, 1 ) ) ) . '</p>';
 
@@ -360,6 +409,8 @@ final class OperationsPages {
 		}
 		if ( ! $report['branches'] ) { echo '<tr><td colspan="8">' . esc_html__( 'لا توجد بيانات للفترة المحددة.', 'auto-dealership-core' ) . '</td></tr>'; }
 		echo '</tbody></table>';
+		$avg_close_minutes = null === $totals['avg_close_seconds'] ? null : (float) $totals['avg_close_seconds'] / MINUTE_IN_SECONDS;
+		echo '<p class="description">' . esc_html( sprintf( __( 'متوسط مدة الإغلاق: %s دقيقة', 'auto-dealership-core' ), null === $avg_close_minutes ? '—' : number_format_i18n( $avg_close_minutes, 1 ) ) ) . '</p>';
 
 		echo '<p class="description">' . esc_html__( 'تعرض مؤشرات الأداء مجمعة حسب الفرع فقط؛ لا تتضمن هوية الموظف قبل اعتماد الجمهور والغرض.', 'auto-dealership-core' ) . '</p>';
 		echo '<h2>' . esc_html__( 'توزيع المراحل حسب الفرع', 'auto-dealership-core' ) . '</h2><table class="widefat striped"><thead><tr><th>' . esc_html__( 'الفرع', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المرحلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'العدد', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
@@ -516,7 +567,7 @@ final class OperationsPages {
 		$id = absint( $_POST['lead_id'] ?? 0 );
 		check_admin_referer( 'adc_update_lead_stage_' . $id );
 		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_manage_own_leads' ) && ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية تغيير مراحل الفرص.', 'auto-dealership-core' ), '', array( 'response' => 403 ) ); }
-		$result = LeadService::update_stage( $id, sanitize_key( wp_unslash( $_POST['stage'] ?? '' ) ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) );
+		$result = LeadService::update_stage( $id, sanitize_key( wp_unslash( $_POST['stage'] ?? '' ) ), sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ), 0, 0, '', '', sanitize_text_field( wp_unslash( $_POST['next_action_at'] ?? '' ) ), sanitize_text_field( wp_unslash( $_POST['lost_competitor'] ?? '' ) ), absint( $_POST['lost_comparative_price'] ?? 0 ) );
 		self::redirect( 'adc-crm', $result );
 	}
 
@@ -525,7 +576,15 @@ final class OperationsPages {
 		if ( current_user_can( 'adc_view_marketing_leads' ) && ! current_user_can( 'adc_manage_own_leads' ) && ! current_user_can( 'adc_manage_branch_leads' ) && ! current_user_can( 'manage_options' ) ) { wp_send_json_error( array( 'message' => __( 'لا تملك صلاحية تغيير مراحل الفرص.', 'auto-dealership-core' ) ), 403 ); }
 		$lead_id = absint( $_POST['lead_id'] ?? 0 );
 		$stage = sanitize_key( wp_unslash( $_POST['stage'] ?? '' ) );
-		$result = LeadService::update_stage( $lead_id, $stage, sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ) );
+		$sale_amount = absint( $_POST['sale_amount'] ?? 0 );
+		$vehicle_id = absint( $_POST['vehicle_id'] ?? 0 );
+		$payment_method = sanitize_key( wp_unslash( $_POST['payment_method'] ?? '' ) );
+		$invoice_reference = sanitize_text_field( wp_unslash( $_POST['invoice_reference'] ?? '' ) );
+		$next_action_at = sanitize_text_field( wp_unslash( $_POST['next_action_at'] ?? '' ) );
+		$lost_competitor = sanitize_text_field( wp_unslash( $_POST['lost_competitor'] ?? '' ) );
+		$lost_comparative_price = absint( $_POST['lost_comparative_price'] ?? 0 );
+		if ( 'won' === $stage && $sale_amount < 1 ) { wp_send_json_error( array( 'message' => __( 'أدخل مبلغ البيع لإغلاق الفرصة كناجحة.', 'auto-dealership-core' ) ), 400 ); }
+		$result = LeadService::update_stage( $lead_id, $stage, sanitize_textarea_field( wp_unslash( $_POST['reason'] ?? '' ) ), $sale_amount, $vehicle_id, $payment_method, $invoice_reference, $next_action_at, $lost_competitor, $lost_comparative_price );
 		if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), (int) ( $result->get_error_data()['status'] ?? 400 ) ); }
 		wp_send_json_success( array( 'id'=>$lead_id, 'stage'=>$stage, 'allowed_stages'=>LeadService::allowed_stage_transitions( $stage ) ) );
 	}
@@ -687,6 +746,8 @@ final class OperationsPages {
 		foreach ( array( 'branch_id', 'created_by' ) as $key ) {
 			if ( isset( $post[$key] ) && is_scalar( $post[$key] ) ) { $filters[$key] = absint( $post[$key] ); }
 		}
+		foreach ( array( 'from', 'to' ) as $key ) { if ( isset( $post[$key] ) && is_scalar( $post[$key] ) ) { $filters[$key] = sanitize_text_field( (string) $post[$key] ); } }
+		if ( isset( $post['archived'] ) && is_scalar( $post['archived'] ) ) { $filters['archived'] = sanitize_key( (string) $post['archived'] ); }
 		if ( isset( $post['owner'] ) && is_scalar( $post['owner'] ) && '' !== (string) $post['owner'] ) { $filters['owner'] = absint( $post['owner'] ); }
 		if ( ! empty( $post['overdue'] ) ) { $filters['overdue'] = 1; }
 		return $filters;
