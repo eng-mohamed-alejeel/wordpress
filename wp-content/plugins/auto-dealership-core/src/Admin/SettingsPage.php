@@ -111,7 +111,7 @@ final class SettingsPage {
 					$workload_staff = get_users( array( 'role' => 'dealership_sales', 'number' => 100, 'orderby' => 'display_name' ) );
 					if ( $workload_staff ) :
 						?>
-						<table class="widefat striped" style="max-width:420px;margin-top:8px"><thead><tr><th><?php esc_html_e( 'موظف المبيعات', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'فرص اليوم', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
+						<table class="widefat striped adc-settings-cap-table"><thead><tr><th><?php esc_html_e( 'موظف المبيعات', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'فرص اليوم', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
 						<?php foreach ( $workload_staff as $workload_user ) : ?><tr><td><?php echo esc_html( $workload_user->display_name ); ?></td><td><?php echo esc_html( number_format_i18n( \AutoDealership\Leads\LeadService::leads_received_today( (int) $workload_user->ID ) ) . ( $lead_daily_cap ? ' / ' . number_format_i18n( $lead_daily_cap ) : '' ) ); ?></td></tr><?php endforeach; ?>
 						</tbody></table>
 					<?php endif; ?></td></tr>
@@ -180,7 +180,7 @@ final class SettingsPage {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية الوصول.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
 		?><p><?php esc_html_e( 'حدد قيمة المبيعات المستهدفة لكل موظف. يظهر الإنجاز تلقائيًا في لوحة CRM ويُحتسب من المبيعات المغلقة في الشهر الحالي.', 'auto-dealership-core' ); ?></p>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="adc_save_lead_goals"><?php wp_nonce_field( 'adc_save_lead_goals' ); ?>
-		<table class="widefat striped" style="max-width:760px"><thead><tr><th><?php esc_html_e( 'الموظف', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الهدف الشهري (SAR)', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
+		<table class="widefat striped adc-settings-goal-table"><thead><tr><th><?php esc_html_e( 'الموظف', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الهدف الشهري (SAR)', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
 		<?php $goal_staff = get_users( array( 'role' => 'dealership_sales', 'number' => 100, 'orderby' => 'display_name' ) ); foreach ( $goal_staff as $goal_user ) : ?><tr><td><?php echo esc_html( $goal_user->display_name ); ?></td><td><input type="number" min="0" step="0.01" name="goals[<?php echo absint( $goal_user->ID ); ?>]" value="<?php echo esc_attr( \AutoDealership\Pricing\Money::decimal( absint( get_user_meta( $goal_user->ID, 'adc_monthly_sales_goal', true ) ) ) ); ?>"></td></tr><?php endforeach; ?>
 		<?php if ( ! $goal_staff ) : ?><tr><td colspan="2"><?php esc_html_e( 'لا يوجد موظفو مبيعات حاليًا.', 'auto-dealership-core' ); ?></td></tr><?php endif; ?></tbody></table>
 		<?php submit_button( __( 'حفظ الأهداف', 'auto-dealership-core' ), 'primary' ); ?></form><?php
@@ -204,7 +204,7 @@ final class SettingsPage {
 	}
 
 	private static function commission_action( int $sale_id, string $target, string $label, bool $reason = false, bool $reference = false ): void {
-		echo '<form style="display:inline-block;margin:2px" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">'; wp_nonce_field( 'adc_employee_commission_' . $target . '_' . $sale_id ); echo '<input type="hidden" name="action" value="adc_employee_commission_status"><input type="hidden" name="sale_id" value="' . absint( $sale_id ) . '"><input type="hidden" name="target" value="' . esc_attr( $target ) . '">';
+		echo '<form class="adc-inline-action-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">'; wp_nonce_field( 'adc_employee_commission_' . $target . '_' . $sale_id ); echo '<input type="hidden" name="action" value="adc_employee_commission_status"><input type="hidden" name="sale_id" value="' . absint( $sale_id ) . '"><input type="hidden" name="target" value="' . esc_attr( $target ) . '">';
 		if ( $reason ) { echo '<input type="text" name="reason" maxlength="500" required placeholder="' . esc_attr__( 'السبب', 'auto-dealership-core' ) . '">'; }
 		if ( $reference ) { echo '<input type="text" name="payment_reference" maxlength="100" required placeholder="' . esc_attr__( 'مرجع الصرف', 'auto-dealership-core' ) . '">'; }
 		echo '<button class="button">' . esc_html__( $label, 'auto-dealership-core' ) . '</button></form> ';

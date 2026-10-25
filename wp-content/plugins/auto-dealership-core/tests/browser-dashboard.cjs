@@ -121,7 +121,7 @@ const { spawn } = require('node:child_process');
               })()`);
             }
             if (process.env.ADC_LAYOUT_DIRECTION === 'ltr') await evaluate('document.querySelector("#wpbody-content > .wrap").dir="ltr"');
-            for (const width of [1440, 768, 390]) {
+            for (const width of [1440, 768, 390, 320]) {
               await call('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 783 });
               await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
               const layout = await evaluate(`(() => {
@@ -175,12 +175,15 @@ const { spawn } = require('node:child_process');
         await admin('admin.php?page=adc-workspace');
         check(await evaluate('document.querySelectorAll(".adc-area-card").length>=11'),'Workspace area shortcuts preserved');
         check(await evaluate('!!document.querySelector(".adc-overview") && document.querySelectorAll(".adc-area-card").length>=11'),'Workspace renders overview and area directory');
+        check(await evaluate('!!document.querySelector(".adc-area-directory-header") && !!document.querySelector(".adc-scope-badge")'),'Workspace identifies role modules and current scope');
         const cards=await evaluate('[...document.querySelectorAll(".adc-workspace-card")].map(a=>a.href)');
         check(cards.length===new Set(cards).size,'Workspace destinations are unique');
         check(await evaluate('!document.querySelector("#adminmenu a[href*=car-dealer-settings]")'),'Duplicate appearance editor removed from sidebar');
         for(const group of groups) {
           await admin('admin.php?page=adc-area-'+group);
-          check(await evaluate('document.querySelectorAll(".adc-workspace-section").length===1 && document.querySelectorAll(".adc-workspace-card").length>0'),'Group landing: '+group);
+          check(await evaluate('document.querySelectorAll(".adc-workspace-section").length>=1 && document.querySelectorAll(".adc-workspace-card").length>0'),'Group landing: '+group);
+          if (group==='customers') check(await evaluate('document.querySelectorAll(".adc-center-intro").length===1&&document.querySelectorAll(".adc-workspace-section > h2").length===2&&document.querySelectorAll(".adc-workspace-card").length>0'),'Customers center separates sales lanes from communication and service');
+          if (['purchasing','finance','reports'].includes(group)) check(await evaluate('document.querySelectorAll(".adc-center-intro").length===1&&document.querySelectorAll(".adc-workspace-section > h2").length===2'),'Center provides two readable work lanes: '+group);
           if (group==='inventory') check(await evaluate('(()=>{const grids=[...document.querySelectorAll(".adc-workspace-grid")];const links=grid=>[...grid.querySelectorAll(".adc-workspace-card")].map(a=>a.href);return document.querySelectorAll(".adc-workspace-section > h2").length===2&&grids.length===2&&links(grids[0]).every(href=>!href.includes("post_type=car"))&&links(grids[1]).every(href=>href.includes("post_type=car"));})()'),'Inventory separates operations and website catalog');
         }
         const fields={pricing:['vat_percent','pricing_fee_amount','promotion_code','seller_name'],reservations:['reservation_hours','reservation_deposit_type'],branches:['default_branch_id','code'],delivery:['delivery_required_documents[]'],privacy:['privacy_retention_days'],catalog:['public_catalog_mode']};

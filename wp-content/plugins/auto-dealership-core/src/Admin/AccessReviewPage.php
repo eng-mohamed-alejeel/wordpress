@@ -89,11 +89,24 @@ final class AccessReviewPage {
 		echo '<h2>' . esc_html( $user->display_name ) . '</h2><p><a href="' . esc_url( get_edit_user_link( $user->ID ) ) . '">' . esc_html__( 'Edit user', 'auto-dealership-core' ) . '</a> | <a href="' . esc_url( admin_url( 'admin.php?page=adc-access-review' ) ) . '">' . esc_html__( 'All accounts', 'auto-dealership-core' ) . '</a></p>';
 		$branches = array();
 		foreach ( BranchService::public_list() as $branch ) { if ( in_array( (int) $branch['id'], BranchScope::assigned_branches( $user->ID ), true ) ) { $branches[] = $branch['name']; } }
-		echo '<p><strong>' . esc_html__( 'Branch scope', 'auto-dealership-core' ) . ':</strong> ' . esc_html( BranchScope::is_global( $user->ID ) ? __( 'All branches', 'auto-dealership-core' ) : ( $branches ? implode( ', ', $branches ) : __( 'No active branch assigned', 'auto-dealership-core' ) ) ) . '</p>';
+		$report = self::report( $user );
+		$granted = count( array_filter( $report, static fn( array $row ): bool => $row['allowed'] ) );
+		$temporary = count( array_filter( AccessPolicy::temporary( $user->ID ), static fn( array $grant ): bool => (int) ( $grant['expires'] ?? 0 ) > time() ) );
+		$overrides = count( array_intersect( array_keys( $user->caps ), Capabilities::assignable_capabilities() ) );
+		$status = AccessPolicy::suspended( $user->ID ) ? __( 'Suspended', 'auto-dealership-core' ) : __( 'Active', 'auto-dealership-core' );
+		$role_names = array_map( static fn( string $role ): string => translate_user_role( wp_roles()->role_names[ $role ] ?? $role ), $user->roles );
+		$scope = BranchScope::is_global( $user->ID ) ? __( 'All branches', 'auto-dealership-core' ) : ( $branches ? implode( ', ', $branches ) : __( 'No active branch assigned', 'auto-dealership-core' ) );
+		echo '<section class="adc-access-summary adc-account-summary" aria-label="' . esc_attr__( 'Account summary', 'auto-dealership-core' ) . '">';
+		self::summary_card( __( 'Account status', 'auto-dealership-core' ), $status, implode( ', ', $role_names ) ?: __( 'No role', 'auto-dealership-core' ) );
+		self::summary_card( __( 'Branch scope', 'auto-dealership-core' ), $scope, __( 'Effective branch scope after active-branch filtering.', 'auto-dealership-core' ) );
+		self::summary_card( __( 'Granted permissions', 'auto-dealership-core' ), number_format_i18n( $granted ), __( 'Permissions effective after roles and policy checks.', 'auto-dealership-core' ) );
+		self::summary_card( __( 'Individual overrides', 'auto-dealership-core' ), number_format_i18n( $overrides ), __( 'Explicit per-account grants or denials.', 'auto-dealership-core' ) );
+		self::summary_card( __( 'Temporary grants', 'auto-dealership-core' ), number_format_i18n( $temporary ), __( 'Active grants with a future expiration time.', 'auto-dealership-core' ) );
+		echo '</section>';
 		echo '<p>' . esc_html__( 'Effective permissions include role defaults, individual overrides, temporary grants and suspension. Object-specific and financial restrictions still apply.', 'auto-dealership-core' ) . '</p>';
 		echo '<section class="adc-permission-report"><div class="adc-table-scroll"><table class="widefat striped"><thead><tr>';
 		foreach ( array( 'Permission', 'Source', 'Effective access', 'Expires' ) as $title ) { echo '<th>' . esc_html__( $title, 'auto-dealership-core' ) . '</th>'; } echo '</tr></thead><tbody>';
-		foreach ( self::report( $user ) as $cap => $row ) {
+		foreach ( $report as $cap => $row ) {
 			echo '<tr data-granted="' . ( $row['allowed'] ? '1' : '0' ) . '" data-custom="' . ( array_key_exists( $cap, $user->caps ) ? '1' : '0' ) . '"><td>' . esc_html( $row['label'] ) . '</td><td>' . esc_html__( $row['source'], 'auto-dealership-core' ) . '</td><td>' . esc_html__( $row['allowed'] ? 'Granted' : 'Denied', 'auto-dealership-core' );
 			if ( $row['reason'] ) { echo '<p class="description">' . esc_html__( $row['reason'], 'auto-dealership-core' ) . '</p>'; }
 			echo '</td><td>' . esc_html( $row['expires'] ? wp_date( 'Y-m-d H:i T', $row['expires'] ) : '—' ) . '</td></tr>';
@@ -105,6 +118,10 @@ final class AccessReviewPage {
 			self::operation_form( $user, 'grant', 'Grant a temporary permission' );
 			foreach ( AccessPolicy::temporary( $user->ID ) as $cap => $grant ) { self::operation_form( $user, 'revoke', 'Revoke temporary permission', $cap ); }
 		}
+	}
+
+	private static function summary_card( string $label, string $value, string $detail ): void {
+		echo '<div class="adc-access-summary-card"><span>' . esc_html( $label ) . '</span><strong>' . esc_html( $value ) . '</strong><small>' . esc_html( $detail ) . '</small></div>';
 	}
 
 	private static function operation_form( \WP_User $user, string $operation, string $title, string $cap = '' ): void {

@@ -228,6 +228,15 @@ final class RoleManager {
 			echo '<p><label>' . esc_html__( $label, 'auto-dealership-core' ) . '<br><input class="regular-text" required name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" maxlength="' . ( 'slug' === $key ? '64' : '80' ) . '" ' . ( 'slug' === $key && ! $new ? 'readonly' : '' ) . '></label></p>';
 		}
 		if ( $new ) { echo '<p class="description">' . esc_html__( 'New role identifiers must begin with adc_role_. Basic account access is always included.', 'auto-dealership-core' ) . '</p>'; }
+		$role_caps = $role ? array_filter( $role->capabilities ) : array();
+		$assignable = Capabilities::assignable_capabilities();
+		$role_users = $slug ? count( get_users( array( 'role' => $slug, 'fields' => 'ID', 'number' => -1 ) ) ) : 0;
+		echo '<section class="adc-access-summary adc-role-summary" aria-label="' . esc_attr__( 'Role summary', 'auto-dealership-core' ) . '">';
+		self::summary_card( __( 'Users on this role', 'auto-dealership-core' ), number_format_i18n( $role_users ), __( 'Users affected by a role-default change.', 'auto-dealership-core' ) );
+		self::summary_card( __( 'Active role permissions', 'auto-dealership-core' ), number_format_i18n( count( array_intersect( array_keys( $role_caps ), $assignable ) ) ), __( 'Explicit dealership permissions currently enabled.', 'auto-dealership-core' ) );
+		self::summary_card( __( 'Available permissions', 'auto-dealership-core' ), number_format_i18n( count( $assignable ) ), __( 'Assignable permissions in the current catalog.', 'auto-dealership-core' ) );
+		self::summary_card( __( 'Role identifier', 'auto-dealership-core' ), $new ? 'adc_role_' : $slug, __( 'Stable identifier used by access and audit records.', 'auto-dealership-core' ) );
+		echo '</section>';
 		if ( $new ) {
 			echo '<input type="hidden" name="clone_loaded" value="0"><p><label>' . esc_html__( 'Copy permissions from role', 'auto-dealership-core' ) . ' <select name="clone_source"><option value="">—</option>';
 			foreach ( get_editable_roles() as $key => $item ) { if ( 'administrator' !== $key ) { echo '<option value="' . esc_attr( $key ) . '">' . esc_html( translate_user_role( $item['name'] ) ) . '</option>'; } } echo '</select></label></p>';
@@ -264,12 +273,16 @@ final class RoleManager {
 		echo '</form>';
 	}
 
+	private static function summary_card( string $label, string $value, string $detail ): void {
+		echo '<div class="adc-access-summary-card"><span>' . esc_html( $label ) . '</span><strong>' . esc_html( $value ) . '</strong><small>' . esc_html( $detail ) . '</small></div>';
+	}
+
 	private static function confirmation( array $input, array $impact, string $token ): void {
 		$title = __( 'Review role impact', 'auto-dealership-core' );
 		$function_labels = array();
 		$function_map = OrganizationalCapabilityMap::report()['functions'];
 		foreach ( is_array( $input['organizational_functions'] ?? null ) ? $input['organizational_functions'] : array() as $function_id ) { if ( is_string( $function_id ) && isset( $function_map[$function_id] ) ) { $function_labels[] = $function_map[$function_id]['label']; } }
-		echo '<div class="wrap"><h1>' . esc_html( $title ) . '</h1><p>' . esc_html__( 'Review these changes before applying them. Users with individual overrides may be unaffected. Role transfers also end active sessions.', 'auto-dealership-core' ) . '</p><p><strong>' . esc_html__( 'Role identifier', 'auto-dealership-core' ) . ':</strong> ' . esc_html( $input['slug'] ) . '</p><p><strong>' . esc_html__( 'Organizational function references (not permission grants)', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $function_labels ) ?: __( 'None selected', 'auto-dealership-core' ) ) . '</p><p>' . esc_html__( 'The function references are informational only. Review the manually selected permissions in this impact preview.', 'auto-dealership-core' ) . '</p><p><strong>' . esc_html__( 'Permissions added', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $impact['role_added'] ) ?: '—' ) . '</p><p><strong>' . esc_html__( 'Permissions removed', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $impact['role_removed'] ) ?: '—' ) . '</p><div style="overflow:auto"><table class="widefat striped"><thead><tr>';
+		echo '<div class="wrap"><h1>' . esc_html( $title ) . '</h1><p>' . esc_html__( 'Review these changes before applying them. Users with individual overrides may be unaffected. Role transfers also end active sessions.', 'auto-dealership-core' ) . '</p><p><strong>' . esc_html__( 'Role identifier', 'auto-dealership-core' ) . ':</strong> ' . esc_html( $input['slug'] ) . '</p><p><strong>' . esc_html__( 'Organizational function references (not permission grants)', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $function_labels ) ?: __( 'None selected', 'auto-dealership-core' ) ) . '</p><p>' . esc_html__( 'The function references are informational only. Review the manually selected permissions in this impact preview.', 'auto-dealership-core' ) . '</p><p><strong>' . esc_html__( 'Permissions added', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $impact['role_added'] ) ?: '—' ) . '</p><p><strong>' . esc_html__( 'Permissions removed', 'auto-dealership-core' ) . ':</strong> ' . esc_html( implode( ', ', $impact['role_removed'] ) ?: '—' ) . '</p><div class="adc-table-scroll"><table class="widefat striped"><thead><tr>';
 		foreach ( array( 'User', 'Permissions added', 'Permissions removed', 'Individual overrides', 'Temporary permissions' ) as $label ) { echo '<th>' . esc_html__( $label, 'auto-dealership-core' ) . '</th>'; } echo '</tr></thead><tbody>';
 		foreach ( $impact['users'] as $row ) { echo '<tr><td>' . esc_html( $row['name'] ) . '</td><td>' . esc_html( implode( ', ', $row['added'] ) ?: '—' ) . '</td><td>' . esc_html( implode( ', ', $row['removed'] ) ?: '—' ) . '</td><td>' . absint( $row['overrides'] ) . '</td><td>' . absint( $row['temporary'] ) . '</td></tr>'; }
 		if ( ! $impact['users'] ) { echo '<tr><td colspan="5">' . esc_html__( 'No users currently assigned to this role.', 'auto-dealership-core' ) . '</td></tr>'; } echo '</tbody></table></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';

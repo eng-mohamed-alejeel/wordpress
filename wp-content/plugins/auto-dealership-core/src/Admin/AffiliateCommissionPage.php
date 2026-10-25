@@ -69,7 +69,7 @@ final class AffiliateCommissionPage {
 	}
 
 	private static function action_form( int $id, string $target, string $label, bool $reason = false, bool $reference = false ): void {
-		echo '<form style="display:inline-block;margin:2px" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<form class="adc-inline-action-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_affiliate_commission_' . $target . '_' . $id );
 		echo '<input type="hidden" name="action" value="adc_affiliate_commission_transition"><input type="hidden" name="commission_id" value="' . $id . '"><input type="hidden" name="target" value="' . esc_attr( $target ) . '">';
 		if ( $reason ) { echo '<input type="text" name="reason" maxlength="1000" placeholder="' . esc_attr( self::text( 'سبب القرار مطلوب', 'Reason required' ) ) . '" required>'; }

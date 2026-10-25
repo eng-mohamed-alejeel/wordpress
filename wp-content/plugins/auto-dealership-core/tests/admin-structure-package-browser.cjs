@@ -24,7 +24,7 @@ module.exports = async ({browser, config, check}) => {
     check(await page.locator(`#adminmenu a[href$="page=${slug}"]`).count() === 1, `Exactly one sidebar entry: ${slug}`);
   }
   check(await page.locator('#adminmenu a[href*="adc-transfer-queue"],#adminmenu a[href*="options-general.php?page=adc-platform-setup"]').count() === 0, 'Retired sidebar links removed');
-  check(await page.locator('#adminmenu a[href="index.php"]').count() === 0, 'There is a single workspace home, without the old WordPress dashboard shortcut');
+  check(await page.locator('#adminmenu a[href="index.php"]').count() > 0, 'System administrators retain the native WordPress dashboard shortcut');
   await page.goto(`${config.base}/wp-admin/index.php`);
   check(new URL(page.url()).searchParams.get('page') === 'adc-workspace', 'Core dashboard bookmark redirects to the workspace before menu access validation');
   check(await page.locator('.adc-workspace .adc-workspace-card').count() === 0 && await page.locator('.adc-area-card').count() > 0, 'Actual home contains area cards without repeated module links');

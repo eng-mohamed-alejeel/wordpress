@@ -167,7 +167,7 @@ final class OrganizationalCapabilityMap {
 		echo '<section class="adc-organizational-reference" data-reference-only="true">';
 		echo '<h2>' . esc_html__( 'Organizational function reference map', 'auto-dealership-core' ) . '</h2>';
 		echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'This is a read-only reference, not a role template or permission recommendation. Selecting a function here does not grant capabilities. Choose only task-required capabilities for each role, review conflicts and data scope, and test before changing access.', 'auto-dealership-core' ) . '</p></div>';
-		echo '<div style="overflow:auto"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Organizational function', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Related existing capabilities (reference only)', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		echo '<div class="adc-table-scroll"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Organizational function', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Related existing capabilities (reference only)', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 		foreach ( $report['functions'] as $function ) {
 			$capabilities = array_map(
 				static fn( array $capability ): string => sprintf( '%1$s (%2$s)', __( $capability['label'], 'auto-dealership-core' ), $capability['key'] ),
@@ -200,7 +200,7 @@ final class OrganizationalCapabilityMap {
 				echo '<p>' . esc_html__( 'None.', 'auto-dealership-core' ) . '</p></details>';
 				continue;
 			}
-			echo '<div style="overflow:auto"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Capability', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Product catalog group', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Preliminary classification (human review required)', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Related functions', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+			echo '<div class="adc-table-scroll"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Capability', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Product catalog group', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Preliminary classification (human review required)', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Related functions', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 			foreach ( $coverage[$key] as $capability ) {
 				$classifications = array(
 					'read_reference' => __( 'Read / reference', 'auto-dealership-core' ),

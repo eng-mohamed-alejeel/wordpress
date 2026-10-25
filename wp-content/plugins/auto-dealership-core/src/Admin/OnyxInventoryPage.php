@@ -25,8 +25,8 @@ final class OnyxInventoryPage {
 	}
 	private static function stock_table(array $rows, bool $failed = false): void {
 		$columns = self::columns();
-		echo '<div role="region" tabindex="0" aria-label="'.esc_attr(self::t('جدول مخزون أونكس، قابل للتمرير أفقيًا', 'Onyx inventory table, horizontally scrollable')).'" style="overflow-x:auto;margin-block:12px"><table class="widefat striped adc-onyx-stock" style="min-width:1600px"><thead><tr>';
-		foreach ($columns as $label) { echo '<th scope="col" style="white-space:nowrap">'.esc_html($label).'</th>'; }
+		echo '<div class="adc-onyx-table-scroll" role="region" tabindex="0" aria-label="'.esc_attr(self::t('جدول مخزون أونكس، قابل للتمرير أفقيًا', 'Onyx inventory table, horizontally scrollable')).'"><table class="widefat striped adc-onyx-stock"><thead><tr>';
+		foreach ($columns as $label) { echo '<th scope="col">'.esc_html($label).'</th>'; }
 		echo '</tr></thead><tbody>';
 		if ($failed || !$rows) {
 			echo '<tr><td colspan="12">'.esc_html($failed ? self::t('تعذر تحميل المخزون.', 'Inventory could not be loaded.') : self::t('لا توجد سجلات.', 'No records.')).'</td></tr>';
@@ -36,7 +36,7 @@ final class OnyxInventoryPage {
 				foreach ($columns as $field => $label) {
 					$value = $row[$field] ?? '';
 					if ('listed_price' === $field && '' !== $value) { $value = \AutoDealership\Pricing\Money::decimal((string)$value); }
-					echo '<td style="white-space:pre-wrap;overflow-wrap:anywhere">';
+					echo '<td>';
 					echo 'source_identifier' === $field ? '<code>'.esc_html((string)$value).'</code>'.(array_key_exists('present',$row)?'<br><small>'.esc_html($row['present']?self::t('متوفرة','Available'):self::t('مباعة حسب أونكس','Sold according to Onyx')).'</small>':'') : esc_html((string)$value);
 					echo '</td>';
 				}

@@ -36,6 +36,8 @@ const assert = require('node:assert/strict');
         check(!(await page.locator('body').innerText()).includes('FOREIGN_CUSTOMER_SECRET'), `${actor} foreign identity absent`);
         check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2), `${actor} ${width}px no page overflow`);
         check(await page.locator('.adc-overview-metric[aria-current="true"]').count() === 1, 'Selected indicator is announced');
+		check(await page.locator('.adc-overview-metric').count() >= 6, `${actor} keeps the primary work indicators visible`);
+		if (await page.locator('.adc-overview-more').count()) check(await page.locator('.adc-overview-more .adc-overview-metric').count() > 0, `${actor} keeps secondary queues available without crowding the overview`);
 		await page.locator('.adc-work-table').focus();
 		check(await page.locator('.adc-work-table').evaluate(node => document.activeElement === node), 'Scrollable table is keyboard accessible');
         await page.screenshot({path:path.join(output, `${actor}-${width}.png`),fullPage:true});

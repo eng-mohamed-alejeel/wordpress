@@ -60,14 +60,15 @@ final class Navigation {
 
 	public static function groups(): array {
 		$leads = array( 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_marketing_leads' );
+		$engagement_leads = array( 'adc_view_own_leads', 'adc_view_branch_leads' );
 		$definitions = array(
 			'customers' => array( 'العملاء والمبيعات', 'dashicons-groups', array(
 				array( 'adc-conversations', 'محادثات العملاء', array('manage_options','adc_view_conversations'), \AutoDealership\Portal\PortalAdmin::class, 'conversations' ),
 				array( 'adc-portal-operations', 'تشغيل بوابة العميل', array('manage_options','adc_publish_customer_documents'), \AutoDealership\Portal\PortalOperations::class, 'render' ),
 				array( 'adc-customer-reviews', 'تقييمات العملاء', array('manage_options','adc_moderate_reviews'), \AutoDealership\Portal\PortalAdmin::class, 'reviews' ),
 				array( 'adc-crm', 'فرص العملاء', $leads, OperationsPages::class, 'render_leads' ),
-				array( 'car-dealer-messages', 'رسائل العملاء', $leads, EngagementPages::class, 'render_messages' ),
-				array( 'car-dealer-bookings', 'حجوزات تجربة القيادة', $leads, EngagementPages::class, 'render_bookings' ),
+				array( 'car-dealer-messages', 'رسائل العملاء', $engagement_leads, EngagementPages::class, 'render_messages' ),
+				array( 'car-dealer-bookings', 'حجوزات تجربة القيادة', $engagement_leads, EngagementPages::class, 'render_bookings' ),
 				array( 'adc-quotes', 'عروض أسعار العملاء', array( 'manage_options', 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_finance' ), QuotePages::class, 'render' ),
 				array( 'adc-sales-journey', 'دورة المبيعات', array( 'manage_options', 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_finance' ), SalesJourneyPage::class, 'render' ),
 				array( 'adc-customer-workspace', 'ملف العميل', array( 'manage_options', 'adc_view_own_leads', 'adc_view_branch_leads', 'adc_view_finance' ), CustomerWorkspacePage::class, 'render' ),
@@ -88,7 +89,7 @@ final class Navigation {
 				array( 'edit-tags.php?taxonomy=car_category&post_type=car', 'فئات السيارات', 'manage_car_categories' ),
 			) ),
 			'purchasing' => array( 'المشتريات', 'dashicons-store', array(
-				array( 'adc-purchase-orders', 'Purchase orders', 'adc_view_purchase_orders', PurchaseOrderPage::class, 'render' ),
+				array( 'adc-purchase-orders', \AutoDealership\Core\ProductSetup::t( 'أوامر الشراء', 'Purchase orders' ), 'adc_view_purchase_orders', PurchaseOrderPage::class, 'render' ),
 				array( 'adc-suppliers', 'الموردون', 'adc_view_suppliers', SupplierPage::class, 'render' ),
 				array( 'adc-vehicle-acquisition', 'اقتناء المركبات وتكاليفها', array( 'adc_view_vehicle_costs', 'adc_manage_vehicle_costs' ), VehicleAcquisitionPage::class, 'render' ),
 			) ),
@@ -130,7 +131,7 @@ final class Navigation {
 				array( 'adc-social-channels', \AutoDealership\Core\ProductSetup::t( 'حسابات التواصل الاجتماعي', 'Social accounts' ), 'manage_options', \AutoDealership\Core\SocialChannels::class, 'admin' ),
 				array( 'adc-branch-locations', \AutoDealership\Core\ProductSetup::t( 'فروع الموقع والخرائط', 'Public branches and maps' ), 'manage_options', \AutoDealership\Core\BranchLocations::class, 'admin' ),
 				array( 'customize.php?autofocus[panel]=adc_brand_palette', \AutoDealership\Core\ProductSetup::t( 'الهوية والألوان', 'Brand and colors' ), 'manage_options' ),
-				array( 'adc-release-evidence', 'Release evidence', 'manage_options', ReleaseEvidencePage::class, 'render' ),
+				array( 'adc-release-evidence', \AutoDealership\Core\ProductSetup::t( 'أدلة الإطلاق', 'Release evidence' ), 'manage_options', ReleaseEvidencePage::class, 'render' ),
 				array( 'adc-settings', 'سياسات وإعدادات المنصة', 'manage_options', SettingsPage::class, 'render' ),
 				array( 'adc-profit-margin', \AutoDealership\Core\ProductSetup::t( 'هامش ربح السيارات', 'Vehicle profit margin' ), 'manage_options', ProfitMarginPage::class, 'render' ),
 				array( 'adc-reference', \AutoDealership\Core\ProductSetup::t( 'العلامات والمواقع التشغيلية', 'Operational brands and locations' ), 'manage_options', ReferencePage::class, 'render' ),
@@ -138,9 +139,9 @@ final class Navigation {
 				array( 'adc-catalog-cutover', 'مطابقة الكتالوج', 'manage_options', CatalogCutoverPage::class, 'render' ),
 				array( 'adc-stored-translations', 'ترجمات البيانات', 'manage_options', StoredTranslationsPage::class, 'render' ),
 				array( 'users.php', \AutoDealership\Core\ProductSetup::t( 'حسابات الموظفين', 'Staff accounts' ), 'list_users' ),
-				array( 'adc-roles', 'Roles and permissions', 'manage_options', RoleManager::class, 'render' ),
-				array( 'adc-access-review', 'Account access review', 'manage_options', AccessReviewPage::class, 'render' ),
-				array( 'adc-policy-profile', 'Company policy profile', 'manage_options', PolicyProfilePage::class, 'render' ),
+				array( 'adc-roles', \AutoDealership\Core\ProductSetup::t( 'الأدوار والصلاحيات', 'Roles and permissions' ), 'manage_options', RoleManager::class, 'render' ),
+				array( 'adc-access-review', \AutoDealership\Core\ProductSetup::t( 'مراجعة وصول الحسابات', 'Account access review' ), 'manage_options', AccessReviewPage::class, 'render' ),
+				array( 'adc-policy-profile', \AutoDealership\Core\ProductSetup::t( 'ملف سياسة الشركة', 'Company policy profile' ), 'manage_options', PolicyProfilePage::class, 'render' ),
 			) ),
 			'audit' => array( 'الرقابة والتكاملات', 'dashicons-visibility', array(
 				array( 'adc-audit', 'سجل التدقيق', 'adc_view_audit', AuditPage::class, 'render' ),
@@ -155,11 +156,26 @@ final class Navigation {
 			$items = array();
 			foreach ( $definition[2] as $entry ) {
 				$native = str_contains( $entry[0], '.php' );
-				$items[] = array( 'slug' => $entry[0], 'path' => $native ? $entry[0] : 'admin.php?page=' . $entry[0], 'title' => __( $entry[1], 'auto-dealership-core' ), 'description' => $descriptions[$native ? $entry[0] : 'admin.php?page=' . $entry[0]] ?? '', 'icon' => $definition[1], 'capabilities' => (array) $entry[2], 'callback' => $native ? '' : array( $entry[3], $entry[4] ) );
+				$items[] = array( 'slug' => $entry[0], 'path' => $native ? $entry[0] : 'admin.php?page=' . $entry[0], 'title' => self::label( $entry[0], $entry[1] ), 'description' => $descriptions[$native ? $entry[0] : 'admin.php?page=' . $entry[0]] ?? '', 'icon' => $definition[1], 'capabilities' => (array) $entry[2], 'callback' => $native ? '' : array( $entry[3], $entry[4] ) );
 			}
-			$groups[] = array( 'id' => $id, 'title' => __( $definition[0], 'auto-dealership-core' ), 'icon' => $definition[1], 'items' => $items );
+			$groups[] = array( 'id' => $id, 'title' => self::label( $id, $definition[0] ), 'icon' => $definition[1], 'items' => $items );
 		}
 		return $groups;
+	}
+
+	private static function label( string $key, string $label ): string {
+		if ( 'en' === \AutoDealership\Core\Localization::language() && preg_match( '/[\x{0600}-\x{06ff}]/u', $label ) ) {
+			$english = array(
+				'customers'=>'Customers and sales', 'inventory'=>'Inventory', 'purchasing'=>'Purchasing', 'approvals'=>'Approvals', 'finance'=>'Finance', 'delivery'=>'Delivery', 'content'=>'Website content', 'marketing'=>'Marketing', 'reports'=>'Reports', 'settings'=>'Platform settings', 'audit'=>'Oversight and integrations',
+				'adc-conversations'=>'Customer conversations', 'adc-portal-operations'=>'Customer portal operations', 'adc-customer-reviews'=>'Customer reviews', 'adc-crm'=>'Customer opportunities', 'car-dealer-messages'=>'Customer messages', 'car-dealer-bookings'=>'Test-drive bookings', 'adc-quotes'=>'Customer quotations', 'adc-sales-journey'=>'Sales journey', 'adc-customer-workspace'=>'Customer workspace', 'adc-follow-ups'=>'Follow-ups and alerts', 'adc-customer-identities'=>'Customer identity review',
+				'adc-onyx'=>'Onyx inventory', 'adc-inventory'=>'Vehicle management', 'adc-inventory-identity'=>'Receiving, inspection and locations', 'adc-vehicle-vin'=>'Correct vehicle VIN', 'adc-vehicle-specifications'=>'Vehicle specifications', 'adc-vehicle-issues'=>'Holds and maintenance', 'adc-vehicle-returns'=>'Vehicle returns', 'edit.php?post_type=car'=>'Vehicle pages', 'edit-tags.php?taxonomy=car_brand&post_type=car'=>'Vehicle brands', 'edit-tags.php?taxonomy=car_category&post_type=car'=>'Vehicle categories',
+				'adc-suppliers'=>'Suppliers', 'adc-vehicle-acquisition'=>'Vehicle acquisition and costs', 'adc-approvals'=>'Discount and sale approvals', 'adc-sale-cancellations'=>'Sale cancellations', 'adc-finance'=>'Finance requests', 'adc-payments'=>'Payment confirmations', 'adc-refunds'=>'Refunds', 'adc-financial-export'=>'Financial export', 'adc-employee-commissions'=>'Sales employee commissions', 'adc-delivery'=>'Vehicle preparation and delivery',
+				'adc-site-content'=>'Homepage and section content', 'edit.php?post_type=car_offer'=>'Promotional offers', 'edit.php?post_type=page'=>'Website pages', 'upload.php'=>'Media library', 'adc-editorial-setup'=>'Website page setup', 'adc-marketing-reports'=>'Marketing reports', 'car-dealer-subscribers'=>'Newsletter subscribers', 'adc-operational-reports'=>'Operational reports', 'adc-area-reports'=>'Reports overview', 'adc-crm-reports'=>'Detailed CRM reports',
+				'adc-settings'=>'Platform policies and settings', 'adc-finance-calculator'=>'Finance calculator settings', 'adc-catalog-cutover'=>'Catalog reconciliation', 'adc-stored-translations'=>'Data translations', 'users.php'=>'Staff accounts', 'adc-audit'=>'Audit log', 'adc-public-security'=>'Public interface security', 'adc-integrations'=>'Integration readiness', 'adc-outbox'=>'Job monitoring',
+			);
+			$label = $english[ $key ] ?? ucwords( str_replace( array( 'adc-', '-', '_' ), array( '', ' ', ' ' ), $key ) );
+		}
+		return __( $label, 'auto-dealership-core' );
 	}
 
 	private static function descriptions(): array {

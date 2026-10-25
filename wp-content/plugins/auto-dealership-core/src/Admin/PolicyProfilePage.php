@@ -59,7 +59,7 @@ final class PolicyProfilePage {
 		if ( ! RoleManager::authorized() ) { wp_die( esc_html__( 'Administrator access is required.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
 		$state = PolicyProfileService::state();
 		if ( is_wp_error( $state ) ) { wp_die( esc_html( $state->get_error_message() ), '', array( 'response'=>500 ) ); }
-		echo '<div class="wrap"><h1>' . esc_html__( 'Company policy profile', 'auto-dealership-core' ) . '</h1>';
+		echo '<div class="wrap adc-policy-page"><h1>' . esc_html__( 'Company policy profile', 'auto-dealership-core' ) . '</h1>';
 		echo '<div class="notice notice-warning"><p>' . esc_html__( 'This page records this WordPress installation’s approved policy decisions. Publishing this record does not change role grants, financial thresholds, exports, reports, or retention settings. Each policy must be mapped to a supported server-side setting and tested before operational activation.', 'auto-dealership-core' ) . '</p></div>';
 		if ( isset( $_GET['updated'] ) ) { echo '<div class="notice notice-success"><p>' . esc_html__( 'Policy-profile record updated.', 'auto-dealership-core' ) . '</p></div>'; }
 		self::current_record( $state['current'] );
@@ -120,7 +120,7 @@ final class PolicyProfilePage {
 			'authority_reference'=>__( 'Authority reference', 'auto-dealership-core' ),
 			'conditions'=>__( 'Conditions', 'auto-dealership-core' ),
 		);
-		echo '<div style="overflow:auto"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Decision area', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Differences', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		echo '<div class="adc-policy-table-scroll"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Decision area', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Differences', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 		foreach ( $changes as $code => $fields ) {
 			echo '<tr><th scope="row">' . esc_html( $code . ' — ' . self::title( $code ) ) . '</th><td><details><summary>' . esc_html( implode( ', ', array_map( static fn( $field ) => $labels[$field] ?? $field, array_keys( $fields ) ) ) ) . '</summary><ul>';
 			foreach ( $fields as $field => $change ) {
@@ -140,7 +140,7 @@ final class PolicyProfilePage {
 		echo '<p class="description">' . esc_html__( 'Complete all eight decision areas. Decisions are governance records only; unsupported settings must not be treated as operationally enforced.', 'auto-dealership-core' ) . '</p>';
 		echo '<p><label>' . esc_html__( 'Next policy review date', 'auto-dealership-core' ) . '<br><input type="date" required name="review_due_date" value="' . esc_attr( $draft['review_due_date'] ?? '' ) . '"></label></p>';
 		foreach ( $draft['decisions'] as $code => $item ) {
-			echo '<fieldset class="widefat" style="padding:12px;margin:12px 0"><legend><strong>' . esc_html( $code . ' — ' . self::title( $code ) ) . '</strong></legend>';
+			echo '<fieldset class="widefat adc-policy-decision-fieldset"><legend><strong>' . esc_html( $code . ' — ' . self::title( $code ) ) . '</strong></legend>';
 			echo '<p><label>' . esc_html__( 'Decision', 'auto-dealership-core' ) . ' <select required name="decisions[' . esc_attr( $code ) . '][outcome]">';
 			foreach ( array( ''=>'—', 'adopt'=>'Adopt the documented policy', 'reject'=>'Reject the proposed policy', 'defer'=>'Defer the decision', 'not_applicable'=>'Not applicable' ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( $item['outcome'], $value, false ) . '>' . esc_html__( $label, 'auto-dealership-core' ) . '</option>'; }
 			echo '</select></label></p>';
@@ -166,7 +166,7 @@ final class PolicyProfilePage {
 
 	private static function review_table( array $draft ): void {
 		echo '<p>' . esc_html__( 'The draft is locked while under review. Each selected review method must be completed by an administrator other than the author and last editor. Hybrid decisions require different internal and evidence reviewers.', 'auto-dealership-core' ) . '</p>';
-		echo '<div style="overflow:auto"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Decision', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Policy', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Review', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Actions', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		echo '<div class="adc-policy-table-scroll"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Decision', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Policy', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Review', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Actions', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 		foreach ( $draft['decisions'] as $code => $item ) {
 			$mode = $item['approval_mode'];
 			echo '<tr><td>' . esc_html( $code . ' — ' . self::title( $code ) . ' (' . $item['outcome'] . ')' ) . '</td><td>' . esc_html( $item['statement'] ) . '<br><small>' . esc_html__( 'Owner function:', 'auto-dealership-core' ) . ' ' . esc_html( $item['owner_function'] ) . '; ' . esc_html__( 'Authority reference:', 'auto-dealership-core' ) . ' ' . esc_html( $item['authority_reference'] ) . '</small></td><td>' . esc_html( self::review_status( $item ) ) . '</td><td>';
@@ -199,7 +199,7 @@ final class PolicyProfilePage {
 	}
 
 	private static function restore_form( int $record_number ): void {
-		echo '<form style="display:inline-block;margin:4px" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<form class="adc-policy-inline-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_policy_profile' );
 		echo '<input type="hidden" name="action" value="adc_policy_profile"><input type="hidden" name="operation" value="restore"><input type="hidden" name="record_number" value="' . absint( $record_number ) . '">';
 		echo '<label>' . esc_html__( 'Reason for restoring as draft', 'auto-dealership-core' ) . ' <input name="reason" required minlength="5" maxlength="2000"></label> ';
@@ -208,7 +208,7 @@ final class PolicyProfilePage {
 	}
 
 	private static function decision_table( array $decisions ): void {
-		echo '<div style="overflow:auto"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Decision', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Approved policy record', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Evidence', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		echo '<div class="adc-policy-table-scroll"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Decision', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Approved policy record', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'Evidence', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 		foreach ( $decisions as $code => $item ) { echo '<tr><td>' . esc_html( $code . ' — ' . self::title( $code ) . ' (' . $item['outcome'] . ')' ) . '</td><td>' . esc_html( $item['statement'] ) . '<br><small>' . esc_html__( 'Rationale:', 'auto-dealership-core' ) . ' ' . esc_html( $item['rationale'] ) . '</small></td><td>' . esc_html( self::review_status( $item ) ) . ( $item['external_reference'] ? '<br>' . esc_html( $item['external_reference'] ) : '' ) . '</td></tr>'; }
 		echo '</tbody></table></div>';
 	}
@@ -234,7 +234,7 @@ final class PolicyProfilePage {
 	}
 
 	private static function action_form( string $operation, string $revision, string $label, bool $enabled = true ): void {
-		echo '<form style="display:inline-block;margin:4px" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<form class="adc-policy-inline-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_policy_profile' );
 		echo '<input type="hidden" name="action" value="adc_policy_profile"><input type="hidden" name="operation" value="' . esc_attr( $operation ) . '"><input type="hidden" name="revision" value="' . esc_attr( $revision ) . '">';
 		submit_button( $label, 'primary', 'submit', false, $enabled ? array() : array( 'disabled'=>true ) );
@@ -242,7 +242,7 @@ final class PolicyProfilePage {
 	}
 
 	private static function code_action_form( string $operation, string $revision, string $code, string $label ): void {
-		echo '<form style="display:inline-block;margin:2px" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<form class="adc-policy-inline-form adc-policy-inline-form--compact" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_policy_profile' );
 		echo '<input type="hidden" name="action" value="adc_policy_profile"><input type="hidden" name="operation" value="' . esc_attr( $operation ) . '"><input type="hidden" name="revision" value="' . esc_attr( $revision ) . '"><input type="hidden" name="code" value="' . esc_attr( $code ) . '">';
 		submit_button( $label, 'secondary', 'submit', false );
@@ -250,7 +250,7 @@ final class PolicyProfilePage {
 	}
 
 	private static function reason_action_form( string $operation, string $revision, string $label ): void {
-		echo '<form style="display:inline-block;margin:4px" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<form class="adc-policy-inline-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_policy_profile' );
 		echo '<input type="hidden" name="action" value="adc_policy_profile"><input type="hidden" name="operation" value="' . esc_attr( $operation ) . '"><input type="hidden" name="revision" value="' . esc_attr( $revision ) . '"><label>' . esc_html__( 'Reason', 'auto-dealership-core' ) . ' <input name="reason" required minlength="5" maxlength="2000"></label> ';
 		submit_button( $label, 'secondary', 'submit', false );

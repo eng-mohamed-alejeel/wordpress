@@ -81,3 +81,72 @@ html.adc-in-modal{padding-top:0!important}
  .wrap .tablenav.top input[type=search],.wrap .tablenav.top select{max-width:100%;min-height:36px}
  .adc-crm-board-column{flex-basis:240px}
 }
+
+/* AD-032: consume the shared semantic palette in light and dark appearances. */
+.adc-admin .adc-crm-summary .card,
+.adc-admin .adc-marketing-filters,
+.adc-admin .adc-crm-board-card,
+.adc-admin .adc-crm-details-bar,
+.adc-admin .adc-crm-details-frame,
+.adc-admin .adc-crm-board-dialog {
+	background: var(--ab-surface);
+	border-color: var(--ab-border);
+	color: var(--ab-text);
+}
+.adc-admin .adc-marketing-filters { box-shadow: var(--ab-shadow); }
+.adc-admin .adc-crm-board-status { color: var(--ab-muted); }
+.adc-admin .adc-crm-board-status.notice-error { color: var(--ab-error); }
+.adc-admin .adc-crm-board-status.is-success { color: var(--ab-success); }
+.adc-admin .adc-crm-board-column {
+	--tone: var(--ab-muted);
+	--tone-bg: var(--ab-soft);
+	--tone-ink: var(--ab-inverse);
+	border-color: var(--ab-border);
+}
+.adc-admin .adc-crm-board-column h2 { border-bottom-color: var(--ab-border); }
+.adc-admin .adc-crm-stage-count { color: var(--tone-ink); }
+.adc-admin .adc-crm-board-empty { border-color: var(--ab-border); color: var(--ab-muted); }
+.adc-admin .adc-crm-board-column[data-stage-tone=new] { --tone: var(--ab-error); --tone-bg: var(--ab-error-bg); }
+.adc-admin .adc-crm-board-column[data-stage-tone=assigned] { --tone: var(--ab-warning); --tone-bg: var(--ab-warning-bg); --tone-ink: var(--ab-on-action); }
+.adc-admin .adc-crm-board-column[data-stage-tone=contacted] { --tone: var(--ab-info); --tone-bg: var(--ab-info-bg); }
+.adc-admin .adc-crm-board-column[data-stage-tone=qualified] { --tone: var(--ab-action); --tone-bg: var(--ab-soft); }
+.adc-admin .adc-crm-board-column[data-stage-tone=quotation] { --tone: var(--ab-info); --tone-bg: var(--ab-info-bg); }
+.adc-admin .adc-crm-board-column[data-stage-tone=finance] { --tone: var(--ab-warning); --tone-bg: var(--ab-warning-bg); --tone-ink: var(--ab-on-action); }
+.adc-admin .adc-crm-board-column[data-stage-tone=negotiation] { --tone: var(--ab-error); --tone-bg: var(--ab-error-bg); }
+.adc-admin .adc-crm-board-column[data-stage-tone=reserved] { --tone: var(--ab-action); --tone-bg: var(--ab-soft); }
+.adc-admin .adc-crm-board-column[data-stage-tone=won] { --tone: var(--ab-success); --tone-bg: var(--ab-success-bg); }
+.adc-admin .adc-crm-board-column[data-stage-tone=lost] { --tone: var(--ab-muted); --tone-bg: var(--ab-soft); --tone-ink: var(--ab-text); }
+.adc-admin .adc-crm-board-card { box-shadow: var(--ab-shadow); }
+.adc-admin .adc-crm-board-card[draggable=true]:hover,
+.adc-admin .adc-crm-board-card:focus-visible { box-shadow: var(--ab-shadow); outline-color: var(--ab-focus); }
+.adc-admin .adc-crm-board-card[data-priority=urgent] { border-inline-start-color: var(--ab-error); }
+.adc-admin .adc-crm-board-card[data-priority=high] { border-inline-start-color: var(--ab-warning); }
+.adc-admin .adc-crm-board-card[data-priority=normal] { border-inline-start-color: var(--ab-action); }
+.adc-admin .adc-crm-board-card[data-priority=low] { border-inline-start-color: var(--ab-muted); }
+.adc-admin .adc-crm-board-card.is-fresh {
+	background: linear-gradient(135deg, var(--ab-surface) 0, var(--ab-error-bg) 100%);
+	box-shadow: 0 0 0 2px var(--ab-error-bg), 0 2px 8px var(--ab-border);
+}
+.adc-admin .adc-crm-board-card.is-overdue { background: var(--ab-warning-bg); }
+.adc-admin .adc-crm-card-id,
+.adc-admin .adc-crm-card-meta,
+.adc-admin .adc-crm-drag-hint { color: var(--ab-muted); }
+.adc-admin .adc-crm-badge { background: var(--ab-soft); color: var(--ab-text); }
+.adc-admin .adc-crm-badge-fresh { background: var(--ab-error); color: var(--ab-on-action); }
+.adc-admin .adc-crm-badge-overdue { background: var(--ab-warning-bg); color: var(--ab-warning); }
+.adc-admin .adc-crm-badge-unassigned { background: var(--ab-soft); color: var(--ab-muted); }
+.adc-admin .adc-crm-board-card[data-priority=urgent] .adc-crm-badge-priority { background: var(--ab-error-bg); color: var(--ab-error); }
+.adc-admin .adc-crm-board-card[data-priority=high] .adc-crm-badge-priority { background: var(--ab-warning-bg); color: var(--ab-warning); }
+.adc-admin .adc-crm-board-card[data-priority=normal] .adc-crm-badge-priority { background: var(--ab-info-bg); color: var(--ab-info); }
+.adc-admin .adc-crm-board-card a { color: var(--ab-link); }
+.adc-admin .adc-crm-details-dialog { box-shadow: var(--ab-shadow); }
+.adc-admin .adc-crm-details-dialog::backdrop,
+.adc-admin .adc-crm-board-dialog::backdrop { background: color-mix(in srgb, var(--ab-hero) 55%, transparent); }
+html.adc-in-modal,
+html.adc-in-modal body { background: var(--ab-bg) !important; }
+.adc-admin .adc-crm-details-bar { border-bottom-color: var(--ab-border); }
+.adc-admin .adc-crm-details-frame { background: var(--ab-surface); }
+.adc-admin .adc-crm-board.is-dragging-active .adc-crm-board-column.is-valid-target.is-over {
+	background: var(--ab-surface);
+	box-shadow: 0 0 0 3px var(--tone), var(--ab-shadow);
+}

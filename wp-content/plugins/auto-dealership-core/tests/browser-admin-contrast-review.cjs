@@ -7,7 +7,17 @@ const pixels = require('./browser-pixel-contrast.cjs');
     const { browser, page } = await launch(true);
     const report = [];
     try {
-        for (const route of ['/wp-admin/', '/wp-admin/admin.php?page=adc-workspace', '/wp-admin/admin.php?page=adc-area-inventory', '/wp-admin/admin.php?page=adc-catalog-cutover']) {
+        for (const route of [
+            '/wp-admin/',
+            '/wp-admin/admin.php?page=adc-workspace',
+            '/wp-admin/admin.php?page=adc-area-inventory',
+            '/wp-admin/admin.php?page=adc-catalog-cutover',
+            '/wp-admin/admin.php?page=adc-crm',
+            '/wp-admin/admin.php?page=adc-crm-reports',
+            '/wp-admin/admin.php?page=adc-area-reports',
+            '/wp-admin/admin.php?page=adc-policy-profile',
+            '/wp-admin/admin.php?page=adc-onyx',
+        ]) {
             await page.goto('http://localhost/wordpress' + route, { waitUntil: 'networkidle' });
             for (const appearance of ['light', 'dark']) {
                 await mode(page, appearance);

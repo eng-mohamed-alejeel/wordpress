@@ -18,12 +18,14 @@ final class WorkspaceOverviewView {
 		echo '</select></label><input type="hidden" name="workspace_task" value="' . esc_attr( $data['selected'] ) . '"><label>' . esc_html( self::t( 'البحث باسم العميل', 'Search by customer name' ) ) . ' <input type="search" name="workspace_search" maxlength="120" value="' . esc_attr( $data['search'] ) . '"></label><button class="button">' . esc_html( self::t( 'تحديث الملخص', 'Update overview' ) ) . '</button></form><p class="description">' . esc_html( self::t( 'تعرض القوائم الأعمال ضمن صلاحياتك وفروعك. البحث يرشح القوائم باسم العميل. الفترة تخص الفرص الجديدة فقط؛ بقية المؤشرات تعرض الحالة الحالية. الاعتماد النهائي يبقى خاضعًا لشروط العملية.', 'Queues respect your permissions and branches. Search filters queues by customer name. The period applies only to new leads; other indicators show current work. Final actions remain subject to workflow checks.' ) ) . '</p>';
 		if ( ! $data['branches'] && ! \AutoDealership\Security\BranchScope::is_global() ) { echo '<p class="notice notice-warning inline">' . esc_html( self::t( 'لا يوجد فرع نشط معيّن لحسابك. اطلب من مسؤول المنصة مراجعة تعيين الفروع.', 'No active branch is assigned to your account. Ask the administrator to review your branch assignments.' ) ) . '</p>'; }
 		if ( ! $data['queues'] ) { echo '<p>' . esc_html( self::t( 'لا توجد قوائم تشغيل متاحة لدورك. استخدم الوحدات المسموحة أدناه.', 'No operational queues are available for your role. Use the permitted modules below.' ) ) . '</p></section>'; return; }
-		echo '<nav class="adc-overview-grid" aria-label="' . esc_attr( self::t( 'مؤشرات العمل وقوائمه', 'Operational indicators and queues' ) ) . '">';
-		foreach ( $data['queues'] as $key=>$queue ) {
-			echo '<a class="adc-overview-metric' . ( $key === $data['selected'] ? ' is-current' : '' ) . '" href="' . esc_url( WorkspaceOverview::url( array_merge( $args, array( 'workspace_task'=>$key ) ) ) . '#adc-work-list' ) . '"' . ( $key === $data['selected'] ? ' aria-current="true"' : '' ) . '><span>' . esc_html( $queue['title'] ) . '</span><strong>' . esc_html( null === $queue['count'] ? '—' : number_format_i18n( $queue['count'] ) ) . '</strong>';
-			if ( null === $queue['count'] ) { echo '<small>' . esc_html( self::t( 'تعذر التحميل؛ أعد المحاولة', 'Could not load; try again' ) ) . '</small>'; } echo '</a>';
+		list( $visible_queues, $secondary_queues ) = self::queue_groups( $data['queues'], $data['selected'] );
+		self::render_queue_cards( $visible_queues, $args, $data['selected'], self::t( 'مؤشرات العمل وقوائمه', 'Operational indicators and queues' ) );
+		if ( $secondary_queues ) {
+			echo '<details class="adc-overview-more"><summary>' . esc_html( sprintf( self::t( 'عرض القوائم الأخرى (%s)', 'Show other queues (%s)' ), number_format_i18n( count( $secondary_queues ) ) ) ) . '</summary>';
+			self::render_queue_cards( $secondary_queues, $args, $data['selected'], self::t( 'القوائم الإضافية', 'Additional queues' ) );
+			echo '</details>';
 		}
-		echo '</nav><div id="adc-work-list" class="adc-work-list" tabindex="-1"><h3>' . esc_html( self::t( 'أعمال تحتاج متابعة', 'Work to follow up' ) ) . ' — ' . esc_html( $data['queues'][$data['selected']]['title'] ) . '</h3>';
+		echo '<div id="adc-work-list" class="adc-work-list" tabindex="-1"><h3>' . esc_html( self::t( 'أعمال تحتاج متابعة', 'Work to follow up' ) ) . ' — ' . esc_html( $data['queues'][$data['selected']]['title'] ) . '</h3>';
 		$q = $data['queues'][$data['selected']];
 		if ( $data['error'] || null === $q['count'] ) { echo '<p role="alert">' . esc_html( self::t( 'تعذر تحميل هذه القائمة. لم نعرض الخطأ على أنه قائمة فارغة.', 'This queue could not be loaded. A loading error is not an empty queue.' ) ) . '</p>'; }
 		elseif ( ! $data['rows'] ) { echo '<p class="adc-overview-empty">' . esc_html( self::t( 'لا توجد أعمال مطابقة لهذه القائمة ضمن نطاقك الحالي.', 'No matching work in this queue within your current scope.' ) ) . '</p>'; }
@@ -46,6 +48,29 @@ final class WorkspaceOverviewView {
 			}
 		}
 		echo '</div></section>';
+	}
+	private static function queue_groups( array $queues, string $selected ): array {
+		$visible = array();
+		if ( isset( $queues[ $selected ] ) ) { $visible[ $selected ] = $queues[ $selected ]; }
+		foreach ( $queues as $key => $queue ) {
+			if ( $key === $selected || null === $queue['count'] || (int) $queue['count'] < 1 ) { continue; }
+			$visible[ $key ] = $queue;
+			if ( count( $visible ) >= 6 ) { break; }
+		}
+		foreach ( $queues as $key => $queue ) {
+			if ( count( $visible ) >= 6 ) { break; }
+			if ( ! isset( $visible[ $key ] ) ) { $visible[ $key ] = $queue; }
+		}
+		return array( $visible, array_diff_key( $queues, $visible ) );
+	}
+	private static function render_queue_cards( array $queues, array $args, string $selected, string $label ): void {
+		echo '<nav class="adc-overview-grid" aria-label="' . esc_attr( $label ) . '">';
+		foreach ( $queues as $key => $queue ) {
+			echo '<a class="adc-overview-metric' . ( $key === $selected ? ' is-current' : '' ) . '" href="' . esc_url( WorkspaceOverview::url( array_merge( $args, array( 'workspace_task'=>$key ) ) ) . '#adc-work-list' ) . '"' . ( $key === $selected ? ' aria-current="true"' : '' ) . '><span>' . esc_html( $queue['title'] ) . '</span><strong>' . esc_html( null === $queue['count'] ? '—' : number_format_i18n( $queue['count'] ) ) . '</strong>';
+			if ( null === $queue['count'] ) { echo '<small>' . esc_html( self::t( 'تعذر التحميل؛ أعد المحاولة', 'Could not load; try again' ) ) . '</small>'; }
+			echo '</a>';
+		}
+		echo '</nav>';
 	}
 	private static function date( string $value ): string {
 		try { return wp_date( 'Y-m-d H:i', ( new \DateTimeImmutable( $value, new \DateTimeZone( 'UTC' ) ) )->getTimestamp() ); }
