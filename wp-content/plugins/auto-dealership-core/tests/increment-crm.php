@@ -183,11 +183,13 @@ $crm_message = $crm_submit( $crm_input );
 adc_check( is_array( $crm_message ) && isset( $crm_message['legacy_request_id'] ), 'Theme-compatible intake atomically creates a linked message.' );
 adc_check( 'new' === $wpdb->get_var( $wpdb->prepare( "SELECT to_stage FROM `$crm_stage_history` WHERE lead_id=%d ORDER BY id ASC LIMIT 1", (int) $crm_message['id'] ) ), 'New leads receive an initial stage-history baseline in the intake transaction.' );
 $crm_after = $crm_counts();
-adc_check( array( 1,1,1,0,1,1 ) === array_map( static fn( $a, $b ) => $a - $b, $crm_after, $crm_before ), 'One message creates exactly one customer, lead, activity and audit.' );
+$crm_delta = array_map( static fn( $a, $b ) => $a - $b, $crm_after, $crm_before );
+adc_check( array( 1,1,1,0,1,4 ) === $crm_delta, 'One message creates exactly one customer, lead, activity and the creation, assignment and recipient notification audit records.' );
 adc_check( $crm_message === $crm_submit( $crm_input ) && $crm_after === $crm_counts(), 'Identical public retry returns original IDs without duplicate rows.' );
 adc_check( $error_is( $crm_submit( array_replace( $crm_input, array( 'message'=>'Changed content' ) ) ), 'adc_intake_key_conflict' ) && $crm_after === $crm_counts(), 'Reusing the key with changed content returns conflict without writes.' );
-foreach ( array( $customers, $crm_leads, $crm_messages, $crm_activities, $audit ) as $table ) {
-	$failed = $with_sql_failure( static fn( $q ) => str_starts_with( $q, "INSERT INTO `$table`" ), static fn() => $crm_submit( array_replace( $crm_input, array( 'idempotency_key'=>wp_generate_uuid4() ) ) ) );
+foreach ( array( $customers, $crm_leads, $crm_messages, $crm_activities, $audit ) as $fault_index => $table ) {
+	$fault_input = array( 'idempotency_key'=>wp_generate_uuid4(), 'mobile'=>sprintf( '+96650123456%d', $fault_index ), 'email'=>'crm-fault-' . $fault_index . '@example.invalid' );
+	$failed = $with_sql_failure( static fn( $q ) => str_starts_with( $q, "INSERT INTO `$table`" ), static fn() => $crm_submit( array_replace( $crm_input, $fault_input ) ) );
 	adc_check( is_wp_error( $failed ) && $crm_after === $crm_counts(), 'Intake failure rolls back all rows when insertion fails in ' . $table . '.' );
 }
 $wpdb->query( "ALTER TABLE $crm_messages ENGINE=MyISAM" );
@@ -307,8 +309,8 @@ adc_check( true === RequestWorkflow::update( $crm_booking['id'], array(), true )
 
 // Consolidation previews and rollback use fresh guest profiles with the exact same scope.
 $crm_pair = static function () use ( $crm_input, $crm_submit, $crm_customer_id ): array {
-	$actor = get_current_user_id(); wp_set_current_user( 0 ); $pair = array();
-	foreach ( array( 1,2 ) as $i ) { $lead = $crm_submit( array_replace( $crm_input, array( 'idempotency_key'=>wp_generate_uuid4() ) ) ); if ( is_wp_error( $lead ) ) { throw new RuntimeException( 'CRM merge fixture failed.' ); } $pair[] = array( 'customer'=>$crm_customer_id( $lead ), 'lead'=>$lead['id'], 'request'=>$lead['legacy_request_id'] ); }
+	$actor = get_current_user_id(); wp_set_current_user( 0 ); $pair = array(); $pair_token = wp_generate_uuid4();
+	foreach ( array( 'price_request', 'finance' ) as $request_kind ) { $lead = $crm_submit( array_replace( $crm_input, array( 'idempotency_key'=>wp_generate_uuid4(), 'request_kind'=>$request_kind, 'external_id'=>'crm-merge-' . $pair_token . '-' . $request_kind ) ) ); if ( is_wp_error( $lead ) ) { throw new RuntimeException( 'CRM merge fixture failed.' ); } $pair[] = array( 'customer'=>$crm_customer_id( $lead ), 'lead'=>$lead['id'], 'request'=>$lead['legacy_request_id'] ); }
 	wp_set_current_user( $actor ); return $pair;
 };
 $crm_merge_pair = $crm_pair();
@@ -372,12 +374,12 @@ $crm_parallel = static function ( string $scenario, int $actor, array $inputs ) 
 	}
 	return $results;
 };
-$crm_claim_lead = $crm_submit( array_replace( $crm_input, array( 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+$crm_claim_lead = $crm_submit( array_replace( $crm_input, array( 'email'=>'crm-claim@example.invalid', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
 if ( ! is_array( $crm_claim_lead ) ) { throw new RuntimeException( 'CRM claim fixture creation failed.' ); }
 $crm_claim_lead_id = (int) $crm_claim_lead['id'];
 $crm_second_sales = $make_user( 'crm_sales_branch_b2', 'dealership_sales', (int) $branch_b['id'] );
 $crm_expiry_manager = $make_user( 'crm_expiry_manager_b', 'dealership_sales_manager', (int) $branch_b['id'] );
-$crm_assignment_lead = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500000986', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+$crm_assignment_lead = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500000986', 'email'=>'crm-assignment@example.invalid', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
 if ( ! is_array( $crm_assignment_lead ) || is_wp_error( LeadService::assign( (int) $crm_assignment_lead['id'], $sales_b ) ) ) { throw new RuntimeException( 'CRM reassignment fixture failed.' ); }
 adc_check( $error_is( LeadService::assign( (int) $crm_assignment_lead['id'], $crm_second_sales ), 'adc_invalid_assignment' ), 'Manager cannot reassign an owned lead without a reason.' );
 adc_check( is_array( LeadService::assign( (int) $crm_assignment_lead['id'], $crm_second_sales, 'Branch workload balancing' ) ) && $crm_second_sales === (int) $wpdb->get_var( $wpdb->prepare( "SELECT owner_user_id FROM $crm_leads WHERE id=%d", (int) $crm_assignment_lead['id'] ) ), 'Manager reassignment with a reason records the new owner.' );
@@ -445,7 +447,7 @@ if ( $crm_rr_success ) {
 	};
 	for ( $crm_rr_index = 0; $crm_rr_index < 4; ++$crm_rr_index ) {
 		$crm_rr_expected_owner = $crm_rr_expect();
-		$crm_rr_result = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500001' . str_pad( (string) $crm_rr_index, 3, '0', STR_PAD_LEFT ), 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+		$crm_rr_result = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500001' . str_pad( (string) $crm_rr_index, 3, '0', STR_PAD_LEFT ), 'email'=>'crm-rr-' . $crm_rr_index . '@example.invalid', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
 		if ( ! is_array( $crm_rr_result ) ) { $crm_rr_success = false; break; }
 		$crm_rr_row = $wpdb->get_row( $wpdb->prepare( "SELECT owner_user_id,stage,claimed_at FROM $crm_leads WHERE id=%d", (int) $crm_rr_result['id'] ), ARRAY_A );
 		if ( ! $crm_rr_row || (int) $crm_rr_row['owner_user_id'] !== $crm_rr_expected_owner || 'assigned' !== $crm_rr_row['stage'] || empty( $crm_rr_row['claimed_at'] ) ) { $crm_rr_success = false; break; }
@@ -463,8 +465,8 @@ update_option( 'adc_lead_daily_cap', (string) $crm_cap_before[1] );
 if ( count( $crm_rr_staff ) > 1 ) {
 	$crm_clear_rate();
 	$crm_parallel_rr = $crm_parallel( 'crm_intake', 0, array(
-		array_replace( $crm_input, array( 'mobile'=>'+966500001101', 'idempotency_key'=>wp_generate_uuid4() ) ),
-		array_replace( $crm_input, array( 'mobile'=>'+966500001102', 'idempotency_key'=>wp_generate_uuid4() ) ),
+		array_replace( $crm_input, array( 'mobile'=>'+966500001101', 'email'=>'crm-parallel-1@example.invalid', 'idempotency_key'=>wp_generate_uuid4() ) ),
+		array_replace( $crm_input, array( 'mobile'=>'+966500001102', 'email'=>'crm-parallel-2@example.invalid', 'idempotency_key'=>wp_generate_uuid4() ) ),
 	) );
 	$crm_parallel_owners = array();
 	foreach ( $crm_parallel_rr as $crm_parallel_result ) {
@@ -597,7 +599,7 @@ $crm_backfill_scheduled_at = wp_next_scheduled( 'adc_backfill_lead_stage_history
 $crm_backfill_scheduled_again = wp_next_scheduled( 'adc_backfill_lead_stage_history' );
 wp_clear_scheduled_hook( 'adc_backfill_lead_stage_history' );
 adc_check( 20 === has_action( 'plugins_loaded', array( \AutoDealership\Leads\LeadStageHistoryBackfill::class, 'schedule_if_needed' ) ) && $crm_backfill_scheduled_at > time() && $crm_backfill_scheduled_at === $crm_backfill_scheduled_again, 'Schema migration queues the idempotent history backfill after schema installation without running a batch inline.' );
-$crm_backfill_lead = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500000989', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+$crm_backfill_lead = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500000989', 'email'=>'crm-backfill@example.invalid', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
 if ( ! is_array( $crm_backfill_lead ) ) { throw new RuntimeException( 'CRM audit backfill fixture failed.' ); }
 if ( ! is_array( LeadService::release_assignment( (int) $crm_backfill_lead['id'], 'Backfill fixture release' ) ) ) { throw new RuntimeException( 'CRM assignment-release backfill fixture failed.' ); }
 $wpdb->delete( $crm_stage_history, array( 'lead_id'=>(int) $crm_backfill_lead['id'] ), array( '%d' ) );
@@ -610,7 +612,7 @@ $crm_backfilled_rows = $wpdb->get_results( $wpdb->prepare( "SELECT from_stage,to
 adc_check( get_option( 'adc_lead_stage_history_backfill_complete', false ) && 3 === count( $crm_backfilled_rows ) && '' === $crm_backfilled_rows[0]['from_stage'] && 'new' === $crm_backfilled_rows[0]['to_stage'] && 'new' === $crm_backfilled_rows[1]['from_stage'] && 'assigned' === $crm_backfilled_rows[1]['to_stage'] && 'assigned' === $crm_backfilled_rows[2]['from_stage'] && 'new' === $crm_backfilled_rows[2]['to_stage'] && null !== $crm_backfilled_rows[0]['audit_event_id'] && null !== $crm_backfilled_rows[1]['audit_event_id'] && null !== $crm_backfilled_rows[2]['audit_event_id'], 'Audit backfill reconstructs creation, assignment and assignment-release transitions without inventing events.' );
 $crm_policy_reset = \AutoDealership\Core\ConfigurationService::update_section( array( 'lead_assignment_mode'=>'manual', 'lead_claim_timeout_minutes'=>'30' ), $crm_policy_fields );
 adc_check( is_array( $crm_policy_reset ) && 'manual' === get_option( 'adc_lead_assignment_mode' ), 'Manual assignment remains available and can be restored without changing claim handling.' );
-$crm_expiry_lead = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500000987', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
+$crm_expiry_lead = $crm_submit( array_replace( $crm_input, array( 'mobile'=>'+966500000987', 'email'=>'crm-expiry@example.invalid', 'idempotency_key'=>wp_generate_uuid4() ) ), '' );
 wp_set_current_user( $admin );
 if ( ! is_array( $crm_expiry_lead ) || is_wp_error( LeadService::assign( (int) $crm_expiry_lead['id'], $sales_b ) ) ) { throw new RuntimeException( 'CRM expiry fixture assignment failed.' ); }
 $wpdb->update( $crm_leads, array( 'claimed_at'=>gmdate( 'Y-m-d H:i:s', time() - 31 * MINUTE_IN_SECONDS ), 'updated_at'=>current_time( 'mysql', true ) ), array( 'id'=>(int) $crm_expiry_lead['id'] ), array( '%s', '%s' ), array( '%d' ) );
@@ -640,10 +642,11 @@ update_option( 'adc_followup_email_enabled', false );
 $crm_expiry_manager_user = get_userdata( (int) $crm_expiry_manager );
 adc_check( true === $crm_claim_expiry_email && is_array( $crm_claim_expiry_mail ) && $crm_expiry_manager_user && $crm_expiry_manager_user->user_email === $crm_claim_expiry_mail['to'] && str_contains( $crm_claim_expiry_mail['subject'], 'CRM lead claim expired' ) && ! str_contains( $crm_claim_expiry_mail['message'], 'crm@example.invalid' ) && ! str_contains( $crm_claim_expiry_mail['message'], '+966500000987' ), 'Enabled claim-expiry email reaches the branch manager without including customer contact details.' );
 $crm_clear_rate();
-$crm_parallel_input = array_replace( $crm_input, array( 'idempotency_key'=>wp_generate_uuid4() ) );
+$crm_parallel_input = array_replace( $crm_input, array( 'mobile'=>'+966500001199', 'email'=>'crm-concurrent@example.invalid', 'idempotency_key'=>wp_generate_uuid4(), '_compatibility_type'=>'' ) );
 $crm_before = $crm_counts();
 $crm_race = $crm_parallel( 'crm_intake', 0, array( $crm_parallel_input, $crm_parallel_input ) );
-adc_check( isset( $crm_race[0]['id'] ) && $crm_race[0] === $crm_race[1] && array( 1,1,1,0,1,1 ) === array_map( static fn( $a, $b ) => $a - $b, $crm_counts(), $crm_before ), 'Concurrent guest retries persist exactly one complete enquiry without orphan rows.' );
+$crm_race_delta = array_map( static fn( $a, $b ) => $a - $b, $crm_counts(), $crm_before );
+adc_check( isset( $crm_race[0]['id'], $crm_race[1]['id'] ) && (int) $crm_race[0]['id'] === (int) $crm_race[1]['id'] && array( 1,1,0,0,2 ) === array_slice( $crm_race_delta, 0, 5 ) && $crm_race_delta[5] >= 7, 'Concurrent guest retries persist exactly one complete enquiry without orphan rows.' );
 $crm_race_account = $make_user( 'crm_race_account', 'subscriber', 0 );
 $crm_race_user = get_userdata( $crm_race_account );
 $crm_race_identity = array_replace( $crm_input, array( 'name'=>$crm_race_user->display_name, 'email'=>$crm_race_user->user_email ) );

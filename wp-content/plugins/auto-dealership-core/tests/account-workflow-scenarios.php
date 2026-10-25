@@ -90,7 +90,7 @@ adc_check( in_array( (string) $paging_ids[0], $visible, true ) && ! in_array( (s
 // Exercise the actual renderer across its twenty-row boundary.
 wp_set_current_user( 0 );
 for ( $i=0; $i<23; ++$i ) {
-	$owned = $crm_submit( array_replace( $crm_input, array( 'message'=>'STAFF-PAGE-' . str_pad( (string) $i, 2, '0', STR_PAD_LEFT ), 'idempotency_key'=>wp_generate_uuid4() ) ) );
+	$owned = $crm_submit( array_replace( $crm_input, array( 'message'=>'STAFF-PAGE-' . str_pad( (string) $i, 2, '0', STR_PAD_LEFT ), 'email'=>'staff-page-' . $i . '@example.invalid', 'mobile'=>'+966500002' . str_pad( (string) $i, 3, '0', STR_PAD_LEFT ), 'idempotency_key'=>wp_generate_uuid4() ) ) );
 	wp_set_current_user( $admin ); LeadService::assign( $owned['id'], $sales_b ); wp_set_current_user( 0 );
 }
 wp_set_current_user( $sales_b );

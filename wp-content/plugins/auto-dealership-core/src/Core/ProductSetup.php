@@ -326,6 +326,10 @@ final class ProductSetup {
 			self::t( 'هوية المنشأة', 'Business identity' )=>! empty( self::profile()['brand_ar'] ) || self::legacy(),
 			self::t( 'الثيم المتوافق وإصداره', 'Matching theme version' )=>'car-dealer' === get_template() && ADC_VERSION === $theme->get( 'Version' ),
 			self::t( 'مخطط قاعدة البيانات', 'Database schema' )=>Schema::is_ready(),
+			self::t( 'فرع تشغيلي نشط', 'Active operating branch' )=>self::active_branch_ready(),
+			self::t( 'الأدوار التشغيلية الأساسية', 'Core operational roles' )=>self::core_roles_ready(),
+			self::t( 'إعداد توزيع الفرص', 'Lead assignment configuration' )=>self::lead_configuration_ready(),
+			self::t( 'جدولة المهام الحرجة', 'Critical scheduled jobs' )=>self::scheduled_jobs_ready(),
 			self::t( 'دعم استيراد المخزون الآمن', 'Transactional inventory storage' )=>\AutoDealership\Inventory\OnyxModelDrafts::transactional_tables(),
 			self::t( 'اتصال HTTPS', 'HTTPS' )=>'https' === wp_parse_url( home_url(), PHP_URL_SCHEME ),
 			self::t( 'عنوان عام آمن لروابط تأكيد البريد واستعادة الحساب', 'Public HTTPS address for verification and account recovery links' )=>\AutoDealership\Accounts\EmailVerification::public_link_origin(),
@@ -336,6 +340,45 @@ final class ProductSetup {
 			self::t( 'بيانات التواصل', 'Contact details' )=>! empty( get_option( 'car_dealer_theme_settings', array() )['email'] ),
 			self::t( 'بيئة إنتاج', 'Production environment' )=>! $local && 'production' === wp_get_environment_type(),
 		);
+	}
+
+	private static function active_branch_ready(): bool {
+		if ( ! Schema::is_ready() ) { return false; }
+		global $wpdb;
+		return (bool) $wpdb->get_var( 'SELECT id FROM ' . Schema::table( 'branches' ) . ' WHERE active=1 ORDER BY id ASC LIMIT 1' );
+	}
+
+	private static function core_roles_ready(): bool {
+		$requirements = array(
+			'dealership_sales' => array( 'read', 'adc_view_own_leads', 'adc_manage_own_leads' ),
+			'dealership_sales_manager' => array( 'read', 'adc_view_branch_leads', 'adc_manage_branch_leads' ),
+			'dealership_general_manager' => array( 'read', 'adc_view_branch_leads', 'adc_view_inventory', 'adc_view_reports' ),
+		);
+		foreach ( $requirements as $slug => $caps ) {
+			$role = get_role( $slug );
+			if ( ! $role ) { return false; }
+			foreach ( $caps as $cap ) { if ( empty( $role->capabilities[ $cap ] ) ) { return false; } }
+		}
+		return true;
+	}
+
+	private static function lead_configuration_ready(): bool {
+		$mode = sanitize_key( (string) get_option( 'adc_lead_assignment_mode', 'manual' ) );
+		if ( ! in_array( $mode, array( 'manual', 'manager', 'round_robin' ), true ) ) { return false; }
+		$archive_days = absint( get_option( 'adc_lead_archive_days', 30 ) );
+		$stale_days = absint( get_option( 'adc_lead_stale_days', 7 ) );
+		if ( 0 === $archive_days || 0 === $stale_days ) { return false; }
+		$default_branch = absint( get_option( 'adc_default_branch_id', 0 ) );
+		if ( ! $default_branch ) { return self::active_branch_ready(); }
+		if ( ! Schema::is_ready() ) { return false; }
+		global $wpdb;
+		return (bool) $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'branches' ) . ' WHERE id=%d AND active=1 LIMIT 1', $default_branch ) );
+	}
+
+	private static function scheduled_jobs_ready(): bool {
+		$hooks = array( 'adc_process_outbox', 'adc_scan_followups', 'adc_archive_closed_leads', 'adc_expire_reservations', 'adc_prune_request_limits' );
+		foreach ( $hooks as $hook ) { if ( ! wp_next_scheduled( $hook ) ) { return false; } }
+		return true;
 	}
 
 	private static function render_legal_pages(): void {

@@ -354,7 +354,10 @@ final class LeadService {
 		// Public enquiries are deduplicated by customer, type and vehicle for a short window.
 		// An explicit external ID remains supported for integrations, while normal website
 		// submissions are protected from repeated clicks/forms without merging old enquiries.
-		$dedupe_enabled = ! $marketing;
+		// Authenticated compatibility forms intentionally create a new opportunity
+		// while reusing the locked customer account; guest intake uses short-window
+		// deduplication to absorb repeated submissions.
+		$dedupe_enabled = ! $marketing && ! empty( $input['public_intake'] ) && !( $compatibility_type && get_current_user_id() );
 		$payload_hash = $request_key ? hash_hmac( 'sha256', wp_json_encode( array( $identity, $branch_id, $legacy_ref, $initial_activity_notes, $compatibility_type, $input['request_kind'] ?? '', $requested_car_id, $input['date'] ?? '', $input['time'] ?? '', $external_id, $utm_source, $utm_medium, $utm_content, $landing_page, $referrer_url, $marketing ) ), wp_salt( 'auth' ) ) : null;
 		if ( $request_key ) {
 			$replay = self::intake_replay( $request_key, $payload_hash, $compatibility_type );
@@ -368,6 +371,15 @@ final class LeadService {
 		}
 		if ( ! Transaction::begin() ) {
 			return new \WP_Error( 'adc_transaction_failed', __( 'تعذر بدء العملية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
+		}
+		// Serialize intake decisions per branch. This closes the small race between
+		// duplicate detection and compatibility-row creation for simultaneous retries.
+		if ( $branch_id ) {
+			$locked_branch = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'branches' ) . ' WHERE id=%d FOR UPDATE', (int) $branch_id ) );
+			if ( $wpdb->last_error || ! $locked_branch ) {
+				$wpdb->query( 'ROLLBACK' );
+				return new \WP_Error( 'adc_assignment_unavailable', __( 'Unable to verify the branch.', 'auto-dealership-core' ), array( 'status'=>503 ) );
+			}
 		}
 		$assignment = $marketing_staff_id
 			? array( 'owner_user_id'=>$marketing_staff_id, 'stage'=>'assigned', 'claimed_at'=>$now )
@@ -415,6 +427,22 @@ final class LeadService {
 			}
 			$legacy_ref = array( 'type'=>$compatibility_type, 'id'=>(int) $wpdb->insert_id );
 		}
+		// A concurrent public retry can pass the first duplicate check before the
+		// winning transaction commits. Re-check after the legacy row is inserted so
+		// the losing request cannot leave an orphan compatibility record.
+		$race_duplicate = $dedupe_enabled ? self::find_open_duplicate( $customer_id, $intake_type, $requested_car_id, (int) $branch_id, $external_id, $compatibility_type ) : null;
+		if ( is_wp_error( $race_duplicate ) ) { $wpdb->query( 'ROLLBACK' ); return $race_duplicate; }
+		if ( $race_duplicate ) {
+			$legacy_deleted = ! $compatibility_table || ( 1 === $wpdb->delete( $compatibility_table, array( 'id'=>(int) $legacy_ref['id'] ), array( '%d' ) ) );
+			$note = trim( 'Repeated public enquiry was attached to this open opportunity.' . ( $initial_activity_notes ? "\n" . $initial_activity_notes : '' ) );
+			$activity = $legacy_deleted && $wpdb->insert( Schema::table( 'activities' ), array( 'lead_id'=>(int) $race_duplicate['id'], 'actor_user_id'=>0, 'type'=>'note', 'notes'=>sanitize_textarea_field( $note ), 'created_at'=>$now ), array( '%d','%d','%s','%s','%s' ) );
+			$updated = false !== $wpdb->update( Schema::table( 'leads' ), array( 'updated_at'=>$now ), array( 'id'=>(int) $race_duplicate['id'] ), array( '%s' ), array( '%d' ) );
+			$audited = $activity && $updated && Transaction::commit( static fn() => AuditLog::record( 'lead.duplicate_intake', 'lead', (int) $race_duplicate['id'], 'Repeated public enquiry attached to an open opportunity', null, array( 'intake_type'=>$intake_type, 'requested_car_id'=>$requested_car_id ) ) );
+			if ( ! $audited ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_lead_failed', 'Unable to record the repeated enquiry safely.', array( 'status'=>500 ) ); }
+			$result = array( 'id'=>(int) $race_duplicate['id'], 'status'=>'duplicate', 'duplicate'=>true, 'reused'=>true );
+			if ( $compatibility_type === (string) $race_duplicate['legacy_request_type'] ) { $result['legacy_request_id'] = (int) $race_duplicate['legacy_request_id']; }
+			return $result;
+		}
 		$legacy_type = isset( $legacy_ref['type'] ) && in_array( $legacy_ref['type'], array( 'message', 'booking' ), true ) ? $legacy_ref['type'] : null;
 		$legacy_id = $legacy_type && ! empty( $legacy_ref['id'] ) ? absint( $legacy_ref['id'] ) : null;
 		$lead_data = array( 'customer_id'=>$customer_id, 'branch_id'=>$branch_id, 'owner_user_id'=>$assignment['owner_user_id'], 'source'=>$source, 'intake_type'=>$intake_type, 'requested_car_id'=>$requested_car_id, 'external_id'=>$external_id, 'utm_source'=>$utm_source, 'utm_medium'=>$utm_medium, 'utm_content'=>$utm_content, 'landing_page'=>$landing_page, 'referrer_url'=>$referrer_url, 'stage'=>$assignment['stage'], 'lost_reason'=>'', 'legacy_request_type'=>$legacy_type, 'legacy_request_id'=>$legacy_id, 'claimed_at'=>$assignment['claimed_at'], 'created_at'=>$now, 'updated_at'=>$now, 'public_request_key'=>$request_key, 'public_payload_hash'=>$payload_hash );
@@ -453,6 +481,11 @@ final class LeadService {
 				return new \WP_Error( 'adc_lead_failed', __( 'تعذر حفظ سياق الطلب. حاول لاحقًا.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 			}
 		}
+		// Keep the public-intake notification inside the intake transaction.
+		if ( ! empty( $input['public_intake'] ) && ! \AutoDealership\Operations\FollowUpNotifications::queue_lead_created( $lead_id, (int) $branch_id, (int) $assignment['owner_user_id'], $now ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error( 'adc_lead_failed', __( 'Unable to record the opportunity notification.', 'auto-dealership-core' ), array( 'status' => 500 ) );
+		}
 		if ( ! Transaction::commit( static function () use ( $lead_id, $customer_id, $source, $assignment, $branch_id, $marketing, $campaign, $platform, $created_by, $marketing_staff_id ): bool {
 			$details = array( 'customer_id'=>$customer_id, 'source'=>$source, 'stage'=>$assignment['stage'], 'owner_user_id'=>$assignment['owner_user_id'], 'branch_id'=>(int) $branch_id );
 			if ( $marketing ) { $details['campaign'] = $campaign; $details['platform'] = $platform; $details['created_by'] = $created_by; }
@@ -463,7 +496,6 @@ final class LeadService {
 			return new \WP_Error( 'adc_lead_failed', __( 'تعذر توثيق الطلب. حاول لاحقًا.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		if ( $compatibility_type && get_current_user_id() ) { do_action( 'adc_customer_account_linked', get_current_user_id(), $customer_id ); }
-		if ( ! \AutoDealership\Operations\FollowUpNotifications::queue_lead_created( $lead_id, (int) $branch_id, (int) $assignment['owner_user_id'], $now ) ) { error_log( 'Auto Dealership Core: unable to queue new public opportunity notification.' ); }
 		$result = array( 'id' => $lead_id, 'status' => 'new' );
 		if ( $compatibility_type ) { $result['legacy_request_id'] = $legacy_id; }
 		return $result;

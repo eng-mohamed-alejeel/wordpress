@@ -100,7 +100,7 @@ final class PublicIntake {
 		if ( '' !== $message ) { $context .= "\n" . $message; }
 		$rate = PublicRequestGuard::consume( 'intake' );
 		if ( is_wp_error( $rate ) ) { return $rate; }
-		return LeadService::create_public( array_merge( $input, $identity, array( 'branch_id'=>$branch, 'idempotency_key'=>$key, 'request_kind'=>$kind, 'car_id'=>$post_id, 'date'=>$date, 'time'=>$time, 'message'=>$message ) ), null, $context, $compatibility_type );
+		return LeadService::create_public( array_merge( $input, $identity, array( 'branch_id'=>$branch, 'idempotency_key'=>$key, 'request_kind'=>$kind, 'car_id'=>$post_id, 'date'=>$date, 'time'=>$time, 'message'=>$message, 'public_intake'=>true ) ), null, $context, $compatibility_type );
 	}
 
 	/** Theme adapter retains nonce, logged-in identity and existing response shape. */

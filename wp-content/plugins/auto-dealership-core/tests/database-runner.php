@@ -82,7 +82,9 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 			$message = WP_CLI::$messages[0];
 			$result = json_decode( substr( $message, strpos( $message, '{' ) ), true, 512, JSON_THROW_ON_ERROR );
 		} elseif ( 'crm_intake' === $scenario ) {
-			$result = \AutoDealership\Leads\PublicIntake::submit( $input, 'message' );
+			$compatibility_type = isset( $input['_compatibility_type'] ) ? (string) $input['_compatibility_type'] : 'message';
+			unset( $input['_compatibility_type'] );
+			$result = \AutoDealership\Leads\PublicIntake::submit( $input, $compatibility_type );
 		} elseif ( 'crm_claim' === $scenario ) {
 			$result = \AutoDealership\Leads\LeadService::claim( (int) ( $input['lead_id'] ?? 0 ) );
 		} elseif ( 'crm_request' === $scenario ) {

@@ -19,8 +19,8 @@ $check( $error( Compatibility::validate_directory( $fixture( array( 'requires_ph
 $check( $error( Compatibility::validate_directory( $fixture( array( 'requires_wp'=>'99.0' ) ), 'plugin' ), 'adc_update_environment' ), 'Unsupported WordPress requirement is blocked' );
 $check( $error( Compatibility::validate_directory( $fixture( array( 'version'=>'1.41.0' ) ), 'plugin' ), 'adc_update_header' ), 'Version/header disagreement is blocked' );
 $check( $error( Compatibility::validate_directory( $fixture( array( 'partner_min'=>'3.0.0', 'partner_before'=>'4.0.0' ) ), 'plugin' ), 'adc_update_partner' ), 'Incompatible installed partner is blocked' );
-$check( $error( Compatibility::validate_directory( $fixture( array( 'schema_max'=>'1.0.0', 'schema_target'=>'1.0.0' ) ), 'plugin' ), 'adc_update_schema' ), 'Package unable to read installed schema is blocked' );
-$check( $error( Compatibility::validate_directory( $fixture( array( 'schema_target'=>'1.21.0' ) ), 'plugin' ), 'adc_update_schema' ), 'Schema downgrade is blocked even when package version is unchanged' );
+$check( $error( Compatibility::validate_directory( $fixture( array( 'schema_min'=>'1.39.0', 'schema_max'=>'1.39.0', 'schema_target'=>'1.39.0' ) ), 'plugin' ), 'adc_update_schema' ), 'Package unable to read installed schema is blocked' );
+$check( $error( Compatibility::validate_directory( $fixture( array( 'schema_target'=>'1.30.0' ) ), 'plugin' ), 'adc_update_schema' ), 'Schema downgrade is blocked even when package version is unchanged' );
 $older = preg_replace( '/Version:\s*[0-9.]+/', 'Version: 1.39.1', $header, 1 );
 $check( $error( Compatibility::validate_directory( $fixture( array( 'version'=>'1.39.1' ), $older ), 'plugin' ), 'adc_update_downgrade' ), 'Code-only downgrade is blocked' );
 $missing = $fixture(); unlink( $missing . '/resources/release.json' );

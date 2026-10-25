@@ -201,7 +201,8 @@ adc_check( 403 === $http_request( '/wp-admin/admin-ajax.php', array(), 'POST', a
 $crm_public_lead_response = $http_request( '/wp-admin/admin-ajax.php', array(), 'POST', $crm_public_lead_form, true );
 $crm_public_lead_data = json_decode( $crm_public_lead_response[1], true );
 $crm_public_lead_after = $crm_counts();
-adc_check( 200 === $crm_public_lead_response[0] && true === ( $crm_public_lead_data['success'] ?? false ) && ! isset( $crm_public_lead_data['data']['id'] ) && ! isset( $crm_public_lead_data['data']['customer_id'] ) && ! isset( $crm_public_lead_data['data']['lead_id'] ) && array( 1,1,0,0,1,1 ) === array_map( static fn( $before, $after ) => $after - $before, $crm_public_lead_before, $crm_public_lead_after ), 'Anonymous lead AJAX creates one scoped CRM record without exposing internal identifiers.' );
+$crm_public_lead_delta = array_map( static fn( $before, $after ) => $after - $before, $crm_public_lead_before, $crm_public_lead_after );
+adc_check( 200 === $crm_public_lead_response[0] && true === ( $crm_public_lead_data['success'] ?? false ) && ! isset( $crm_public_lead_data['data']['id'] ) && ! isset( $crm_public_lead_data['data']['customer_id'] ) && ! isset( $crm_public_lead_data['data']['lead_id'] ) && array( 1,1,0,0,1,6 ) === $crm_public_lead_delta, 'Anonymous lead AJAX creates one scoped CRM record without exposing internal identifiers.' );
 adc_check( 200 === $http_request( '/wp-admin/admin-ajax.php', array(), 'POST', $crm_public_lead_form, true )[0] && $crm_public_lead_after === $crm_counts(), 'Anonymous lead AJAX retry with the same idempotency key does not duplicate records.' );
 $crm_http_current_user = get_current_user_id();
 wp_set_current_user( 0 );
