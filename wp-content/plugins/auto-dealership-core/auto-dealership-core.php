@@ -71,6 +71,7 @@ require_once ADC_PATH . 'src/Content/TermTranslations.php';
 require_once ADC_PATH . 'src/Admin/StoredTranslationsPage.php';
 require_once ADC_PATH . 'src/Content/PublicStructuredData.php';
 require_once ADC_PATH . 'src/SEO/PublicSeo.php';
+require_once ADC_PATH . 'src/SEO/SeoHealth.php';
 require_once ADC_PATH . 'src/Content/PublicOfferView.php';
 require_once ADC_PATH . 'src/Content/PublicVehicleView.php';
 require_once ADC_PATH . 'src/Content/HomePageView.php';

@@ -3,6 +3,8 @@ namespace AutoDealership\Content;
 
 use AutoDealership\Inventory\CatalogPresentation;
 use AutoDealership\Inventory\PublicCatalog;
+use AutoDealership\Core\BranchLocations;
+use AutoDealership\Core\SocialChannels;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -25,6 +27,9 @@ final class PublicStructuredData {
 			return;
 		}
 		self::print_entity( $data );
+		if ( (string) ( $data['@id'] ?? '' ) !== home_url( '/' ) . '#organization' ) {
+			self::print_entity( self::organization() );
+		}
 		foreach ( self::additional_entities() as $entity ) {
 			self::print_entity( $entity );
 		}
@@ -78,6 +83,7 @@ final class PublicStructuredData {
 				'url' => $base,
 				'name' => wp_get_document_title(),
 				'isPartOf' => array( '@id' => $home . '#website' ),
+				'publisher' => array( '@id' => home_url( '/' ) . '#organization' ),
 			),
 			array(
 				'@context' => 'https://schema.org',
@@ -92,6 +98,7 @@ final class PublicStructuredData {
 				'@id' => $home . '#website',
 				'url' => $home,
 				'name' => $name,
+				'publisher' => array( '@id' => home_url( '/' ) . '#organization' ),
 			);
 		}
 		return $entities;
@@ -105,12 +112,96 @@ final class PublicStructuredData {
 		if ( is_singular( 'car_offer' ) ) {
 			return self::offer( get_queried_object_id() );
 		}
-		return array(
+		return self::organization();
+	}
+
+	/** Build business identity schema only from public settings in this installation. */
+	/** @return array<string,mixed> */
+	private static function organization(): array {
+		$language = \AutoDealership\Core\Localization::language();
+		$settings = (array) get_option( 'car_dealer_theme_settings', array() );
+		$home     = home_url( '/' );
+		$data     = array(
 			'@context' => 'https://schema.org',
-			'@type' => 'Organization',
-			'name' => \AutoDealership\Core\ProductSetup::brand( \AutoDealership\Core\Localization::language() ),
-			'url' => home_url( '/' ),
+			// Keep the existing Organization contract for consumers that expect a
+			// scalar @type, while exposing the dealership specialization safely.
+			'@type'    => 'Organization',
+			'additionalType' => 'https://schema.org/AutoDealer',
+			'@id'      => $home . '#organization',
+			'name'     => \AutoDealership\Core\ProductSetup::brand( $language ),
+			'url'      => $home,
 		);
+
+		$legal_name = \AutoDealership\Core\ProductSetup::legal_name( $language );
+		if ( $legal_name && $legal_name !== $data['name'] ) {
+			$data['legalName'] = $legal_name;
+		}
+
+		$logo_id = absint( get_theme_mod( 'custom_logo' ) );
+		$logo    = $logo_id ? wp_get_attachment_image_url( $logo_id, 'full' ) : '';
+		if ( is_string( $logo ) && '' !== $logo ) {
+			$data['logo'] = array( '@type' => 'ImageObject', 'url' => $logo );
+		}
+
+		$phone = trim( (string) ( $settings['phone'] ?? '' ) );
+		$email = sanitize_email( (string) ( $settings['email'] ?? '' ) );
+		if ( $phone ) {
+			$data['telephone'] = $phone;
+		}
+		if ( $email ) {
+			$data['email'] = $email;
+		}
+
+		$address = \AutoDealership\Core\ProductSetup::contact_address( $language );
+		if ( $address ) {
+			$data['address'] = array( '@type' => 'PostalAddress', 'streetAddress' => $address );
+		}
+		$country = \AutoDealership\Core\ProductSetup::country( $language );
+		if ( $country ) {
+			$data['areaServed'] = $country;
+			if ( isset( $data['address'] ) ) {
+				$data['address']['addressCountry'] = $country;
+			}
+		}
+
+		$same_as = array();
+		foreach ( SocialChannels::links( 'contact' ) as $link ) {
+			if ( ! empty( $link['url'] ) ) {
+				$same_as[] = (string) $link['url'];
+			}
+		}
+		if ( $same_as ) {
+			$data['sameAs'] = array_values( array_unique( $same_as ) );
+		}
+
+		$locations = array();
+		foreach ( BranchLocations::all() as $row ) {
+			if ( ! is_array( $row ) || empty( $row['active'] ) ) {
+				continue;
+			}
+			$name = trim( (string) ( $row[ 'name_' . $language ] ?? '' ) ) ?: trim( (string) ( $row['name_ar'] ?? '' ) );
+			if ( '' === $name ) {
+				continue;
+			}
+			$location = array( '@type' => 'LocalBusiness', 'name' => $name );
+			$location_address = trim( (string) ( $row[ 'address_' . $language ] ?? '' ) ) ?: trim( (string) ( $row['address_ar'] ?? '' ) );
+			if ( $location_address ) {
+				$location['address'] = array( '@type' => 'PostalAddress', 'streetAddress' => $location_address );
+			}
+			$location_phone = trim( (string) ( $row['phone'] ?? '' ) );
+			if ( $location_phone ) {
+				$location['telephone'] = $location_phone;
+			}
+			if ( ! empty( $row['directions_url'] ) ) {
+				$location['hasMap'] = (string) $row['directions_url'];
+			}
+			$locations[] = $location;
+		}
+		if ( $locations ) {
+			$data['location'] = $locations;
+		}
+
+		return $data;
 	}
 
 	/** @return array<string,mixed> */
@@ -126,7 +217,7 @@ final class PublicStructuredData {
 			$offers = array();
 			foreach ( $view['catalog_model']['options'] as $option ) {
 				if ( (int)$option['listed_price'] < 1 ) { continue; }
-				$offers[] = array( '@type'=>'Offer', 'name'=>implode( ' ', array( $option['brand'], $option['model'], $option['trim_name'], $option['exterior_color'], $option['model_year'] ) ), 'price'=>\AutoDealership\Pricing\Money::decimal( (string)$option['public_price'] ), 'priceCurrency'=>'SAR', 'availability'=>'https://schema.org/InStock', 'url'=>$grouped_url );
+				$offers[] = array( '@type'=>'Offer', 'name'=>implode( ' ', array( $option['brand'], $option['model'], $option['trim_name'], $option['exterior_color'], $option['model_year'] ) ), 'price'=>\AutoDealership\Pricing\Money::decimal( (string)$option['public_price'] ), 'priceCurrency'=>self::currency_code( 'SAR', $post_id, 'grouped_vehicle' ), 'availability'=>self::availability_url( 'available', $post_id, 'grouped_vehicle' ), 'url'=>$grouped_url );
 			}
 			if ( $offers ) { $data['offers'] = $offers; }
 			$image = get_the_post_thumbnail_url( $post_id, 'full' );
@@ -219,9 +310,25 @@ final class PublicStructuredData {
 		return array(
 			'@type' => 'Offer',
 			'price' => $price,
-			'priceCurrency' => preg_match( '/\A[A-Z]{3}\z/', $currency ) ? $currency : 'SAR',
-			'availability' => 'https://schema.org/InStock',
+			'priceCurrency' => self::currency_code( $currency, 0, 'vehicle_offer' ),
+			'availability' => self::availability_url( 'available', 0, 'vehicle_offer' ),
 			'url' => $url,
 		);
+	}
+
+	private static function currency_code( string $currency, int $post_id, string $context ): string {
+		$value = strtoupper( trim( (string) apply_filters( 'adc_structured_data_currency', $currency, $post_id, $context ) ) );
+		return preg_match( '/\A[A-Z]{3}\z/', $value ) ? $value : 'SAR';
+	}
+
+	private static function availability_url( string $status, int $post_id, string $context ): string {
+		$map = array(
+			'available'  => 'https://schema.org/InStock',
+			'sold'       => 'https://schema.org/SoldOut',
+			'pending'    => 'https://schema.org/LimitedAvailability',
+			'outofstock' => 'https://schema.org/OutOfStock',
+		);
+		$value = (string) apply_filters( 'adc_structured_data_availability', $map[ $status ] ?? $map['available'], $status, $post_id, $context );
+		return in_array( $value, array_values( $map ), true ) ? $value : $map['available'];
 	}
 }

@@ -4,6 +4,7 @@ namespace AutoDealership\Admin;
 use AutoDealership\Core\Localization;
 use AutoDealership\Core\ProductSetup;
 use AutoDealership\SEO\PublicSeo;
+use AutoDealership\SEO\SeoHealth;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -52,6 +53,7 @@ final class SeoSettingsPage {
 			echo '<div class="notice notice-error"><p>' . esc_html( ProductSetup::t( 'تعذر حفظ الإعدادات. تحقق من رابط الصورة والقيم المدخلة.', 'The settings could not be saved. Check the image URL and entered values.' ) ) . '</p></div>';
 		}
 		echo '<div class="notice notice-info inline"><p><strong>' . esc_html( ProductSetup::t( 'الوضع التلقائي:', 'Automatic mode:' ) ) . '</strong> ' . esc_html( ProductSetup::t( 'عند ترك الحقول فارغة أو استخدام الرموز، يأخذ النظام اسم المنشأة والموقع وبيانات السيارة والسعر من النظام مباشرة.', 'When fields are empty or use tokens, the system reads the business name, location, vehicle data and price directly from the platform.' ) ) . '</p></div>';
+		SeoHealth::render();
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="adc_save_seo_settings">';
 		wp_nonce_field( 'adc_save_seo_settings' );

@@ -231,6 +231,13 @@ final class PublicSeo {
 
 	/** Exclude private/utility pages until they have a public SEO contract. */
 	public static function sitemap_posts_query_args( array $args, string $post_type ): array {
+		if ( 'car_offer' === $post_type ) {
+			// PublicOfferView applies the same availability, price and expiry
+			// contract to the sitemap query as it does to the public archive.
+			$args['adc_public_sitemap'] = '1';
+			return $args;
+		}
+
 		if ( 'page' !== $post_type ) {
 			return $args;
 		}

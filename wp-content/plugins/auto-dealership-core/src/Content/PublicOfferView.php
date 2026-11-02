@@ -21,7 +21,10 @@ final class PublicOfferView {
 
 	/** Keep the archive's found_posts and pagination aligned with the public offer model. */
 	public static function filter_archive_query( array $clauses, \WP_Query $query ): array {
-		if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'car_offer' ) || $query->is_preview() ) {
+		$is_sitemap_query = '1' === (string) $query->get( 'adc_public_sitemap' )
+			&& 'car_offer' === $query->get( 'post_type' );
+		$is_archive_query = $query->is_main_query() && $query->is_post_type_archive( 'car_offer' );
+		if ( is_admin() || ( ! $is_archive_query && ! $is_sitemap_query ) || $query->is_preview() ) {
 			return $clauses;
 		}
 
