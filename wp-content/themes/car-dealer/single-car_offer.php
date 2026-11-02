@@ -10,18 +10,29 @@ $expires = isset( $offer['expires'] ) && is_string( $offer['expires'] ) ? $offer
 $summary = trim( (string) get_the_excerpt() );
 $content = trim( (string) get_post_field( 'post_content', get_the_ID() ) );
 $discount_percent = $old > $new && $new > 0 ? (int) round( ( ( $old - $new ) / $old ) * 100 ) : 0;
-$offer_image = get_the_post_thumbnail( get_the_ID(), 'large' );
-if ( ! $offer_image && $car_id ) { $offer_image = get_the_post_thumbnail( $car_id, 'large' ); }
+$offer_image = get_the_post_thumbnail( get_the_ID(), 'large', array( 'loading' => 'eager', 'fetchpriority' => 'high', 'decoding' => 'async', 'sizes' => '(max-width: 900px) 100vw, 55vw' ) );
+if ( ! $offer_image && $car_id ) { $offer_image = get_the_post_thumbnail( $car_id, 'large', array( 'loading' => 'eager', 'fetchpriority' => 'high', 'decoding' => 'async', 'sizes' => '(max-width: 900px) 100vw, 55vw' ) ); }
 $canonical_offer_url = function_exists( 'car_dealer_catalog_localized_url' ) ? car_dealer_catalog_localized_url( (string) get_permalink( get_the_ID() ) ) : (string) get_permalink( get_the_ID() );
 $request_path = wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH );
 $canonical_path = wp_parse_url( $canonical_offer_url, PHP_URL_PATH );
 $is_legacy_offer_url = is_string( $request_path ) && is_string( $canonical_path ) && untrailingslashit( $request_path ) !== untrailingslashit( $canonical_path );
+$catalog_language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
+$catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl';
 ?>
 <?php if ( $is_legacy_offer_url ) : ?><script>
 if ( window.history && window.history.replaceState ) {
 	window.history.replaceState( null, document.title, <?php echo wp_json_encode( $canonical_offer_url ); ?> + window.location.hash );
 }
 </script><?php endif; ?>
+<?php
+$offer_context_links = array_filter( array(
+	array( 'url' => car_dealer_site_url(), 'label' => car_dealer_text( 'الرئيسية', 'Home' ) ),
+	array( 'url' => car_dealer_archive_url( 'car_offer' ), 'label' => car_dealer_text( 'العروض', 'Offers' ) ),
+) );
+?>
+<div class="cd-breadcrumb-shell" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
+	<div class="container"><?php car_dealer_context_navigation( $offer_context_links, get_the_title() ); ?></div>
+</div>
 <section class="ab-car-hero ab-offer-single" aria-labelledby="offer-title">
 	<div class="container ab-car-hero-grid">
 		<div class="ab-offer-visual">
@@ -36,7 +47,7 @@ if ( window.history && window.history.replaceState ) {
 				<?php endif; ?>
 			</div>
 			<?php if ( $discount_percent > 0 ) : ?><span class="ab-offer-badge"><?php echo esc_html( car_dealer_text( 'خصم ', 'Save ' ) . $discount_percent . '%' ); ?></span><?php endif; ?>
-			<?php if ( $car_id && get_the_title( $car_id ) ) : ?><p class="ab-offer-vehicle-link"><?php echo esc_html( car_dealer_text( 'على سيارة ', 'For ' ) . get_the_title( $car_id ) ); ?></p><?php endif; ?>
+			<?php if ( $car_id && get_the_title( $car_id ) ) : ?><p class="ab-offer-vehicle-link"><?php echo esc_html( car_dealer_text( 'على سيارة ', 'For ' ) ); ?><a href="<?php echo esc_url( car_dealer_catalog_localized_url( (string) get_permalink( $car_id ) ) ); ?>"><?php echo esc_html( get_the_title( $car_id ) ); ?></a></p><?php endif; ?>
 		</div>
 		<div class="car-single-content ab-offer-content">
 			<p class="eyebrow"><?php echo esc_html( car_dealer_text( 'عرض {site_name}', '{site_name} Offer' ) ); ?></p>

@@ -1,0 +1,1817 @@
+{
+  "generatedAt": "2026-10-29T09:05:36.015Z",
+  "origin": "http://localhost/wordpress",
+  "checks": [
+    {
+      "id": "robots.status",
+      "status": "pass",
+      "detail": "robots.txt returns HTTP 200.",
+      "httpStatus": 200
+    },
+    {
+      "id": "robots.content-type",
+      "status": "pass",
+      "detail": "robots.txt is served as text/plain."
+    },
+    {
+      "id": "robots.sitemap",
+      "status": "pass",
+      "detail": "robots.txt advertises the WordPress sitemap.",
+      "body": "User-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\nSitemap: http://localhost/wordpress/wp-sitemap.xml\n"
+    },
+    {
+      "id": "robots.admin-scope",
+      "status": "pass",
+      "detail": "robots.txt blocks only the administration path and allows admin-ajax.php."
+    },
+    {
+      "id": "sitemap.index-status",
+      "status": "pass",
+      "detail": "sitemap index returns HTTP 200.",
+      "httpStatus": 200
+    },
+    {
+      "id": "sitemap.index-xml",
+      "status": "pass",
+      "detail": "sitemap index is valid XML."
+    },
+    {
+      "id": "sitemap.child-maps",
+      "status": "pass",
+      "detail": "sitemap index exposes child sitemaps.",
+      "childCount": 4
+    },
+    {
+      "id": "sitemap.child.0",
+      "status": "pass",
+      "detail": "child sitemap returns 200 and valid XML.",
+      "url": "http://localhost/wordpress/wp-sitemap-posts-post-1.xml",
+      "urlCount": 1,
+      "httpStatus": 200
+    },
+    {
+      "id": "sitemap.child.1",
+      "status": "pass",
+      "detail": "child sitemap returns 200 and valid XML.",
+      "url": "http://localhost/wordpress/wp-sitemap-posts-page-1.xml",
+      "urlCount": 10,
+      "httpStatus": 200
+    },
+    {
+      "id": "sitemap.child.2",
+      "status": "pass",
+      "detail": "child sitemap returns 200 and valid XML.",
+      "url": "http://localhost/wordpress/wp-sitemap-posts-car-1.xml",
+      "urlCount": 74,
+      "httpStatus": 200
+    },
+    {
+      "id": "sitemap.child.3",
+      "status": "pass",
+      "detail": "child sitemap returns 200 and valid XML.",
+      "url": "http://localhost/wordpress/wp-sitemap-posts-car_offer-1.xml",
+      "urlCount": 1,
+      "httpStatus": 200
+    },
+    {
+      "id": "sitemap.unique-urls",
+      "status": "pass",
+      "detail": "sitemap contains no duplicate URLs.",
+      "total": 86,
+      "unique": 86
+    },
+    {
+      "id": "sitemap.no-encoded-commercial-links",
+      "status": "pass",
+      "detail": "vehicle and offer sitemap URLs do not use encoded Arabic slugs."
+    },
+    {
+      "id": "sitemap.encoded-editorial-url",
+      "status": "warning",
+      "detail": "Editorial or taxonomy URL still uses a percent-encoded path; review only if a clean localized slug is required.",
+      "url": "http://localhost/wordpress/2026/10/22/%d8%a3%d9%87%d9%84%d8%a7-%d8%a8%d8%a7%d9%84%d8%b9%d8%a7%d9%84%d9%85/"
+    },
+    {
+      "id": "sitemap.pages-200",
+      "status": "pass",
+      "detail": "every sitemap URL returns HTTP 200.",
+      "total": 86,
+      "failures": 0
+    },
+    {
+      "id": "sitemap.pages-canonical",
+      "status": "pass",
+      "detail": "every sitemap URL publishes a matching canonical.",
+      "total": 86,
+      "failures": 0
+    },
+    {
+      "id": "sitemap.pages-indexable",
+      "status": "pass",
+      "detail": "no sitemap URL publishes noindex.",
+      "total": 86,
+      "failures": 0
+    },
+    {
+      "id": "public.vehicle.status",
+      "status": "pass",
+      "detail": "representative clean vehicle URL returns 200.",
+      "url": "http://localhost/wordpress/cars/car-90/",
+      "type": "representative",
+      "finalUrl": "http://localhost/wordpress/cars/car-90/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-90/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null,
+      "httpStatus": 200
+    },
+    {
+      "id": "public.vehicle.canonical",
+      "status": "pass",
+      "detail": "representative vehicle canonical matches its clean URL."
+    },
+    {
+      "id": "public.offer.status",
+      "status": "pass",
+      "detail": "representative clean offer URL returns 200.",
+      "url": "http://localhost/wordpress/offers/offer-111/",
+      "type": "representative",
+      "finalUrl": "http://localhost/wordpress/offers/offer-111/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/offers/offer-111/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null,
+      "httpStatus": 200
+    },
+    {
+      "id": "public.offer.canonical",
+      "status": "pass",
+      "detail": "representative offer canonical matches its clean URL."
+    },
+    {
+      "id": "redirect.vehicle",
+      "status": "pass",
+      "detail": "legacy URL returns HTTP 301.",
+      "url": "http://localhost/wordpress/cars/%d9%86%d9%8a%d8%b3%d8%a7%d9%86-%d8%a7%d9%83%d8%b3%d8%aa%d9%8a%d8%b1%d8%a7-%d8%a7%d8%b3%d8%aa%d9%86%d8%af%d8%b1-2024/",
+      "location": "http://localhost/wordpress/cars/car-90/?adc_seo_audit=1793264736015",
+      "error": null,
+      "httpStatus": 301
+    },
+    {
+      "id": "redirect.vehicle",
+      "status": "pass",
+      "detail": "legacy URL redirects to the clean route.",
+      "url": "http://localhost/wordpress/cars/%d9%86%d9%8a%d8%b3%d8%a7%d9%86-%d8%a7%d9%83%d8%b3%d8%aa%d9%8a%d8%b1%d8%a7-%d8%a7%d8%b3%d8%aa%d9%86%d8%af%d8%b1-2024/",
+      "location": "http://localhost/wordpress/cars/car-90/?adc_seo_audit=1793264736015",
+      "error": null,
+      "httpStatus": 301
+    },
+    {
+      "id": "redirect.offer",
+      "status": "pass",
+      "detail": "legacy URL returns HTTP 301.",
+      "url": "http://localhost/wordpress/offers/%d8%a7%d9%84%d9%8a%d9%88%d9%85-%d8%a7%d9%84%d9%88%d8%b7%d9%86%d9%8a/",
+      "location": "http://localhost/wordpress/offers/offer-111/?adc_seo_audit=1793264736015",
+      "error": null,
+      "httpStatus": 301
+    },
+    {
+      "id": "redirect.offer",
+      "status": "pass",
+      "detail": "legacy URL redirects to the clean route.",
+      "url": "http://localhost/wordpress/offers/%d8%a7%d9%84%d9%8a%d9%88%d9%85-%d8%a7%d9%84%d9%88%d8%b7%d9%86%d9%8a/",
+      "location": "http://localhost/wordpress/offers/offer-111/?adc_seo_audit=1793264736015",
+      "error": null,
+      "httpStatus": 301
+    },
+    {
+      "id": "exclusion.account.noindex",
+      "status": "pass",
+      "detail": "exclusion.account is noindex.",
+      "url": "http://localhost/wordpress/?cd_account=login",
+      "type": "exclusion",
+      "finalUrl": "http://localhost/wordpress/?cd_account=login&adc_seo_audit=1793264736015",
+      "canonical": "",
+      "robots": "max-image-preview:large, noindex, follow",
+      "alternates": [],
+      "noindex": true,
+      "encodedArabicPath": false,
+      "error": null,
+      "httpStatus": 200
+    },
+    {
+      "id": "exclusion.account.not-in-sitemap",
+      "status": "pass",
+      "detail": "exclusion.account is not present in the sitemap."
+    },
+    {
+      "id": "exclusion.search.noindex",
+      "status": "pass",
+      "detail": "exclusion.search is noindex.",
+      "url": "http://localhost/wordpress/cars/?search=seo-launch-audit",
+      "type": "exclusion",
+      "finalUrl": "http://localhost/wordpress/cars/?search=seo-launch-audit&adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/",
+      "robots": "max-image-preview:large, noindex, follow",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": true,
+      "encodedArabicPath": false,
+      "error": null,
+      "httpStatus": 200
+    },
+    {
+      "id": "exclusion.search.not-in-sitemap",
+      "status": "pass",
+      "detail": "exclusion.search is not present in the sitemap."
+    }
+  ],
+  "sitemaps": [
+    {
+      "url": "http://localhost/wordpress/wp-sitemap-posts-post-1.xml",
+      "status": 200,
+      "urlCount": 1,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/wp-sitemap-posts-page-1.xml",
+      "status": 200,
+      "urlCount": 10,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/wp-sitemap-posts-car-1.xml",
+      "status": 200,
+      "urlCount": 74,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/wp-sitemap-posts-car_offer-1.xml",
+      "status": 200,
+      "urlCount": 1,
+      "error": null
+    }
+  ],
+  "pages": [
+    {
+      "url": "http://localhost/wordpress/2026/10/22/%d8%a3%d9%87%d9%84%d8%a7-%d8%a8%d8%a7%d9%84%d8%b9%d8%a7%d9%84%d9%85/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/2026/10/22/%d8%a3%d9%87%d9%84%d8%a7-%d8%a8%d8%a7%d9%84%d8%b9%d8%a7%d9%84%d9%85/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/2026/10/22/%d8%a3%d9%87%d9%84%d8%a7-%d8%a8%d8%a7%d9%84%d8%b9%d8%a7%d9%84%d9%85/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": true,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/privacy-policy/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/privacy-policy/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/privacy-policy/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/about/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/about/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/about/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/contact/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/contact/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/contact/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/faq/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/faq/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/faq/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/buying-guide/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/buying-guide/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/buying-guide/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/finance/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/finance/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/finance/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/terms/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/terms/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/terms/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cookie-policy/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cookie-policy/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cookie-policy/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/reservation-policy/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/reservation-policy/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/reservation-policy/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-36/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-36/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-36/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-37/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-37/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-37/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-38/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-38/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-38/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-39/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-39/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-39/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-40/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-40/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-40/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-41/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-41/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-41/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-42/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-42/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-42/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-43/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-43/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-43/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-44/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-44/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-44/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-45/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-45/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-45/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-46/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-46/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-46/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-47/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-47/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-47/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-48/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-48/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-48/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-49/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-49/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-49/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-50/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-50/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-50/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-51/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-51/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-51/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-52/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-52/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-52/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-53/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-53/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-53/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-54/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-54/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-54/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-55/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-55/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-55/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-56/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-56/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-56/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-57/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-57/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-57/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-58/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-58/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-58/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-59/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-59/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-59/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-60/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-60/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-60/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-61/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-61/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-61/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-62/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-62/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-62/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-63/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-63/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-63/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-64/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-64/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-64/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-65/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-65/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-65/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-66/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-66/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-66/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-67/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-67/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-67/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-68/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-68/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-68/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-69/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-69/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-69/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-70/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-70/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-70/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-71/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-71/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-71/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-72/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-72/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-72/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-73/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-73/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-73/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-74/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-74/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-74/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-75/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-75/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-75/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-76/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-76/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-76/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-77/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-77/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-77/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-78/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-78/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-78/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-79/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-79/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-79/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-80/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-80/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-80/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-81/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-81/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-81/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-82/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-82/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-82/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-83/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-83/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-83/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-84/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-84/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-84/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-85/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-85/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-85/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-86/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-86/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-86/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-87/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-87/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-87/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-88/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-88/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-88/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-89/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-89/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-89/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-90/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-90/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-90/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-91/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-91/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-91/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-92/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-92/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-92/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-93/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-93/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-93/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-94/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-94/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-94/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-95/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-95/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-95/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-96/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-96/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-96/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-97/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-97/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-97/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-98/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-98/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-98/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-99/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-99/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-99/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-100/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-100/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-100/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-101/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-101/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-101/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-102/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-102/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-102/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-103/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-103/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-103/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-104/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-104/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-104/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-105/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-105/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-105/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-106/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-106/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-106/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-107/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-107/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-107/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-108/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-108/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-108/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-109/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-109/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-109/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/offers/offer-111/",
+      "type": "sitemap",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/offers/offer-111/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/offers/offer-111/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/car-90/",
+      "type": "representative",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/car-90/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/car-90/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/offers/offer-111/",
+      "type": "representative",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/offers/offer-111/?adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/offers/offer-111/",
+      "robots": "max-image-preview:large",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": false,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/?cd_account=login",
+      "type": "exclusion",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/?cd_account=login&adc_seo_audit=1793264736015",
+      "canonical": "",
+      "robots": "max-image-preview:large, noindex, follow",
+      "alternates": [],
+      "noindex": true,
+      "encodedArabicPath": false,
+      "error": null
+    },
+    {
+      "url": "http://localhost/wordpress/cars/?search=seo-launch-audit",
+      "type": "exclusion",
+      "status": 200,
+      "finalUrl": "http://localhost/wordpress/cars/?search=seo-launch-audit&adc_seo_audit=1793264736015",
+      "canonical": "http://localhost/wordpress/cars/",
+      "robots": "max-image-preview:large, noindex, follow",
+      "alternates": [
+        "ar",
+        "en",
+        "x-default"
+      ],
+      "noindex": true,
+      "encodedArabicPath": false,
+      "error": null
+    }
+  ],
+  "redirects": [
+    {
+      "id": "redirect.vehicle",
+      "url": "http://localhost/wordpress/cars/%d9%86%d9%8a%d8%b3%d8%a7%d9%86-%d8%a7%d9%83%d8%b3%d8%aa%d9%8a%d8%b1%d8%a7-%d8%a7%d8%b3%d8%aa%d9%86%d8%af%d8%b1-2024/",
+      "status": 301,
+      "location": "http://localhost/wordpress/cars/car-90/?adc_seo_audit=1793264736015",
+      "error": null
+    },
+    {
+      "id": "redirect.offer",
+      "url": "http://localhost/wordpress/offers/%d8%a7%d9%84%d9%8a%d9%88%d9%85-%d8%a7%d9%84%d9%88%d8%b7%d9%86%d9%8a/",
+      "status": 301,
+      "location": "http://localhost/wordpress/offers/offer-111/?adc_seo_audit=1793264736015",
+      "error": null
+    }
+  ],
+  "summary": {
+    "passed": 28,
+    "failed": 0,
+    "warnings": 1
+  },
+  "sitemapUrls": [
+    "http://localhost/wordpress/2026/10/22/%d8%a3%d9%87%d9%84%d8%a7-%d8%a8%d8%a7%d9%84%d8%b9%d8%a7%d9%84%d9%85/",
+    "http://localhost/wordpress/",
+    "http://localhost/wordpress/privacy-policy/",
+    "http://localhost/wordpress/about/",
+    "http://localhost/wordpress/contact/",
+    "http://localhost/wordpress/faq/",
+    "http://localhost/wordpress/buying-guide/",
+    "http://localhost/wordpress/finance/",
+    "http://localhost/wordpress/terms/",
+    "http://localhost/wordpress/cookie-policy/",
+    "http://localhost/wordpress/reservation-policy/",
+    "http://localhost/wordpress/cars/car-36/",
+    "http://localhost/wordpress/cars/car-37/",
+    "http://localhost/wordpress/cars/car-38/",
+    "http://localhost/wordpress/cars/car-39/",
+    "http://localhost/wordpress/cars/car-40/",
+    "http://localhost/wordpress/cars/car-41/",
+    "http://localhost/wordpress/cars/car-42/",
+    "http://localhost/wordpress/cars/car-43/",
+    "http://localhost/wordpress/cars/car-44/",
+    "http://localhost/wordpress/cars/car-45/",
+    "http://localhost/wordpress/cars/car-46/",
+    "http://localhost/wordpress/cars/car-47/",
+    "http://localhost/wordpress/cars/car-48/",
+    "http://localhost/wordpress/cars/car-49/",
+    "http://localhost/wordpress/cars/car-50/",
+    "http://localhost/wordpress/cars/car-51/",
+    "http://localhost/wordpress/cars/car-52/",
+    "http://localhost/wordpress/cars/car-53/",
+    "http://localhost/wordpress/cars/car-54/",
+    "http://localhost/wordpress/cars/car-55/",
+    "http://localhost/wordpress/cars/car-56/",
+    "http://localhost/wordpress/cars/car-57/",
+    "http://localhost/wordpress/cars/car-58/",
+    "http://localhost/wordpress/cars/car-59/",
+    "http://localhost/wordpress/cars/car-60/",
+    "http://localhost/wordpress/cars/car-61/",
+    "http://localhost/wordpress/cars/car-62/",
+    "http://localhost/wordpress/cars/car-63/",
+    "http://localhost/wordpress/cars/car-64/",
+    "http://localhost/wordpress/cars/car-65/",
+    "http://localhost/wordpress/cars/car-66/",
+    "http://localhost/wordpress/cars/car-67/",
+    "http://localhost/wordpress/cars/car-68/",
+    "http://localhost/wordpress/cars/car-69/",
+    "http://localhost/wordpress/cars/car-70/",
+    "http://localhost/wordpress/cars/car-71/",
+    "http://localhost/wordpress/cars/car-72/",
+    "http://localhost/wordpress/cars/car-73/",
+    "http://localhost/wordpress/cars/car-74/",
+    "http://localhost/wordpress/cars/car-75/",
+    "http://localhost/wordpress/cars/car-76/",
+    "http://localhost/wordpress/cars/car-77/",
+    "http://localhost/wordpress/cars/car-78/",
+    "http://localhost/wordpress/cars/car-79/",
+    "http://localhost/wordpress/cars/car-80/",
+    "http://localhost/wordpress/cars/car-81/",
+    "http://localhost/wordpress/cars/car-82/",
+    "http://localhost/wordpress/cars/car-83/",
+    "http://localhost/wordpress/cars/car-84/",
+    "http://localhost/wordpress/cars/car-85/",
+    "http://localhost/wordpress/cars/car-86/",
+    "http://localhost/wordpress/cars/car-87/",
+    "http://localhost/wordpress/cars/car-88/",
+    "http://localhost/wordpress/cars/car-89/",
+    "http://localhost/wordpress/cars/car-90/",
+    "http://localhost/wordpress/cars/car-91/",
+    "http://localhost/wordpress/cars/car-92/",
+    "http://localhost/wordpress/cars/car-93/",
+    "http://localhost/wordpress/cars/car-94/",
+    "http://localhost/wordpress/cars/car-95/",
+    "http://localhost/wordpress/cars/car-96/",
+    "http://localhost/wordpress/cars/car-97/",
+    "http://localhost/wordpress/cars/car-98/",
+    "http://localhost/wordpress/cars/car-99/",
+    "http://localhost/wordpress/cars/car-100/",
+    "http://localhost/wordpress/cars/car-101/",
+    "http://localhost/wordpress/cars/car-102/",
+    "http://localhost/wordpress/cars/car-103/",
+    "http://localhost/wordpress/cars/car-104/",
+    "http://localhost/wordpress/cars/car-105/",
+    "http://localhost/wordpress/cars/car-106/",
+    "http://localhost/wordpress/cars/car-107/",
+    "http://localhost/wordpress/cars/car-108/",
+    "http://localhost/wordpress/cars/car-109/",
+    "http://localhost/wordpress/offers/offer-111/"
+  ]
+}

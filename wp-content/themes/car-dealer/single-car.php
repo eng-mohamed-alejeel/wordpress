@@ -22,15 +22,24 @@ while ( have_posts() ) :
 	$catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl';
 	$wa_message   = sprintf( car_dealer_text( 'مرحباً %1$s، أريد الاستفسار عن %2$s', 'Hello %1$s, I would like to ask about %2$s' ), car_dealer_brand_name(), get_the_title() );
 	?>
+	<?php
+	$car_context_links = array_filter( array(
+		array( 'url' => car_dealer_site_url(), 'label' => car_dealer_text( 'الرئيسية', 'Home' ) ),
+		array( 'url' => car_dealer_archive_url( 'car' ), 'label' => car_dealer_text( 'السيارات', 'Vehicles' ) ),
+	) );
+	?>
+	<div class="cd-breadcrumb-shell" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
+		<div class="container"><?php car_dealer_context_navigation( $car_context_links, get_the_title() ); ?></div>
+	</div>
 	<section class="ab-car-hero" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 		<div class="container ab-car-hero-grid">
 			<div class="car-single-media">
 				<?php if ( ! class_exists('\AutoDealership\Inventory\VehicleColors') || ! \AutoDealership\Inventory\VehicleColors::render((int)$id) ) : ?>
-				<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large', array( 'loading' => 'eager', 'alt' => get_post_meta( get_post_thumbnail_id(), '_wp_attachment_image_alt', true ) ?: get_the_title() ) ); } else { ?><div class="car-image-placeholder"><?php echo car_dealer_vehicle_placeholder(); ?><span class="car-image-placeholder-label"><?php echo esc_html( car_dealer_text( 'صورة افتراضية للسيارة', 'Default vehicle image' ) ); ?></span></div><?php } ?>
+				<?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'large', array( 'loading' => 'eager', 'fetchpriority' => 'high', 'decoding' => 'async', 'sizes' => '(max-width: 900px) 100vw, 55vw', 'alt' => get_post_meta( get_post_thumbnail_id(), '_wp_attachment_image_alt', true ) ?: get_the_title() ) ); } else { ?><div class="car-image-placeholder"><?php echo car_dealer_vehicle_placeholder(); ?><span class="car-image-placeholder-label"><?php echo esc_html( car_dealer_text( 'صورة افتراضية للسيارة', 'Default vehicle image' ) ); ?></span></div><?php } ?>
 				<?php $gallery_ids = get_post_meta( $id, '_car_gallery_ids', true ); if ( is_array( $gallery_ids ) && $gallery_ids ) : ?>
 				<div class="adc-public-gallery" aria-label="<?php echo esc_attr( car_dealer_text( 'معرض صور السيارة', 'Vehicle photo gallery' ) ); ?>">
 					<?php foreach ( array_slice( $gallery_ids, 0, 20 ) as $gallery_id ) : if ( ! wp_attachment_is_image( (int)$gallery_id ) ) { continue; } ?>
-					<a href="<?php echo esc_url( wp_get_attachment_image_url( (int)$gallery_id, 'full' ) ); ?>"><?php echo wp_get_attachment_image( (int)$gallery_id, 'medium', false, array( 'loading'=>'lazy', 'alt'=>get_post_meta( (int)$gallery_id, '_wp_attachment_image_alt', true ) ?: get_the_title() ) ); ?></a>
+					<a href="<?php echo esc_url( wp_get_attachment_image_url( (int)$gallery_id, 'full' ) ); ?>"><?php echo wp_get_attachment_image( (int)$gallery_id, 'medium', false, array( 'loading'=>'lazy', 'decoding'=>'async', 'sizes'=>'(max-width: 900px) 50vw, 220px', 'alt'=>get_post_meta( (int)$gallery_id, '_wp_attachment_image_alt', true ) ?: get_the_title() ) ); ?></a>
 					<?php endforeach; ?>
 				</div>
 				<?php endif; ?>
@@ -115,6 +124,23 @@ while ( have_posts() ) :
 			</dl>
 		</aside>
 	</article>
+	<?php
+	$related_offer_ids = function_exists( 'car_dealer_related_offers' ) ? car_dealer_related_offers( (int) $id ) : array();
+	if ( $related_offer_ids ) :
+		ob_start();
+		foreach ( $related_offer_ids as $related_offer_id ) { car_dealer_offer_card( $related_offer_id ); }
+		$related_offer_cards = trim( ob_get_clean() );
+		if ( '' !== $related_offer_cards ) :
+		?>
+		<section class="container cd-related-content" aria-labelledby="related-offers-heading" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
+			<div class="cd-related-heading">
+				<div><p class="eyebrow"><?php echo esc_html( car_dealer_text( 'اختيارات مناسبة', 'Recommended next step' ) ); ?></p><h2 id="related-offers-heading"><?php echo esc_html( car_dealer_text( 'العروض المتاحة لهذه السيارة', 'Available offers for this vehicle' ) ); ?></h2></div>
+				<?php $related_offers_url = car_dealer_archive_url( 'car_offer' ); if ( $related_offers_url ) : ?><a class="btn btn-outline" href="<?php echo esc_url( $related_offers_url ); ?>"><?php echo esc_html( car_dealer_text( 'عرض كل العروض', 'View all offers' ) ); ?></a><?php endif; ?>
+			</div>
+			<div class="offer-grid"><?php echo $related_offer_cards; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Cards escape their own dynamic values. ?></div>
+		</section>
+		<?php endif; ?>
+	<?php endif; ?>
 
 	<section class="container cd-single-tools ab-lead-tools" data-car-dialogs data-car-name="<?php echo esc_attr(get_the_title()); ?>" data-close-label="<?php echo esc_attr(car_dealer_text('إغلاق النافذة','Close dialog')); ?>" dir="<?php echo esc_attr($catalog_direction); ?>" lang="<?php echo esc_attr($catalog_language); ?>">
 		<noscript><p class="cd-car-noscript-note"><?php echo esc_html(car_dealer_text('لإرسال الطلبات أو استخدام الحاسبة، فعّل JavaScript في المتصفح، أو تواصل معنا مباشرة.','To send requests or use the calculator, enable JavaScript in your browser, or contact us directly.')); ?> <?php if(isset($wa_link) && '#'!==$wa_link): ?><a href="<?php echo esc_url($wa_link); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html(car_dealer_text('تواصل واتساب','Contact on WhatsApp')); ?></a><?php endif; ?></p></noscript>

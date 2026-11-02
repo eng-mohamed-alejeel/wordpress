@@ -7,6 +7,16 @@
 		<p><?php echo esc_html(car_dealer_text('اختر سيارتك حسب الماركة والطراز والفئة واللون والسنة والسعر.','Find your vehicle by brand, model, trim, color, year and price.')); ?></p>
 	</div>
 </section>
+<div class="cd-breadcrumb-shell" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
+	<div class="container">
+		<?php
+		$archive_context_links = array_filter( array(
+			array( 'url' => car_dealer_site_url(), 'label' => car_dealer_text( 'الرئيسية', 'Home' ) ),
+		) );
+		car_dealer_context_navigation( $archive_context_links, car_dealer_text( 'السيارات', 'Vehicles' ) );
+		?>
+	</div>
+</div>
 <div class="container archive-content" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 	<?php if ( ! function_exists( 'adc_public_vehicle_view' ) ) : ?>
 		<p class="empty-state" role="status"><?php esc_html_e( 'كتالوج السيارات غير متاح حاليًا. يرجى المحاولة لاحقًا.', 'car-dealer' ); ?></p>

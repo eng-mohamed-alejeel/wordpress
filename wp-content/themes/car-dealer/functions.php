@@ -68,15 +68,15 @@ function car_dealer_assets() {
 	}
 	wp_enqueue_style( 'car-dealer-style', get_stylesheet_uri(), wp_style_is( 'autobrands-tokens', 'registered' ) ? array( 'autobrands-tokens' ) : array(), $version );
 	wp_enqueue_style( 'car-dealer-main', $uri . '/assets/css/main.css', array( 'car-dealer-style' ), filemtime( get_template_directory() . '/assets/css/main.css' ) );
-	wp_enqueue_style( 'car-dealer-home-v2', $uri . '/assets/css/home-v2.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/home-v2.css' ) );
+	if ( is_front_page() || is_home() ) { wp_enqueue_style( 'car-dealer-home-v2', $uri . '/assets/css/home-v2.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/home-v2.css' ) ); }
 	wp_enqueue_style( 'car-dealer-floating', $uri . '/assets/css/floating-buttons.css', array( 'car-dealer-main' ), filemtime( get_template_directory() . '/assets/css/floating-buttons.css' ) );
 	wp_enqueue_style( 'car-dealer-site-shell', $uri . '/assets/css/site-shell.css', array( 'car-dealer-floating' ), filemtime( get_template_directory() . '/assets/css/site-shell.css' ) );
-	// Keep optional editorial components available, without loading their page-only
-	// decoration for vehicle pages that have no editorial content at all.
-	$empty_vehicle_description = is_singular( 'car' ) && '' === trim( (string) get_post_field( 'post_content', get_queried_object_id() ) );
-	if ( ! $empty_vehicle_description ) { wp_enqueue_style( 'car-dealer-about', $uri . '/assets/css/pages/_about.css', array( 'car-dealer-main' ), $version ); }
-	if ( is_page( 'about' ) || is_page_template( 'page-about.php' ) || ( is_singular() && has_block( 'auto-dealership/component' ) ) ) { wp_enqueue_style( 'car-dealer-about-modern', $uri . '/assets/css/about-modern.css', array( 'car-dealer-about', 'car-dealer-site-shell' ), filemtime( get_template_directory() . '/assets/css/about-modern.css' ) ); }
-	if ( ! $empty_vehicle_description ) { wp_enqueue_style( 'car-dealer-contact', $uri . '/assets/css/pages/_contact.css', array( 'car-dealer-main' ), $version ); }
+	$has_editorial_component = is_singular() && has_block( 'auto-dealership/component' );
+	$is_about_page = is_page( 'about' ) || is_page_template( 'page-about.php' );
+	$is_contact_page = is_page( 'contact' ) || is_page_template( 'page-contact.php' );
+	if ( $is_about_page || $has_editorial_component ) { wp_enqueue_style( 'car-dealer-about', $uri . '/assets/css/pages/_about.css', array( 'car-dealer-main' ), $version ); }
+	if ( $is_about_page || $has_editorial_component ) { wp_enqueue_style( 'car-dealer-about-modern', $uri . '/assets/css/about-modern.css', array( 'car-dealer-about', 'car-dealer-site-shell' ), filemtime( get_template_directory() . '/assets/css/about-modern.css' ) ); }
+	if ( $is_contact_page || $has_editorial_component ) { wp_enqueue_style( 'car-dealer-contact', $uri . '/assets/css/pages/_contact.css', array( 'car-dealer-main' ), $version ); }
 	wp_enqueue_script( 'car-dealer-main-js', $uri . '/assets/js/main.js', array(), filemtime( get_template_directory() . '/assets/js/main.js' ), true );
 	if(is_singular('car')) {
 		wp_enqueue_style('car-dealer-car-dialogs',$uri.'/assets/css/car-dialogs.css',array('car-dealer-site-shell'),filemtime(get_template_directory().'/assets/css/car-dialogs.css'));
@@ -91,8 +91,43 @@ function car_dealer_assets() {
 }
 add_action( 'wp_enqueue_scripts', 'car_dealer_assets' );
 
+/** Resolve the same homepage hero image used by the template for early discovery. */
+function car_dealer_home_hero_image_url(): string {
+	static $resolved = null;
+	if ( null !== $resolved ) { return $resolved; }
+	$resolved = '';
+	if ( ! is_front_page() && ! is_home() ) { return ''; }
+	$site_content = class_exists( '\AutoDealership\Content\SiteContent' ) ? \AutoDealership\Content\SiteContent::data() : array();
+	$hero_id = absint( $site_content['hero_image'] ?? 0 );
+	if ( $hero_id ) {
+		$url = wp_get_attachment_image_url( $hero_id, 'full' );
+		if ( is_string( $url ) && '' !== $url ) { $resolved = $url; return $resolved; }
+	}
+	$home = function_exists( 'adc_home_page_view' ) ? adc_home_page_view() : array();
+	$featured_ids = is_array( $home ) && ! empty( $home['featured_ids'] ) && is_array( $home['featured_ids'] ) ? $home['featured_ids'] : array();
+	if ( $featured_ids ) {
+		$url = get_the_post_thumbnail_url( (int) $featured_ids[0], 'full' );
+		if ( is_string( $url ) && '' !== $url ) { $resolved = $url; return $resolved; }
+	}
+	return $resolved;
+}
+
+add_filter( 'wp_preload_resources', static function ( array $preloads ): array {
+	$url = car_dealer_home_hero_image_url();
+	if ( '' === $url ) { return $preloads; }
+	foreach ( $preloads as $preload ) {
+		if ( is_array( $preload ) && isset( $preload['href'] ) && $preload['href'] === $url ) { return $preloads; }
+	}
+	$preloads[] = array( 'href' => $url, 'as' => 'image', 'fetchpriority' => 'high' );
+	return $preloads;
+} );
+
 /** Add a consistent accessible password visibility control across public and WordPress screens. */
 function car_dealer_password_toggle_script() {
+	if ( 'wp_enqueue_scripts' === current_filter() ) {
+		$view = function_exists( 'car_dealer_account_view' ) ? car_dealer_account_view() : '';
+		if ( ! in_array( $view, array( 'login', 'register', 'lostpassword', 'resetpass', 'dashboard' ), true ) ) { return; }
+	}
 	$path = get_template_directory() . '/assets/js/password-toggle.js';
 	wp_enqueue_script( 'car-dealer-password-toggle', get_template_directory_uri() . '/assets/js/password-toggle.js', array(), filemtime( $path ), true );
 }
@@ -181,6 +216,65 @@ function car_dealer_archive_url( string $post_type ): string {
 	return is_string( $url ) ? car_dealer_catalog_localized_url( $url ) : '';
 }
 
+/**
+ * Render a compact, crawlable breadcrumb for public catalogue pages.
+ *
+ * The links are resolved at render time so installations can omit optional
+ * pages without leaving dead links in the public HTML.
+ *
+ * @param array<int,array{url:string,label:string}> $links
+ */
+function car_dealer_context_navigation( array $links, string $current = '' ): void {
+	$links = array_values( array_filter( $links, static function ( $link ): bool {
+		return is_array( $link ) && ! empty( $link['url'] ) && ! empty( $link['label'] );
+	} ) );
+	if ( ! $links && '' === trim( $current ) ) { return; }
+	$aria_label = car_dealer_text( 'مسار التنقل', 'Breadcrumb' );
+	$direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dealer_catalog_direction() : 'rtl';
+	$language = function_exists( 'car_dealer_catalog_language' ) ? car_dealer_catalog_language() : 'ar';
+	?>
+	<nav class="cd-context-navigation" aria-label="<?php echo esc_attr( $aria_label ); ?>" dir="<?php echo esc_attr( $direction ); ?>" lang="<?php echo esc_attr( $language ); ?>">
+		<ol class="cd-context-navigation-list">
+			<?php foreach ( $links as $index => $link ) : ?>
+				<?php if ( $index > 0 ) : ?><li class="cd-context-navigation-separator" aria-hidden="true">/</li><?php endif; ?>
+				<li><a href="<?php echo esc_url( (string) $link['url'] ); ?>"><?php echo esc_html( (string) $link['label'] ); ?></a></li>
+			<?php endforeach; ?>
+			<?php if ( '' !== trim( $current ) ) : ?>
+				<li class="cd-context-navigation-separator" aria-hidden="true">/</li>
+				<li><span aria-current="page"><?php echo esc_html( $current ); ?></span></li>
+			<?php endif; ?>
+		</ol>
+	</nav>
+	<?php
+}
+
+/** Return currently publishable offers connected to one public vehicle. */
+function car_dealer_related_offers( int $car_id, int $limit = 3 ): array {
+	if ( $car_id < 1 || ! post_type_exists( 'car_offer' ) || ! function_exists( 'car_dealer_offer_view' ) ) { return array(); }
+	$limit = max( 1, min( 6, $limit ) );
+	$offer_ids = get_posts( array(
+		'post_type'              => 'car_offer',
+		'post_status'            => 'publish',
+		'posts_per_page'         => max( 8, $limit * 2 ),
+		'fields'                 => 'ids',
+		'no_found_rows'          => true,
+		'ignore_sticky_posts'    => true,
+		'orderby'                => 'date',
+		'order'                  => 'DESC',
+		'meta_key'               => '_offer_car_id',
+		'meta_value'             => (string) $car_id,
+		'suppress_filters'       => true,
+	) );
+	$related = array();
+	foreach ( $offer_ids as $offer_id ) {
+		if ( car_dealer_offer_view( (int) $offer_id ) ) {
+			$related[] = (int) $offer_id;
+		}
+		if ( count( $related ) >= $limit ) { break; }
+	}
+	return $related;
+}
+
 add_filter( 'nav_menu_link_attributes', static function ( array $atts ): array {
 	if ( ! is_admin() && isset( $atts['href'] ) && is_string( $atts['href'] ) && function_exists( 'car_dealer_catalog_localized_url' ) ) {
 		$atts['href'] = car_dealer_catalog_localized_url( $atts['href'] );
@@ -259,8 +353,13 @@ function car_dealer_offer_card( $post_id = null ) {
 	$discount_percent = $old_price > $new_price && $new_price > 0 ? (int) round( ( ( $old_price - $new_price ) / $old_price ) * 100 ) : 0;
 	$url = car_dealer_catalog_localized_url( $offer['url'] );
 	$title = $offer['title'];
-	$image = get_the_post_thumbnail( $post_id, 'medium_large' );
-	if ( ! $image ) { $image = get_the_post_thumbnail( $offer['car_id'], 'medium_large' ); }
+	$vehicle_url = '';
+	$vehicle_title = $offer['car_id'] ? get_the_title( (int) $offer['car_id'] ) : '';
+	if ( $vehicle_title && 'car' === get_post_type( (int) $offer['car_id'] ) && 'publish' === get_post_status( (int) $offer['car_id'] ) ) {
+		$vehicle_url = car_dealer_catalog_localized_url( (string) get_permalink( (int) $offer['car_id'] ) );
+	}
+	$image = get_the_post_thumbnail( $post_id, 'medium_large', array( 'loading' => 'lazy', 'decoding' => 'async', 'sizes' => '(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw' ) );
+	if ( ! $image ) { $image = get_the_post_thumbnail( $offer['car_id'], 'medium_large', array( 'loading' => 'lazy', 'decoding' => 'async', 'sizes' => '(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw' ) ); }
 	if ( ! $image ) { $image = '<span class="offer-placeholder">' . car_dealer_vehicle_placeholder() . '</span>'; }
 	?>
 	<article class="offer-card">
@@ -273,6 +372,7 @@ function car_dealer_offer_card( $post_id = null ) {
 		<div class="offer-content">
 			<p class="offer-kicker"><?php echo esc_html( car_dealer_text( 'عرض مميز', 'Featured offer' ) ); ?></p>
 			<h3><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $title ); ?></a></h3>
+			<?php if ( $vehicle_url && $vehicle_title ) : ?><p class="offer-vehicle-link"><span><?php echo esc_html( car_dealer_text( 'على سيارة', 'For vehicle' ) ); ?></span> <a href="<?php echo esc_url( $vehicle_url ); ?>"><?php echo esc_html( $vehicle_title ); ?></a></p><?php endif; ?>
 			<div class="offer-pricing">
 				<?php if ( $old_price ) : ?><p class="offer-old"><span><?php echo esc_html( car_dealer_text( 'السعر السابق', 'Previous price' ) ); ?></span><del><?php echo esc_html( car_dealer_format_price( $old_price ) ); ?></del></p><?php endif; ?>
 				<?php if ( $new_price ) : ?><p class="offer-price"><span><?php echo esc_html( car_dealer_text( 'سعر العرض', 'Offer price' ) ); ?></span><strong><?php echo esc_html( car_dealer_format_price( $new_price ) ); ?></strong></p><?php endif; ?>

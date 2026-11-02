@@ -45,7 +45,10 @@ function car_dealer_account_menu_fallback() {
   if ( $catalog_url ) { echo '<li><a href="' . esc_url( $catalog_url ) . '">' . esc_html( car_dealer_text( 'السيارات', 'Vehicles' ) ) . '</a></li>'; }
   echo car_dealer_account_links() . '</ul>';
 }
-add_action( 'wp_enqueue_scripts', function () { wp_enqueue_style( 'car-dealer-account', get_template_directory_uri() . '/assets/css/account.css', array( 'car-dealer-main' ), filemtime( __DIR__ . '/../assets/css/account.css' ) ); } );
+add_action( 'wp_enqueue_scripts', function () {
+ if ( ! in_array( car_dealer_account_view(), array( 'login', 'register', 'dashboard', 'lostpassword', 'resetpass' ), true ) ) { return; }
+ wp_enqueue_style( 'car-dealer-account', get_template_directory_uri() . '/assets/css/account.css', array( 'car-dealer-main' ), filemtime( __DIR__ . '/../assets/css/account.css' ) );
+} );
 add_filter( 'login_redirect', function ( $redirect, $requested, $user ) {
  return $user instanceof WP_User ? car_dealer_account_url() : $redirect;
 }, 10, 3 );

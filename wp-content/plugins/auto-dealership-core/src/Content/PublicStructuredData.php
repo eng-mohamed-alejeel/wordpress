@@ -24,10 +24,77 @@ final class PublicStructuredData {
 		if ( ! $data ) {
 			return;
 		}
-		$json = wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP );
+		self::print_entity( $data );
+		foreach ( self::additional_entities() as $entity ) {
+			self::print_entity( $entity );
+		}
+	}
+
+	/** @param array<string,mixed> $entity */
+	private static function print_entity( array $entity ): void {
+		$json = wp_json_encode( $entity, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP );
 		if ( is_string( $json ) ) {
 			echo '<script type="application/ld+json">' . $json . '</script>' . "\n";
 		}
+	}
+
+	/** Additional page entities remain separate so existing Vehicle consumers keep their contract. */
+	/** @return array<int,array<string,mixed>> */
+	private static function additional_entities(): array {
+		if ( is_admin() || isset( $_GET['cd_account'] ) || is_search() || is_404() ) {
+			return array();
+		}
+		$language = CatalogPresentation::language();
+		$home = CatalogPresentation::localized_url( home_url( '/' ), $language );
+		$base = $home;
+		$name = \AutoDealership\Core\ProductSetup::brand( $language );
+		$items = array( array( '@type' => 'ListItem', 'position' => 1, 'name' => 'en' === $language ? 'Home' : 'الرئيسية', 'item' => $home ) );
+		if ( is_post_type_archive( 'car' ) ) {
+			$base = CatalogPresentation::localized_url( (string) get_post_type_archive_link( 'car' ), $language );
+			$items[] = array( '@type' => 'ListItem', 'position' => 2, 'name' => 'en' === $language ? 'Cars' : 'السيارات', 'item' => $base );
+		} elseif ( is_post_type_archive( 'car_offer' ) ) {
+			$base = CatalogPresentation::localized_url( (string) get_post_type_archive_link( 'car_offer' ), $language );
+			$items[] = array( '@type' => 'ListItem', 'position' => 2, 'name' => 'en' === $language ? 'Offers' : 'العروض', 'item' => $base );
+		} elseif ( is_singular( 'car' ) ) {
+			$base = CatalogPresentation::localized_url( (string) get_permalink(), $language );
+			$archive = CatalogPresentation::localized_url( (string) get_post_type_archive_link( 'car' ), $language );
+			$items[] = array( '@type' => 'ListItem', 'position' => 2, 'name' => 'en' === $language ? 'Cars' : 'السيارات', 'item' => $archive );
+			$items[] = array( '@type' => 'ListItem', 'position' => 3, 'name' => get_the_title(), 'item' => $base );
+		} elseif ( is_singular( 'car_offer' ) ) {
+			$base = CatalogPresentation::localized_url( (string) get_permalink(), $language );
+			$archive = CatalogPresentation::localized_url( (string) get_post_type_archive_link( 'car_offer' ), $language );
+			$items[] = array( '@type' => 'ListItem', 'position' => 2, 'name' => 'en' === $language ? 'Offers' : 'العروض', 'item' => $archive );
+			$items[] = array( '@type' => 'ListItem', 'position' => 3, 'name' => get_the_title(), 'item' => $base );
+		} elseif ( is_singular( array( 'page', 'post' ) ) ) {
+			$page_url = CatalogPresentation::localized_url( (string) get_permalink(), $language );
+			$items[] = array( '@type' => 'ListItem', 'position' => 2, 'name' => get_the_title(), 'item' => $page_url );
+			$base = $page_url;
+		}
+		$entities = array(
+			array(
+				'@context' => 'https://schema.org',
+				'@type' => 'WebPage',
+				'@id' => $base . '#webpage',
+				'url' => $base,
+				'name' => wp_get_document_title(),
+				'isPartOf' => array( '@id' => $home . '#website' ),
+			),
+			array(
+				'@context' => 'https://schema.org',
+				'@type' => 'BreadcrumbList',
+				'itemListElement' => $items,
+			),
+		);
+		if ( is_front_page() || is_home() ) {
+			$entities[] = array(
+				'@context' => 'https://schema.org',
+				'@type' => 'WebSite',
+				'@id' => $home . '#website',
+				'url' => $home,
+				'name' => $name,
+			);
+		}
+		return $entities;
 	}
 
 	/** @return array<string,mixed> */
@@ -54,11 +121,12 @@ final class PublicStructuredData {
 		if ( \AutoDealership\Inventory\GroupedModelCatalog::is_mapped( $post_id ) ) {
 			$view = \AutoDealership\Inventory\GroupedModelCatalog::view( $post_id );
 			if ( ! $view ) { return array(); }
-			$data = array( '@context'=>'https://schema.org', '@type'=>'Vehicle', 'name'=>get_the_title( $post_id ), 'url'=>get_permalink( $post_id ), 'brand'=>array( '@type'=>'Brand', 'name'=>$view['brand_name'] ), 'model'=>$view['model'], 'color'=>$view['catalog_model']['colors'] );
+			$grouped_url = CatalogPresentation::localized_url( (string) get_permalink( $post_id ) );
+			$data = array( '@context'=>'https://schema.org', '@type'=>'Vehicle', 'name'=>get_the_title( $post_id ), 'url'=>$grouped_url, 'brand'=>array( '@type'=>'Brand', 'name'=>$view['brand_name'] ), 'model'=>$view['model'], 'color'=>$view['catalog_model']['colors'] );
 			$offers = array();
 			foreach ( $view['catalog_model']['options'] as $option ) {
 				if ( (int)$option['listed_price'] < 1 ) { continue; }
-				$offers[] = array( '@type'=>'Offer', 'name'=>implode( ' ', array( $option['brand'], $option['model'], $option['trim_name'], $option['exterior_color'], $option['model_year'] ) ), 'price'=>\AutoDealership\Pricing\Money::decimal( (string)$option['public_price'] ), 'priceCurrency'=>'SAR', 'availability'=>'https://schema.org/InStock', 'url'=>get_permalink( $post_id ) );
+				$offers[] = array( '@type'=>'Offer', 'name'=>implode( ' ', array( $option['brand'], $option['model'], $option['trim_name'], $option['exterior_color'], $option['model_year'] ) ), 'price'=>\AutoDealership\Pricing\Money::decimal( (string)$option['public_price'] ), 'priceCurrency'=>'SAR', 'availability'=>'https://schema.org/InStock', 'url'=>$grouped_url );
 			}
 			if ( $offers ) { $data['offers'] = $offers; }
 			$image = get_the_post_thumbnail_url( $post_id, 'full' );
@@ -113,12 +181,13 @@ final class PublicStructuredData {
 		if ( ! $model ) {
 			return array();
 		}
+		$url = CatalogPresentation::localized_url( (string) $model['url'] );
 		$data = array(
 			'@context' => 'https://schema.org',
 			'@type' => 'Vehicle',
 			'name' => $model['car_title'],
-			'url' => $model['url'],
-			'offers' => self::offer_value( $model['price'], $model['currency'], $model['url'] ),
+			'url' => $url,
+			'offers' => self::offer_value( $model['price'], $model['currency'], $url ),
 		);
 		if ( '' !== $model['expires'] ) {
 			$data['offers']['priceValidUntil'] = $model['expires'];

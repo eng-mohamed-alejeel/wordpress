@@ -482,6 +482,61 @@ body.post-type-archive-car_offer .archive-hero { min-height: 0; padding-block: 2
 body.post-type-archive-car_offer .archive-hero h1 { font-size: clamp(1.65rem, 3vw, 2.6rem); line-height: 1.45; text-shadow: none; }
 body.post-type-archive-car_offer .archive-hero p { font-size: .95rem; }
 body.post-type-archive-car_offer .archive-content { padding-block: 2rem; }
+.cd-context-navigation {
+  display: block;
+  margin-block: 0 1.25rem;
+  padding-block: .15rem;
+  color: var(--ab-muted);
+}
+.cd-context-navigation-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .1rem .45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cd-context-navigation-list li { display: inline-flex; align-items: center; min-width: 0; }
+.cd-context-navigation-list a,
+.cd-context-navigation-list li > span {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.75rem;
+  padding-inline: .1rem;
+  color: var(--ab-muted);
+  font-size: .82rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+}
+.cd-context-navigation-list a { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: .18em; }
+.cd-context-navigation-list a:hover,
+.cd-context-navigation-list a:focus-visible { color: var(--ab-link); text-decoration-color: currentColor; }
+.cd-context-navigation-list a:hover { color: var(--ab-link); text-decoration-color: currentColor; }
+.cd-context-navigation-list span[aria-current="page"] { color: var(--ab-heading); font-weight: 700; }
+.cd-context-navigation-separator { color: var(--ab-border-strong, var(--ab-border)); font-size: .78rem; user-select: none; }
+.cd-breadcrumb-shell {
+  border-block-end: 1px solid var(--ab-border);
+  background: var(--ab-bg);
+}
+.cd-breadcrumb-shell > .container { padding-block: .55rem; }
+.cd-breadcrumb-shell .cd-context-navigation { margin: 0; padding: 0; }
+.offer-card .offer-vehicle-link { margin: .35rem 0 .75rem; color: var(--ab-muted); font-size: .86rem; line-height: 1.6; }
+.offer-card .offer-vehicle-link a { color: var(--ab-link); font-weight: 700; text-decoration: underline; text-underline-offset: .15em; }
+.cd-related-content { padding-block: clamp(2rem, 4vw, 3.5rem); }
+.cd-related-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem 2rem; margin-block-end: 1.25rem; }
+.cd-related-heading h2 { margin: .2rem 0 0; color: var(--ab-heading); font-size: clamp(1.35rem, 2.5vw, 2rem); }
+.cd-related-heading .eyebrow { margin: 0; color: var(--ab-link); font-weight: 800; }
+body.single-car_offer .ab-offer-vehicle-link a { color: var(--ab-link); text-decoration: underline; text-underline-offset: .15em; }
+@media (max-width: 600px) {
+  .cd-context-navigation { overflow-x: auto; scrollbar-width: thin; }
+  .cd-context-navigation-list { flex-wrap: nowrap; min-width: max-content; }
+  .cd-context-navigation-list a, .cd-context-navigation-list li > span { min-block-size: 2rem; font-size: .8rem; }
+  .cd-context-navigation-list li:last-child span[aria-current="page"] { max-inline-size: 62vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cd-related-heading { align-items: stretch; flex-direction: column; }
+  .cd-related-heading .btn { align-self: start; }
+}
 .cd-filter-primary, .cd-filter-secondary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end; gap: 1rem; }
 .cd-customer-filters label { display: grid; grid-template-rows: 1.5rem 46px; gap: .4rem; min-width: 0; font-size: .875rem; font-weight: 500; color: var(--ab-muted); }
 .cd-customer-filters label > span { line-height: 1.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

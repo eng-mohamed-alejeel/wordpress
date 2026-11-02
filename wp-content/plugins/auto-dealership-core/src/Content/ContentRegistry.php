@@ -27,6 +27,7 @@ final class ContentRegistry {
 		add_action( 'init', array( self::class, 'register' ), 5 );
 		add_action( 'admin_init', array( self::class, 'maybe_upgrade_rewrites' ), 5 );
 		add_action( 'template_redirect', array( self::class, 'redirect_legacy_car_request' ), 1 );
+		add_action( 'template_redirect', array( self::class, 'redirect_legacy_offer_request' ), 1 );
 		add_action( 'admin_notices', array( self::class, 'render_collision_notice' ) );
 		add_filter( 'post_type_link', array( self::class, 'content_permalink' ), 10, 4 );
 		add_filter( 'request', array( self::class, 'resolve_clean_offer_request' ), 10, 1 );
@@ -101,6 +102,34 @@ final class ContentRegistry {
 	/** Canonicalize old vehicle slugs while preserving their public reachability. */
 	public static function redirect_legacy_car_request(): void {
 		if ( is_admin() || wp_doing_ajax() || is_preview() || is_feed() || ! is_singular( 'car' ) ) {
+			return;
+		}
+
+		$post = get_queried_object();
+		if ( ! $post instanceof \WP_Post || $post->ID < 1 ) {
+			return;
+		}
+
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) && is_string( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+		$current_path = '' !== $request_uri ? wp_parse_url( $request_uri, PHP_URL_PATH ) : '';
+		$canonical    = self::content_permalink( '', $post );
+		$target_path  = wp_parse_url( $canonical, PHP_URL_PATH );
+		if ( ! is_string( $current_path ) || ! is_string( $target_path ) || untrailingslashit( $current_path ) === untrailingslashit( $target_path ) ) {
+			return;
+		}
+
+		$query = wp_parse_url( $request_uri, PHP_URL_QUERY );
+		if ( is_string( $query ) && '' !== $query ) {
+			$canonical .= '?' . $query;
+		}
+
+		wp_safe_redirect( $canonical, 301, 'Auto Dealership Core' );
+		exit;
+	}
+
+	/** Canonicalize old offer slugs while preserving their public reachability. */
+	public static function redirect_legacy_offer_request(): void {
+		if ( is_admin() || wp_doing_ajax() || is_preview() || is_feed() || ! is_singular( 'car_offer' ) ) {
 			return;
 		}
 

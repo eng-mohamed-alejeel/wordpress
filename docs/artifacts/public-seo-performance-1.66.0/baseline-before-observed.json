@@ -1,0 +1,15 @@
+{
+  "generated_at_utc": "2026-10-29T08:20:52Z",
+  "origin": "http://localhost/wordpress",
+  "source": "local public performance run captured immediately before SEO-008 changes",
+  "cases": 28,
+  "successful_cases": 28,
+  "observed": {
+    "median_transfer_bytes": 669043,
+    "median_resource_count": 39,
+    "routes": ["/", "/cars/", "/cars/car-43/", "/offers/", "/offers/offer-111/", "/finance/", "/contact/"],
+    "languages": ["ar", "en"],
+    "viewports": ["desktop", "mobile"]
+  },
+  "note": "The complete after-run is stored in baseline-after.json. This compact before artifact preserves the measured transfer/resource medians from the pre-change run; the before run completed all 28 cases without overflow failures."
+}

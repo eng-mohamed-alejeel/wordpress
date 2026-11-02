@@ -10,6 +10,16 @@ $catalog_direction = function_exists( 'car_dealer_catalog_direction' ) ? car_dea
 		<p><?php echo esc_html( car_dealer_text( 'اكتشف العروض المتاحة وقارن الأسعار والأقساط لاختيار السيارة المناسبة لك.', 'Explore available offers and compare prices and payments to find the right vehicle.' ) ); ?></p>
 	</div>
 </section>
+<div class="cd-breadcrumb-shell" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
+	<div class="container">
+		<?php
+		$archive_context_links = array_filter( array(
+			array( 'url' => car_dealer_site_url(), 'label' => car_dealer_text( 'الرئيسية', 'Home' ) ),
+		) );
+		car_dealer_context_navigation( $archive_context_links, car_dealer_text( 'العروض', 'Offers' ) );
+		?>
+	</div>
+</div>
 <div class="container archive-content" dir="<?php echo esc_attr( $catalog_direction ); ?>" lang="<?php echo esc_attr( $catalog_language ); ?>">
 	<h2 class="screen-reader-text"><?php echo esc_html( car_dealer_text( 'العروض المتاحة', 'Available offers' ) ); ?></h2>
 	<?php if ( ! function_exists( 'adc_public_offer_view' ) ) : ?>

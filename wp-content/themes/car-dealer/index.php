@@ -11,7 +11,7 @@ $car_count_step = $total_cars > 50 ? (int) ( floor( ( $total_cars - 1 ) / 50 ) *
 $content_class = '\AutoDealership\Content\SiteContent';
 $manage_content = class_exists($content_class);
 $site_content = $manage_content ? $content_class::data() : array();
-$hero_image = !empty($site_content['hero_image']) ? wp_get_attachment_image_url($site_content['hero_image'], 'full') : ($featured_ids ? get_the_post_thumbnail_url( $featured_ids[0], 'full' ) : '');
+$hero_image = function_exists( 'car_dealer_home_hero_image_url' ) ? car_dealer_home_hero_image_url() : ( ! empty( $site_content['hero_image'] ) ? wp_get_attachment_image_url( $site_content['hero_image'], 'full' ) : ( $featured_ids ? get_the_post_thumbnail_url( $featured_ids[0], 'full' ) : '' ) );
 $home_text = static fn($key,$field,$fallback) => $manage_content ? $content_class::home_text($key,$field,$fallback) : $fallback;
 $home_parts = array();
 $whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً {site_name}، أريد الاستفسار عن السيارات المتاحة.', 'Hello {site_name}, I would like to ask about the available vehicles.' ) );

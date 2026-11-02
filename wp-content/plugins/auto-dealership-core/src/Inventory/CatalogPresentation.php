@@ -21,7 +21,6 @@ final class CatalogPresentation {
 		}
 		add_filter( 'wp_robots', array( self::class, 'robots' ) );
 		add_filter( 'get_canonical_url', array( self::class, 'singular_canonical' ), 10, 2 );
-		add_action( 'wp_head', array( self::class, 'print_links' ), 9 );
 		add_filter( 'gettext', array( self::class, 'public_gettext' ), 10, 3 );
 	}
 
