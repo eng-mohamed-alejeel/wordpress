@@ -529,6 +529,37 @@ body.post-type-archive-car_offer .archive-content { padding-block: 2rem; }
 .cd-related-heading h2 { margin: .2rem 0 0; color: var(--ab-heading); font-size: clamp(1.35rem, 2.5vw, 2rem); }
 .cd-related-heading .eyebrow { margin: 0; color: var(--ab-link); font-weight: 800; }
 body.single-car_offer .ab-offer-vehicle-link a { color: var(--ab-link); text-decoration: underline; text-underline-offset: .15em; }
+body.single-car_offer .ab-offer-expired-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-block-start: .75rem;
+  padding: .42rem .8rem;
+  border: 1px solid var(--ab-muted);
+  border-radius: var(--cd-radius-full);
+  background: var(--ab-muted);
+  color: var(--ab-inverse);
+  font-size: var(--cd-font-size-xs);
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+body.single-car_offer .ab-offer-validity--expired {
+  display: inline-flex;
+  gap: .35rem;
+  align-items: baseline;
+  width: fit-content;
+  padding: .5rem .7rem;
+  border: 1px solid var(--ab-border);
+  border-radius: var(--cd-radius-md);
+  background: var(--ab-soft);
+  color: var(--ab-heading);
+  font-weight: 800;
+}
+body.single-car_offer .ab-offer-validity--expired time { color: var(--ab-muted); font-weight: 700; }
+body.single-car_offer .ab-offer-expired-actions { margin-block-start: 1rem; }
+body.single-car_offer .ab-offer-expired-message { color: var(--ab-muted); }
+body.single-car_offer .ab-offer-details--expired { grid-template-columns: minmax(0, 1fr); }
+body.single-car_offer .ab-expired-related { padding-block-start: 0; }
 @media (max-width: 600px) {
   .cd-context-navigation { overflow-x: auto; scrollbar-width: thin; }
   .cd-context-navigation-list { flex-wrap: nowrap; min-width: max-content; }

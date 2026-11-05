@@ -322,6 +322,11 @@ if ( ! function_exists( 'adc_public_offer_view' ) ) {
 		return \AutoDealership\Content\PublicOfferView::enabled() ? \AutoDealership\Content\PublicOfferView::for_post( $post_id ) : null;
 	}
 }
+if ( ! function_exists( 'adc_public_offer_display' ) ) {
+	function adc_public_offer_display( int $post_id ): ?array {
+		return \AutoDealership\Content\PublicOfferView::enabled() ? \AutoDealership\Content\PublicOfferView::for_display( $post_id ) : null;
+	}
+}
 if ( ! function_exists( 'adc_public_offer_preview' ) ) {
 	function adc_public_offer_preview( int $post_id ): ?array {
 		return \AutoDealership\Content\PublicOfferView::enabled() ? \AutoDealership\Content\PublicOfferView::for_preview( $post_id ) : null;

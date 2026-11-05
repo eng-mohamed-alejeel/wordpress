@@ -73,7 +73,7 @@ final class PublicOfferView {
 	}
 
 	public static function hide_invalid_single(): void {
-		if ( ! is_singular( 'car_offer' ) || is_preview() || self::for_post( get_queried_object_id() ) ) {
+		if ( ! is_singular( 'car_offer' ) || is_preview() || self::for_display( get_queried_object_id() ) ) {
 			return;
 		}
 		global $wp_query;
@@ -84,6 +84,25 @@ final class PublicOfferView {
 
 	/** @return array<string,mixed>|null */
 	public static function for_post( int $post_id ): ?array {
+		return self::build_model( $post_id, false );
+	}
+
+	/**
+	 * Return a safe public display model for active or expired published offers.
+	 *
+	 * Expired offers remain reachable so old links can explain what happened, but
+	 * they are never treated as active catalog entries by for_post().
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	public static function for_display( int $post_id ): ?array {
+		return self::build_model( $post_id, true );
+	}
+
+	/**
+	 * @return array<string,mixed>|null
+	 */
+	private static function build_model( int $post_id, bool $include_expired ): ?array {
 		if ( $post_id < 1 || 'car_offer' !== get_post_type( $post_id ) || 'publish' !== get_post_status( $post_id ) ) {
 			return null;
 		}
@@ -93,7 +112,14 @@ final class PublicOfferView {
 			return null;
 		}
 		$expires = get_post_meta( $post_id, '_offer_expires', true );
-		if ( ! is_string( $expires ) || ( '' !== $expires && ( ! self::valid_date( $expires ) || $expires < current_time( 'Y-m-d' ) ) ) ) {
+		if ( ! is_string( $expires ) ) {
+			return null;
+		}
+		$is_expired = '' !== $expires && self::valid_date( $expires ) && $expires < current_time( 'Y-m-d' );
+		if ( '' !== $expires && ! self::valid_date( $expires ) ) {
+			return null;
+		}
+		if ( $is_expired && ! $include_expired ) {
 			return null;
 		}
 		$price = self::price( get_post_meta( $post_id, '_offer_new_price', true ) );
@@ -117,6 +143,7 @@ final class PublicOfferView {
 			'monthly_payment' => $monthly,
 			'currency' => 'SAR', // Legacy offer price fields are whole SAR, not vehicle minor units.
 			'expires' => $expires,
+			'is_expired' => $is_expired,
 			'image_url' => get_the_post_thumbnail_url( $post_id, 'full' ) ?: get_the_post_thumbnail_url( $car_id, 'full' ) ?: '',
 		);
 	}
@@ -134,6 +161,7 @@ final class PublicOfferView {
 			'price'           => self::price( get_post_meta( $post_id, '_offer_new_price', true ) ),
 			'old_price'       => self::price( get_post_meta( $post_id, '_offer_old_price', true ) ),
 			'monthly_payment' => self::price( get_post_meta( $post_id, '_offer_monthly_payment', true ) ),
+			'is_expired'      => false,
 		);
 	}
 

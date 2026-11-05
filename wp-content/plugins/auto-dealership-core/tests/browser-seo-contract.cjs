@@ -76,10 +76,10 @@ assert.match(origin, /^https?:\/\/[^/]+\/wordpress$/);
         const inspectExpression = '(function(){' +
             'var metas=function(s){return Array.from(document.querySelectorAll(s)).map(function(n){return n.content||"";});};' +
             'var schemas=Array.from(document.querySelectorAll("script[type=\\"application/ld+json\\"]")).map(function(n){try{return JSON.parse(n.textContent);}catch(e){return null;}}).filter(Boolean);' +
-            'return {description:metas("meta[name=\\"description\\"]"),og:metas("meta[property^=\\"og:\\"]"),canonical:document.querySelector("link[rel=\\"canonical\\"]")?.href||"",alternates:Array.from(document.querySelectorAll("link[rel=\\"alternate\\"][hreflang]")).map(function(n){return n.hreflang;}),robots:document.querySelector("meta[name=\\"robots\\"]")?.content||"",schemas:schemas,contextLinks:Array.from(document.querySelectorAll(".cd-context-navigation a[href], .offer-vehicle-link a[href], .ab-offer-vehicle-link a[href]")).map(function(n){return n.href;}),breadcrumbVisible:Array.from(document.querySelectorAll(".cd-context-navigation li:not(.cd-context-navigation-separator)")).map(function(n){return n.textContent.trim();}),breadcrumbSchema:(schemas.find(function(n){return n["@type"] === "BreadcrumbList";})||{}).itemListElement||[],relatedOfferLinks:Array.from(document.querySelectorAll(".cd-related-content a[href]")).map(function(n){return n.href;}),overflow:document.documentElement.scrollWidth>window.innerWidth+1};' +
+            'return {description:metas("meta[name=\\"description\\"]"),og:metas("meta[property^=\\"og:\\"]"),canonical:document.querySelector("link[rel=\\"canonical\\"]")?.href||"",alternates:Array.from(document.querySelectorAll("link[rel=\\"alternate\\"][hreflang]")).map(function(n){return n.hreflang;}),robots:document.querySelector("meta[name=\\"robots\\"]")?.content||"",schemas:schemas,expiredMarker:!!document.querySelector(".ab-offer-expired-badge"),offerLead:!!document.querySelector("#offer-lead"),whatsappAction:!!document.querySelector(".btn-whatsapp"),contextLinks:Array.from(document.querySelectorAll(".cd-context-navigation a[href], .offer-vehicle-link a[href], .ab-offer-vehicle-link a[href]")).map(function(n){return n.href;}),breadcrumbVisible:Array.from(document.querySelectorAll(".cd-context-navigation li:not(.cd-context-navigation-separator)")).map(function(n){return n.textContent.trim();}),breadcrumbSchema:(schemas.find(function(n){return n["@type"] === "BreadcrumbList";})||{}).itemListElement||[],relatedOfferLinks:Array.from(document.querySelectorAll(".cd-related-content a[href]")).map(function(n){return n.href;}),overflow:document.documentElement.scrollWidth>window.innerWidth+1};' +
         '})()';
         const inspect = () => evaluate(inspectExpression);
-        const discoverPublicId = async (postType, routePrefix) => {
+        const discoverPublicId = async (postType, routePrefix, predicate = () => true, required = true) => {
             const response = await fetch(origin + '/wp-json/wp/v2/' + postType + '?per_page=100&_fields=id');
             assert.equal(response.status, 200, 'REST discovery for ' + postType + ' must return HTTP 200.');
             const rows = await response.json();
@@ -87,12 +87,15 @@ assert.match(origin, /^https?:\/\/[^/]+\/wordpress$/);
                 const id = Number(row.id || 0);
                 if (!id) continue;
                 const page = await fetch(origin + routePrefix + id + '/', { redirect: 'manual' });
-                if (page.status === 200) return id;
+                const body = await page.text();
+                if (page.status === 200 && predicate(body)) return id;
             }
-            throw new Error('No publicly reachable ' + postType + ' was found in the isolated fixture.');
+            if (required) throw new Error('No publicly reachable ' + postType + ' was found in the isolated fixture.');
+            return 0;
         };
         const vehicleId = await discoverPublicId('car', '/cars/car-');
-        const offerId = await discoverPublicId('car_offer', '/offers/offer-');
+        const offerId = await discoverPublicId('car_offer', '/offers/offer-', body => /"@type":"Vehicle"/.test(body) && !body.includes('ab-offer-expired-badge'));
+        const expiredOfferId = await discoverPublicId('car_offer', '/offers/offer-', body => body.includes('ab-offer-expired-badge'), false);
 
         await navigate('/?seo_probe=20261029');
         let data = await inspect();
@@ -129,6 +132,14 @@ assert.match(origin, /^https?:\/\/[^/]+\/wordpress$/);
         check(data.description.length === 1 && data.canonical === origin + '/offers/offer-' + offerId + '/' && offer && offer.url === origin + '/offers/offer-' + offerId + '/', 'Offer page metadata and structured data use the clean route.');
         check(data.contextLinks.includes(origin + '/offers/') && data.contextLinks.some(url => url.indexOf('/cars/car-') !== -1 && url.endsWith('/')) && data.breadcrumbVisible.length === 3 && data.breadcrumbSchema.length === 3, 'Offer page uses a focused breadcrumb and links back to its related vehicle.');
         check(data.contextLinks.every(url => !/%(?:d8|d9)/i.test(url)), 'Offer contextual links do not contain encoded Arabic slugs.');
+
+        if ( expiredOfferId ) {
+            await navigate('/offers/offer-' + expiredOfferId + '/?seo_probe=20261105');
+            data = await inspect();
+            check(data.expiredMarker && !data.offerLead && !data.whatsappAction, 'Expired offer is visibly marked and has no active lead or WhatsApp action.');
+            check(data.robots.includes('noindex') && data.robots.includes('follow') && data.canonical === origin + '/offers/offer-' + expiredOfferId + '/', 'Expired offer is noindex/follow with a self-referencing canonical.');
+            check(!data.schemas.some(node => ['Vehicle', 'Product', 'Offer'].includes(node['@type'])), 'Expired offer does not publish active commercial structured data.');
+        }
 
         await navigate('/?cd_account=login&seo_probe=20261029');
         data = await inspect();

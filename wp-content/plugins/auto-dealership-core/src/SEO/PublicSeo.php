@@ -165,6 +165,8 @@ final class PublicSeo {
 
 	public static function robots( array $robots ): array {
 		$blocked = self::is_account_request() || is_search() || is_404() || is_page( 'comparison' ) || CatalogPresentation::has_active_filters();
+		// Expired offers remain useful landing pages for old links, but never
+		// qualify as indexable commercial inventory.
 		if ( ( is_singular( 'car' ) && ! PublicCatalog::is_post_publicly_eligible( get_queried_object_id() ) ) || ( is_singular( 'car_offer' ) && ! PublicOfferView::for_post( get_queried_object_id() ) ) ) {
 			$blocked = true;
 		}
@@ -277,7 +279,7 @@ final class PublicSeo {
 		return array();
 	}
 
-	/** @return array<string,string>|null */
+	/** @return array<string,mixed>|null */
 	public static function page_data(): ?array {
 		if ( is_admin() || self::is_account_request() || is_search() || is_404() || is_page( 'comparison' ) ) {
 			return null;
@@ -285,6 +287,7 @@ final class PublicSeo {
 		$language = CatalogPresentation::language();
 		$settings = self::settings();
 		$context = '';
+		$is_expired_offer = false;
 		$tokens = array(
 			'site_name' => ProductSetup::brand( $language ),
 			'legal_name' => ProductSetup::legal_name( $language ),
@@ -315,11 +318,12 @@ final class PublicSeo {
 			$tokens['condition'] = self::condition_label( (string) ( $view['condition'] ?? '' ), $language );
 			$tokens['price'] = self::format_price( (string) ( $view['price'] ?? '' ) );
 		} elseif ( is_singular( 'car_offer' ) ) {
-			$model = PublicOfferView::for_post( get_queried_object_id() );
+			$model = PublicOfferView::for_display( get_queried_object_id() );
 			if ( ! $model ) {
 				return null;
 			}
 			$context = 'offer';
+			$is_expired_offer = ! empty( $model['is_expired'] );
 			$tokens['offer_title'] = self::post_title( (int) $model['post_id'], $language ) ?: self::post_title( (int) $model['car_id'], $language );
 			$tokens['vehicle_title'] = self::post_title( (int) $model['car_id'], $language );
 			$tokens['offer_price'] = self::format_price( (string) $model['price'] );
@@ -352,8 +356,18 @@ final class PublicSeo {
 		$override_id = is_singular( array( 'page', 'post', 'car', 'car_offer' ) ) ? get_queried_object_id() : 0;
 		$override_title = $override_id ? self::plain( (string) get_post_meta( $override_id, '_adc_seo_title', true ) ) : '';
 		$override_description = $override_id ? self::plain( (string) get_post_meta( $override_id, '_adc_seo_description', true ) ) : '';
-		if ( $override_title ) { $title = self::replace_tokens( $override_title, $tokens ); }
-		if ( $override_description ) { $description = self::replace_tokens( $override_description, $tokens ); }
+		if ( ! $is_expired_offer ) {
+			if ( $override_title ) { $title = self::replace_tokens( $override_title, $tokens ); }
+			if ( $override_description ) { $description = self::replace_tokens( $override_description, $tokens ); }
+		} else {
+			$offer_title = $tokens['offer_title'] ?: self::post_title( get_queried_object_id(), $language );
+			$title = 'en' === $language
+				? 'Expired offer: ' . $offer_title . ' | ' . $tokens['site_name']
+				: 'انتهى العرض: ' . $offer_title . ' | ' . $tokens['site_name'];
+			$description = 'en' === $language
+				? 'This offer has expired. Browse the current offers from ' . $tokens['site_name'] . $tokens['location_suffix'] . '.'
+				: 'هذا العرض منتهي حاليًا. تصفح العروض المتاحة من ' . $tokens['site_name'] . $tokens['location_suffix'] . '.';
+		}
 		$title = self::truncate( self::plain( $title ), self::TITLE_LIMIT );
 		$description = self::truncate( self::plain( $description ), self::DESCRIPTION_LIMIT );
 		if ( '' === $title ) {
@@ -367,7 +381,8 @@ final class PublicSeo {
 			'language' => $language,
 			'title' => $title,
 			'description' => $description,
-			'type' => in_array( $context, array( 'vehicle', 'offer' ), true ) ? 'product' : 'website',
+			'type' => 'offer' === $context && ! $is_expired_offer ? 'product' : 'website',
+			'expired' => $is_expired_offer,
 		);
 	}
 
@@ -396,7 +411,7 @@ final class PublicSeo {
 				return $image;
 			}
 			if ( is_singular( 'car_offer' ) ) {
-				$model = PublicOfferView::for_post( get_queried_object_id() );
+				$model = PublicOfferView::for_display( get_queried_object_id() );
 				if ( $model && '' !== (string) ( $model['image_url'] ?? '' ) ) {
 					return (string) $model['image_url'];
 				}

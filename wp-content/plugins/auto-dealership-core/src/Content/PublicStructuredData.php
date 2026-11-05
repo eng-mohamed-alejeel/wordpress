@@ -110,7 +110,16 @@ final class PublicStructuredData {
 			return self::vehicle( get_queried_object_id() );
 		}
 		if ( is_singular( 'car_offer' ) ) {
-			return self::offer( get_queried_object_id() );
+			$offer = self::offer( get_queried_object_id() );
+			if ( $offer ) {
+				return $offer;
+			}
+			// An expired offer remains a useful public page, but must not emit
+			// commercial Offer/Product data that could be interpreted as active.
+			if ( PublicOfferView::for_display( get_queried_object_id() ) ) {
+				return self::organization();
+			}
+			return array();
 		}
 		return self::organization();
 	}

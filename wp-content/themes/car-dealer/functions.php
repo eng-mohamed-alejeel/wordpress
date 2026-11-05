@@ -335,9 +335,12 @@ function car_dealer_footer_social_links(): void {
 }
 
 /** Public offers and editorial previews use plugin read models. */
-function car_dealer_offer_view( int $post_id, bool $preview = false ): ?array {
+function car_dealer_offer_view( int $post_id, bool $preview = false, bool $include_expired = false ): ?array {
 	if ( $preview && function_exists( 'adc_public_offer_preview' ) ) {
 		return adc_public_offer_preview( $post_id );
+	}
+	if ( $include_expired && function_exists( 'adc_public_offer_display' ) ) {
+		return adc_public_offer_display( $post_id );
 	}
 	return function_exists( 'adc_public_offer_view' ) ? adc_public_offer_view( $post_id ) : null;
 }
