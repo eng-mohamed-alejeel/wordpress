@@ -73,6 +73,7 @@ require_once ADC_PATH . 'src/Content/PublicStructuredData.php';
 require_once ADC_PATH . 'src/SEO/PublicSeo.php';
 require_once ADC_PATH . 'src/SEO/SeoHealth.php';
 require_once ADC_PATH . 'src/Content/PublicOfferView.php';
+require_once ADC_PATH . 'src/Cache/OfferCache.php';
 require_once ADC_PATH . 'src/Content/PublicVehicleView.php';
 require_once ADC_PATH . 'src/Content/HomePageView.php';
 require_once ADC_PATH . 'src/Audit/AuditLog.php';
@@ -265,6 +266,7 @@ register_activation_hook( ADC_FILE, array( 'AutoDealership\\Leads\\LegacyEngagem
 \AutoDealership\Content\PublicEditorialTranslations::boot();
 \AutoDealership\Content\TermTranslations::boot();
 \AutoDealership\Content\PublicOfferView::boot();
+\AutoDealership\Cache\OfferCache::boot();
 \AutoDealership\Inventory\CatalogPresentation::boot();
 \AutoDealership\SEO\PublicSeo::boot();
 \AutoDealership\Content\PublicStructuredData::boot();
@@ -570,6 +572,8 @@ add_action( 'adc_prune_request_limits', array( 'AutoDealership\\Security\\Public
 add_action( 'adc_archive_closed_leads', array( 'AutoDealership\\Leads\\LeadService', 'archive_closed_leads' ) );
 register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_expire_reservations' );
+	wp_clear_scheduled_hook( 'adc_offer_cache_expire' );
+	wp_clear_scheduled_hook( 'adc_offer_cache_reconcile' );
 	wp_clear_scheduled_hook( 'adc_privacy_retention' );
 	wp_clear_scheduled_hook( 'adc_process_outbox' );
 	wp_clear_scheduled_hook( 'adc_mail_wake' );
