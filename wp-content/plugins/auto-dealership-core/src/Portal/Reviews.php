@@ -1,6 +1,7 @@
 <?php
 namespace AutoDealership\Portal;
 use AutoDealership\Database\Transaction;
+use AutoDealership\Cache\CacheManager;
 defined('ABSPATH') || exit;
 
 final class Reviews {
@@ -72,7 +73,7 @@ final class Reviews {
 		foreach(self::public_rows(48) as $row){$key=hash('sha256',trim($row['display_name']).'|'.trim($row['body']).'|'.(int)$row['rating']);if(isset($seen[$key])){continue;}$seen[$key]=true;$existing[]=array('id'=>'customer-review-'.$row['id'],'status'=>'published','order'=>-(int)$row['id'],'name_'.$lang=>$row['display_name'],'text_'.$lang=>$row['body'],'rating'=>$row['rating'],'image'=>0,'source'=>PortalAccess::t('عميل مميز','Valued customer'),'original_language'=>$row['locale']);}return $existing;
 	}
 	public static function purge():void {
-		foreach(array('w3tc_flush_all','car_dealer_clear_public_page_cache') as $function){if(is_callable($function)){$function();}}
+		CacheManager::purge_all('portal_reviews');
 		do_action('adc_portal_reviews_published');
 	}
 }

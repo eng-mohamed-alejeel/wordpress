@@ -14,6 +14,7 @@ define( 'ADC_VERSION', '1.66.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
 
+require_once ADC_PATH . 'src/Cache/CacheManager.php';
 require_once ADC_PATH . 'src/Core/ProductSetup.php';
 require_once ADC_PATH . 'src/Core/BranchLocations.php';
 \AutoDealership\Core\BranchLocations::boot();
@@ -332,6 +333,23 @@ if ( ! function_exists( 'adc_public_offer_display' ) ) {
 if ( ! function_exists( 'adc_public_offer_preview' ) ) {
 	function adc_public_offer_preview( int $post_id ): ?array {
 		return \AutoDealership\Content\PublicOfferView::enabled() ? \AutoDealership\Content\PublicOfferView::for_preview( $post_id ) : null;
+	}
+}
+if ( ! function_exists( 'adc_cache_purge_urls' ) ) {
+	/** @param string[] $urls @param int[] $post_ids */
+	function adc_cache_purge_urls( array $urls, array $post_ids = array(), string $context = 'public' ): void {
+		\AutoDealership\Cache\CacheManager::purge_urls( $urls, $post_ids, $context );
+	}
+}
+if ( ! function_exists( 'adc_cache_purge_all' ) ) {
+	function adc_cache_purge_all( string $reason = '' ): void {
+		\AutoDealership\Cache\CacheManager::purge_all( $reason );
+	}
+}
+if ( ! function_exists( 'adc_cache_providers' ) ) {
+	/** @return string[] */
+	function adc_cache_providers(): array {
+		return \AutoDealership\Cache\CacheManager::providers();
 	}
 }
 if ( ! function_exists( 'adc_public_vehicle_view' ) ) {

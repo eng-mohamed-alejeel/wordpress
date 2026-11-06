@@ -1,6 +1,8 @@
 <?php
 namespace AutoDealership\Core;
 
+use AutoDealership\Cache\CacheManager;
+
 defined( 'ABSPATH' ) || exit;
 
 /** Validated, portable semantic colors. No operational data is stored here. */
@@ -138,7 +140,7 @@ final class BrandPalette {
         return $html;
     }
     public static function legacy_update($old,$new): void { if(!is_array($new)){return;}$data=self::config();foreach(array('primary_color'=>'brand-navy','accent_color'=>'brand-blue') as $key=>$token){$color=self::legacy_hex($new[$key]??'');if(($old[$key]??'')!==($new[$key]??'') && $color){$data['light'][$token]=$color;if('accent_color'===$key){unset($data['light']['action']);}}}update_option(self::OPTION,$data,false); }
-    public static function invalidate(): void { if(function_exists('wp_cache_flush')){wp_cache_flush();}if(function_exists('w3tc_flush_all')){call_user_func('w3tc_flush_all');}if(function_exists('car_dealer_clear_public_page_cache')){car_dealer_clear_public_page_cache();}do_action('adc_brand_palette_updated'); }
+    public static function invalidate(): void { wp_cache_delete(self::OPTION,'options');wp_cache_delete('car_dealer_theme_settings','options');CacheManager::purge_all('brand_palette');do_action('adc_brand_palette_updated'); }
     public static function url(): string { return admin_url('admin.php?page=adc-brand-colors'); }
     public static function submit(): void {
         if(!current_user_can('manage_options')){wp_die('Forbidden','',array('response'=>403));}check_admin_referer('adc_brand_palette');$operation=sanitize_key($_POST['operation']??'save');

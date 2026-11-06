@@ -2,6 +2,7 @@
 namespace AutoDealership\Pricing;
 use AutoDealership\Database\Transaction;
 use AutoDealership\Audit\AuditLog;
+use AutoDealership\Cache\CacheManager;
 defined('ABSPATH') || exit;
 
 /** Global display pricing policy. Source prices and issued financial documents stay immutable. */
@@ -29,7 +30,7 @@ final class ProfitMargin {
    $after=array('type'=>$type,'value'=>$type==='none'?0:$value,'stage'=>$stage,'revision'=>$revision+1);
    if(1!==$wpdb->update($wpdb->options,array('option_value'=>maybe_serialize($after)),array('option_name'=>self::OPTION))||!Transaction::commit(static fn()=>AuditLog::record('pricing.margin_updated','settings',0,'Public vehicle margin policy updated',$before,$after))){throw new \RuntimeException('Unable to save and audit margin.');}
    wp_cache_delete(self::OPTION,'options');wp_cache_delete('notoptions','options');wp_cache_delete('alloptions','options');
-   if(function_exists('wp_cache_clear_cache')){wp_cache_clear_cache();}
+   CacheManager::purge_all('profit_margin');
    return $after;
   }catch(\Throwable $e){$wpdb->query('ROLLBACK');wp_cache_delete(self::OPTION,'options');return new \WP_Error('margin_failed',$e->getMessage());}
  }

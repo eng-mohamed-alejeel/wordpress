@@ -2,6 +2,8 @@
 namespace AutoDealership\Admin;
 
 use AutoDealership\Audit\AuditLog;
+use AutoDealership\Cache\CacheManager;
+use AutoDealership\Cache\OfferCache;
 use AutoDealership\Operations\AdminDiagnostics;
 use AutoDealership\Operations\JobRuntime;
 
@@ -17,6 +19,12 @@ final class DiagnosticsPage {
 		$runtime  = JobRuntime::status();
 		$signals  = self::audit_signals();
 		$settings = $snapshot['settings'];
+		$cache_providers = CacheManager::providers();
+		$cache_cron = OfferCache::reconcile_status();
+		$last_cache_purge = CacheManager::last_purge();
+		$cache_reconcile = $cache_cron['scheduled_at'];
+		$cache_reconcile_label = $cache_reconcile ? ( $cache_cron['wp_cron_disabled'] ? 'scheduled · external cron expected' : 'scheduled · traffic cron' ) : 'attention';
+		$cache_purge_label = ! empty( $last_cache_purge['timestamp'] ) ? sanitize_key( (string) ( $last_cache_purge['operation'] ?? 'unknown' ) ) . ' · ' . gmdate( 'Y-m-d H:i:s', absint( $last_cache_purge['timestamp'] ) ) . ( ! empty( $last_cache_purge['errors'] ) ? ' · errors: ' . absint( $last_cache_purge['errors'] ) : '' ) : 'none recorded';
 		?>
 		<div class="wrap adc-admin" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'صحة الإدارة والتدقيق التشغيلي', 'auto-dealership-core' ); ?></h1>
@@ -31,6 +39,9 @@ final class DiagnosticsPage {
 					<?php self::metric( __( 'فشل حفظ/تصدير مرصود', 'auto-dealership-core' ), (string) absint( $snapshot['operation_failures'] ), __( 'إعادة توجيه إدارية تحمل حالة فشل، مع حفظ بصمة الرمز فقط.', 'auto-dealership-core' ) ); ?>
 					<?php self::metric( __( 'المهام الفاشلة', 'auto-dealership-core' ), (string) absint( $runtime['failed_jobs'] ?? 0 ), __( 'من حالة العامل المرصودة دون تغيير طريقة تشغيل المهام.', 'auto-dealership-core' ) ); ?>
 					<?php self::metric( __( 'إشارات فشل مدققة', 'auto-dealership-core' ), (string) absint( $signals['total'] ), __( 'أحداث رفض/فشل مسجلة أصلًا في سجل التدقيق؛ لا تمثل عمليات غير مدققة.', 'auto-dealership-core' ) ); ?>
+					<?php self::metric( 'Cache providers', $cache_providers ? implode( ', ', $cache_providers ) : 'none detected', 'Detected targeted page-cache and persistent object-cache integrations.' ); ?>
+					<?php self::metric( 'Offer cache reconcile', $cache_reconcile_label, 'A daily safety pass keeps expired offer pages and public indexes coherent. Use a real server cron when DISABLE_WP_CRON is enabled.' ); ?>
+					<?php self::metric( 'Cache last purge', $cache_purge_label, 'The latest cache invalidation operation is recorded without URLs or customer data.' ); ?>
 				</tbody></table>
 			</div>
 

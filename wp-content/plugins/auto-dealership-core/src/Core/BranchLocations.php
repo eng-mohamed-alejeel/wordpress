@@ -2,6 +2,7 @@
 namespace AutoDealership\Core;
 
 use AutoDealership\Audit\AuditLog;
+use AutoDealership\Cache\CacheManager;
 use AutoDealership\Database\Transaction;
 
 defined('ABSPATH') || exit;
@@ -70,8 +71,7 @@ final class BranchLocations {
 			update_option(self::OPTION, $clean, false);
 			$ok = !$wpdb->last_error && get_option(self::OPTION) === $clean && Transaction::commit(static fn() => AuditLog::record('platform.branches_updated', 'settings', 0, 'Public branch locations updated', null, array('count'=>count($clean))));
 			if (!$ok) { $wpdb->query('ROLLBACK'); wp_cache_delete(self::OPTION, 'options'); wp_cache_delete('notoptions', 'options'); return new \WP_Error('adc_branches_storage', self::t('تعذر حفظ الفروع.', 'Could not save branches.')); }
-			if (function_exists('w3tc_flush_all')) { call_user_func('w3tc_flush_all'); }
-			if (function_exists('car_dealer_clear_public_page_cache')) { car_dealer_clear_public_page_cache(); }
+			CacheManager::purge_all( 'branch_locations' );
 			return true;
 		} finally { $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock)); }
 	}

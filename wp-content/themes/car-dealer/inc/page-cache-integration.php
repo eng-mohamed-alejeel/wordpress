@@ -3,6 +3,10 @@ defined( 'ABSPATH' ) || exit;
 
 /** Public identity changes must invalidate cached pages as soon as they publish. */
 function car_dealer_clear_public_page_cache() {
+	if ( function_exists( 'adc_cache_purge_all' ) ) {
+		adc_cache_purge_all( 'theme_public_identity' );
+		return;
+	}
 	if ( function_exists( 'wp_cache_clear_cache' ) ) { wp_cache_clear_cache(); }
 }
 add_action( 'customize_save_after', 'car_dealer_clear_public_page_cache' );

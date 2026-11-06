@@ -55,6 +55,16 @@ final class OfferCache {
 		}
 	}
 
+	/** @return array{scheduled_at:int,last_date:string,wp_cron_disabled:bool} */
+	public static function reconcile_status(): array {
+		$last = get_option( self::LAST_RECONCILE_OPTION, '' );
+		return array(
+			'scheduled_at'     => (int) wp_next_scheduled( self::RECONCILE_HOOK ),
+			'last_date'        => self::valid_date( (string) $last ) ? (string) $last : '',
+			'wp_cron_disabled' => defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON,
+		);
+	}
+
 	/** Queue an offer after native or custom editorial saves. */
 	public static function queue_saved_offer( int $post_id, \WP_Post $post, bool $update ): void {
 		unset( $post, $update );
@@ -154,6 +164,8 @@ final class OfferCache {
 					'paged'          => $page,
 					'fields'         => 'ids',
 					'no_found_rows'  => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
 					'orderby'        => 'ID',
 					'order'          => 'ASC',
 					'meta_query'     => array(
@@ -208,6 +220,7 @@ final class OfferCache {
 		$vehicle_ids = array_map( 'absint', array_keys( self::$queued_vehicle_ids ) );
 		$expiry_ids  = array_map( 'absint', array_keys( self::$queued_expiry_sync_ids ) );
 		$urls       = array_keys( self::$queued_urls );
+		$known_offer_ids = array_fill_keys( $offer_ids, true );
 		self::$queued_offer_ids = array();
 		self::$queued_vehicle_ids = array();
 		self::$queued_expiry_sync_ids = array();
@@ -227,25 +240,33 @@ final class OfferCache {
 			if ( is_string( $url ) && '' !== $url ) {
 				$urls[] = $url;
 			}
-			$related = get_posts( array(
-				'post_type'      => 'car_offer',
-				'post_status'    => 'any',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				'meta_key'       => '_offer_car_id',
-				'meta_value'     => (string) $vehicle_id,
-			) );
-			foreach ( $related as $offer_id ) {
-				$offer_id = absint( $offer_id );
-				if ( ! in_array( $offer_id, $offer_ids, true ) ) {
-					$offer_ids[] = $offer_id;
+			$related_page = 1;
+			do {
+				$related = get_posts( array(
+					'post_type'      => 'car_offer',
+					'post_status'    => 'any',
+					'posts_per_page' => self::BATCH_SIZE,
+					'paged'          => $related_page,
+					'fields'         => 'ids',
+					'no_found_rows'  => true,
+					'orderby'        => 'ID',
+					'order'          => 'ASC',
+					'meta_key'       => '_offer_car_id',
+					'meta_value'     => (string) $vehicle_id,
+				) );
+				foreach ( $related as $offer_id ) {
+					$offer_id = absint( $offer_id );
+					if ( ! isset( $known_offer_ids[ $offer_id ] ) ) {
+						$offer_ids[] = $offer_id;
+						$known_offer_ids[ $offer_id ] = true;
+					}
+					$url = get_permalink( $offer_id );
+					if ( is_string( $url ) && '' !== $url ) {
+						$urls[] = $url;
+					}
 				}
-				$url = get_permalink( $offer_id );
-				if ( is_string( $url ) && '' !== $url ) {
-					$urls[] = $url;
-				}
-			}
+				$related_page++;
+			} while ( count( $related ) === self::BATCH_SIZE );
 		}
 
 		$urls[] = home_url( '/' );
@@ -255,32 +276,9 @@ final class OfferCache {
 		}
 		$urls = array_values( array_unique( array_filter( array_map( 'esc_url_raw', $urls ) ) ) );
 		$urls = array_merge( $urls, self::sitemap_urls() );
-		self::purge( array_values( array_unique( $urls ) ), $offer_ids );
-	}
-
-	/** @param string[] $urls @param int[] $post_ids */
-	private static function purge( array $urls, array $post_ids ): void {
-		foreach ( $post_ids as $post_id ) {
-			if ( function_exists( 'rocket_clean_post' ) ) {
-				call_user_func( 'rocket_clean_post', $post_id );
-			}
-			if ( function_exists( 'wp_cache_post_change' ) ) {
-				call_user_func( 'wp_cache_post_change', $post_id );
-			}
-			if ( has_action( 'litespeed_purge_post' ) ) {
-				do_action( 'litespeed_purge_post', $post_id );
-			}
-		}
-		foreach ( $urls as $url ) {
-			if ( function_exists( 'w3tc_flush_url' ) ) {
-				call_user_func( 'w3tc_flush_url', $url );
-			}
-			if ( has_action( 'litespeed_purge_url' ) ) {
-				do_action( 'litespeed_purge_url', $url );
-			}
-		}
-		/** Allows a host or CDN adapter to purge these exact URLs. */
-		do_action( 'adc_offer_cache_purge_urls', $urls, $post_ids );
+		$urls = array_values( array_unique( $urls ) );
+		CacheManager::purge_posts( $offer_ids, 'offer_change' );
+		CacheManager::purge_urls( $urls, $offer_ids, 'offer', 'offer_change' );
 	}
 
 	private static function queue_offer( int $post_id, bool $sync_expiry = true ): void {

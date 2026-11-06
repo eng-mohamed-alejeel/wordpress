@@ -1,6 +1,7 @@
 <?php
 namespace AutoDealership\SEO;
 
+use AutoDealership\Cache\CacheManager;
 use AutoDealership\Content\PublicOfferView;
 use AutoDealership\Content\PublicVehicleView;
 use AutoDealership\Core\ProductSetup;
@@ -99,15 +100,9 @@ final class PublicSeo {
 		}
 		update_option( self::OPTION, $clean, false );
 		wp_cache_delete( self::OPTION, 'options' );
-		// Clear known full-page cache integrations after a metadata change.
-		if ( function_exists( 'wp_cache_clear_cache' ) ) {
-			wp_cache_clear_cache();
-		}
-		if ( function_exists( 'w3tc_flush_all' ) ) {
-			// W3 Total Cache is optional; call the integration dynamically so the
-			// core plugin remains valid when that plugin is not installed.
-			call_user_func( 'w3tc_flush_all' );
-		}
+		// SEO templates affect the full public surface, so this is one of the
+		// intentionally explicit site-wide purges owned by the cache boundary.
+		CacheManager::purge_all( 'seo_settings' );
 		do_action( 'adc_seo_settings_saved' );
 		return true;
 	}

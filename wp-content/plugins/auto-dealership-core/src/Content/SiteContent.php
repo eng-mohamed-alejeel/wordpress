@@ -4,6 +4,7 @@ namespace AutoDealership\Content;
 use AutoDealership\Core\Localization;
 use AutoDealership\Core\ProductSetup;
 use AutoDealership\Audit\AuditLog;
+use AutoDealership\Cache\CacheManager;
 use AutoDealership\Database\Transaction;
 
 defined('ABSPATH') || exit;
@@ -115,7 +116,7 @@ final class SiteContent {
 			$before=(array)get_option(self::OPTION,[]); update_option(self::OPTION,$clean,false);
 			$ok=get_option(self::OPTION)===$clean && Transaction::commit(static fn()=>AuditLog::record('content.saved','site_content',0,'Editorial content updated',$before,$clean));
 			if(!$ok) { $wpdb->query('ROLLBACK'); wp_cache_delete(self::OPTION,'options'); wp_cache_delete('notoptions','options'); return new \WP_Error('adc_content_storage',self::t('تعذر حفظ المحتوى؛ لم تُطبق التغييرات.','Content could not be saved; changes were not applied.')); }
-			if(function_exists('w3tc_flush_all')) { call_user_func('w3tc_flush_all'); } if(function_exists('car_dealer_clear_public_page_cache')) { car_dealer_clear_public_page_cache(); }
+			CacheManager::purge_all( 'site_content' );
 			return true;
 		} finally { $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)',$lock)); }
 	}

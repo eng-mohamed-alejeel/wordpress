@@ -2,6 +2,7 @@
 namespace AutoDealership\Core;
 
 use AutoDealership\Audit\AuditLog;
+use AutoDealership\Cache\CacheManager;
 use AutoDealership\Database\Schema;
 
 defined( 'ABSPATH' ) || exit;
@@ -92,8 +93,7 @@ final class ProductSetup {
 	}
 	/** Runs after the settings transaction has committed. */
 	public static function identity_cache(): void {
-		if ( function_exists( 'w3tc_flush_all' ) ) { call_user_func( 'w3tc_flush_all' ); }
-		if ( function_exists( 'car_dealer_clear_public_page_cache' ) ) { car_dealer_clear_public_page_cache(); }
+		CacheManager::purge_all( 'theme_identity' );
 		do_action( 'adc_identity_changed' );
 	}
 	/** Review editable legacy page copy without touching URLs or historical records. */
