@@ -73,7 +73,7 @@ try {
 	adc_check( is_array( $queued ) && $queued['created'] && is_array( $replayed ) && ! $replayed['created'] && $queued['id'] === $replayed['id'], 'Enabled publication is durable and idempotent for the same domain version.' );
 	adc_check( str_contains( $row['payload'], 'reservation' ) && ! preg_match( '/email|mobile|phone|name|vin|reference|amount/i', $row['payload'] ), 'Domain event payload contains minimized identifiers and state without identity or financial values.' );
 
-	$processed = OutboxService::process_due( 1 );
+	$processed = OutboxService::process_due( 1, array(), array( (int) $queued['id'] ) );
 	adc_check( 1 === $processed['completed'] && 1 === count( $adapter->deliveries ) && 'reservation.confirmed' === $adapter->deliveries[0]['event_key'], 'Registered adapter receives the minimized event through the existing outbox worker.' );
 
 	wp_set_current_user( $sales_a );

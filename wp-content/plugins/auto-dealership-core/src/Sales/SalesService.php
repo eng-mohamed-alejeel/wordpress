@@ -73,7 +73,7 @@ final class SalesService {
 			return new \WP_Error( 'adc_quote_preview_changed', __( 'Pricing changed. Preview the quotation again before saving.', 'auto-dealership-core' ), array( 'status'=>409 ) );
 		}
 		$now = current_time( 'mysql', true );
-		$ok = $wpdb->insert( Schema::table( 'quotations' ), array_merge( $amounts, PricingPolicy::seller_snapshot(), array( 'quote_number' => $quote_number, 'customer_id' => $customer_id, 'vehicle_id' => $vehicle_id, 'branch_id' => (int) $vehicle['branch_id'], 'owner_user_id' => get_current_user_id(), 'marketing_lead_id' => $marketing_lead_id, 'affiliate_user_id' => $affiliate_user_id, 'affiliate_commission_amount' => $affiliate_commission_amount, 'valid_until' => $valid_until, 'status' => 'approved', 'version' => 1, 'created_at' => $now ) ) );
+		$ok = $wpdb->insert( Schema::table( 'quotations' ), array_merge( $amounts, PricingPolicy::seller_snapshot(), array( 'quote_number' => $quote_number, 'customer_id' => $customer_id, 'vehicle_id' => $vehicle_id, 'branch_id' => (int) $vehicle['branch_id'], 'owner_user_id' => get_current_user_id(), 'marketing_lead_id' => $marketing_lead_id, 'affiliate_user_id' => $affiliate_user_id, 'affiliate_commission_amount' => $affiliate_commission_amount, 'currency_code' => 'SAR', 'valid_until' => $valid_until, 'status' => 'approved', 'version' => 1, 'created_at' => $now ) ) );
 		if ( false === $ok ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_quote_failed', __( 'تعذر إنشاء عرض السعر.', 'auto-dealership-core' ), array( 'status' => 500 ) );

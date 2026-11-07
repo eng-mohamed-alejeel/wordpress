@@ -20,6 +20,8 @@ use AutoDealership\Delivery\DeliveryService;
 use AutoDealership\Payments\PaymentService;
 use AutoDealership\Payments\RefundService;
 use AutoDealership\Pricing\QuoteHistory;
+use AutoDealership\Marketing\AffiliateCommissionService;
+use AutoDealership\Reports\AffiliateCommissionReport;
 use AutoDealership\Security\PublicRequestGuard;
 
 defined( 'ABSPATH' ) || exit;
@@ -149,6 +151,44 @@ final class Routes {
 		) );
 		self::route( '/quotations', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'create_quote' ), 'permission_callback' => static fn() => current_user_can( 'adc_create_quotes' ) || current_user_can( 'manage_options' ), 'args' => array( 'customer_id' => array( 'type' => 'integer', 'required' => true ), 'vehicle_id' => array( 'type' => 'integer', 'required' => true ), 'valid_until' => array( 'type' => 'string', 'required' => true, 'format' => 'date' ), 'promotion_code'=>array( 'type'=>'string','maxLength'=>64 ), 'marketing_lead_id'=>array( 'type'=>'integer','minimum'=>0 ) ),
+		) );
+		self::route( '/affiliate/account/summary', array(
+			'methods'=>'GET',
+			'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( AffiliateCommissionService::account_summary( absint( $r->get_param( 'affiliate_user_id' ) ) ) ),
+			'permission_callback'=>static fn()=>current_user_can( 'adc_view_own_affiliate_commissions' ) || current_user_can( 'adc_manage_affiliate_commissions' ) || current_user_can( 'manage_options' ),
+			'args'=>array( 'affiliate_user_id'=>array( 'type'=>'integer','minimum'=>1 ) ),
+		) );
+		self::route( '/affiliate/commissions', array(
+			'methods'=>'GET',
+			'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( AffiliateCommissionService::list_commissions( $r->get_params() ) ),
+			'permission_callback'=>static fn()=>current_user_can( 'adc_view_own_affiliate_commissions' ) || current_user_can( 'adc_manage_affiliate_commissions' ) || current_user_can( 'manage_options' ),
+			'args'=>array(
+				'page'=>array( 'type'=>'integer','minimum'=>1,'default'=>1 ),
+				'per_page'=>array( 'type'=>'integer','minimum'=>1,'maximum'=>100,'default'=>25 ),
+				'affiliate_user_id'=>array( 'type'=>'integer','minimum'=>1 ),
+				'status'=>array( 'type'=>'string','enum'=>array( 'pending_review','approved','paid','void','paid_sale_returned' ) ),
+				'from'=>array( 'type'=>'string','pattern'=>'^\\d{4}-\\d{2}-\\d{2}$' ),
+				'to'=>array( 'type'=>'string','pattern'=>'^\\d{4}-\\d{2}-\\d{2}$' ),
+			),
+		) );
+		self::route( '/affiliate/reports', array(
+			'methods'=>'GET',
+			'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( AffiliateCommissionReport::report( $r->get_params() ) ),
+			'permission_callback'=>static fn()=>current_user_can( 'adc_manage_affiliate_commissions' ) || current_user_can( 'manage_options' ),
+			'args'=>array(
+				'from'=>array( 'type'=>'string','pattern'=>'^\\d{4}-\\d{2}-\\d{2}$' ),
+				'to'=>array( 'type'=>'string','pattern'=>'^\\d{4}-\\d{2}-\\d{2}$' ),
+				'branch_id'=>array( 'type'=>'integer','minimum'=>1 ),
+				'affiliate_user_id'=>array( 'type'=>'integer','minimum'=>1 ),
+				'status'=>array( 'type'=>'string','enum'=>array( 'pending_review','approved','paid','void','paid_sale_returned' ) ),
+				'period'=>array( 'type'=>'string','enum'=>array( 'day','month' ),'default'=>'month' ),
+			),
+		) );
+		self::route( '/affiliate/commissions/(?P<id>\\d+)/transition', array(
+			'methods'=>'POST',
+			'callback'=>static fn( \WP_REST_Request $r ) => rest_ensure_response( AffiliateCommissionService::transition( absint( $r['id'] ), (string) $r['target'], (string) $r->get_param( 'reason' ), (string) $r->get_param( 'payment_reference' ) ) ),
+			'permission_callback'=>static fn()=>current_user_can( 'adc_manage_affiliate_commissions' ) || current_user_can( 'manage_options' ),
+			'args'=>array( 'id'=>array( 'type'=>'integer','minimum'=>1,'required'=>true ), 'target'=>array( 'type'=>'string','enum'=>array( 'approved','paid','void' ),'required'=>true ), 'reason'=>array( 'type'=>'string','maxLength'=>2000 ), 'payment_reference'=>array( 'type'=>'string','maxLength'=>190 ) ),
 		) );
 		self::route( '/quotations/(?P<id>\d+)/discounts', array(
 			'methods' => 'POST', 'callback' => array( self::class, 'request_discount' ), 'permission_callback' => static fn() => current_user_can( 'adc_request_discounts' ) || current_user_can( 'manage_options' ), 'args' => array( 'id' => array( 'type' => 'integer', 'required' => true ), 'amount' => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ), 'reason' => array( 'type' => 'string', 'required' => true ) ),

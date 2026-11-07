@@ -40,34 +40,34 @@ try {
 		return 41 === $event_payload['subject_id'] && ! empty( $event['idempotency_key'] );
 	} );
 	$delayed = OutboxService::enqueue( 'test.delayed', array( 'subject_type'=>'vehicle', 'subject_id'=>42 ), 'delayed-42', gmdate( 'Y-m-d H:i:s', time() + HOUR_IN_SECONDS ) );
-	$completed = OutboxService::process_due( 10 );
+	$completed = OutboxService::process_due( 10, array( 'test.complete' ) );
 	adc_check( 'pending' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $outbox WHERE id=%d", $delayed['id'] ) ), 'Outbox does not claim an event before its available time.' );
 	$completed_row = $wpdb->get_row( $wpdb->prepare( "SELECT status,attempts,completed_at,lock_token FROM $outbox WHERE id=%d", $queued['id'] ), ARRAY_A );
-	OutboxService::process_due( 10 );
+	OutboxService::process_due( 10, array( 'test.complete' ) );
 	adc_check( 1 === $completed['completed'] && 1 === $handled && 'completed' === $completed_row['status'] && 1 === (int) $completed_row['attempts'] && $completed_row['completed_at'] && null === $completed_row['lock_token'], 'Successful delivery completes exactly once and releases its lease.' );
 
 	OutboxService::register_handler( 'test.failure', static fn() => new WP_Error( 'provider_timeout_with_no_private_detail', 'Private remote message must not be stored.' ) );
 	$failing = OutboxService::enqueue( 'test.failure', array( 'subject_type'=>'sale', 'subject_id'=>9 ), 'failure-9' );
 	for ( $attempt = 1; $attempt <= OutboxService::MAX_ATTEMPTS; ++$attempt ) {
 		$wpdb->update( $outbox, array( 'next_attempt_at'=>'2000-01-01 00:00:00' ), array( 'id'=>$failing['id'] ), array( '%s' ), array( '%d' ) );
-		OutboxService::process_due( 1 );
+		OutboxService::process_due( 1, array( 'test.failure' ) );
 	}
 	$failed_row = $wpdb->get_row( $wpdb->prepare( "SELECT status,attempts,last_error,failed_at FROM $outbox WHERE id=%d", $failing['id'] ), ARRAY_A );
 	adc_check( 'failed' === $failed_row['status'] && OutboxService::MAX_ATTEMPTS === (int) $failed_row['attempts'] && 'provider_timeout_with_no_private_detail' === $failed_row['last_error'] && $failed_row['failed_at'], 'Bounded backoff moves repeated delivery failure to an operator-visible terminal state.' );
 	adc_check( ! str_contains( wp_json_encode( $failed_row ), 'Private remote message' ), 'Outbox stores a safe failure code without the remote error message.' );
 
 	$invalid_id = $wpdb->insert( $outbox, array( 'event_key'=>'test.invalid_payload', 'payload'=>'{"token":"SECRET-OUTBOX-VALUE"}', 'payload_hash'=>hash( 'sha256', '{"token":"SECRET-OUTBOX-VALUE"}' ), 'status'=>'pending', 'attempts'=>0, 'next_attempt_at'=>'2000-01-01 00:00:00', 'created_at'=>$legacy_time ), array( '%s','%s','%s','%s','%d','%s','%s' ) ) ? (int) $wpdb->insert_id : 0;
-	$invalid_result = OutboxService::process_due( 1 );
+	$invalid_result = OutboxService::process_due( 1, array( 'test.invalid_payload' ) );
 	adc_check( 1 === $invalid_result['failed'] && 'failed' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $outbox WHERE id=%d", $invalid_id ) ), 'Malformed stored payload fails terminally without reaching an adapter.' );
 	$tampered_payload = '{"subject_id":52,"subject_type":"vehicle"}';
 	$tampered_id = $wpdb->insert( $outbox, array( 'event_key'=>'test.tampered', 'payload'=>$tampered_payload, 'payload_hash'=>str_repeat( '0', 64 ), 'status'=>'pending', 'attempts'=>0, 'next_attempt_at'=>'2000-01-01 00:00:00', 'created_at'=>$legacy_time ), array( '%s','%s','%s','%s','%d','%s','%s' ) ) ? (int) $wpdb->insert_id : 0;
-	$tampered_result = OutboxService::process_due( 1 );
+	$tampered_result = OutboxService::process_due( 1, array( 'test.tampered' ) );
 	adc_check( 1 === $tampered_result['failed'] && 'adc_outbox_integrity' === $wpdb->get_var( $wpdb->prepare( "SELECT last_error FROM $outbox WHERE id=%d", $tampered_id ) ), 'Payload hash mismatch is detected before adapter dispatch.' );
 
 	OutboxService::register_handler( 'test.stale', static fn() => true );
 	$stale_payload = '{"subject_id":51,"subject_type":"vehicle"}';
 	$stale_id = $wpdb->insert( $outbox, array( 'event_key'=>'test.stale', 'payload'=>$stale_payload, 'payload_hash'=>hash( 'sha256', $stale_payload ), 'status'=>'processing', 'attempts'=>0, 'next_attempt_at'=>'2000-01-01 00:00:00', 'locked_at'=>'2000-01-01 00:00:00', 'lock_token'=>wp_generate_uuid4(), 'created_at'=>$legacy_time ), array( '%s','%s','%s','%s','%d','%s','%s','%s','%s' ) ) ? (int) $wpdb->insert_id : 0;
-	$stale_result = OutboxService::process_due( 1 );
+	$stale_result = OutboxService::process_due( 1, array( 'test.stale' ) );
 	adc_check( 1 === $stale_result['completed'] && 'completed' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $outbox WHERE id=%d", $stale_id ) ), 'A worker safely reclaims and completes an expired lease.' );
 
 	$auditor = $make_user( 'outbox_auditor', 'dealership_auditor', $branch_a['id'] );

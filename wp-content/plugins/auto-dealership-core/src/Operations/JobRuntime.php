@@ -22,6 +22,8 @@ final class JobRuntime {
         'adc_expire_reservations'=>array('AutoDealership\\Reservations\\ReservationService','expire_due'),
         'adc_scan_followups'=>array(FollowUpNotifications::class,'run'),
         'adc_backfill_lead_stage_history'=>array('AutoDealership\\Leads\\LeadStageHistoryBackfill','run_scheduled'),
+        'adc_migrate_affiliate_commissions'=>array('AutoDealership\\Marketing\\AffiliateCommissionMigration','run_scheduled'),
+        'adc_affiliate_commission_reconciliation'=>array('AutoDealership\\Marketing\\AffiliateCommissionReconciliation','run_scheduled'),
         'adc_prune_request_limits'=>array('AutoDealership\\Security\\PublicRequestGuard','prune'),
         'adc_verification_prune'=>array('AutoDealership\\Accounts\\EmailVerification','prune'),
         'adc_access_maintenance'=>array('AutoDealership\\Security\\AccessPolicy','maintenance'),

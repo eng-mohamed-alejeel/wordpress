@@ -93,6 +93,7 @@ require_once ADC_PATH . 'src/Database/Transaction.php';
 require_once ADC_PATH . 'src/Database/SchemaGuard.php';
 require_once ADC_PATH . 'src/Operations/OutboxService.php';
 require_once ADC_PATH . 'src/Operations/FollowUpNotifications.php';
+require_once ADC_PATH . 'src/Operations/AdministrativeAlert.php';
 require_once ADC_PATH . 'src/Operations/JobRuntime.php';
 require_once ADC_PATH . 'src/Operations/AdminDiagnostics.php';
 \AutoDealership\Operations\JobRuntime::boot();
@@ -181,6 +182,11 @@ require_once ADC_PATH . 'src/Tools/VehicleComparison.php';
 require_once ADC_PATH . 'src/Tools/PublicTools.php';
 require_once ADC_PATH . 'src/Sales/SalesService.php';
 require_once ADC_PATH . 'src/Marketing/AffiliateCommissionService.php';
+require_once ADC_PATH . 'src/Marketing/AffiliateCommissionMigration.php';
+require_once ADC_PATH . 'src/Marketing/AffiliateCommissionReconciliation.php';
+require_once ADC_PATH . 'src/Marketing/AffiliateCommissionHealth.php';
+require_once ADC_PATH . 'src/Marketing/AffiliateNotificationPreferences.php';
+require_once ADC_PATH . 'src/Marketing/AffiliateCommissionNotificationTemplate.php';
 require_once ADC_PATH . 'src/Sales/SaleCancellationService.php';
 require_once ADC_PATH . 'src/Payments/PaymentService.php';
 require_once ADC_PATH . 'src/Payments/RefundService.php';
@@ -194,6 +200,9 @@ require_once ADC_PATH . 'src/Core/MigrationReportCommand.php';
 require_once ADC_PATH . 'src/Privacy/PrivacyTools.php';
 require_once ADC_PATH . 'src/Privacy/RetentionService.php';
 require_once ADC_PATH . 'src/Reports/FinancialExport.php';
+require_once ADC_PATH . 'src/Reports/ReportDateRange.php';
+require_once ADC_PATH . 'src/Reports/AffiliateCommissionReport.php';
+require_once ADC_PATH . 'src/Reports/AffiliateCommissionExport.php';
 require_once ADC_PATH . 'src/Reports/OperationalReport.php';
 require_once ADC_PATH . 'src/Reports/LeadPerformanceReport.php';
 require_once ADC_PATH . 'src/Admin/AreaReportsPage.php';
@@ -235,6 +244,7 @@ require_once ADC_PATH . 'src/Admin/TransferPages.php';
 require_once ADC_PATH . 'src/Admin/QuotePages.php';
 require_once ADC_PATH . 'src/Admin/SalesJourneyPage.php';
 require_once ADC_PATH . 'src/Admin/AffiliateCommissionPage.php';
+require_once ADC_PATH . 'src/Admin/AffiliateCommissionReportPage.php';
 require_once ADC_PATH . 'src/Admin/CustomerWorkspacePage.php';
 require_once ADC_PATH . 'src/Admin/FollowUpPage.php';
 require_once ADC_PATH . 'src/Content/ReservationPolicyView.php';
@@ -256,6 +266,11 @@ foreach ( array('PortalAccess','Conversations','Reviews','PortalMail','PortalPri
 	require_once ADC_PATH . 'src/Portal/' . $portal_class . '.php';
 }
 \AutoDealership\Portal\Portal::boot();
+\AutoDealership\Marketing\AffiliateCommissionMigration::boot();
+\AutoDealership\Marketing\AffiliateCommissionReconciliation::boot();
+\AutoDealership\Operations\AdministrativeAlert::boot();
+\AutoDealership\Admin\AffiliateCommissionPage::boot();
+\AutoDealership\Admin\AffiliateCommissionReportPage::boot();
 
 register_activation_hook( ADC_FILE, array( 'AutoDealership\\Core\\Capabilities', 'activate' ) );
 register_activation_hook( ADC_FILE, array( 'AutoDealership\\Database\\Schema', 'install' ) );
@@ -574,6 +589,9 @@ add_action( 'init', static function (): void {
 	if ( ! wp_next_scheduled( 'adc_scan_followups' ) ) {
 		wp_schedule_event( time() + 5 * MINUTE_IN_SECONDS, 'adc_five_minutes', 'adc_scan_followups' );
 	}
+	if ( ! wp_next_scheduled( 'adc_affiliate_commission_reconciliation' ) ) {
+		wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'adc_affiliate_commission_reconciliation' );
+	}
 	if ( ! wp_next_scheduled( 'adc_archive_closed_leads' ) ) {
 		wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'adc_archive_closed_leads' );
 	}
@@ -594,11 +612,13 @@ register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_offer_cache_reconcile' );
 	wp_clear_scheduled_hook( 'adc_privacy_retention' );
 	wp_clear_scheduled_hook( 'adc_process_outbox' );
+	wp_clear_scheduled_hook( 'adc_affiliate_commission_reconciliation' );
 	wp_clear_scheduled_hook( 'adc_mail_wake' );
 	wp_clear_scheduled_hook( 'adc_verification_prune' );
 	wp_clear_scheduled_hook( 'adc_scan_followups' );
 	wp_clear_scheduled_hook( 'adc_archive_closed_leads' );
 	wp_clear_scheduled_hook( 'adc_prune_request_limits' );
+	wp_clear_scheduled_hook( 'adc_migrate_affiliate_commissions' );
 } );
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {

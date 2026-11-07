@@ -8,6 +8,12 @@ adc_check( 123456 === $sar['amount'] && 24 === $sar['term_months'] && ! isset( $
 adc_check( is_wp_error( CurrencyContract::input( array( 'amount'=>123456,'amount_sar'=>'1234.56' ) ) ), 'Mixed API units fail closed.' );
 adc_check( is_wp_error( CurrencyContract::input( array( 'amount_sar'=>'0.001' ) ) ), 'API excess precision fails closed.' );
 adc_check( 123 === CurrencyContract::input( array( 'acquisition'=>array( 'purchase_cost_sar'=>'1.23' ) ) )['acquisition']['purchase_cost'], 'Nested acquisition fields use SAR conversion.' );
+$affiliate_summary_response = rest_do_request( new WP_REST_Request( 'GET', '/auto-dealership/v2/affiliate/account/summary' ) );
+adc_check( 200 === $affiliate_summary_response->get_status() && 'SAR' === ( $affiliate_summary_response->get_data()['currency'] ?? '' ) && isset( $affiliate_summary_response->get_data()['net_ledger_sar'] ), 'Affiliate account summary REST contract exposes explicit SAR totals.' );
+$affiliate_list_request = new WP_REST_Request( 'GET', '/auto-dealership/v2/affiliate/commissions' );
+$affiliate_list_request->set_param( 'per_page', 1 );
+$affiliate_list_response = rest_do_request( $affiliate_list_request );
+adc_check( 200 === $affiliate_list_response->get_status() && 'SAR' === ( $affiliate_list_response->get_data()['currency'] ?? '' ) && isset( $affiliate_list_response->get_data()['items'], $affiliate_list_response->get_data()['pages'] ), 'Affiliate commission REST ledger exposes bounded pagination and currency.' );
 $endpoint = CurrencyContract::endpoint( array( 'args'=>array( 'amount'=>array( 'type'=>'integer','required'=>true,'minimum'=>1 ), 'down_payment'=>array( 'type'=>'integer','default'=>0,'minimum'=>0 ) ), 'callback'=>static fn($r)=>rest_ensure_response( array( 'amount'=>$r['amount'],'down_payment'=>$r['down_payment'] ) ) ) );
 $request = new WP_REST_Request( 'POST', '/currency-test' );
 $request->set_param( 'amount_sar', '1234.56' );

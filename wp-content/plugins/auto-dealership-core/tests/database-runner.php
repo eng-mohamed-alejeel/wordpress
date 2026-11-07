@@ -76,7 +76,7 @@ if ( '--worker' === ( $argv[1] ?? '' ) ) {
 			$result = \AutoDealership\Security\PublicRequestGuard::consume( (string) ( $input['policy'] ?? '' ) );
 		} elseif ( 'outbox' === $scenario ) {
 			\AutoDealership\Operations\OutboxService::register_handler( 'test.concurrent', static function (): bool { usleep( 250000 ); return true; } );
-			$result = \AutoDealership\Operations\OutboxService::process_due( 1 );
+			$result = \AutoDealership\Operations\OutboxService::process_due( 1, array( 'test.concurrent' ) );
 		} elseif ( 'migrate' === $scenario ) {
 			require __DIR__ . '/cli-double.php';
 			( new \AutoDealership\Core\VehicleMigrationCommand() )( array(), $input );

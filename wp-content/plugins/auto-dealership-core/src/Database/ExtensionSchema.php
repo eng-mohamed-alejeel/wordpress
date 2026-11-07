@@ -73,6 +73,7 @@ final class ExtensionSchema {
 				affiliate_user_id bigint(20) unsigned NOT NULL,
 				branch_id bigint(20) unsigned NOT NULL,
 				amount bigint(20) unsigned NOT NULL,
+				currency_code char(3) NOT NULL DEFAULT 'SAR',
 				status varchar(24) NOT NULL DEFAULT 'pending_review',
 				payment_reference varchar(190) NOT NULL DEFAULT '',
 				reviewed_by bigint(20) unsigned NOT NULL DEFAULT 0,
@@ -84,8 +85,48 @@ final class ExtensionSchema {
 				PRIMARY KEY  (id),
 				UNIQUE KEY sale_id (sale_id),
 				KEY affiliate_status (affiliate_user_id,status),
+				KEY affiliate_created (affiliate_user_id,created_at),
+				KEY branch_created (branch_id,created_at),
+				KEY currency_status_created (currency_code,status,created_at),
 				KEY status_created (status,created_at),
 				KEY branch_status (branch_id,status)
+			) $collate ENGINE=InnoDB;"
+			,
+			"CREATE TABLE " . Schema::table( 'affiliate_commission_entries' ) . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				commission_id bigint(20) unsigned NOT NULL,
+				sale_id bigint(20) unsigned NOT NULL,
+				affiliate_user_id bigint(20) unsigned NOT NULL,
+				branch_id bigint(20) unsigned NOT NULL,
+				entry_type varchar(32) NOT NULL,
+				amount bigint(20) NOT NULL,
+				currency_code char(3) NOT NULL DEFAULT 'SAR',
+				event_key char(64) NOT NULL,
+				reason text NOT NULL,
+				actor_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				created_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY event_key (event_key),
+				KEY commission_created (commission_id,created_at),
+				KEY affiliate_created (affiliate_user_id,created_at),
+				KEY type_created (entry_type,created_at)
+			) $collate ENGINE=InnoDB;"
+			,
+			"CREATE TABLE " . Schema::table( 'affiliate_commission_migration_issues' ) . " (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				commission_id bigint(20) unsigned NOT NULL,
+				issue_type varchar(40) NOT NULL,
+				reason text NOT NULL,
+				snapshot longtext NOT NULL,
+				status varchar(16) NOT NULL DEFAULT 'open',
+				resolved_by bigint(20) unsigned NOT NULL DEFAULT 0,
+				resolved_at datetime NULL,
+				created_at datetime NOT NULL,
+				updated_at datetime NOT NULL,
+				PRIMARY KEY (id),
+				UNIQUE KEY commission_issue (commission_id,issue_type),
+				KEY issue_status_created (status,created_at),
+				KEY issue_commission (commission_id,status)
 			) $collate ENGINE=InnoDB;"
 		);
 	}

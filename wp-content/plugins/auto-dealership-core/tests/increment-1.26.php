@@ -87,7 +87,7 @@ try {
 	adc_check( is_array( IntegrationActivation::set_enabled( 'finance.under_review', true, 'Sandbox acknowledgement path verified') ), 'A second ready route can be enabled independently.' );
 
 	$published = DomainEventPublisher::publish( 'finance.submitted', 126003, (int) $branch_a['id'], 'submitted' );
-	$delivered = OutboxService::process_due( 10 );
+	$delivered = OutboxService::process_due( 10, array(), array( (int) $published['id'] ) );
 	$receipt = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $integration_126_receipts WHERE outbox_id=%d", $published['id'] ), ARRAY_A );
 	adc_check( 1 === $delivered['completed'] && $receipt && 'pending' === $receipt['status'] && 'finance-ready' === $receipt['adapter_id'], 'Structured delivery creates one durable pending provider receipt before the outbox event completes.' );
 
@@ -95,7 +95,7 @@ try {
 	adc_check( is_wp_error( AcknowledgementService::counts() ) && is_wp_error( AcknowledgementService::request_reconciliation( (int) $receipt['id'], 'Unauthorized reconciliation request' ) ), 'Sales staff cannot inspect or request provider reconciliation.' );
 	wp_set_current_user( $integration_manager );
 	$queued_reconciliation = AcknowledgementService::request_reconciliation( (int) $receipt['id'], 'Provider acknowledgement has remained pending' );
-	$reconciled = OutboxService::process_due( 10 );
+	$reconciled = OutboxService::process_due( 10, array( 'integration.reconcile' ) );
 	$receipt_status = $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $integration_126_receipts WHERE id=%d", $receipt['id'] ) );
 	adc_check( is_array( $queued_reconciliation ) && 1 === $reconciled['completed'] && 'accepted' === $receipt_status && array( (int) $receipt['id'] ) === $ready->reconciled, 'Operator reconciliation is queued, polled asynchronously and records the accepted acknowledgement.' );
 
@@ -103,7 +103,7 @@ try {
 	$unmatched_counts = AcknowledgementService::counts();
 	adc_check( is_array( $early ) && !$early['matched'] && $unmatched_counts['unmatched'] >= 1, 'A verified acknowledgement that arrives before delivery is retained as an unmatched operational exception.' );
 	$early_published = DomainEventPublisher::publish( 'finance.under_review', 126004, (int) $branch_a['id'], 'under_review' );
-	OutboxService::process_due( 10 );
+	OutboxService::process_due( 10, array(), array( (int) $early_published['id'] ) );
 	$linked = $wpdb->get_row( $wpdb->prepare( "SELECT id,outbox_id,status FROM $integration_126_receipts WHERE adapter_id='finance-ready' AND reference_hash=%s", hash( 'sha256', 'finance-126004' ) ), ARRAY_A );
 	adc_check( (int) $early_published['id'] === (int) $linked['outbox_id'] && 'accepted' === $linked['status'], 'Later delivery links the early acknowledgement without downgrading its accepted state.' );
 

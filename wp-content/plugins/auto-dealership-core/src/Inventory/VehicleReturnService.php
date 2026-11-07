@@ -68,7 +68,7 @@ final class VehicleReturnService {
 		$audit = static fn() => AuditLog::record( 'vehicle.return_received', 'vehicle_return', $return_id, $reason, null, array(
 			'sale_id' => (int) $row['sale_id'], 'delivery_id' => $delivery_id, 'vehicle_id' => (int) $row['vehicle_id'],
 			'condition' => $condition, 'location_id' => $location_id, 'financial_status' => 'pending_refund',
-		) ) && AuditLog::record( 'vehicle.status_changed', 'vehicle', (int) $row['vehicle_id'], $reason, array( 'status' => 'delivered' ), array( 'status' => 'returned' ) ) && ( ! is_array( $commission ) || AuditLog::record( 'affiliate_commission.return_review', 'affiliate_commission', (int) $commission['id'], 'Sale returned #' . $return_id, array( 'status'=>$commission['before'] ), array( 'status'=>$commission['after'] ) ) );
+		) ) && AuditLog::record( 'vehicle.status_changed', 'vehicle', (int) $row['vehicle_id'], $reason, array( 'status' => 'delivered' ), array( 'status' => 'returned' ) ) && ( ! is_array( $commission ) || AuditLog::record( 'affiliate_commission.return_review', 'affiliate_commission', (int) $commission['id'], 'Sale returned #' . $return_id, array( 'status'=>$commission['before'], 'amount'=>(int) $commission['amount'], 'currency'=>(string) ( $commission['currency'] ?? 'SAR' ) ), array( 'status'=>$commission['after'], 'amount'=>-(int) $commission['amount'], 'currency'=>(string) ( $commission['currency'] ?? 'SAR' ) ) ) );
 		if ( 1 !== $inserted || 1 !== $delivery_updated || 1 !== $sale_updated || false === $commission || 1 !== $vehicle_updated || 1 !== $movement || ! Transaction::commit( $audit ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return self::error( 'adc_return_failed', 500 );

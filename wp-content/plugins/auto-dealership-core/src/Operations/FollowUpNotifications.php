@@ -13,12 +13,14 @@ final class FollowUpNotifications {
 	private const CLAIM_EXPIRED_NOTE = 'Claim expired before first contact; returned to shared queue';
 
 	public static function label(string $type): string {
+		if('affiliate_commission'===$type){return \AutoDealership\Core\Localization::language()==='en'?'Affiliate commission update':'تحديث عمولة المسوق';}
 		if('lost_recontact'===$type){return \AutoDealership\Core\Localization::language()==='en'?'Lost lead recontact':'إعادة تواصل مع فرصة خاسرة';}
 		if('lead_closed'===$type){return \AutoDealership\Core\Localization::language()==='en'?'Lead closed':'إغلاق فرصة';}
 		$labels=array('new_lead'=>array('فرصة جديدة من الموقع','New website opportunity'),'lead'=>array('متابعة فرصة','Lead follow-up'),'stale_lead'=>array('فرصة راكدة','Stale lead'),'claim_expired'=>array('انتهاء مهلة استلام فرصة','Lead claim expired'),'discount'=>array('اعتماد خصم','Discount approval'),'sale'=>array('اعتماد بيع','Sale approval'),'reservation'=>array('حجز منتهي','Expired reservation'),'refund'=>array('استرداد متأخر','Overdue refund'),'outbox'=>array('مهمة آلية متعثرة','Failed background job'));
 		return $labels[$type][\AutoDealership\Core\Localization::language()==='en'?1:0]??$type;
 	}
 	public static function url(array $row): string {
+		if('affiliate_commission'===($row['source_type']??'')){return add_query_arg(array('page'=>'adc-affiliate-commissions','commission_id'=>(int)$row['source_id']),admin_url('admin.php'));}
 		if('lost_recontact'===($row['source_type']??'')){return add_query_arg(array('page'=>'adc-crm','lead_id'=>(int)$row['source_id']),admin_url('admin.php'));}
 		if('lead_closed'===($row['source_type']??'')){return add_query_arg(array('page'=>'adc-crm','lead_id'=>(int)$row['source_id']),admin_url('admin.php'));}
 		$targets=array('new_lead'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'lead'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'stale_lead'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'claim_expired'=>array('page'=>'adc-crm','lead_id'=>$row['source_id']),'discount'=>array('page'=>'adc-approvals','section'=>'discounts'),'sale'=>array('page'=>'adc-onyx-documents','sale_id'=>$row['source_id']),'reservation'=>array('page'=>'adc-sales-journey','section'=>'reservations','reservation_id'=>$row['source_id']),'refund'=>array('page'=>'adc-refunds'),'outbox'=>array('page'=>'adc-outbox'));
@@ -68,6 +70,13 @@ final class FollowUpNotifications {
 	}
 
 	private static function allowed(array $row,int $user_id,bool $manager=false): bool {
+		if('affiliate_commission'===(string)($row['source_type']??'')){
+			global $wpdb;
+			$commission=$wpdb->get_row($wpdb->prepare('SELECT affiliate_user_id,branch_id FROM '.Schema::table('affiliate_commissions').' WHERE id=%d',(int)$row['source_id']),ARRAY_A);
+			if(!$commission||!BranchScope::allows((int)$commission['branch_id'],$user_id)){return false;}
+			if($manager){return user_can($user_id,'adc_manage_affiliate_commissions')||user_can($user_id,'manage_options');}
+			return (int)$commission['affiliate_user_id']===$user_id&&user_can($user_id,'adc_view_own_affiliate_commissions');
+		}
 		if('lead_closed'===(string)($row['source_type']??'')){return BranchScope::allows((int)$row['branch_id'],$user_id)&&($manager?user_can($user_id,'adc_view_branch_leads'):((int)$row['owner_user_id']===$user_id&&user_can($user_id,'adc_view_own_leads')));}
 		if('new_lead'===(string)($row['source_type']??'')){return BranchScope::allows((int)$row['branch_id'],$user_id)&&($manager?user_can($user_id,'adc_view_branch_leads'):((int)$row['owner_user_id']>0&&(int)$row['owner_user_id']===$user_id&&user_can($user_id,'adc_view_own_leads')));}
 		$source=self::sources()[$row['source_type']]??null;
@@ -174,8 +183,35 @@ final class FollowUpNotifications {
 		return true;
 	}
 
+	/** Queue an affiliate-facing inbox/email notification inside the caller's transaction. */
+	public static function queue_affiliate_commission(int $commission_id,string $event): bool {
+		global $wpdb;
+		$row=$wpdb->get_row($wpdb->prepare('SELECT id,affiliate_user_id,branch_id,status,updated_at FROM '.Schema::table('affiliate_commissions').' WHERE id=%d FOR UPDATE',$commission_id),ARRAY_A);
+		if(!$row||$wpdb->last_error){return false;}
+		$affiliate_context=array('source_type'=>'affiliate_commission','source_id'=>$commission_id,'branch_id'=>(int)$row['branch_id'],'owner_user_id'=>(int)$row['affiliate_user_id']);
+		$recipients=array();
+		$preference_event = 0 === strpos( $event, 'status_' ) ? substr( $event, 7 ) : $event;
+		if ( ! in_array( $preference_event, array( 'created', 'approved', 'paid', 'void', 'returned' ), true ) ) { $preference_event = 'created'; }
+		if(self::allowed($affiliate_context,(int)$row['affiliate_user_id']) && \AutoDealership\Marketing\AffiliateNotificationPreferences::accepts((int)$row['affiliate_user_id'],$preference_event,'inbox')){$recipients[(int)$row['affiliate_user_id']]=0;}
+		if(in_array($event,array('created','returned'),true)){
+			foreach(get_users(array('fields'=>'ID')) as $user_id){$user_id=(int)$user_id;if($user_id!==(int)$row['affiliate_user_id']&&self::allowed($affiliate_context,$user_id,true) && \AutoDealership\Marketing\AffiliateNotificationPreferences::accepts($user_id,$preference_event,'inbox')){$recipients[$user_id]=1;}}
+		}
+		$table=Schema::table('followup_notifications');
+		foreach($recipients as $recipient=>$level){
+			$key=hash('sha256',implode('|',array('affiliate_commission',$commission_id,$event,$recipient,$level,$row['status'])));
+			$insert=$wpdb->query($wpdb->prepare("INSERT IGNORE INTO $table (notification_key,source_type,source_id,branch_id,owner_user_id,recipient_id,level,due_at,created_at) VALUES (%s,'affiliate_commission',%d,%d,%d,%d,%d,%s,%s)",$key,$commission_id,(int)$row['branch_id'],(int)$row['affiliate_user_id'],$recipient,$level,(string)$row['updated_at'],current_time('mysql',true)));
+			if(false===$insert){return false;}
+			if(0===$insert){continue;}
+			$id=(int)$wpdb->insert_id;
+			$queued=OutboxService::enqueue('followup.notify',array('subject_type'=>'followup_notification','subject_id'=>$id,'recipient_type'=>'user','recipient_id'=>$recipient,'branch_id'=>(int)$row['branch_id']),$key);
+			if(is_wp_error($queued)||!AuditLog::record('affiliate_commission.notification_queued','followup_notification',$id,'Affiliate commission notification',null,array('commission_id'=>$commission_id,'event'=>$event,'recipient_id'=>$recipient))){return false;}
+		}
+		return true;
+	}
+
 	private static function current(array $row) {
 		global $wpdb;
+		if('affiliate_commission'===(string)$row['source_type']){$commission=$wpdb->get_row($wpdb->prepare('SELECT id,affiliate_user_id,branch_id FROM '.Schema::table('affiliate_commissions').' WHERE id=%d',(int)$row['source_id']),ARRAY_A);return $commission&&(int)$commission['branch_id']===(int)$row['branch_id'];}
 		if('new_lead'===(string)$row['source_type']){$lead=$wpdb->get_row($wpdb->prepare('SELECT id,branch_id,owner_user_id,stage,archived_at,created_at FROM '.Schema::table('leads').' WHERE id=%d',(int)$row['source_id']),ARRAY_A);return $lead&&empty($lead['archived_at'])&&!in_array($lead['stage'],array('won','lost'),true)&&(int)$lead['branch_id']===(int)$row['branch_id']&&(int)$lead['owner_user_id']===(int)$row['owner_user_id']&&(string)$lead['created_at']===(string)$row['due_at'];}
 		if('lost_recontact'===(string)$row['source_type']){$lead=$wpdb->get_row($wpdb->prepare('SELECT id,branch_id,owner_user_id,stage,next_action_at FROM '.Schema::table('leads').' WHERE id=%d',(int)$row['source_id']),ARRAY_A);return $lead&&'lost'===$lead['stage']&&(string)$lead['next_action_at']===(string)$row['due_at']&&(int)$lead['branch_id']===(int)$row['branch_id'];}
 		if('lead_closed'===(string)$row['source_type']){$lead=$wpdb->get_row($wpdb->prepare('SELECT id,branch_id,owner_user_id,stage,closed_at FROM '.Schema::table('leads').' WHERE id=%d',(int)$row['source_id']),ARRAY_A);return $lead&&in_array($lead['stage'],array('won','lost'),true)&&(string)$lead['closed_at']===(string)$row['due_at']&&(int)$lead['branch_id']===(int)$row['branch_id'];}
@@ -201,9 +237,27 @@ final class FollowUpNotifications {
 		if(!$current||!self::allowed($row,(int)$row['recipient_id'],(bool)$row['level'])){return false!==$wpdb->update(Schema::table('followup_notifications'),array('resolved_at'=>current_time('mysql',true)),array('id'=>$row['id']));}
 		$channel='inbox';
 		if(get_option('adc_followup_email_enabled',false)){
+			$subject='';
+			$message='';
 			$user=get_userdata((int)$row['recipient_id']);
-			if(!$user||!is_email($user->user_email)){return new \WP_Error('adc_followup_recipient');}
-			if('new_lead'===$row['source_type']){
+			if('affiliate_commission'!==$row['source_type'] && (!$user||!is_email($user->user_email))){return new \WP_Error('adc_followup_recipient');}
+			if('affiliate_commission'===$row['source_type']){
+				$commission=$wpdb->get_row($wpdb->prepare('SELECT id,status,amount,currency_code FROM '.Schema::table('affiliate_commissions').' WHERE id=%d',(int)$row['source_id']),ARRAY_A);
+				$event='pending_review'===(string)($commission['status']??'')?'created':('approved'===(string)($commission['status']??'')?'approved':('paid'===(string)($commission['status']??'')?'paid':('void'===(string)($commission['status']??'')?'void':'returned')));
+				if ( ! \AutoDealership\Marketing\AffiliateNotificationPreferences::accepts((int)$row['recipient_id'],$event,'email') ) { $channel='inbox'; }
+				else {
+				if(!$user||!is_email($user->user_email)){return new \WP_Error('adc_followup_recipient');}
+				$subject='تحديث عمولة المسوق / Affiliate commission update';
+				$message='تم تحديث حالة عمولتك. راجع صفحة عمولات المسوقين للاطلاع على الحالة الحالية. / Your affiliate commission status was updated. Review the affiliate commission page for the current status: ';
+				$url=admin_url('admin.php?page=adc-affiliate-commissions&commission_id='.(int)$row['source_id']);
+				$lang=\AutoDealership\Leads\NewsletterService::language((string)get_user_meta((int)$row['recipient_id'],'adc_preferred_language',true));$ar='ar'===$lang;
+				$title=$ar?'تحديث عمولة المسوق':'Affiliate commission update';$body='<p>'.esc_html($ar?'تم تحديث حالة عمولتك. راجع صفحة العمولات للاطلاع على التفاصيل.':'Your affiliate commission status was updated. Review the commission page for details.').'</p>';
+				$html=\AutoDealership\Accounts\BrandedMail::render($title,$body,$ar?'عرض العمولات':'View commissions',$url,'',$lang);
+				$template=\AutoDealership\Marketing\AffiliateCommissionNotificationTemplate::build($commission?:array('id'=>(int)$row['source_id'],'status'=>'pending_review','amount'=>0,'currency_code'=>'SAR'),$event,(int)$row['recipient_id']);
+				$subject=$template['subject'];$html=\AutoDealership\Accounts\BrandedMail::render($template['title'],$template['body'],$template['button'],$template['url'],'',$template['language']);
+				if(!\AutoDealership\Accounts\BrandedMail::send($user->user_email,$subject,$html)){return new \WP_Error('adc_affiliate_mail');}
+				$channel='email'; }
+			}elseif('new_lead'===$row['source_type']){
 				$subject='فرصة جديدة من الموقع / New website opportunity';
 				$message='وصلت فرصة جديدة من أحد نماذج الموقع. افتحها من لوحة CRM لمراجعتها وإسنادها: ';
 			}elseif('claim_expired'===$row['source_type']){
@@ -213,8 +267,8 @@ final class FollowUpNotifications {
 				$subject='متابعة عمل مستحقة / Due workflow follow-up';
 				$message='توجد متابعة مستحقة ضمن صلاحياتك. افتح لوحة المتابعات للاطلاع والإقرار. / Review and acknowledge your due work: ';
 			}
-			if(!wp_mail($user->user_email,$subject,$message.admin_url('admin.php?page=adc-follow-ups'))){return new \WP_Error('adc_followup_mail');}
-			$channel='email';
+			if('affiliate_commission'!==$row['source_type'] && !wp_mail($user->user_email,$subject,$message.admin_url('admin.php?page=adc-follow-ups'))){return new \WP_Error('adc_followup_mail');}
+			if('affiliate_commission'!==$row['source_type']){$channel='email';}
 		}
 		return false!==$wpdb->update(Schema::table('followup_notifications'),array('delivered_at'=>current_time('mysql',true),'delivery_channel'=>$channel),array('id'=>$row['id']));
 	}
@@ -237,10 +291,14 @@ final class FollowUpNotifications {
 		wp_safe_redirect(add_query_arg(is_wp_error($result)?'ack_error':'acknowledged',1,admin_url('admin.php?page=adc-follow-ups')));exit;
 	}
 
-	public static function inbox(): array {
-		global $wpdb;
-		$rows=$wpdb->get_results($wpdb->prepare('SELECT * FROM '.Schema::table('followup_notifications').' WHERE recipient_id=%d AND acknowledged_at IS NULL AND resolved_at IS NULL ORDER BY id DESC LIMIT 100',get_current_user_id()),ARRAY_A)?:array();
-		$result=array();foreach($rows as $row){if(!self::allowed($row,get_current_user_id(),(bool)$row['level'])){continue;}$current=self::current($row);if(is_wp_error($current)){wp_die('Unable to load notifications','',array('response'=>503));}if($current){$result[]=$row;}}
-		return $result;
+	public static function inbox(): array { $page = self::inbox_page( array( 'page'=>1, 'per_page'=>100 ) ); return is_wp_error( $page ) ? array() : $page['items']; }
+
+	public static function inbox_page( array $filters = array() ) {
+		global $wpdb; $page=max(1,absint($filters['page']??1));$per_page=min(100,max(1,absint($filters['per_page']??25)));$where=array('recipient_id=%d');$args=array(get_current_user_id());
+		if(!empty($filters['archived'])){$where[]='(acknowledged_at IS NOT NULL OR resolved_at IS NOT NULL)';}else{$where[]='acknowledged_at IS NULL AND resolved_at IS NULL';}
+		if(!empty($filters['source_type'])){$where[]='source_type=%s';$args[]=sanitize_key((string)$filters['source_type']);}
+		if(isset($filters['search'])&&''!==trim((string)$filters['search'])){$where[]='CAST(source_id AS CHAR) LIKE %s';$args[]='%'.$wpdb->esc_like(sanitize_text_field((string)$filters['search'])).'%';}
+		$table=Schema::table('followup_notifications');$base=implode(' AND ',$where);$total=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE $base",$args));$rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE $base ORDER BY id DESC LIMIT %d OFFSET %d",array_merge($args,array($per_page,($page-1)*$per_page))),ARRAY_A)?:array();$result=array();foreach($rows as $row){if(!self::allowed($row,get_current_user_id(),(bool)$row['level'])){continue;}$current=self::current($row);if(is_wp_error($current)){return $current;}if($current||!empty($filters['archived'])){$result[]=$row;}}
+		return array('items'=>$result,'page'=>$page,'per_page'=>$per_page,'total'=>$total,'pages'=>(int)ceil($total/$per_page),'timezone'=>wp_timezone_string());
 	}
 }

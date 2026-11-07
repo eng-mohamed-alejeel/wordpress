@@ -13,7 +13,7 @@ final class QuoteHistory {
 
 	private static function insert_sql(): string {
 		$columns = implode( ',', array_map( static fn( $field ) => 'q.' . $field, explode( ',', self::FIELDS ) ) );
-		return 'INSERT INTO ' . Schema::table( 'quotation_versions' ) . ' (quotation_id,' . self::FIELDS . ',customer_name,vehicle_stock_number,vehicle_description,currency,event_key,actor_user_id,reason,created_at) SELECT q.id,' . $columns . ",c.full_name,v.stock_number,TRIM(CONCAT_WS(' ',v.model_year,v.brand,v.model,NULLIF(v.trim_name,''))),'SAR',%s,%d,%s,%s FROM " . Schema::table( 'quotations' ) . ' q INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=q.customer_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=q.vehicle_id';
+		return 'INSERT INTO ' . Schema::table( 'quotation_versions' ) . ' (quotation_id,' . self::FIELDS . ',customer_name,vehicle_stock_number,vehicle_description,currency,event_key,actor_user_id,reason,created_at) SELECT q.id,' . $columns . ",c.full_name,v.stock_number,TRIM(CONCAT_WS(' ',v.model_year,v.brand,v.model,NULLIF(v.trim_name,''))),COALESCE(NULLIF(q.currency_code,''),'SAR'),%s,%d,%s,%s FROM " . Schema::table( 'quotations' ) . ' q INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=q.customer_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=q.vehicle_id';
 	}
 
 	public static function capture( int $quote_id, string $event, string $reason = '' ): bool {

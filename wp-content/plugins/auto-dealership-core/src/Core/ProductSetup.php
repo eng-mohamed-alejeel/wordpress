@@ -378,7 +378,7 @@ final class ProductSetup {
 	}
 
 	private static function scheduled_jobs_ready(): bool {
-		$hooks = array( 'adc_process_outbox', 'adc_scan_followups', 'adc_archive_closed_leads', 'adc_expire_reservations', 'adc_prune_request_limits' );
+		$hooks = array( 'adc_process_outbox', 'adc_scan_followups', 'adc_affiliate_commission_reconciliation', 'adc_archive_closed_leads', 'adc_expire_reservations', 'adc_prune_request_limits' );
 		foreach ( $hooks as $hook ) { if ( ! wp_next_scheduled( $hook ) ) { return false; } }
 		return true;
 	}
