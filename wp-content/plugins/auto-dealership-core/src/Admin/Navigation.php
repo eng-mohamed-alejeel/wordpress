@@ -125,6 +125,7 @@ final class Navigation {
 				array( 'adc-operational-reports', 'التقارير التشغيلية', 'adc_view_reports', OperationalReportPage::class, 'render' ),
 				array( 'adc-area-reports', 'النظرة العامة للتقارير', array( 'manage_options', 'adc_view_reports' ), OperationsPages::class, 'render_area_reports' ),
 				array( 'adc-crm-reports', 'تقارير CRM التفصيلية', array( 'manage_options', 'adc_view_reports' ), AreaReportsPage::class, 'render' ),
+				array( 'adc-lead-performance', 'أداء العملاء المحتملين CRM', array( 'manage_options', 'adc_view_reports' ), OperationsPages::class, 'render_lead_performance' ),
 			) ),
 			'settings' => array( 'إعدادات المنصة', 'dashicons-admin-settings', array(
 				array( 'adc-platform-setup', \AutoDealership\Core\ProductSetup::t( 'الهوية والبريد وجاهزية المنصة', 'Identity, email and platform readiness' ), 'manage_options', \AutoDealership\Core\ProductSetup::class, 'render' ),

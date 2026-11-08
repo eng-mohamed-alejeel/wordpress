@@ -220,6 +220,7 @@ require_once ADC_PATH . 'src/Admin/ProfitMarginPage.php';
 \AutoDealership\Admin\ProfitMarginPage::boot();
 require_once ADC_PATH . 'src/Admin/AuditPage.php';
 require_once ADC_PATH . 'src/Admin/DiagnosticsPage.php';
+require_once ADC_PATH . 'src/Admin/ReportView.php';
 require_once ADC_PATH . 'src/Admin/AdministrativeAlertPage.php';
 require_once ADC_PATH . 'src/Admin/OutboxPage.php';
 require_once ADC_PATH . 'src/Admin/IntegrationPage.php';
@@ -541,6 +542,7 @@ add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\OutboxPage', 'boot'
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\IntegrationPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SecurityPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\Navigation', 'boot' ) );
+add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\ReportView', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\SeoSettingsPage', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\AdminStructure', 'boot' ) );
 add_action( 'plugins_loaded', array( 'AutoDealership\\Admin\\WorkspacePage', 'boot' ) );

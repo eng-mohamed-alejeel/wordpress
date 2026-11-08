@@ -1,0 +1,175 @@
+.adc-report-actions {
+	display: flex;
+	justify-content: flex-start;
+	gap: 8px;
+	margin: 12px 0;
+}
+
+.adc-report-summary {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 12px;
+	margin: 16px 0;
+}
+
+.adc-report-kpi {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	min-height: 82px;
+	padding: 16px;
+}
+
+.adc-report-kpi strong {
+	font-size: 1.35rem;
+	line-height: 1.2;
+}
+
+.adc-report-kpi span {
+	font-weight: 600;
+}
+
+.adc-report-kpi small {
+	color: #646970;
+}
+
+.adc-report-chart {
+	margin: 18px 0;
+	padding: 16px;
+}
+
+.adc-report-bars {
+	display: grid;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.adc-report-bar-row {
+	display: grid;
+	gap: 5px;
+}
+
+.adc-report-bar-label {
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.adc-report-bar-label span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.adc-report-bar-track {
+	height: 12px;
+	overflow: hidden;
+	background: #e2e8f0;
+	border-radius: 999px;
+}
+
+.adc-report-bar-track span {
+	display: block;
+	width: var(--adc-report-bar-width);
+	height: 100%;
+	background: linear-gradient(90deg, #2271b1, #36a269);
+	border-radius: 999px;
+	transition: width .2s ease;
+}
+
+.adc-report-chart-data {
+	display: none;
+	margin-top: 16px;
+}
+
+.adc-report-chart-data th,
+.adc-report-chart-data td {
+	padding: 7px 10px;
+}
+
+@media (max-width: 782px) {
+	.adc-report-actions {
+		justify-content: stretch;
+	}
+
+	.adc-report-actions .button {
+		width: 100%;
+	}
+
+	.adc-report-summary {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media print {
+	#adminmenumain,
+	#adminmenuback,
+	#adminmenuwrap,
+	#wpadminbar,
+	#wpfooter,
+	.notice,
+	.update-nag,
+	.adc-report-actions,
+	.adc-export-actions,
+	form,
+	.no-print {
+		display: none !important;
+	}
+
+	#wpcontent {
+		margin: 0 !important;
+		padding: 0 !important;
+	}
+
+	.wrap {
+		margin: 0 !important;
+		max-width: none !important;
+	}
+
+	.adc-admin-shell #wpbody-content {
+		padding-bottom: 0 !important;
+	}
+
+	.card {
+		box-shadow: none !important;
+		border: 1px solid #dcdcde !important;
+		break-inside: avoid;
+	}
+
+	.adc-report-summary {
+		grid-template-columns: repeat(4, 1fr);
+	}
+
+	.adc-report-chart-data {
+		display: table;
+	}
+
+	.adc-report-bars {
+		display: none;
+	}
+
+	table {
+		width: 100% !important;
+		table-layout: fixed;
+		break-inside: auto;
+	}
+
+	thead {
+		display: table-header-group;
+	}
+
+	tr {
+		break-inside: avoid;
+		break-after: auto;
+	}
+
+	th,
+	td {
+		overflow-wrap: anywhere;
+		word-break: break-word;
+	}
+
+	.adc-report-chart {
+		break-inside: avoid;
+	}
+}

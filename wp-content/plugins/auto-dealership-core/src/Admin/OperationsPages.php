@@ -300,9 +300,17 @@ final class OperationsPages {
 	public static function render_area_reports(): void {
 		if ( ! current_user_can( 'adc_view_reports' ) && ! current_user_can( 'manage_options' ) ) { wp_die( esc_html__( 'لا تملك صلاحية عرض التقارير.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
 		$summary = LeadService::pipeline_summary(); $dir = 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl';
-		echo '<div class="wrap" dir="' . esc_attr( $dir ) . '"><h1>' . esc_html__( 'النظرة العامة للتقارير', 'auto-dealership-core' ) . '</h1><p>' . esc_html__( 'ملخص سريع لأداء CRM الحالي. استخدم التقارير التفصيلية للتحليل حسب الموظف والفرع والمصدر.', 'auto-dealership-core' ) . '</p><div class="adc-crm-summary">';
+		echo '<div class="wrap" dir="' . esc_attr( $dir ) . '"><h1>' . esc_html__( 'النظرة العامة للتقارير', 'auto-dealership-core' ) . '</h1><p>' . esc_html__( 'ملخص سريع لأداء CRM الحالي. استخدم التقارير التفصيلية للتحليل حسب الموظف والفرع والمصدر.', 'auto-dealership-core' ) . '</p>';
+		\AutoDealership\Admin\ReportView::print_button();
+		echo '<div class="adc-crm-summary">';
 		foreach ( array( 'total'=>'إجمالي الفرص', 'new'=>'فرص جديدة', 'overdue'=>'متابعات متأخرة', 'unassigned'=>'غير مسندة', 'month_sales_amount'=>'مبيعات الشهر', 'conversion_percent'=>'نسبة التحويل', 'open_value'=>'قيمة الفرص المفتوحة' ) as $key => $label ) { $value = in_array( $key, array( 'month_sales_amount', 'open_value' ), true ) ? number_format_i18n( $summary[$key] / 100, 2 ) . ' SAR' : ( 'conversion_percent' === $key ? number_format_i18n( $summary[$key], 1 ) . '%' : number_format_i18n( $summary[$key] ) ); echo '<div class="card"><strong>' . esc_html( $value ) . '</strong><br>' . esc_html__( $label, 'auto-dealership-core' ) . '</div>'; }
-		echo '</div><section class="card"><h2>' . esc_html__( 'الوصول السريع', 'auto-dealership-core' ) . '</h2><p><a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=adc-crm-reports' ) ) . '">' . esc_html__( 'فتح تقارير CRM التفصيلية', 'auto-dealership-core' ) . '</a> <a class="button" href="' . esc_url( admin_url( 'admin.php?page=adc-crm' ) ) . '">' . esc_html__( 'فتح لوحة الفرص', 'auto-dealership-core' ) . '</a></p></section></div>';
+		echo '</div>';
+		$overview_rows = array();
+		foreach ( array( 'total', 'new', 'overdue', 'unassigned' ) as $key ) {
+			$overview_rows[] = array( 'label' => (string) $key, 'value' => (int) ( $summary[ $key ] ?? 0 ) );
+		}
+		\AutoDealership\Admin\ReportView::bar_chart( __( 'مؤشرات CRM الأساسية', 'auto-dealership-core' ), $overview_rows );
+		echo '<section class="card"><h2>' . esc_html__( 'الوصول السريع', 'auto-dealership-core' ) . '</h2><p><a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=adc-crm-reports' ) ) . '">' . esc_html__( 'فتح تقارير CRM التفصيلية', 'auto-dealership-core' ) . '</a> <a class="button" href="' . esc_url( admin_url( 'admin.php?page=adc-crm' ) ) . '">' . esc_html__( 'فتح لوحة الفرص', 'auto-dealership-core' ) . '</a></p></section></div>';
 	}
 
 	private static function crm_filter_query_args(): array {
@@ -392,6 +400,7 @@ final class OperationsPages {
 			return;
 		}
 		echo '<form method="get" class="adc-marketing-filters"><input type="hidden" name="page" value="adc-lead-performance"><label>' . esc_html__( 'من تاريخ', 'auto-dealership-core' ) . ' <input type="date" name="from" value="' . esc_attr( $from ) . '" required></label> <label>' . esc_html__( 'إلى تاريخ', 'auto-dealership-core' ) . ' <input type="date" name="to" value="' . esc_attr( $to ) . '" required></label> <button class="button">' . esc_html__( 'تطبيق', 'auto-dealership-core' ) . '</button></form>';
+		\AutoDealership\Admin\ReportView::print_button();
 		echo '<p class="description">' . esc_html__( 'تعتمد حدود التاريخ على المنطقة الزمنية للموقع. تشمل المؤشرات الفرص المنشأة خلال الفترة المحددة، بينما تعكس المرحلة الحالية والمتابعات المتأخرة حالتها عند إعداد التقرير، لا الأحداث التي وقعت داخل الفترة فقط.', 'auto-dealership-core' ) . '</p>';
 		$backfill_complete = (bool) get_option( 'adc_lead_stage_history_backfill_complete', false ) && (bool) get_option( 'adc_lead_stage_history_duration_complete', false );
 		$backfill_health = get_option( 'adc_lead_stage_history_backfill_health', array() );
@@ -407,6 +416,7 @@ final class OperationsPages {
 		echo '<div class="card"><strong>' . esc_html( number_format_i18n( (int) $totals['employee_commission_amount'] / 100, 2 ) ) . ' SAR</strong><br>' . esc_html__( 'عمولات الموظفين', 'auto-dealership-core' ) . '</div>';
 		$avg_minutes = null === $totals['avg_first_contact_seconds'] ? null : (float) $totals['avg_first_contact_seconds'] / MINUTE_IN_SECONDS;
 		echo '</div><p class="description">' . esc_html( sprintf( __( 'متوسط الزمن من إنشاء الفرصة إلى أول تواصل: %s دقيقة', 'auto-dealership-core' ), null === $avg_minutes ? '—' : number_format_i18n( $avg_minutes, 1 ) ) ) . '</p>';
+		\AutoDealership\Admin\ReportView::bar_chart( __( 'الفرص الناجحة حسب الفرع', 'auto-dealership-core' ), array_map( static function ( array $row ): array { return array( 'label' => (string) $row['branch_name'], 'value' => (int) $row['won_count'] ); }, $report['branches'] ) );
 
 		echo '<h2>' . esc_html__( 'مؤشرات الفروع', 'auto-dealership-core' ) . '</h2><table class="widefat striped"><thead><tr><th>' . esc_html__( 'الفرع', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'إجمالي الفرص', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'جديدة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'تم أول تواصل', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'متوسط أول تواصل (دقيقة)', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'متأخرة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'مباعة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'خاسرة', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 		foreach ( $report['branches'] as $row ) {
@@ -448,10 +458,14 @@ final class OperationsPages {
 		$overdue = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table . ' l' . $where . " AND l.next_action_at IS NOT NULL AND l.next_action_at<=%s AND l.stage NOT IN ('won','lost')", array_merge( $args, array( current_time( 'mysql', true ) ) ) ) );
 		if ( $wpdb->last_error ) { error_log( 'Auto Dealership Core: campaign overdue metric query failed: ' . $wpdb->last_error ); wp_die( esc_html__( 'تعذر تحميل مؤشرات المتابعة المتأخرة.', 'auto-dealership-core' ), '', array( 'response'=>503 ) ); return; }
 		$summary['overdue'] = (int) $overdue;
-		echo '<div class="wrap"><h1>' . esc_html__( 'تقارير التسويق', 'auto-dealership-core' ) . '</h1><p>' . esc_html__( 'توزيع الفرص التسويقية حسب الحملة والمنصة والمرحلة ضمن نطاق صلاحيتك.', 'auto-dealership-core' ) . '</p><div class="adc-crm-summary">';
+		echo '<div class="wrap"><h1>' . esc_html__( 'تقارير التسويق', 'auto-dealership-core' ) . '</h1><p>' . esc_html__( 'توزيع الفرص التسويقية حسب الحملة والمنصة والمرحلة ضمن نطاق صلاحيتك.', 'auto-dealership-core' ) . '</p>';
+		\AutoDealership\Admin\ReportView::print_button();
+		echo '<div class="adc-crm-summary">';
 		foreach ( array( 'total'=>'الإجمالي','new'=>'جديدة','contacted'=>'تم التواصل','qualified'=>'مؤهلة','reserved'=>'محجوزة','won'=>'مباعة','lost'=>'خاسرة','overdue'=>'متأخرة' ) as $key=>$label ) { echo '<div class="card"><strong>' . esc_html( number_format_i18n( $summary[ $key ] ) ) . '</strong><br>' . esc_html__( $label, 'auto-dealership-core' ) . '</div>'; }
 		$conversion = static function ( int $value, int $base ): string { return $base > 0 ? number_format_i18n( ( $value / $base ) * 100, 1 ) . '%' : '0%'; };
-		echo '</div><div class="card"><h2>' . esc_html__( 'نسب التحويل', 'auto-dealership-core' ) . '</h2><p>' . esc_html( sprintf( __( 'التواصل من الإجمالي: %s — التأهيل من التواصل: %s — البيع من الإجمالي: %s — الخسارة من الإجمالي: %s', 'auto-dealership-core' ), $conversion( $summary['contacted'], $summary['total'] ), $conversion( $summary['qualified'], $summary['contacted'] ), $conversion( $summary['won'], $summary['total'] ), $conversion( $summary['lost'], $summary['total'] ) ) ) . '</p></div><table class="widefat striped"><thead><tr><th>' . esc_html__( 'الحملة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المنصة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المرحلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'العدد', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		echo '</div><div class="card"><h2>' . esc_html__( 'نسب التحويل', 'auto-dealership-core' ) . '</h2><p>' . esc_html( sprintf( __( 'التواصل من الإجمالي: %s — التأهيل من التواصل: %s — البيع من الإجمالي: %s — الخسارة من الإجمالي: %s', 'auto-dealership-core' ), $conversion( $summary['contacted'], $summary['total'] ), $conversion( $summary['qualified'], $summary['contacted'] ), $conversion( $summary['won'], $summary['total'] ), $conversion( $summary['lost'], $summary['total'] ) ) ) . '</p></div>';
+		\AutoDealership\Admin\ReportView::bar_chart( __( 'حجم الفرص حسب الحملة والمنصة', 'auto-dealership-core' ), array_map( static function ( array $row ): array { return array( 'label' => (string) $row['campaign'] . ' · ' . (string) $row['platform'], 'value' => (int) $row['total'] ); }, array_slice( $rows, 0, 12 ) ) );
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'الحملة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المنصة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المرحلة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'العدد', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
 		foreach ( $rows as $row ) { echo '<tr><td>' . esc_html( $row['campaign'] ) . '</td><td>' . esc_html( $row['platform'] ) . '</td><td>' . esc_html( \AutoDealership\Core\Localization::label( $row['stage'] ) ) . '</td><td>' . esc_html( number_format_i18n( (int) $row['total'] ) ) . '</td></tr>'; }
 		if ( ! $rows ) { echo '<tr><td colspan="4">' . esc_html__( 'لا توجد بيانات تسويقية بعد.', 'auto-dealership-core' ) . '</td></tr>'; }
 		echo '</tbody></table></div>';

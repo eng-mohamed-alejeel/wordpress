@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Audited, branch-scoped and minimized settlement export. */
 final class FinancialExport {
-	public static function create( string $from, string $to ) {
+	public static function report( string $from, string $to ) {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_view_finance' ) ) { return new \WP_Error( 'adc_export_forbidden', __( 'Finance viewing permission is required.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }
 		$start = \DateTimeImmutable::createFromFormat( '!Y-m-d', $from, new \DateTimeZone( 'UTC' ) );
@@ -23,6 +23,16 @@ final class FinancialExport {
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
 		$truncated = count( $rows ) > 5000;
 		if ( $truncated ) { array_pop( $rows ); }
+		return array( 'from' => $from, 'to' => $to, 'generated_at' => current_time( 'mysql', true ), 'rows' => $rows, 'truncated' => $truncated, 'currency' => 'SAR' );
+	}
+
+	public static function create( string $from, string $to ) {
+		$report = self::report( $from, $to );
+		if ( is_wp_error( $report ) ) {
+			return $report;
+		}
+		$rows = $report['rows'];
+		$truncated = (bool) $report['truncated'];
 		if ( ! AuditLog::record( 'finance.exported', 'financial_report', 0, 'Financial settlement CSV export', null, array( 'from' => $from, 'to' => $to, 'row_count' => count( $rows ), 'truncated' => $truncated ) ) ) {
 			return new \WP_Error( 'adc_export_audit_failed', __( 'The export could not be audited.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}

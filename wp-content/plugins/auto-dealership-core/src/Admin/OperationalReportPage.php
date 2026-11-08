@@ -2,6 +2,7 @@
 namespace AutoDealership\Admin;
 
 use AutoDealership\Reports\OperationalReport;
+use AutoDealership\Admin\ReportView;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -39,6 +40,9 @@ final class OperationalReportPage {
 			<?php if ( is_wp_error( $report ) ) : ?>
 				<div class="notice notice-error inline"><p><?php echo esc_html( $report->get_error_message() ); ?> <code><?php echo esc_html( $report->get_error_code() ); ?></code></p></div>
 			<?php else : ?>
+				<?php ReportView::print_button(); $totals = array(); foreach ( $report['sections'] as $section => $rows ) { $totals[ $section ] = array( 'total' => 0, 'amount' => 0 ); foreach ( $rows as $row ) { $totals[ $section ]['total'] += (int) $row['total']; $totals[ $section ]['amount'] += (int) $row['amount']; } } ?>
+				<?php ReportView::summary_cards( array( array( 'label'=>__( 'إجمالي المؤشرات', 'auto-dealership-core' ), 'value'=>number_format_i18n( array_sum( array_column( $totals, 'total' ) ) ) ), array( 'label'=>__( 'عروض الأسعار', 'auto-dealership-core' ), 'value'=>number_format_i18n( $totals['quotations']['total'] ?? 0 ), 'note'=>'SAR' ), array( 'label'=>__( 'المبيعات', 'auto-dealership-core' ), 'value'=>number_format_i18n( $totals['sales']['total'] ?? 0 ), 'note'=>'SAR' ), array( 'label'=>__( 'استثناءات تحتاج متابعة', 'auto-dealership-core' ), 'value'=>number_format_i18n( $totals['exceptions']['total'] ?? 0 ) ) ) ); ?>
+				<?php ReportView::bar_chart( __( 'حجم المؤشرات حسب القسم', 'auto-dealership-core' ), array_map( static function ( string $section, array $value ): array { return array( 'label' => $section, 'value' => $value['total'] ); }, array_keys( $totals ), $totals ) ); ?>
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="adc-export-actions"><input type="hidden" name="action" value="adc_operational_report_export"><input type="hidden" name="from" value="<?php echo esc_attr( $from ); ?>"><input type="hidden" name="to" value="<?php echo esc_attr( $to ); ?>"><?php wp_nonce_field( 'adc_operational_report_export' ); ?><?php submit_button( __( 'تنزيل CSV مدقق', 'auto-dealership-core' ), 'primary', 'submit', false ); ?></form>
 				<p><small><?php echo esc_html( sprintf( __( 'أُنشئ في %s UTC. المخزون والاستثناءات لقطة حالية، وبقية الأقسام ضمن الفترة المختارة.', 'auto-dealership-core' ), $report['generated_at'] ) ); ?></small></p>
 				<?php foreach ( OperationalReport::SECTIONS as $section ) { self::table( $section, $report['sections'][ $section ] ); } ?>
