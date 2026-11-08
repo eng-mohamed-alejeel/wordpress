@@ -21,6 +21,12 @@ final class Localization {
 		return CatalogPresentation::language();
 	}
 
+	/** Normalize a document language without coupling printable HTML to a PDF engine. */
+	public static function normalize_document_language( ?string $language = null ): string {
+		$language = sanitize_key( (string) ( $language ?: self::language() ) );
+		return 'en' === $language ? 'en' : 'ar';
+	}
+
 	public static function gettext( string $translation, string $text, string $domain ): string {
 		if ( null === self::$catalog ) {
 			self::$catalog = require __DIR__ . '/../../languages/ui.php';

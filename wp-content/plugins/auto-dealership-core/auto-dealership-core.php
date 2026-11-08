@@ -209,7 +209,6 @@ require_once ADC_PATH . 'src/Privacy/RetentionService.php';
 require_once ADC_PATH . 'src/Reports/FinancialExport.php';
 require_once ADC_PATH . 'src/Reports/ReportDateRange.php';
 require_once ADC_PATH . 'src/Reports/AffiliateCommissionReport.php';
-require_once ADC_PATH . 'src/Reports/ServerPdfRenderer.php';
 require_once ADC_PATH . 'src/Reports/AffiliateCommissionExport.php';
 require_once ADC_PATH . 'src/Reports/OperationalReport.php';
 require_once ADC_PATH . 'src/Reports/LeadPerformanceReport.php';

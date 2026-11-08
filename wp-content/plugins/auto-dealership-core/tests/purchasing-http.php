@@ -33,7 +33,7 @@ try{
 	$r=$request('/wp-admin/admin.php?page=adc-release-evidence',$admin_cookie);$check($r[0]===200&&str_contains($r[1],'SHA-256'),'Administrator accesses release evidence form');
 	$nonce=trim($request('/adc-test-nonce?action=adc_archive_quote_'.$quote['id'].'_1',$admin_cookie)[1]);$path='/wp-admin/admin-post.php?action=adc_archive_quote&quote_id='.$quote['id'].'&version=1&_wpnonce=';
 	$r=$request($path.'invalid',$admin_cookie);$check($r[0]===403,'Archived document rejects invalid nonce');
-	$r=$request($path.rawurlencode($nonce),$admin_cookie);$check($r[0]===200&&str_contains($r[1],$archive['document_number'])&&str_contains($r[2],'Content-Disposition: attachment;'),'Authenticated archive download returns numbered document attachment');
+	$r=$request($path.rawurlencode($nonce),$admin_cookie);$check($r[0]===200&&str_contains($r[1],$archive['document_number'])&&str_contains($r[2],'Content-Disposition: inline;'),'Authenticated archive opens as a numbered printable HTML document');
 	$r=$request($path.rawurlencode($nonce),$purchase_cookie);$check($r[0]===403,'Archive nonce is bound to authorized user');
 	update_user_meta($purchaser,'locale','ar');$r=$request('/wp-admin/admin.php?page=adc-purchase-orders&id='.$order['id'],$purchase_cookie);$check($r[0]===200&&str_contains($r[1],'أوامر الشراء')&&str_contains($r[1],'مرجع الاستلام'),'HTTP purchase screen renders Arabic workflow labels');
 }finally{if(is_resource($process)){proc_terminate($process);proc_close($process);}if(is_file($log)){unlink($log);}}

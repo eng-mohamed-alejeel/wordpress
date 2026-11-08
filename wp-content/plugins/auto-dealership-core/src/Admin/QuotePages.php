@@ -4,8 +4,6 @@ namespace AutoDealership\Admin;
 use AutoDealership\Pricing\Money;
 use AutoDealership\Pricing\QuoteDocument;
 use AutoDealership\Pricing\QuoteHistory;
-use AutoDealership\Reports\ServerPdfRenderer;
-
 defined( 'ABSPATH' ) || exit;
 
 final class QuotePages {
@@ -16,7 +14,6 @@ final class QuotePages {
 			}
 		} );
 		add_action( 'admin_post_adc_print_quote', array( self::class, 'print_quote' ) );
-		add_action( 'admin_post_adc_pdf_quote', array( self::class, 'pdf_quote' ) );
 	}
 
 	public static function render(): void {
@@ -41,8 +38,8 @@ final class QuotePages {
 		?></td></tr><?php endif; ?></tbody></table>
 		<?php QueueTable::footer( $results, 'adc-quotes', '', array( 'status'=>sanitize_key( $_GET['status'] ?? '' ), 'validity'=>sanitize_key( $_GET['validity'] ?? '' ) ) ); ?>
 		<?php if ( $versions ) : ?><h2><?php esc_html_e( 'نسخ العرض', 'auto-dealership-core' ); ?></h2><table class="widefat striped"><thead><tr><th><?php esc_html_e( 'النسخة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الإجمالي', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'وقت الحفظ', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الوثيقة', 'auto-dealership-core' ); ?></th></tr></thead><tbody><?php foreach ( $versions as $version ) :
-			$url = wp_nonce_url( add_query_arg( array( 'action' => 'adc_pdf_quote', 'quote_id' => (int) $version['quotation_id'], 'version' => (int) $version['version'] ), admin_url( 'admin-post.php' ) ), 'adc_pdf_quote_' . (int) $version['quotation_id'] . '_' . (int) $version['version'] ); ?>
-		<tr><td><?php echo absint( $version['version'] ); ?></td><td><?php echo esc_html( \AutoDealership\Core\Localization::label( (string) $version['status'] ) ); ?></td><td><?php echo esc_html( Money::display( (int) $version['final_amount'] ) ); ?></td><td><?php echo esc_html( $version['created_at'] ); ?></td><td><a class="button" target="_blank" rel="noopener" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'طباعة / PDF', 'auto-dealership-core' ); ?></a></td></tr><?php endforeach; ?></tbody></table><?php endif; ?>
+			$url = wp_nonce_url( add_query_arg( array( 'action' => 'adc_print_quote', 'quote_id' => (int) $version['quotation_id'], 'version' => (int) $version['version'] ), admin_url( 'admin-post.php' ) ), 'adc_print_quote_' . (int) $version['quotation_id'] . '_' . (int) $version['version'] ); ?>
+		<tr><td><?php echo absint( $version['version'] ); ?></td><td><?php echo esc_html( \AutoDealership\Core\Localization::label( (string) $version['status'] ) ); ?></td><td><?php echo esc_html( Money::display( (int) $version['final_amount'] ) ); ?></td><td><?php echo esc_html( $version['created_at'] ); ?></td><td><a class="button" target="_blank" rel="noopener" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'فتح المستند القابل للطباعة', 'auto-dealership-core' ); ?></a></td></tr><?php endforeach; ?></tbody></table><?php endif; ?>
 		</div><?php
 	}
 
@@ -55,29 +52,8 @@ final class QuotePages {
 		nocache_headers();
 		header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
 		$archive_url = wp_nonce_url( add_query_arg( array( 'action'=>'adc_archive_quote', 'quote_id'=>$quote_id, 'version'=>$version ), admin_url( 'admin-post.php' ) ), 'adc_archive_quote_' . $quote_id . '_' . $version );
-		$pdf_url = wp_nonce_url( add_query_arg( array( 'action'=>'adc_pdf_quote', 'quote_id'=>$quote_id, 'version'=>$version ), admin_url( 'admin-post.php' ) ), 'adc_pdf_quote_' . $quote_id . '_' . $version );
 		$label = 'en' === \AutoDealership\Core\Localization::language() ? 'Issue and download archived document' : 'إصدار وتنزيل المستند المؤرشف';
-		echo str_replace( '</body>', '<p class="no-print"><a href="' . esc_url( $pdf_url ) . '">Download server PDF</a> · <a href="' . esc_url( $archive_url ) . '">' . esc_html( $label ) . '</a></p></body>', QuoteDocument::render( $quote ) ); // Renderer escapes dynamic values.
+		echo str_replace( '</body>', '<p class="no-print"><a href="' . esc_url( $archive_url ) . '" target="_blank" rel="noopener">' . esc_html( $label ) . '</a></p></body>', QuoteDocument::render( $quote ) ); // Renderer escapes dynamic values.
 		exit;
-	}
-
-	public static function pdf_quote(): void {
-		$quote_id = absint( $_GET['quote_id'] ?? 0 );
-		$version = absint( $_GET['version'] ?? 0 );
-		check_admin_referer( 'adc_pdf_quote_' . $quote_id . '_' . $version );
-		if ( ! QuoteHistory::can_read() ) {
-			wp_die( esc_html__( 'لا تملك صلاحية تنزيل العرض.', 'auto-dealership-core' ), '', array( 'response' => 403 ) );
-		}
-		$quote = QuoteHistory::version( $quote_id, $version );
-		if ( is_wp_error( $quote ) ) {
-			wp_die( esc_html( $quote->get_error_message() ), '', array( 'response' => (int) ( $quote->get_error_data()['status'] ?? 404 ) ) );
-		}
-			$orientation = ServerPdfRenderer::normalize_orientation( sanitize_key( wp_unslash( $_GET['orientation'] ?? 'portrait' ) ), 'portrait' );
-			$language = ServerPdfRenderer::normalize_language( sanitize_key( wp_unslash( $_GET['language'] ?? \AutoDealership\Core\Localization::language() ) ) );
-			$binary = ServerPdfRenderer::render( QuoteDocument::render( $quote, $language ), 'A4', $orientation, $language );
-		if ( is_wp_error( $binary ) ) {
-			wp_die( esc_html( $binary->get_error_message() ), '', array( 'response' => (int) ( $binary->get_error_data()['status'] ?? 500 ) ) );
-		}
-			ServerPdfRenderer::send( $binary, 'quotation-' . $quote_id . '-v' . $version . '-' . $language . '-' . $orientation . '.pdf' );
 	}
 }

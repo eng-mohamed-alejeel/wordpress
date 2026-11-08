@@ -5,7 +5,7 @@ use AutoDealership\Marketing\AffiliateCommissionService;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Generates Excel workbooks and a non-JavaScript legacy HTML fallback. */
+/** Generates a lightweight Excel workbook for downloadable report data. */
 final class AffiliateCommissionExport {
 	public static function xlsx( array $rows, array $filters ) {
 		if ( ! class_exists( 'ZipArchive' ) ) { return new \WP_Error( 'adc_affiliate_excel_unavailable', 'The PHP ZIP extension is required for Excel export.', array( 'status'=>503 ) ); }
@@ -24,41 +24,6 @@ final class AffiliateCommissionExport {
 		$zip->close();
 		$data = file_get_contents( $path ); @unlink( $path );
 		return false === $data ? new \WP_Error( 'adc_affiliate_excel_read', 'Unable to read the Excel workbook.', array( 'status'=>500 ) ) : $data;
-	}
-
-	/** Kept for bookmarked integrations; it never invokes browser printing. */
-	public static function print_html( array $rows, array $filters ): string {
-		return self::pdf_html( $rows, $filters );
-	}
-
-	public static function pdf( array $rows, array $filters, string $orientation = 'landscape', ?string $language = null ) {
-		$language = ServerPdfRenderer::normalize_language( $language ?: ( class_exists( '\\AutoDealership\\Core\\Localization' ) ? \AutoDealership\Core\Localization::language() : 'ar' ) );
-		return ServerPdfRenderer::render( self::pdf_html( $rows, $filters, $language ), 'A4', ServerPdfRenderer::normalize_orientation( $orientation, 'landscape' ), $language );
-	}
-
-	private static function pdf_html( array $rows, array $filters, string $language = 'ar' ): string {
-		$language = ServerPdfRenderer::normalize_language( $language );
-		$direction = 'en' === $language ? 'ltr' : 'rtl';
-		$align = 'en' === $language ? 'left' : 'right';
-		$labels = 'en' === $language ? array(
-			'title' => 'Affiliate Commission Report', 'period' => 'Period', 'to' => 'to', 'timezone' => 'Timezone', 'currency' => 'Currency',
-			'group' => 'Category', 'period_column' => 'Period', 'count' => 'Commission count', 'gross' => 'Gross', 'reversals' => 'Reversals', 'net' => 'Net ledger', 'paid' => 'Paid',
-			'empty' => 'No results were found for the selected period.', 'footer' => 'Generated from the financial commission ledger. Negative values are retained as reversal movements.',
-		) : array(
-			'title' => 'تقرير عمولات المسوقين', 'period' => 'الفترة', 'to' => 'إلى', 'timezone' => 'المنطقة الزمنية', 'currency' => 'العملة',
-			'group' => 'التصنيف', 'period_column' => 'الفترة', 'count' => 'عدد العمولات', 'gross' => 'الإجمالي', 'reversals' => 'العكوسات', 'net' => 'صافي السجل', 'paid' => 'المدفوع',
-			'empty' => 'لا توجد نتائج ضمن الفترة المحددة.', 'footer' => 'تم إنشاء التقرير من سجل العمولات المالي. الأرقام السالبة محفوظة كحركات عكسية.',
-		);
-		$money = static fn( $value ): string => '<span class="adc-pdf-number" dir="ltr">' . esc_html( number_format( (int) $value / 100, 2, '.', ',' ) . ' SAR' ) . '</span>';
-		$from = esc_html( (string) ( $filters['from'] ?? '' ) );
-		$to = esc_html( (string) ( $filters['to'] ?? '' ) );
-		$timezone = esc_html( (string) ( $filters['timezone'] ?? '' ) );
-		$html = '<!doctype html><html lang="' . $language . '" dir="' . $direction . '"><head><meta charset="utf-8"><style>body{font-family:"DejaVu Sans",sans-serif;color:#24364b;font-size:10px;margin:24px;direction:' . $direction . '}h1{font-size:20px;margin:0 0 5px;color:#17324d}.meta{color:#64748b;margin:0 0 18px}table{border-collapse:collapse;width:100%;margin-top:12px;direction:' . $direction . '}th,td{border:1px solid #cbd5e1;padding:6px;text-align:' . $align . ';vertical-align:middle}th{background:#e7eef5;color:#17324d}tr:nth-child(even){background:#f8fafc}.adc-pdf-number{direction:ltr;unicode-bidi:embed;white-space:nowrap}.footer{margin-top:18px;color:#64748b;font-size:9px}</style></head><body><h1>' . esc_html( $labels['title'] ) . '</h1><p class="meta"><span>' . esc_html( $labels['period'] ) . ': ' . $from . ' ' . esc_html( $labels['to'] ) . ' ' . $to . '</span> · <span>' . esc_html( $labels['timezone'] ) . ': <span class="adc-pdf-code" dir="ltr">' . $timezone . '</span></span> · <span>' . esc_html( $labels['currency'] ) . ': <span class="adc-pdf-code" dir="ltr">SAR</span></span></p><table><thead><tr><th>' . esc_html( $labels['group'] ) . '</th><th>' . esc_html( $labels['period_column'] ) . '</th><th>' . esc_html( $labels['count'] ) . '</th><th>' . esc_html( $labels['gross'] ) . '</th><th>' . esc_html( $labels['reversals'] ) . '</th><th>' . esc_html( $labels['net'] ) . '</th><th>' . esc_html( $labels['paid'] ) . '</th></tr></thead><tbody>';
-		foreach ( $rows as $row ) {
-			$html .= '<tr><td dir="auto">' . esc_html( (string) ( $row['group_label'] ?? '' ) ) . '</td><td dir="ltr">' . esc_html( (string) ( $row['period'] ?? '' ) ) . '</td><td class="adc-pdf-number" dir="ltr">' . absint( $row['commission_count'] ?? 0 ) . '</td><td>' . $money( $row['gross'] ?? 0 ) . '</td><td>' . $money( $row['reversals'] ?? 0 ) . '</td><td>' . $money( $row['net_ledger'] ?? 0 ) . '</td><td>' . $money( $row['paid'] ?? 0 ) . '</td></tr>';
-		}
-		if ( ! $rows ) { $html .= '<tr><td colspan="7">' . esc_html( $labels['empty'] ) . '</td></tr>'; }
-		return $html . '</tbody></table><p class="footer">' . esc_html( $labels['footer'] ) . '</p></body></html>';
 	}
 
 	private static function sheet( array $rows, array $filters ): string {

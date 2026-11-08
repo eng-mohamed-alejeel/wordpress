@@ -4,26 +4,21 @@ namespace AutoDealership\Admin;
 use AutoDealership\Pricing\Money;
 use AutoDealership\Reports\AffiliateCommissionExport;
 use AutoDealership\Reports\AffiliateCommissionReport;
-use AutoDealership\Reports\ServerPdfRenderer;
-
 defined( 'ABSPATH' ) || exit;
 
 final class AffiliateCommissionReportPage {
-	public static function boot(): void { add_action( 'admin_post_adc_affiliate_commission_report_export', array( self::class, 'export' ) ); add_action( 'admin_post_adc_affiliate_commission_report_excel', array( self::class, 'export_excel' ) ); add_action( 'admin_post_adc_affiliate_commission_report_pdf', array( self::class, 'export_pdf' ) ); }
+	public static function boot(): void { add_action( 'admin_post_adc_affiliate_commission_report_export', array( self::class, 'export' ) ); add_action( 'admin_post_adc_affiliate_commission_report_excel', array( self::class, 'export_excel' ) ); }
 
 	public static function render(): void {
 		if ( ! self::can_manage() ) { wp_die( esc_html__( 'لا تملك صلاحية عرض تقرير العمولات.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
 		$filters = array( 'from'=>sanitize_text_field( wp_unslash( $_GET['from'] ?? '' ) ), 'to'=>sanitize_text_field( wp_unslash( $_GET['to'] ?? '' ) ), 'status'=>sanitize_key( wp_unslash( $_GET['status'] ?? '' ) ), 'affiliate_user_id'=>absint( $_GET['affiliate_user_id'] ?? 0 ), 'branch_id'=>absint( $_GET['branch_id'] ?? 0 ), 'period'=>sanitize_key( wp_unslash( $_GET['period'] ?? 'month' ) ) );
-		$orientation = ServerPdfRenderer::normalize_orientation( sanitize_key( wp_unslash( $_GET['orientation'] ?? 'landscape' ) ), 'landscape' );
-		$language = ServerPdfRenderer::normalize_language( sanitize_key( wp_unslash( $_GET['language'] ?? \AutoDealership\Core\Localization::language() ) ) );
-		$pdf_environment = ServerPdfRenderer::environment();
 			$result = AffiliateCommissionReport::report( $filters ); if ( is_wp_error( $result ) ) { wp_die( esc_html( $result->get_error_message() ), '', array( 'response'=>(int) ( $result->get_error_data()['status'] ?? 500 ) ) ); }
 		$summary = $result['summary'];
 		echo '<div class="wrap" dir="rtl"><h1>تقارير عمولات المسوقين</h1><p>يُحتسب التقرير من سجل العمولات المالي، مع تثبيت العملة والمنطقة الزمنية المستخدمة في التصدير.</p>';
 		echo '<form method="get"><input type="hidden" name="page" value="adc-affiliate-reports"><label>من <input type="date" name="from" value="' . esc_attr( $result['filters']['from'] ) . '" required></label> <label>إلى <input type="date" name="to" value="' . esc_attr( $result['filters']['to'] ) . '" required></label> <label>الحالة <select name="status"><option value="">الكل</option>';
 		foreach ( array( 'pending_review'=>'بانتظار المراجعة','approved'=>'معتمدة للصرف','paid'=>'مدفوعة','void'=>'ملغاة','paid_sale_returned'=>'صفقة مرتجعة' ) as $value=>$label ) { echo '<option value="' . esc_attr( $value ) . '"' . selected( $result['filters']['status'], $value, false ) . '>' . esc_html( $label ) . '</option>'; }
-		echo '</select></label> <label>المسوق <input type="number" min="0" name="affiliate_user_id" value="' . esc_attr( $result['filters']['affiliate_user_id'] ) . '"></label> <label>الفرع <input type="number" min="0" name="branch_id" value="' . esc_attr( $result['filters']['branch_id'] ) . '"></label> <label>التجميع <select name="period"><option value="month"' . selected( $result['filters']['period'], 'month', false ) . '>شهري</option><option value="day"' . selected( $result['filters']['period'], 'day', false ) . '>يومي</option></select></label> <label>لغة PDF <select name="language"><option value="ar"' . selected( $language, 'ar', false ) . '>العربية</option><option value="en"' . selected( $language, 'en', false ) . '>English</option></select></label> <label>اتجاه PDF <select name="orientation"><option value="landscape"' . selected( $orientation, 'landscape', false ) . '>أفقي</option><option value="portrait"' . selected( $orientation, 'portrait', false ) . '>رأسي</option></select></label> <button class="button button-primary">تصفية</button></form>';
-		echo '<p><small>الفترة: ' . esc_html( $result['filters']['from'] . ' إلى ' . $result['filters']['to'] . ' · ' . $result['filters']['timezone'] . ' · SAR' ) . '</small></p>' . self::export_forms( $result['filters'], $orientation, $language, ! empty( $pdf_environment['ready'] ) );
+		echo '</select></label> <label>المسوق <input type="number" min="0" name="affiliate_user_id" value="' . esc_attr( $result['filters']['affiliate_user_id'] ) . '"></label> <label>الفرع <input type="number" min="0" name="branch_id" value="' . esc_attr( $result['filters']['branch_id'] ) . '"></label> <label>التجميع <select name="period"><option value="month"' . selected( $result['filters']['period'], 'month', false ) . '>شهري</option><option value="day"' . selected( $result['filters']['period'], 'day', false ) . '>يومي</option></select></label> <button class="button button-primary">تصفية</button></form>';
+		echo '<p><small>الفترة: ' . esc_html( $result['filters']['from'] . ' إلى ' . $result['filters']['to'] . ' · ' . $result['filters']['timezone'] . ' · SAR' ) . '</small></p>' . self::export_forms( $result['filters'] );
 		ReportView::print_button();
 		echo '<div class="adc-affiliate-summary">'; foreach ( array( 'gross'=>'الإجمالي','reversals'=>'العكوسات','net_ledger'=>'صافي السجل','pending_review'=>'قيد المراجعة','approved'=>'معتمد','paid'=>'مدفوع' ) as $key=>$label ) { echo '<div class="card"><strong>' . esc_html( Money::display( (int) $summary[ $key ] ) ) . '</strong><br>' . esc_html( $label ) . '</div>'; } echo '</div>';
 		echo '<h2>المؤشر الزمني</h2>' . self::chart( $result['by_period'] ) . '<h2>حسب المسوق</h2>' . self::table( $result['by_affiliate'] ) . '<h2>حسب الفرع</h2>' . self::table( $result['by_branch'] ) . '<h2>حسب الفترة</h2>' . self::table( $result['by_period'] ) . '<h2>التسوية والفروقات</h2><p>' . esc_html( wp_json_encode( $result['reconciliation']['summary'], JSON_UNESCAPED_UNICODE ) ) . '</p>' . self::issues( $result['reconciliation']['items'] ) . '</div>';
@@ -31,28 +26,22 @@ final class AffiliateCommissionReportPage {
 
 	public static function export(): void { self::download( 'csv' ); }
 	public static function export_excel(): void { self::download( 'excel' ); }
-	public static function export_pdf(): void { self::download( 'pdf' ); }
 	private static function download( string $format ): void {
 		if ( ! self::can_manage() ) { wp_die( esc_html__( 'لا تملك صلاحية تصدير تقرير العمولات.', 'auto-dealership-core' ), '', array( 'response'=>403 ) ); }
-		$action = 'csv' === $format ? 'adc_affiliate_commission_report_export' : ( 'excel' === $format ? 'adc_affiliate_commission_report_excel' : 'adc_affiliate_commission_report_pdf' ); check_admin_referer( $action );
-		$filters=array();foreach(array('from','to','status','period') as $key){$filters[$key]=sanitize_text_field(wp_unslash($_POST[$key]??''));}foreach(array('affiliate_user_id','branch_id') as $key){$filters[$key]=absint($_POST[$key]??0);} $orientation=ServerPdfRenderer::normalize_orientation(sanitize_key(wp_unslash($_POST['orientation']??'landscape')),'landscape'); $language=ServerPdfRenderer::normalize_language(sanitize_key(wp_unslash($_POST['language']??\AutoDealership\Core\Localization::language())));
+		$action = 'csv' === $format ? 'adc_affiliate_commission_report_export' : 'adc_affiliate_commission_report_excel'; check_admin_referer( $action );
+		$filters=array();foreach(array('from','to','status','period') as $key){$filters[$key]=sanitize_text_field(wp_unslash($_POST[$key]??''));}foreach(array('affiliate_user_id','branch_id') as $key){$filters[$key]=absint($_POST[$key]??0);}
 		$result=AffiliateCommissionReport::export($filters,$format);if(is_wp_error($result)){wp_die(esc_html($result->get_error_message()),'',array('response'=>(int)($result->get_error_data()['status']??500)));}nocache_headers();$filename='affiliate-commissions-'.$result['filters']['from'].'-'.$result['filters']['to'];
 		if('csv'===$format){header('Content-Type: text/csv; charset=utf-8');header('Content-Disposition: attachment; filename="'.$filename.'.csv"');echo $result['csv'];exit;}// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		if('excel'===$format){$binary=AffiliateCommissionExport::xlsx($result['data'],$result['filters']);if(is_wp_error($binary)){wp_die(esc_html($binary->get_error_message()),'',array('response'=>503));}header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');header('Content-Disposition: attachment; filename="'.$filename.'.xlsx"');echo $binary;exit;}// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		$binary=AffiliateCommissionExport::pdf($result['data'],$result['filters'],$orientation,$language);if(is_wp_error($binary)){wp_die(esc_html($binary->get_error_message()),'',array('response'=>(int)($binary->get_error_data()['status']??500)));} \AutoDealership\Reports\ServerPdfRenderer::send($binary,$filename.'-'.$language.'-'.$orientation.'.pdf');
 	}
-	private static function export_forms( array $filters, string $orientation = 'landscape', string $language = 'ar', bool $pdf_ready = true ): string {
+	private static function export_forms( array $filters ): string {
 		$html = '<div class="adc-export-actions no-print" style="display:flex;gap:8px;margin:10px 0">';
-		foreach ( array( 'csv'=>array('تنزيل CSV','adc_affiliate_commission_report_export'), 'excel'=>array('تنزيل Excel','adc_affiliate_commission_report_excel'), 'pdf'=>array('تنزيل PDF','adc_affiliate_commission_report_pdf') ) as $format => $data ) {
-			$disabled = 'pdf' === $format && ! $pdf_ready;
+		foreach ( array( 'csv'=>array('تنزيل CSV','adc_affiliate_commission_report_export'), 'excel'=>array('تنزيل Excel','adc_affiliate_commission_report_excel') ) as $format => $data ) {
 			$html .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="' . esc_attr( $data[1] ) . '">' . wp_nonce_field( $data[1], '_wpnonce', true, false );
 			foreach ( array( 'from', 'to', 'status', 'affiliate_user_id', 'branch_id', 'period' ) as $key ) {
 				$html .= '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $filters[ $key ] ?? '' ) . '">';
 			}
-			$html .= '<input type="hidden" name="orientation" value="' . esc_attr( $orientation ) . '"><input type="hidden" name="language" value="' . esc_attr( $language ) . '"><button class="button"' . ( $disabled ? ' disabled="disabled" title="PDF environment is not ready"' : '' ) . '>' . esc_html( $data[0] ) . '</button></form>';
-		}
-		if ( ! $pdf_ready ) {
-			$html .= '<p class="description" role="alert">' . esc_html__( 'تصدير PDF متوقف مؤقتًا: راجع فحص بيئة PDF في صفحة صحة الإدارة.', 'auto-dealership-core' ) . '</p>';
+			$html .= '<button class="button">' . esc_html( $data[0] ) . '</button></form>';
 		}
 		return $html . '</div>';
 	}

@@ -1,12 +1,10 @@
 {
   "name": "autodealership/auto-dealership-core",
-  "description": "Server-side PDF and business services for Auto Dealership Core.",
+  "description": "Business services and browser-printable reports for Auto Dealership Core.",
   "type": "wordpress-plugin",
   "license": "proprietary",
   "require": {
-    "php": ">=8.0",
-    "dompdf/dompdf": "^3.1.6",
-    "mpdf/mpdf": "^8.2"
+    "php": ">=8.0"
   },
   "config": {
     "sort-packages": true,
