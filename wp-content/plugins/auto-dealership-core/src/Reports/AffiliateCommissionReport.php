@@ -29,10 +29,11 @@ final class AffiliateCommissionReport {
 		return array( 'filters'=>$normalized, 'summary'=>$summary, 'by_affiliate'=>$by_affiliate, 'by_branch'=>$by_branch, 'by_period'=>$by_period, 'reconciliation'=>$reconciliation );
 	}
 
-	public static function export( array $filters = array() ) {
+	public static function export( array $filters = array(), string $format = 'csv' ) {
 		$result = self::report( $filters ); if ( is_wp_error( $result ) ) { return $result; } $rows = array();
 		foreach ( array( 'affiliate'=>'by_affiliate', 'branch'=>'by_branch', 'period'=>'by_period' ) as $type=>$key ) { foreach ( $result[ $key ] as $row ) { $rows[] = array( 'group_type'=>$type, 'group_id'=>(int) ( $row['group_id'] ?? 0 ), 'group_label'=>(string) ( $row['group_label'] ?? $row['period'] ?? '' ), 'period'=>(string) ( $row['period'] ?? '' ), 'commission_count'=>(int) $row['commission_count'], 'gross'=>(int) $row['gross'], 'reversals'=>(int) $row['reversals'], 'net_ledger'=>(int) $row['net_ledger'], 'pending_review'=>(int) $row['pending_review'], 'approved'=>(int) $row['approved'], 'paid'=>(int) $row['paid'], 'voided'=>(int) $row['voided'], 'returned'=>(int) $row['returned'] ); } }
-		if ( ! AuditLog::record( 'affiliate_commission.report_exported', 'affiliate_commission_report', 0, 'Affiliate commission CSV export', null, array( 'from'=>$result['filters']['from'], 'to'=>$result['filters']['to'], 'timezone'=>$result['filters']['timezone'], 'currency'=>AffiliateCommissionService::CURRENCY, 'row_count'=>count( $rows ) ) ) ) { return new \WP_Error( 'adc_affiliate_report_audit', 'The affiliate report could not be audited.', array( 'status'=>500 ) ); }
+		$format = in_array( $format, array( 'csv', 'excel', 'pdf' ), true ) ? $format : 'csv';
+		if ( ! AuditLog::record( 'affiliate_commission.report_exported', 'affiliate_commission_report', 0, 'Affiliate commission ' . strtoupper( $format ) . ' export', null, array( 'from'=>$result['filters']['from'], 'to'=>$result['filters']['to'], 'timezone'=>$result['filters']['timezone'], 'currency'=>AffiliateCommissionService::CURRENCY, 'format'=>$format, 'row_count'=>count( $rows ) ) ) ) { return new \WP_Error( 'adc_affiliate_report_audit', 'The affiliate report could not be audited.', array( 'status'=>500 ) ); }
 		return array( 'csv'=>self::csv( $rows, $result['filters'] ), 'data'=>$rows, 'rows'=>count( $rows ), 'filters'=>$result['filters'] );
 	}
 

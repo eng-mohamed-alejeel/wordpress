@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
 /** Read-only pre-release checks for affiliate commission operations. */
 final class AffiliateCommissionHealth {
 	public static function snapshot(): array {
-		$reconciliation = AffiliateCommissionReconciliation::status(); $migration = AffiliateCommissionMigration::status();
+		$reconciliation = AffiliateCommissionReconciliation::status(); $migration = AffiliateCommissionMigration::status(); $performance = AffiliateCommissionPerformance::snapshot();
 		$checks = array(
 			'schema'=>array( 'label'=>'Verified database schema', 'ok'=>Schema::is_ready(), 'value'=>Schema::VERSION ),
 			'currency'=>array( 'label'=>'Single supported currency', 'ok'=>AffiliateCommissionService::is_supported_currency( AffiliateCommissionService::CURRENCY ), 'value'=>AffiliateCommissionService::CURRENCY ),
@@ -19,6 +19,7 @@ final class AffiliateCommissionHealth {
 			'reconciliation_schedule'=>array( 'label'=>'Reconciliation schedule', 'ok'=>false !== wp_next_scheduled( AffiliateCommissionReconciliation::HOOK ), 'value'=>self::scheduled_value( AffiliateCommissionReconciliation::HOOK ) ),
 			'ledger_reconciliation'=>array( 'label'=>'Ledger reconciliation', 'ok'=>'healthy' === $reconciliation['status'], 'value'=>$reconciliation['status'] . ' / ' . absint( $reconciliation['total'] ) . ' findings' ),
 			'migration'=>array( 'label'=>'Historical migration', 'ok'=>in_array( $migration['status'], array( 'idle','complete' ), true ), 'value'=>$migration['status'] ),
+			'performance'=>array( 'label'=>'Report indexes and EXPLAIN', 'ok'=>(bool) $performance['ok'], 'value'=>(string) $performance['value'] ),
 		);
 		$ok = true; foreach ( $checks as $check ) { if ( ! $check['ok'] ) { $ok = false; break; } }
 		return array( 'status'=>$ok ? 'ready' : 'attention', 'checks'=>$checks, 'job_runtime'=>JobRuntime::status() );

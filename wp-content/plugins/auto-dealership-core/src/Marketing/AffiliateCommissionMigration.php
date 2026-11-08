@@ -129,14 +129,15 @@ final class AffiliateCommissionMigration {
 			}
 			$amount = in_array( $status, array( 'void', 'paid_sale_returned' ), true ) ? 0 : (int) $row['amount'];
 			$event_key = hash( 'sha256', 'legacy-opening:' . (int) $row['id'] );
+			$created_at = current_time( 'mysql', true );
 			$inserted = $wpdb->insert( $entries, array(
 				'commission_id'=>(int) $row['id'], 'sale_id'=>(int) $row['sale_id'], 'affiliate_user_id'=>(int) $row['affiliate_user_id'],
 				'branch_id'=>(int) $row['branch_id'], 'entry_type'=>'legacy_opening', 'amount'=>$amount,
 				'currency_code'=>$currency, 'event_key'=>$event_key,
 				'reason'=>'Historical commission opening balance migrated without inventing prior events.', 'actor_user_id'=>0,
-				'created_at'=>current_time( 'mysql', true ),
+				'created_at'=>$created_at,
 			), array( '%d','%d','%d','%d','%s','%d','%s','%s','%s','%d','%s' ) );
-			if ( 1 === $inserted ) { ++$created; if ( 0 === $amount ) { ++$zero; } }
+			if ( 1 === $inserted && AffiliateCommissionService::stamp_entry_metadata( (int) $wpdb->insert_id, array( 'commission_id'=>(int) $row['id'], 'sale_id'=>(int) $row['sale_id'], 'affiliate_user_id'=>(int) $row['affiliate_user_id'], 'branch_id'=>(int) $row['branch_id'], 'entry_type'=>'legacy_opening', 'amount'=>$amount, 'currency_code'=>$currency, 'event_key'=>$event_key, 'reason'=>'Historical commission opening balance migrated without inventing prior events.', 'actor_user_id'=>0, 'created_at'=>$created_at ) ) ) { ++$created; if ( 0 === $amount ) { ++$zero; } }
 			elseif ( 0 === $inserted && ! $wpdb->last_error ) { ++$skipped; }
 			else { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_commission_migration_write', 'Unable to write a historical ledger entry.' ); }
 		}

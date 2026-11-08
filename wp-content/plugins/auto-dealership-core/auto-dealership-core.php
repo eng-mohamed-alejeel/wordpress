@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
- * Version: 1.66.0
+	 * Version: 1.67.0
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Text Domain: auto-dealership-core
@@ -10,9 +10,14 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ADC_VERSION', '1.66.0' );
+define( 'ADC_VERSION', '1.67.0' );
 define( 'ADC_FILE', __FILE__ );
 define( 'ADC_PATH', plugin_dir_path( __FILE__ ) );
+
+// Third-party libraries are packaged with the plugin for production-safe server rendering.
+if ( is_readable( ADC_PATH . 'vendor/autoload.php' ) ) {
+	require_once ADC_PATH . 'vendor/autoload.php';
+}
 
 require_once ADC_PATH . 'src/Cache/CacheManager.php';
 require_once ADC_PATH . 'src/Core/ProductSetup.php';
@@ -182,9 +187,11 @@ require_once ADC_PATH . 'src/Tools/VehicleComparison.php';
 require_once ADC_PATH . 'src/Tools/PublicTools.php';
 require_once ADC_PATH . 'src/Sales/SalesService.php';
 require_once ADC_PATH . 'src/Marketing/AffiliateCommissionService.php';
+\AutoDealership\Marketing\AffiliateCommissionService::boot();
 require_once ADC_PATH . 'src/Marketing/AffiliateCommissionMigration.php';
 require_once ADC_PATH . 'src/Marketing/AffiliateCommissionReconciliation.php';
 require_once ADC_PATH . 'src/Marketing/AffiliateCommissionHealth.php';
+require_once ADC_PATH . 'src/Marketing/AffiliateCommissionPerformance.php';
 require_once ADC_PATH . 'src/Marketing/AffiliateNotificationPreferences.php';
 require_once ADC_PATH . 'src/Marketing/AffiliateCommissionNotificationTemplate.php';
 require_once ADC_PATH . 'src/Sales/SaleCancellationService.php';
@@ -202,6 +209,7 @@ require_once ADC_PATH . 'src/Privacy/RetentionService.php';
 require_once ADC_PATH . 'src/Reports/FinancialExport.php';
 require_once ADC_PATH . 'src/Reports/ReportDateRange.php';
 require_once ADC_PATH . 'src/Reports/AffiliateCommissionReport.php';
+require_once ADC_PATH . 'src/Reports/ServerPdfRenderer.php';
 require_once ADC_PATH . 'src/Reports/AffiliateCommissionExport.php';
 require_once ADC_PATH . 'src/Reports/OperationalReport.php';
 require_once ADC_PATH . 'src/Reports/LeadPerformanceReport.php';
@@ -212,6 +220,7 @@ require_once ADC_PATH . 'src/Admin/ProfitMarginPage.php';
 \AutoDealership\Admin\ProfitMarginPage::boot();
 require_once ADC_PATH . 'src/Admin/AuditPage.php';
 require_once ADC_PATH . 'src/Admin/DiagnosticsPage.php';
+require_once ADC_PATH . 'src/Admin/AdministrativeAlertPage.php';
 require_once ADC_PATH . 'src/Admin/OutboxPage.php';
 require_once ADC_PATH . 'src/Admin/IntegrationPage.php';
 require_once ADC_PATH . 'src/Admin/SecurityPage.php';
@@ -269,6 +278,7 @@ foreach ( array('PortalAccess','Conversations','Reviews','PortalMail','PortalPri
 \AutoDealership\Marketing\AffiliateCommissionMigration::boot();
 \AutoDealership\Marketing\AffiliateCommissionReconciliation::boot();
 \AutoDealership\Operations\AdministrativeAlert::boot();
+\AutoDealership\Admin\AdministrativeAlertPage::boot();
 \AutoDealership\Admin\AffiliateCommissionPage::boot();
 \AutoDealership\Admin\AffiliateCommissionReportPage::boot();
 
@@ -619,6 +629,7 @@ register_deactivation_hook( ADC_FILE, static function (): void {
 	wp_clear_scheduled_hook( 'adc_archive_closed_leads' );
 	wp_clear_scheduled_hook( 'adc_prune_request_limits' );
 	wp_clear_scheduled_hook( 'adc_migrate_affiliate_commissions' );
+	wp_clear_scheduled_hook( 'adc_affiliate_commission_entry_metadata_backfill' );
 } );
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {

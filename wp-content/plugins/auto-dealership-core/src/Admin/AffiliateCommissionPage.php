@@ -17,6 +17,7 @@ final class AffiliateCommissionPage {
 		add_action( 'admin_post_adc_affiliate_commission_migration_resolve', array( self::class, 'resolve_migration_issue' ) );
 		add_action( 'admin_post_adc_affiliate_notification_preferences', array( self::class, 'save_notification_preferences' ) );
 		add_action( 'admin_post_adc_affiliate_commission_reconciliation', array( self::class, 'run_reconciliation' ) );
+		add_action( 'admin_post_adc_affiliate_commission_fingerprint', array( self::class, 'save_fingerprint_setting' ) );
 	}
 
 	private static function text( string $ar, string $en ): string {
@@ -41,6 +42,9 @@ final class AffiliateCommissionPage {
 		self::render_summary( AffiliateCommissionService::account_summary( 0 ), self::text( 'ملخص الفروع المتاحة', 'Accessible commission summary' ) );
 		self::render_operations_health();
 		self::render_migration();
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin:12px 0">';
+		wp_nonce_field( 'adc_affiliate_commission_fingerprint' );
+		echo '<input type="hidden" name="action" value="adc_affiliate_commission_fingerprint"><label><input type="checkbox" name="enabled" value="1"' . checked( AffiliateCommissionService::fingerprint_enabled(), true, false ) . '> ' . esc_html( self::text( 'تفعيل البصمة الاختيارية للحركات المالية', 'Enable optional financial movement fingerprints' ) ) . '</label> <button class="button">' . esc_html( self::text( 'حفظ إعداد البصمة', 'Save fingerprint setting' ) ) . '</button></form>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_affiliate_commission_rate' );
 		echo '<input type="hidden" name="action" value="adc_affiliate_commission_rate"><input type="hidden" name="adc_money_unit" value="SAR"><label>' . esc_html( self::text( 'العمولة الثابتة (ريال)', 'Fixed commission (SAR)' ) ) . ' <input type="number" min="0" step="0.01" name="amount" value="' . esc_attr( Money::decimal( $amount ) ) . '" required></label> <button class="button button-primary">' . esc_html( self::text( 'حفظ الإعداد', 'Save setting' ) ) . '</button></form>';
@@ -67,6 +71,13 @@ final class AffiliateCommissionPage {
 			echo '</td></tr>';
 		}
 		echo '</tbody></table>';
+		if ( $rows ) {
+			echo '<h4>' . esc_html( self::text( 'مراجع الحركات المالية', 'Financial movement references' ) ) . '</h4><ul>';
+			foreach ( $rows as $row ) {
+				if ( ! empty( $row['entry_references'] ) ) { echo '<li><strong>#' . absint( $row['id'] ) . '</strong>: <code>' . esc_html( (string) $row['entry_references'] ) . '</code></li>'; }
+			}
+			echo '</ul>';
+		}
 		self::render_pager( $data );
 	}
 
@@ -187,6 +198,14 @@ final class AffiliateCommissionPage {
 		$result = AffiliateCommissionService::set_configured_amount( $amount );
 		if ( is_wp_error( $result ) ) { wp_die( esc_html( $result->get_error_message() ), '', array( 'response'=>(int) ( $result->get_error_data()['status'] ?? 400 ) ) ); }
 		wp_safe_redirect( add_query_arg( array( 'page'=>'adc-affiliate-commissions', 'saved'=>1 ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	public static function save_fingerprint_setting(): void {
+		check_admin_referer( 'adc_affiliate_commission_fingerprint' );
+		$result = AffiliateCommissionService::set_fingerprint_enabled( ! empty( $_POST['enabled'] ) );
+		if ( is_wp_error( $result ) ) { wp_die( esc_html( $result->get_error_message() ), '', array( 'response' => (int) ( $result->get_error_data()['status'] ?? 400 ) ) ); }
+		wp_safe_redirect( add_query_arg( array( 'page' => 'adc-affiliate-commissions', 'saved' => 1 ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 

@@ -89,7 +89,10 @@ final class ExtensionSchema {
 				KEY branch_created (branch_id,created_at),
 				KEY currency_status_created (currency_code,status,created_at),
 				KEY status_created (status,created_at),
-				KEY branch_status (branch_id,status)
+				KEY branch_status (branch_id,status),
+				KEY report_created_status_branch (created_at,status,branch_id),
+				KEY report_affiliate_created_status (affiliate_user_id,created_at,status),
+				KEY report_branch_created_status (branch_id,created_at,status)
 			) $collate ENGINE=InnoDB;"
 			,
 			"CREATE TABLE " . Schema::table( 'affiliate_commission_entries' ) . " (
@@ -102,6 +105,8 @@ final class ExtensionSchema {
 				amount bigint(20) NOT NULL,
 				currency_code char(3) NOT NULL DEFAULT 'SAR',
 				event_key char(64) NOT NULL,
+				entry_reference varchar(40) NOT NULL DEFAULT '',
+				fingerprint char(64) NULL,
 				reason text NOT NULL,
 				actor_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				created_at datetime NOT NULL,
@@ -109,7 +114,9 @@ final class ExtensionSchema {
 				UNIQUE KEY event_key (event_key),
 				KEY commission_created (commission_id,created_at),
 				KEY affiliate_created (affiliate_user_id,created_at),
-				KEY type_created (entry_type,created_at)
+				KEY type_created (entry_type,created_at),
+				KEY entry_reference (entry_reference),
+				KEY fingerprint (fingerprint)
 			) $collate ENGINE=InnoDB;"
 			,
 			"CREATE TABLE " . Schema::table( 'affiliate_commission_migration_issues' ) . " (
@@ -126,7 +133,8 @@ final class ExtensionSchema {
 				PRIMARY KEY (id),
 				UNIQUE KEY commission_issue (commission_id,issue_type),
 				KEY issue_status_created (status,created_at),
-				KEY issue_commission (commission_id,status)
+				KEY issue_commission (commission_id,status),
+				KEY issue_type_status (issue_type,status,id)
 			) $collate ENGINE=InnoDB;"
 		);
 	}

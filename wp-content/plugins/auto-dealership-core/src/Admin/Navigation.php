@@ -151,6 +151,7 @@ final class Navigation {
 				array( 'adc-public-security', 'أمن الواجهة العامة', 'adc_view_audit', SecurityPage::class, 'render' ),
 				array( 'adc-integrations', 'جاهزية التكاملات', 'adc_view_integrations', IntegrationPage::class, 'render' ),
 				array( 'adc-outbox', 'مراقبة المهام', 'adc_view_outbox', OutboxPage::class, 'render' ),
+				array( 'adc-administrative-alerts', 'سجل تنبيهات الإدارة', 'manage_options', AdministrativeAlertPage::class, 'render' ),
 			) ),
 		);
 		$descriptions = self::descriptions();

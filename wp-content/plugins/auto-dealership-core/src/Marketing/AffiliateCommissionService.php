@@ -17,9 +17,32 @@ final class AffiliateCommissionService {
 	private const ENTRY_VOID_REVERSAL = 'void_reversal';
 	private const ENTRY_RETURN_REVERSAL = 'return_reversal';
 	private const STATUSES = array( 'pending_review','approved','paid','void','paid_sale_returned' );
+	private const FINGERPRINT_OPTION = 'adc_affiliate_entry_fingerprint_enabled';
+	private const METADATA_BATCH = 200;
+
+	public static function boot(): void {
+		add_action( 'adc_affiliate_commission_entry_metadata_backfill', array( self::class, 'run_metadata_backfill' ) );
+		if ( function_exists( 'wp_next_scheduled' ) && function_exists( 'wp_schedule_single_event' ) && Schema::is_ready() && ! wp_next_scheduled( 'adc_affiliate_commission_entry_metadata_backfill' ) ) {
+			wp_schedule_single_event( time() + 30, 'adc_affiliate_commission_entry_metadata_backfill' );
+		}
+	}
 
 	public static function statuses(): array { return self::STATUSES; }
 	public static function is_supported_currency( string $currency ): bool { return self::CURRENCY === strtoupper( trim( $currency ) ); }
+
+	public static function fingerprint_enabled(): bool {
+		return (bool) get_option( self::FINGERPRINT_OPTION, true );
+	}
+
+	public static function set_fingerprint_enabled( bool $enabled ) {
+		if ( ! current_user_can( 'adc_manage_affiliate_commissions' ) && ! current_user_can( 'manage_options' ) ) {
+			return new \WP_Error( 'adc_commission_forbidden', __( 'لا تملك صلاحية تعديل إعدادات الحركات المالية.', 'auto-dealership-core' ), array( 'status' => 403 ) );
+		}
+		if ( ! update_option( self::FINGERPRINT_OPTION, $enabled, false ) && self::fingerprint_enabled() !== $enabled ) {
+			return new \WP_Error( 'adc_commission_fingerprint_setting_failed', __( 'تعذر حفظ إعداد بصمة الحركات المالية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
+		}
+		return $enabled;
+	}
 
 	public static function configured_amount(): int {
 		return Money::parse( get_option( 'adc_affiliate_commission_amount', 0 ) ) ?? 0;
@@ -298,10 +321,57 @@ final class AffiliateCommissionService {
 		$total = (int) $wpdb->get_var( $args ? $wpdb->prepare( $count_sql, $args ) : $count_sql );
 		if ( $wpdb->last_error ) { return new \WP_Error( 'adc_commission_query_failed', __( 'تعذر تحميل سجل العمولات.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
 		$limit = $per_page; $offset = ( $page - 1 ) * $per_page;
-		$sql = 'SELECT c.id,c.sale_id,c.quotation_id,c.lead_id,c.affiliate_user_id,c.branch_id,c.amount,c.currency_code,c.status,c.payment_reference,c.reviewed_by,c.reviewed_at,c.paid_by,c.paid_at,c.created_at,u.display_name FROM ' . $from . ' c LEFT JOIN ' . $wpdb->users . ' u ON u.ID=c.affiliate_user_id WHERE ' . implode( ' AND ', $where ) . ' ORDER BY c.id DESC LIMIT %d OFFSET %d';
+		$entries = Schema::table( 'affiliate_commission_entries' );
+		$sql = "SELECT c.id,c.sale_id,c.quotation_id,c.lead_id,c.affiliate_user_id,c.branch_id,c.amount,c.currency_code,c.status,c.payment_reference,c.reviewed_by,c.reviewed_at,c.paid_by,c.paid_at,c.created_at,u.display_name,(SELECT GROUP_CONCAT(e.entry_reference ORDER BY e.id ASC SEPARATOR ', ') FROM $entries e WHERE e.commission_id=c.id AND e.entry_reference<>'') entry_references FROM $from c LEFT JOIN {$wpdb->users} u ON u.ID=c.affiliate_user_id WHERE " . implode( ' AND ', $where ) . ' ORDER BY c.id DESC LIMIT %d OFFSET %d';
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $args, array( $limit, $offset ) ) ), ARRAY_A );
 		if ( $wpdb->last_error ) { return new \WP_Error( 'adc_commission_query_failed', __( 'تعذر تحميل سجل العمولات.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
 		return array( 'items'=>$rows ?: array(), 'page'=>$page, 'per_page'=>$per_page, 'total'=>$total, 'pages'=>(int) ceil( $total / $per_page ), 'currency'=>self::CURRENCY, 'timezone'=>$timezone->getName() );
+	}
+
+	public static function run_metadata_backfill(): void {
+		self::backfill_entry_metadata( self::METADATA_BATCH );
+	}
+
+	/** Internal migration hook; only metadata is written, never the financial movement itself. */
+	public static function stamp_entry_metadata( int $entry_id, array $entry ): bool {
+		return self::write_entry_metadata( $entry_id, $entry );
+	}
+
+	/** Backfills visible references and optional fingerprints without changing financial amounts. */
+	public static function backfill_entry_metadata( int $limit = self::METADATA_BATCH ): int {
+		global $wpdb;
+		if ( ! Schema::is_ready() ) { return 0; }
+		$table = Schema::table( 'affiliate_commission_entries' );
+		$condition = self::fingerprint_enabled() ? 'fingerprint IS NULL' : '0=1';
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id,commission_id,sale_id,affiliate_user_id,branch_id,entry_type,amount,currency_code,event_key,reason,actor_user_id,created_at,entry_reference,fingerprint FROM $table WHERE entry_reference='' OR ($condition) ORDER BY id ASC LIMIT %d", min( 1000, max( 1, $limit ) ) ), ARRAY_A );
+		if ( $wpdb->last_error || ! $rows ) { return 0; }
+		$count = 0;
+		foreach ( $rows as $row ) {
+			if ( self::write_entry_metadata( (int) $row['id'], $row ) ) { ++$count; }
+		}
+		if ( count( $rows ) >= $limit && function_exists( 'wp_schedule_single_event' ) && function_exists( 'wp_next_scheduled' ) && ! wp_next_scheduled( 'adc_affiliate_commission_entry_metadata_backfill' ) ) {
+			wp_schedule_single_event( time() + 30, 'adc_affiliate_commission_entry_metadata_backfill' );
+		}
+		return $count;
+	}
+
+	private static function write_entry_metadata( int $entry_id, array $entry ): bool {
+		global $wpdb;
+		$table = Schema::table( 'affiliate_commission_entries' );
+		$reference = 'ADC-LE-' . str_pad( (string) $entry_id, 12, '0', STR_PAD_LEFT );
+		$data = array( 'entry_reference' => $reference );
+		$formats = array( '%s' );
+		if ( self::fingerprint_enabled() ) {
+			$data['fingerprint'] = hash( 'sha256', (string) wp_json_encode( array(
+				'id'=>(int) $entry_id, 'commission_id'=>(int) ( $entry['commission_id'] ?? 0 ), 'sale_id'=>(int) ( $entry['sale_id'] ?? 0 ),
+				'affiliate_user_id'=>(int) ( $entry['affiliate_user_id'] ?? 0 ), 'branch_id'=>(int) ( $entry['branch_id'] ?? 0 ),
+				'entry_type'=>(string) ( $entry['entry_type'] ?? '' ), 'amount'=>(int) ( $entry['amount'] ?? 0 ),
+				'currency_code'=>(string) ( $entry['currency_code'] ?? self::CURRENCY ), 'event_key'=>(string) ( $entry['event_key'] ?? '' ),
+				'reason'=>(string) ( $entry['reason'] ?? '' ), 'actor_user_id'=>(int) ( $entry['actor_user_id'] ?? 0 ), 'created_at'=>(string) ( $entry['created_at'] ?? '' ),
+			), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
+			$formats[] = '%s';
+		}
+		return 1 === $wpdb->update( $table, $data, array( 'id' => $entry_id ), $formats, array( '%d' ) );
 	}
 
 	private static function insert_entry( array $entry ): bool {
@@ -313,10 +383,14 @@ final class AffiliateCommissionService {
 		$valid_sign = self::ENTRY_ACCRUAL === $entry_type ? $amount > 0 : $amount < 0;
 		if ( ! $valid_type || ! self::is_supported_currency( $currency ) || ! $valid_sign ) { return false; }
 		$table = Schema::table( 'affiliate_commission_entries' );
+		$created_at = current_time( 'mysql', true );
 		$inserted = $wpdb->insert( $table, array(
-			'commission_id'=>(int) $entry['commission_id'], 'sale_id'=>(int) $entry['sale_id'], 'affiliate_user_id'=>(int) $entry['affiliate_user_id'], 'branch_id'=>(int) $entry['branch_id'], 'entry_type'=>$entry_type, 'amount'=>$amount, 'currency_code'=>$currency, 'event_key'=>(string) $entry['event_key'], 'reason'=>(string) ( $entry['reason'] ?? '' ), 'actor_user_id'=>get_current_user_id(), 'created_at'=>current_time( 'mysql', true ),
+			'commission_id'=>(int) $entry['commission_id'], 'sale_id'=>(int) $entry['sale_id'], 'affiliate_user_id'=>(int) $entry['affiliate_user_id'], 'branch_id'=>(int) $entry['branch_id'], 'entry_type'=>$entry_type, 'amount'=>$amount, 'currency_code'=>$currency, 'event_key'=>(string) $entry['event_key'], 'reason'=>(string) ( $entry['reason'] ?? '' ), 'actor_user_id'=>get_current_user_id(), 'created_at'=>$created_at,
 		), array( '%d','%d','%d','%d','%s','%d','%s','%s','%s','%d','%s' ) );
-		if ( 1 === $inserted ) { return true; }
+		if ( 1 === $inserted ) {
+			$entry_id = (int) $wpdb->insert_id;
+			return self::write_entry_metadata( $entry_id, array_merge( $entry, array( 'id' => $entry_id, 'currency_code' => $currency, 'actor_user_id' => get_current_user_id(), 'created_at' => $created_at ) ) );
+		}
 		return (bool) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table WHERE event_key=%s", $entry['event_key'] ) );
 	}
 }

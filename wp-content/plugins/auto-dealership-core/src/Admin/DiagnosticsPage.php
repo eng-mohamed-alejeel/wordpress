@@ -6,6 +6,7 @@ use AutoDealership\Cache\CacheManager;
 use AutoDealership\Cache\OfferCache;
 use AutoDealership\Operations\AdminDiagnostics;
 use AutoDealership\Operations\JobRuntime;
+use AutoDealership\Reports\ServerPdfRenderer;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -18,6 +19,7 @@ final class DiagnosticsPage {
 		$snapshot = AdminDiagnostics::snapshot();
 		$runtime  = JobRuntime::status();
 		$signals  = self::audit_signals();
+		$pdf_environment = ServerPdfRenderer::environment();
 		$settings = $snapshot['settings'];
 		$cache_providers = CacheManager::providers();
 		$cache_cron = OfferCache::reconcile_status();
@@ -44,6 +46,7 @@ final class DiagnosticsPage {
 					<?php self::metric( 'Cache last purge', $cache_purge_label, 'The latest cache invalidation operation is recorded without URLs or customer data.' ); ?>
 				</tbody></table>
 			</div>
+			<?php self::render_pdf_environment( $pdf_environment ); ?>
 
 			<?php if ( current_user_can( 'manage_options' ) ) : ?>
 				<div class="card">
@@ -87,6 +90,24 @@ final class DiagnosticsPage {
 			</div>
 		</div>
 		<?php
+	}
+
+	private static function render_pdf_environment( array $environment ): void {
+		$ready = ! empty( $environment['ready'] );
+		$status_class = $ready ? 'notice-success' : 'notice-error';
+		$status_label = $ready ? __( 'جاهز للتصدير', 'auto-dealership-core' ) : __( 'التصدير محجوب حتى استكمال المتطلبات', 'auto-dealership-core' );
+		echo '<h2>' . esc_html__( 'بيئة تصدير PDF', 'auto-dealership-core' ) . '</h2>';
+		echo '<div class="notice ' . esc_attr( $status_class ) . '"><p><strong>' . esc_html( $status_label ) . '</strong></p></div>';
+		echo '<p class="description">' . esc_html__( 'يتم فحص امتدادات PHP والمكتبات والخطوط ومجلد الملفات المؤقتة قبل إنشاء أي ملف PDF. لا يتم عرض مسارات الخادم أو بيانات حساسة.', 'auto-dealership-core' ) . '</p>';
+		echo '<div class="adc-table-scroll" role="region" aria-label="' . esc_attr__( 'فحص بيئة PDF', 'auto-dealership-core' ) . '" tabindex="0"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'المكوّن', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'الحالة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'القيمة', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'المتطلبات', 'auto-dealership-core' ) . '</th><th>' . esc_html__( 'التفاصيل', 'auto-dealership-core' ) . '</th></tr></thead><tbody>';
+		foreach ( (array) ( $environment['checks'] ?? array() ) as $check ) {
+			$ok = ! empty( $check['ok'] );
+			$required = ! empty( $check['required'] );
+			$status = $ok ? __( 'سليم', 'auto-dealership-core' ) : ( $required ? __( 'مفقود — يمنع التصدير', 'auto-dealership-core' ) : __( 'تنبيه', 'auto-dealership-core' ) );
+			$requirement = $required ? __( 'مطلوب', 'auto-dealership-core' ) : __( 'موصى به', 'auto-dealership-core' );
+			echo '<tr><th>' . esc_html( (string) ( $check['label'] ?? '' ) ) . '</th><td><strong>' . esc_html( $status ) . '</strong></td><td>' . esc_html( (string) ( $check['value'] ?? '' ) ) . '</td><td>' . esc_html( $requirement ) . '</td><td>' . esc_html( (string) ( $check['detail'] ?? '' ) ) . '</td></tr>';
+		}
+		echo '</tbody></table></div>';
 	}
 
 	private static function notice(): void {
