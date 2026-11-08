@@ -1,0 +1,361 @@
+﻿{
+    "package":  "car-dealer-1.66.0.zip",
+    "install_mode":  "WordPress dashboard",
+    "source_commit":  "546fae086cff72d23bf64def9b84251853417227",
+    "working_tree_review":  true,
+    "version":  "1.66.0",
+    "file_count":  70,
+    "package_sha256":  "60766620868838d01c724ae8a88a9da843109c97af1dff9f914c25fd7bf70f98",
+    "files":  [
+                  {
+                      "path":  "car-dealer/404.php",
+                      "bytes":  1680,
+                      "sha256":  "e1fac3ff5dee315598d3bcfb13bf4ac6d684cb81345c64d81306b6b896cc36a5"
+                  },
+                  {
+                      "path":  "car-dealer/archive-car.php",
+                      "bytes":  4829,
+                      "sha256":  "9ca5c52909cd10a7ffcc310c7b8ee23bcb00b04f97ec0f3dc7ec1c81306bee26"
+                  },
+                  {
+                      "path":  "car-dealer/archive-car_offer.php",
+                      "bytes":  3731,
+                      "sha256":  "bc3580313b79eb66283a006fb6b135c920223519c177f07f3180b6cec89db64f"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/about-modern.css",
+                      "bytes":  4832,
+                      "sha256":  "e53559fb66d8e4dd4eb1619211ceadf37cefedf004b0cb3af7d7b3079038c1dc"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/abstracts/_variables.css",
+                      "bytes":  3311,
+                      "sha256":  "695069a7831304ba981a73658a099f19d1d16a506401fd26402d541c7901702d"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/account.css",
+                      "bytes":  11336,
+                      "sha256":  "010c6349187a759d12ef7bfb7249db0309488ec9261f4458be1b19e389ad2525"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/base/_reset.css",
+                      "bytes":  2277,
+                      "sha256":  "54bfbfc244103930f711b6bbd0bdca2733f4f26f086229c71640046a070b1888"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/base/_typography.css",
+                      "bytes":  1141,
+                      "sha256":  "a7376c38768eed53424a60fac71b2a17ce65c021281538846f35478882fe0091"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/car-dialogs.css",
+                      "bytes":  4762,
+                      "sha256":  "ac9cc76ac85d5ec1885db58f59ce5c8ff860751792e83a2edf7bc570c1cb13d0"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/components/_buttons.css",
+                      "bytes":  4094,
+                      "sha256":  "dbc468c208ad5a15f37f1a9591e7dfe21e662a479b668e93a13fd422c12d7383"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/components/_cards.css",
+                      "bytes":  7979,
+                      "sha256":  "2dbfb28ceaab035059d1f9b2f817ac2b2df02b8da3008a3d954cd76604245be7"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/components/_cookies.css",
+                      "bytes":  7957,
+                      "sha256":  "3346c89e7f6314c7e41fe69ce0459ecf18a6726f3f0d0b4938fdb3e439f88841"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/components/_floating.css",
+                      "bytes":  2171,
+                      "sha256":  "37b83c24fbdf5f5d7748406fc76cde39d4ab5832b139fa3d9696c1b6a75ddfd0"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/components/_forms.css",
+                      "bytes":  1750,
+                      "sha256":  "3996f7b1d8df4bff7746e7492d5fdd99f65a0e9106d9379eab50f712e571f27e"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/components/_icons.css",
+                      "bytes":  7888,
+                      "sha256":  "377dba24ee5625b7027587dbfaa064dfddae2dbbeafdb81cda923a87ad468d19"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/components/_password-toggle.css",
+                      "bytes":  7969,
+                      "sha256":  "7aeb8436691065c1e66c1330fd990762fe6ae8019a388445c3c5d315dca31e26"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/floating-buttons.css",
+                      "bytes":  2810,
+                      "sha256":  "e021b9424f4e8e7bc05e556e7c571f03eaffaa89897608577df13a197d18cf6e"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/home-v2.css",
+                      "bytes":  19226,
+                      "sha256":  "53bbdb232fbf34766b4926705058f802ba3e0d8111bca3f17d8e9f1e303f1d64"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/layout/_footer.css",
+                      "bytes":  7082,
+                      "sha256":  "329a00a7d07ef754ec758d9594cbad872eb63d16d6fc75ec399e213649585270"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/layout/_grid.css",
+                      "bytes":  2302,
+                      "sha256":  "fb86ed99ccf4479d03df7dac47e43ee4830a14a1fd6d0016a1178bd424edb36e"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/layout/_header.css",
+                      "bytes":  5183,
+                      "sha256":  "3aee6a18c632df56bb66414e116cc5b5563120cd7d7b2c56f484f8b7a10b9f9b"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/main.css",
+                      "bytes":  86391,
+                      "sha256":  "65c1aa82528356f79b700dcf3fbe9b0d7445e5e6681216b98efbabe327be2ae5"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/pages/_about.css",
+                      "bytes":  10161,
+                      "sha256":  "0fa8583e0092b962d44077af656b10a04aa0ee08e9da7fc04d2f19db872b5a9c"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/pages/_account.css",
+                      "bytes":  2527,
+                      "sha256":  "d75784aeb856c8d990e6daa9ce7a2426438238bfce289a216489b18ea2954955"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/pages/_cars.css",
+                      "bytes":  906,
+                      "sha256":  "66ce0fc2255c2d121cf2cd9c030628503f635ecbb7e14433bb198e5e6803dd3b"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/pages/_contact.css",
+                      "bytes":  10435,
+                      "sha256":  "14b4ca3e950c18906862258a6f2aac1cb1e91258e61ca08a72bef13a6b59bca0"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/pages/_home.css",
+                      "bytes":  3134,
+                      "sha256":  "b8ffb9a9e460512660368ba95b1e79b3bd6c2422b41a533ea6275cec639cb7f8"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/pages/_page.css",
+                      "bytes":  7646,
+                      "sha256":  "5d25e24afafc47078f92bdd36c38f373299200266153d0bea17456e6e24289c9"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/site-shell.css",
+                      "bytes":  65716,
+                      "sha256":  "b39ba9e52a84fae91aebea69d43e1300df16aa0d3d8733f7bf354865eff35d41"
+                  },
+                  {
+                      "path":  "car-dealer/assets/css/themes/_auto-brands.css",
+                      "bytes":  18354,
+                      "sha256":  "b7dc51b13bce874c50ce09dd244e74f5a5fe7a653ae4d805034e9c9ed3ab9661"
+                  },
+                  {
+                      "path":  "car-dealer/assets/js/car-dialogs.js",
+                      "bytes":  9368,
+                      "sha256":  "3f03ca8da8c27bf86b74177d1bce882b7ce9145706681b7989da8f2b761108f1"
+                  },
+                  {
+                      "path":  "car-dealer/assets/js/cookie-consent.js",
+                      "bytes":  13264,
+                      "sha256":  "649d4aa10c0af1847b2b4c9c7a93ee0379e3c91d4a7ab03fbc80859077ba1998"
+                  },
+                  {
+                      "path":  "car-dealer/assets/js/customize-preview.js",
+                      "bytes":  1323,
+                      "sha256":  "bc51b8f8e9f78bd42bde6e8d0864f7add750d83f024a9fc3f6adfc75cd71300e"
+                  },
+                  {
+                      "path":  "car-dealer/assets/js/main.js",
+                      "bytes":  11936,
+                      "sha256":  "8216e120dec534c3f684f19d66f13d4072292036aecd7ea33e3eafd68f2c2081"
+                  },
+                  {
+                      "path":  "car-dealer/assets/js/password-toggle.js",
+                      "bytes":  11179,
+                      "sha256":  "6913dd730d86f51ab78fd6f9c4a222b85b1fd0b7e4c9ab9d58407b75576112b8"
+                  },
+                  {
+                      "path":  "car-dealer/assets/js/wordpress-underscore.js",
+                      "bytes":  865,
+                      "sha256":  "a01281b6e25112a4ac1f9b7e35d7d481d088fc4e35d708ccdb05f97f92fcad13"
+                  },
+                  {
+                      "path":  "car-dealer/footer.php",
+                      "bytes":  7024,
+                      "sha256":  "eedea6f9c6ba9528b12ede5eb5c149258c2f35869b18451cbb3610d6e466ae96"
+                  },
+                  {
+                      "path":  "car-dealer/functions.php",
+                      "bytes":  36765,
+                      "sha256":  "4255caf752a07ead01866d93f3e32c5cbc5ae481ec3c356729a8cfd4bf0e0db7"
+                  },
+                  {
+                      "path":  "car-dealer/header.php",
+                      "bytes":  2617,
+                      "sha256":  "2ced5f8b26aa71b49cbb7eb25741dd3934d635a1f1f9d6b2bee5d4ef0966a2a2"
+                  },
+                  {
+                      "path":  "car-dealer/inc/about-contact-pages.php",
+                      "bytes":  31875,
+                      "sha256":  "ddfd016758c5b86c42e3ffd338a4b77fa3af0bceaa7dd0f3a6616b0f16952bb0"
+                  },
+                  {
+                      "path":  "car-dealer/inc/accounts.php",
+                      "bytes":  10083,
+                      "sha256":  "f048bbc758e75cce46d9b3329b891479ecf3f3ed0a2010c2f4c95705fe5041fb"
+                  },
+                  {
+                      "path":  "car-dealer/inc/contact-form-manager.php",
+                      "bytes":  8999,
+                      "sha256":  "3ebf302e499b4b04e6955bf679ad01b3cb91393f17d4c233ab440488a749cc9b"
+                  },
+                  {
+                      "path":  "car-dealer/inc/customization-manager.php",
+                      "bytes":  9024,
+                      "sha256":  "556341a63a408d4dfa365dbe973effd8973aa475fb3796e24dddeee6ad5a8677"
+                  },
+                  {
+                      "path":  "car-dealer/inc/localization.php",
+                      "bytes":  1089,
+                      "sha256":  "ea0f85a83b8aa69bf77825c0341f4febabf54a484411d0f22610839daa996664"
+                  },
+                  {
+                      "path":  "car-dealer/inc/page-cache-integration.php",
+                      "bytes":  765,
+                      "sha256":  "4d971f74ab4297cbc61113f10eec01dbaf2349e9142e7fabca92057618d7f834"
+                  },
+                  {
+                      "path":  "car-dealer/inc/public-catalog.php",
+                      "bytes":  31944,
+                      "sha256":  "e898054fa4613b450b2653445628602a8554fc5bce592862eecf521896dc39f5"
+                  },
+                  {
+                      "path":  "car-dealer/inc/public-site-defaults.json",
+                      "bytes":  33531,
+                      "sha256":  "a0d54c7db24cf53313b491fe31c253db288b6ac8afc75a83dfe71fe604c38427"
+                  },
+                  {
+                      "path":  "car-dealer/inc/public-site-setup.php",
+                      "bytes":  522,
+                      "sha256":  "3e338ab1e7fb64717aac0683c99834fa1a3a67038f678aae43b70427e8a438f1"
+                  },
+                  {
+                      "path":  "car-dealer/inc/release.json",
+                      "bytes":  219,
+                      "sha256":  "9f12f180df8728a49a995eeaf0b1f05e9e9f0f2ae833a573b794264ed320afe8"
+                  },
+                  {
+                      "path":  "car-dealer/inc/script-compatibility.php",
+                      "bytes":  922,
+                      "sha256":  "a0b0bbadb0c45a7d0eb8ecf9194f282bfdb0722f76a62307c7d65497dadc8083"
+                  },
+                  {
+                      "path":  "car-dealer/index.php",
+                      "bytes":  16652,
+                      "sha256":  "2857b2c03f5fff28f4f07a47ac9116fad315d902adb9fdf47264574bea0c7b2e"
+                  },
+                  {
+                      "path":  "car-dealer/languages/ui.php",
+                      "bytes":  397780,
+                      "sha256":  "912d2a6d6fd18af0568b452aecb76d3c5765e5a0769af8f8f821bd7f696f8f93"
+                  },
+                  {
+                      "path":  "car-dealer/page-about.php",
+                      "bytes":  1121,
+                      "sha256":  "04a9b97d4d59906f8459cad83d157168a22b48fb93bd1c7c321d4f4c4d76b225"
+                  },
+                  {
+                      "path":  "car-dealer/page-comparison.php",
+                      "bytes":  289,
+                      "sha256":  "8b4cf8b7a448b4315d4b217cb81fa839306b79807f9eada506b93cfbc0c35f7d"
+                  },
+                  {
+                      "path":  "car-dealer/page-contact.php",
+                      "bytes":  1019,
+                      "sha256":  "104c92cd47385a961667806236241f07e5946736e1d21f307a52eecb805ff1e8"
+                  },
+                  {
+                      "path":  "car-dealer/page-legal.php",
+                      "bytes":  1407,
+                      "sha256":  "f9e9e0dabe9e91d3c13e46b50d1b37d88a664ad3f3663f1449eeb1e1be80a38b"
+                  },
+                  {
+                      "path":  "car-dealer/page-privacy.php",
+                      "bytes":  758,
+                      "sha256":  "b2e27b8864ed5fc270b676fa722cd4a1534cde680011c714dde5c96b8065af06"
+                  },
+                  {
+                      "path":  "car-dealer/page-terms.php",
+                      "bytes":  756,
+                      "sha256":  "d12d289864499099dace87fae273984e1fb056e9bd21c9fd5418bfa355ea003c"
+                  },
+                  {
+                      "path":  "car-dealer/page.php",
+                      "bytes":  1742,
+                      "sha256":  "ba2a3cbc485cd617ce20b1f5ff9857dd1ac12400697e5e40037c0848c61bc52a"
+                  },
+                  {
+                      "path":  "car-dealer/readme.txt",
+                      "bytes":  1247,
+                      "sha256":  "540f95bf6e0c484d9775b85e8328d0837d9e9ab90d14056a5103f45596cd6aa0"
+                  },
+                  {
+                      "path":  "car-dealer/single-car.php",
+                      "bytes":  16590,
+                      "sha256":  "c45fad9ace0d887f313c89f99bc54c6df525324bc081bdeadb58fcbc29b3cf05"
+                  },
+                  {
+                      "path":  "car-dealer/single-car_offer.php",
+                      "bytes":  10893,
+                      "sha256":  "4543f45acdeca27a169bea75d4b2de569ed1578a9c42f1129b130e83c31e33fb"
+                  },
+                  {
+                      "path":  "car-dealer/style.css",
+                      "bytes":  782,
+                      "sha256":  "20504eee91dbc4f725875ada1dad1ceb0e3d0568b36e343393f3b38ab1ae2ad9"
+                  },
+                  {
+                      "path":  "car-dealer/templates/account-password-policy.php",
+                      "bytes":  3039,
+                      "sha256":  "33e1fe4b1651619899d19440789c21dff6cfd0b83f718e40601c50b2f938f4e7"
+                  },
+                  {
+                      "path":  "car-dealer/templates/account-recovery.php",
+                      "bytes":  5425,
+                      "sha256":  "883443786340ad2781036c7a00ab95ae675384a442c42ed7e95f29f80d764fd1"
+                  },
+                  {
+                      "path":  "car-dealer/templates/account.php",
+                      "bytes":  17519,
+                      "sha256":  "baac3d4a543117208f7feb5b7e4e87f7200c674e20430e20f8acd9dbfe1a711f"
+                  },
+                  {
+                      "path":  "car-dealer/templates/components/car-card.php",
+                      "bytes":  5752,
+                      "sha256":  "acc519fa809a1e76a7b91718450f657f7ef79396d4ce99f232f0fecd2ffdd4bd"
+                  },
+                  {
+                      "path":  "car-dealer/templates/components/catalog-filters.php",
+                      "bytes":  4376,
+                      "sha256":  "d8709048002bcb7896294355d8d8bc11a31252244811845fd11cfc3a757096b5"
+                  },
+                  {
+                      "path":  "car-dealer/templates/components/filter-bar.php",
+                      "bytes":  11519,
+                      "sha256":  "d9afd59fa7c3e52f82bd55d6e15761203bafe59d1e7fa518b74b0148d5aa708c"
+                  },
+                  {
+                      "path":  "car-dealer/templates/components/header-search.php",
+                      "bytes":  2911,
+                      "sha256":  "d8e5cc502d0065ee2c1af3fc1817dbc96a7755744603398ff7a026f0480bbd55"
+                  }
+              ]
+}
