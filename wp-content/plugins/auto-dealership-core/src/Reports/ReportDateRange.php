@@ -8,8 +8,11 @@ final class ReportDateRange {
 	public static function normalize( array $filters, int $default_days = 30 ) {
 		$timezone = wp_timezone();
 		$today = ( new \DateTimeImmutable( 'now', $timezone ) )->setTime( 0, 0, 0 );
-		$from = sanitize_text_field( (string) ( $filters['from'] ?? $today->modify( '-' . max( 1, $default_days ) . ' days' )->format( 'Y-m-d' ) ) );
-		$to = sanitize_text_field( (string) ( $filters['to'] ?? $today->format( 'Y-m-d' ) ) );
+		$default_from = $today->modify( '-' . max( 1, $default_days ) . ' days' )->format( 'Y-m-d' );
+		$from_input = sanitize_text_field( (string) ( $filters['from'] ?? '' ) );
+		$to_input = sanitize_text_field( (string) ( $filters['to'] ?? '' ) );
+		$from = '' !== trim( $from_input ) ? $from_input : $default_from;
+		$to = '' !== trim( $to_input ) ? $to_input : $today->format( 'Y-m-d' );
 		$start = \DateTimeImmutable::createFromFormat( '!Y-m-d', $from, $timezone );
 		$end = \DateTimeImmutable::createFromFormat( '!Y-m-d', $to, $timezone );
 		if ( ! $start || ! $end || $start->format( 'Y-m-d' ) !== $from || $end->format( 'Y-m-d' ) !== $to || $end < $start || $start->diff( $end )->days > 366 ) {
