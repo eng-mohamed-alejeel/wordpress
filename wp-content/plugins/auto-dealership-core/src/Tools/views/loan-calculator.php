@@ -5,6 +5,8 @@ defined('ABSPATH') || exit;
 use AutoDealership\Tools\LoanCalculator;
 use AutoDealership\Tools\FinanceConfiguration;
 $settings=FinanceConfiguration::get()['settings'];
+$unit=\AutoDealership\Core\CurrencySettings::display_unit();
+$money_step=\AutoDealership\Core\CurrencySettings::input_step();
 $label=static fn($ar,$en)=>LoanCalculator::text($ar,$en);
 $select=static function($name,$ar,$en,$options,$default) use($label) {
  echo '<label>'.esc_html($label($ar,$en)).'<select name="'.esc_attr($name).'" required>';
@@ -20,8 +22,8 @@ foreach(LoanCalculator::rules() as $id=>$bank) $providers[$id]=$bank['name'];
  <form data-loan-calculator>
   <input type="hidden" name="lang" value="<?php echo esc_attr(\AutoDealership\Core\Localization::language()); ?>">
   <div class="cd-form-grid adc-finance-inputs">
-   <label><?php echo esc_html($label('سعر السيارة شامل ضريبة 15% (ريال)','Car price including 15% VAT (SAR)')); ?><input name="price" data-loan-price type="number" min="0.01" max="100000000" step="0.01" value="<?php echo esc_attr($model['price']>0?$model['price']:''); ?>" required></label>
-   <label><?php echo esc_html($label('الراتب الشهري (ريال)','Monthly salary (SAR)')); ?><input name="salary" type="number" min="0.01" max="100000000" step="0.01" required></label>
+   <label><?php echo esc_html($label('سعر السيارة شامل ضريبة 15% ('.$unit.')','Car price including 15% VAT ('.$unit.')')); ?><input name="price" data-loan-price type="number" min="0.01" max="100000000" step="<?php echo esc_attr($money_step); ?>" value="<?php echo esc_attr($model['price']>0?$model['price']:''); ?>" required></label>
+   <label><?php echo esc_html($label('الراتب الشهري ('.$unit.')','Monthly salary ('.$unit.')')); ?><input name="salary" type="number" min="0.01" max="100000000" step="<?php echo esc_attr($money_step); ?>" required></label>
    <?php
    $select('sector','قطاع العمل','Employment sector', ['government'=>['حكومي / مدني','Government / Civilian'],'military'=>['عسكري','Military'],'private_approved'=>['خاص معتمد','Approved private'],'private_unapproved'=>['خاص غير معتمد','Non-approved private'],'retired'=>['متقاعد','Retired'],'self_employed'=>['أصحاب مؤسسات','Self-employed']],'government');
    $select('nationality','الجنسية','Nationality',['saudi'=>['سعودي','Saudi'],'expat'=>['مقيم','Expat']],'saudi');
@@ -34,7 +36,7 @@ foreach(LoanCalculator::rules() as $id=>$bank) $providers[$id]=$bank['name'];
    $select('chinese','هل العلامة صينية؟','Is the brand Chinese?',['no'=>['لا','No'],'yes'=>['نعم','Yes']],'no');
    ?>
    <label><?php echo esc_html($label('العلامة التجارية (بالإنجليزية)','Vehicle brand (English)')); ?><input name="brand" type="text" maxlength="80" placeholder="Toyota" dir="ltr"></label>
-   <label><?php echo esc_html($label('الالتزامات الشهرية الحالية (ريال)','Existing monthly obligations (SAR)')); ?><input name="obligations" type="number" min="0" max="100000000" step="0.01" value="0" required></label>
+   <label><?php echo esc_html($label('الالتزامات الشهرية الحالية ('.$unit.')','Existing monthly obligations ('.$unit.')')); ?><input name="obligations" type="number" min="0" max="100000000" step="<?php echo esc_attr($money_step); ?>" value="0" required></label>
    <label><?php echo esc_html($label('نسبة التأمين السنوية التقديرية %','Estimated annual insurance %')); ?><input name="insurance_rate" type="number" min="<?php echo esc_attr($settings['insurance_min']); ?>" max="<?php echo esc_attr($settings['insurance_max']); ?>" step="0.01" value="<?php echo esc_attr($settings['insurance_default']); ?>" required></label>
   </div>
   <fieldset class="adc-finance-assumptions"><legend><?php echo esc_html($label('بيانات إضافية لحساب التمويل','Additional financing details')); ?></legend>
@@ -42,7 +44,7 @@ foreach(LoanCalculator::rules() as $id=>$bank) $providers[$id]=$bank['name'];
    <div class="adc-finance-inputs">
     <label><?php echo esc_html($label('الدفعة الأولى % ','Down payment % ')); ?><input name="assumed_down" type="number" min="0" max="100" step="0.01"></label>
     <label><?php echo esc_html($label('الدفعة الأخيرة % ','Balloon payment % ')); ?><input name="assumed_balloon" type="number" min="0" max="100" step="0.01"></label>
-    <label><?php echo esc_html($label('الرسوم الإدارية (ريال) ','Administrative fees (SAR)')); ?><input name="assumed_admin" type="number" min="0" max="100000000" step="0.01"></label>
+    <label><?php echo esc_html($label('الرسوم الإدارية ('.$unit.') ','Administrative fees ('.$unit.')')); ?><input name="assumed_admin" type="number" min="0" max="100000000" step="<?php echo esc_attr($money_step); ?>"></label>
    </div>
   </fieldset>
   <details class="adc-finance-brands" open><summary><?php echo esc_html($label('مرجع فئات العلامات','Brand category reference')); ?></summary>

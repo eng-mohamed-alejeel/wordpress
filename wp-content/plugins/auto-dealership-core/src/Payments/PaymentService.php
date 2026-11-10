@@ -46,7 +46,7 @@ final class PaymentService {
 			}
 			return self::error( 'adc_payment_reference_conflict' );
 		}
-		$ok = $wpdb->insert( $table, array( 'sale_id' => $sale_id, 'amount' => $amount, 'currency' => 'SAR', 'source' => $source, 'reference' => $reference, 'status' => 'pending', 'recorded_by' => get_current_user_id(), 'decision_reason' => '', 'created_at' => current_time( 'mysql', true ) ), array( '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s' ) );
+		$ok = $wpdb->insert( $table, array( 'sale_id' => $sale_id, 'amount' => $amount, 'currency' => \AutoDealership\Core\CurrencySettings::base_code(), 'source' => $source, 'reference' => $reference, 'status' => 'pending', 'recorded_by' => get_current_user_id(), 'decision_reason' => '', 'created_at' => current_time( 'mysql', true ) ), array( '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s' ) );
 		if ( false === $ok ) {
 			$wpdb->query( 'ROLLBACK' );
 			return self::error( 'adc_payment_record_failed', 500 );
@@ -94,7 +94,7 @@ final class PaymentService {
 
 	private static function verified_amount( int $sale_id ): ?int {
 		global $wpdb;
-		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(p.amount),0)+(SELECT COALESCE(r.deposit_amount,0) FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'reservations' ) . ' r ON r.id=s.reservation_id WHERE s.id=%d) FROM ' . Schema::table( 'payment_confirmations' ) . " p WHERE p.sale_id = %d AND p.status = 'verified' AND p.currency = 'SAR'", $sale_id, $sale_id ) );
+		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(p.amount),0)+(SELECT COALESCE(r.deposit_amount,0) FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'reservations' ) . ' r ON r.id=s.reservation_id WHERE s.id=%d) FROM ' . Schema::table( 'payment_confirmations' ) . " p WHERE p.sale_id = %d AND p.status = 'verified' AND p.currency = %s", $sale_id, $sale_id, \AutoDealership\Core\CurrencySettings::base_code() ) );
 		return null === $value ? null : (int) $value;
 	}
 

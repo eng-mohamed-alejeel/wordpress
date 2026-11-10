@@ -84,7 +84,7 @@ final class ReservationService {
 		if ( ! Transaction::commit( static fn() => AuditLog::record( 'reservation.confirmed', 'reservation', $reservation_id, 'Reservation created', null, array( 'vehicle_id' => $vehicle_id, 'customer_id' => $customer_id, 'expires_at' => $expires, 'deposit_policy' => $policy, 'deposit_receipt_verified' => false ) ) && DomainEventPublisher::commit( 'reservation.confirmed', $reservation_id, (int) $vehicle['branch_id'], 'confirmed' ) ) ) {
 			return new \WP_Error( 'adc_reservation_failed', __( 'تعذر توثيق الحجز وحفظه.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		return array( 'id' => $reservation_id, 'vehicle_id' => $vehicle_id, 'status' => 'confirmed', 'expires_at' => $expires, 'deposit_policy' => $policy['type'], 'deposit_required_amount' => $policy['required_amount'], 'deposit_verified_amount' => 0, 'currency' => 'SAR' );
+		return array( 'id' => $reservation_id, 'vehicle_id' => $vehicle_id, 'status' => 'confirmed', 'expires_at' => $expires, 'deposit_policy' => $policy['type'], 'deposit_required_amount' => $policy['required_amount'], 'deposit_verified_amount' => 0, 'currency' => \AutoDealership\Core\CurrencySettings::base_code() );
 	}
 
 	private static function find_key( string $key, bool $lock = false ): ?array {
@@ -98,7 +98,7 @@ final class ReservationService {
 		if ( (int) $row['owner_user_id'] !== get_current_user_id() || (int) $row['vehicle_id'] !== $vehicle_id || (int) $row['customer_id'] !== $customer_id || $declared !== $deposit || ! CustomerScope::allows( $customer_id, (int) $row['branch_id'] ) ) {
 			return new \WP_Error( 'adc_idempotency_conflict', __( 'مفتاح الطلب غير متاح لهذه العملية.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
-		return array( 'id' => (int) $row['id'], 'vehicle_id' => (int) $row['vehicle_id'], 'status' => $row['status'], 'expires_at' => $row['expires_at'], 'deposit_policy' => $policy['type'] ?? 'none', 'deposit_required_amount' => (int) $row['deposit_required_amount'], 'deposit_verified_amount' => (int) $row['deposit_amount'], 'currency' => 'SAR' );
+		return array( 'id' => (int) $row['id'], 'vehicle_id' => (int) $row['vehicle_id'], 'status' => $row['status'], 'expires_at' => $row['expires_at'], 'deposit_policy' => $policy['type'] ?? 'none', 'deposit_required_amount' => (int) $row['deposit_required_amount'], 'deposit_verified_amount' => (int) $row['deposit_amount'], 'currency' => \AutoDealership\Core\CurrencySettings::base_code() );
 	}
 
 	/** Record deposit evidence; only an independent reviewer can make it effective. */
@@ -125,10 +125,10 @@ final class ReservationService {
 			}
 			return new \WP_Error( 'adc_deposit_exists', __( 'Deposit evidence is already pending or verified.', 'auto-dealership-core' ), array( 'status' => 409 ) );
 		}
-		$data = array( 'amount'=>$amount, 'currency'=>'SAR', 'source'=>$source, 'reference'=>$reference, 'status'=>'pending', 'recorded_by'=>get_current_user_id(), 'decided_by'=>0, 'decision_reason'=>'', 'created_at'=>$now, 'decided_at'=>null );
+		$data = array( 'amount'=>$amount, 'currency'=>\AutoDealership\Core\CurrencySettings::base_code(), 'source'=>$source, 'reference'=>$reference, 'status'=>'pending', 'recorded_by'=>get_current_user_id(), 'decided_by'=>0, 'decision_reason'=>'', 'created_at'=>$now, 'decided_at'=>null );
 		$ok = $existing ? $wpdb->update( $table, $data, array( 'id'=>(int) $existing['id'], 'status'=>'rejected' ) ) : $wpdb->insert( $table, array_merge( array( 'reservation_id'=>$reservation_id ), $data ) );
 		$id = $existing ? (int) $existing['id'] : (int) $wpdb->insert_id;
-		if ( false === $ok || ( $existing && 1 !== $ok ) || ! Transaction::commit( static fn()=>AuditLog::record( 'reservation.deposit_recorded', 'reservation_deposit', $id, '', null, array( 'reservation_id'=>$reservation_id, 'amount'=>$amount, 'currency'=>'SAR', 'source'=>$source, 'reference'=>$reference, 'status'=>'pending' ) ) ) ) {
+		if ( false === $ok || ( $existing && 1 !== $ok ) || ! Transaction::commit( static fn()=>AuditLog::record( 'reservation.deposit_recorded', 'reservation_deposit', $id, '', null, array( 'reservation_id'=>$reservation_id, 'amount'=>$amount, 'currency'=>\AutoDealership\Core\CurrencySettings::base_code(), 'source'=>$source, 'reference'=>$reference, 'status'=>'pending' ) ) ) ) {
 			if ( $wpdb->last_error ) { $wpdb->query( 'ROLLBACK' ); }
 			return new \WP_Error( 'adc_deposit_failed', __( 'Could not save and audit the deposit evidence.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}

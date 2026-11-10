@@ -30,7 +30,7 @@ final class OnyxImportService {
 			foreach(array('brand'=>100,'model'=>120,'trim_name'=>120,'exterior_color'=>80,'interior_color'=>80,'supplier_name'=>190,'warehouse_name'=>190,'notes'=>4000)as$field=>$limit){$row[$field]=sanitize_textarea_field($row[$field]??'');if(mb_strlen($row[$field])>$limit){$invalid[]=$field;}}
 			if(!$row['brand']||!$row['model']){$invalid[]='brand_model';}
 			$year=filter_var($row['model_year'],FILTER_VALIDATE_INT,array('options'=>array('min_range'=>1900,'max_range'=>(int)gmdate('Y')+2)));if(false===$year){$invalid[]='year';}$row['model_year']=$year;
-			$price=Money::from_sar($row['listed_price']);if(null===$price){$invalid[]='price';}$row['listed_price']=$price;
+			$price=Money::from_major($row['listed_price']);if(null===$price){$invalid[]='price';}$row['listed_price']=$price;
 			$age=$row['stock_age']??'';$row['stock_age']=''===$age?null:filter_var($age,FILTER_VALIDATE_INT,array('options'=>array('min_range'=>0,'max_range'=>100000)));if(false===$row['stock_age']){$invalid[]='stock_age';}
 			if(array_intersect($cells['_formulas']??array(),array_keys($columns))){$invalid[]='formula';}
 			if($invalid){$errors[]=array('line'=>$line,'identifier'=>$id,'fields'=>$invalid);}else{$data[$id]=$row;}

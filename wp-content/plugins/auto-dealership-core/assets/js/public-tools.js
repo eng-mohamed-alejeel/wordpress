@@ -46,7 +46,7 @@
         if (className) node.className = className;
         return node;
     }
-    function money(value) { return value == null ? '—' : number.format(value) + ' ' + (window.adcPublicTools.currencyLabel || 'SAR'); }
+    function money(value) { return value == null ? '—' : number.format(value) + ' ' + (window.adcPublicTools.currencyLabel || window.adcPublicTools.currency || ''); }
     function percent(value) { return value == null ? '—' : number.format(value) + '%'; }
     function download(name, text, type) {
         var url = URL.createObjectURL(new Blob([text], {type: type}));
@@ -74,7 +74,7 @@
         filterLabel.append(filter, document.createTextNode(tr('اجتياز الشروط المنشورة فقط','Passing published checks only')));toolbar.append(filterLabel);
         var exportButton=el('button',tr('تصدير CSV','Export CSV'));exportButton.type='button';
         exportButton.addEventListener('click',function () {
-            var rows=[['Financing comparison estimate / SAR / flat rate; not an approval'],['Source',data.source],['Price including VAT',data.input.price],['Salary',data.input.salary],['Existing obligations',data.input.obligations],['Sector',data.input.sector],['Nationality',data.input.nationality],['Transfer',data.input.transfer],['Employer',data.input.employer],['Campaign',data.input.campaign],['Months',data.input.months],['Category',data.input.category],['Chinese',data.input.chinese],['Brand',data.input.brand],['Annual insurance %',data.input.insurance_rate],[],['Provider','Status','Flat rate %','Monthly incl insurance SAR','Base monthly SAR','Insurance monthly SAR','Down payment SAR','Balloon SAR','Admin SAR','Profit SAR','Total SAR','Source page','Dealer rebate % (not deducted)','Reasons','Notes']];
+            var unit=window.adcPublicTools.currencyLabel || window.adcPublicTools.currency || ''; var rows=[['Financing comparison estimate / '+unit+' / flat rate; not an approval'],['Source',data.source],['Price including VAT',data.input.price],['Salary',data.input.salary],['Existing obligations',data.input.obligations],['Sector',data.input.sector],['Nationality',data.input.nationality],['Transfer',data.input.transfer],['Employer',data.input.employer],['Campaign',data.input.campaign],['Months',data.input.months],['Category',data.input.category],['Chinese',data.input.chinese],['Brand',data.input.brand],['Annual insurance %',data.input.insurance_rate],[],['Provider','Status','Flat rate %','Monthly incl insurance '+unit,'Base monthly '+unit,'Insurance monthly '+unit,'Down payment '+unit,'Balloon '+unit,'Admin '+unit,'Profit '+unit,'Total '+unit,'Source page','Dealer rebate % (not deducted)','Reasons','Notes']];
             data.results.forEach(function(r){rows.push([r.name,status(r),r.annual_rate,r.monthly_payment,r.base_monthly,r.insurance_monthly,r.down_payment,r.balloon_payment,r.admin_fees,r.profit,r.total_payable,r.source_page,r.rebate_percent,r.reasons.join('; '),r.notes.join('; ')]);});
             download('finance-comparison.csv','\uFEFF'+rows.map(function(r){return r.map(csvCell).join(',');}).join('\r\n'),'text/csv;charset=utf-8');
         });toolbar.append(exportButton);
@@ -82,7 +82,7 @@
         jsonButton.addEventListener('click',function(){download('finance-details.json',JSON.stringify(data,null,2),'application/json');});toolbar.append(jsonButton);
         container.append(toolbar);
         var scroll=el('div',undefined,'adc-finance-scroll'); scroll.tabIndex=0;scroll.setAttribute('role','region');scroll.setAttribute('aria-label',tr('مقارنة نتائج التمويل','Financing comparison results'));
-        var table=el('table');var caption=el('caption',tr('المقارنة بالريال السعودي — القسط يشمل التأمين التقديري','Comparison in SAR — payment includes estimated insurance'));table.append(caption);
+        var table=el('table');var caption=el('caption',tr('المقارنة بالعملة الأساسية — القسط يشمل التأمين التقديري','Comparison in the configured base currency — payment includes estimated insurance'));table.append(caption);
         var head=el('thead'); var hr=el('tr');
         [tr('الجهة','Provider'),tr('الربح الثابت','Flat rate'),tr('القسط الشهري','Monthly payment'),tr('الدفعة الأولى','Down payment'),tr('الدفعة الأخيرة','Balloon'),tr('الحالة والتفاصيل','Status and details')].forEach(function(h){var th=el('th',h);th.scope='col';hr.append(th);});head.append(hr);table.append(head);
         var body=el('tbody');table.append(body);scroll.append(table);container.append(scroll);

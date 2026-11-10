@@ -473,7 +473,7 @@ final class WorkspacePage {
 
 	private static function finance_sections( array $items ): array {
 		$money = array( 'adc-onyx-documents', 'adc-payments', 'adc-refunds', 'adc-financial-export' );
-		$planning = array( 'adc-finance', 'adc-employee-commissions', 'adc-affiliate-commissions' );
+		$planning = array( 'adc-finance', 'adc-employee-commissions', 'adc-affiliate-commissions', 'adc-affiliate-reports' );
 		return self::sections_by_slugs( $items, array(
 			\AutoDealership\Core\ProductSetup::t( 'المستندات والمدفوعات', 'Documents and payments' ) => $money,
 			\AutoDealership\Core\ProductSetup::t( 'التمويل والعمولات', 'Finance and commissions' ) => $planning,
@@ -482,7 +482,7 @@ final class WorkspacePage {
 
 	private static function report_sections( array $items ): array {
 		$overview = array( 'adc-operational-reports', 'adc-area-reports' );
-		$analysis = array( 'adc-crm-reports' );
+		$analysis = array( 'adc-crm-reports', 'adc-lead-performance' );
 		return self::sections_by_slugs( $items, array(
 			\AutoDealership\Core\ProductSetup::t( 'الملخص والتشغيل', 'Overview and operations' ) => $overview,
 			\AutoDealership\Core\ProductSetup::t( 'تحليل CRM', 'CRM analytics' ) => $analysis,

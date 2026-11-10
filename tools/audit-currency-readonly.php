@@ -5,7 +5,9 @@ define( 'SHORTINIT', true );
 define( 'DISABLE_WP_CRON', true );
 require dirname( __DIR__ ) . '/wp-load.php';
 require dirname( __DIR__ ) . '/wp-content/plugins/auto-dealership-core/src/Pricing/Money.php';
+require dirname( __DIR__ ) . '/wp-content/plugins/auto-dealership-core/src/Core/CurrencySettings.php';
 use AutoDealership\Pricing\Money;
+use AutoDealership\Core\CurrencySettings;
 global $wpdb;
 $wpdb->hide_errors();
 if ( false === $wpdb->query( 'START TRANSACTION READ ONLY' ) ) { fwrite( STDERR, "Cannot start a read-only audit.\n" ); exit( 1 ); }
@@ -18,7 +20,9 @@ try {
 		'payment_confirmations'=>array( 'amount' ), 'reservation_deposits'=>array( 'amount' ), 'payment_refunds'=>array( 'amount' ),
 		'finance_requests'=>array( 'requested_amount','down_payment','monthly_payment' ),
 	);
-	$report = array( 'read_only'=>true, 'currency'=>'SAR', 'storage_unit'=>'halala', 'tables'=>array(), 'findings'=>array(), 'limits'=>array() );
+	$currency = CurrencySettings::base_code();
+	$report = array( 'read_only'=>true, 'currency'=>$currency, 'configured'=>CurrencySettings::is_configured(), 'storage_unit'=>'minor_units', 'tables'=>array(), 'findings'=>array(), 'limits'=>array() );
+	if ( '' === $currency ) { $report['limits'][] = 'Base currency is not configured; monetary row validation is incomplete.'; }
 	$rows_by_table = array();
 	foreach ( $definitions as $name=>$fields ) {
 		$table = $wpdb->prefix . 'adc_' . $name;
@@ -26,16 +30,17 @@ try {
 		if ( ! $exists ) { $report['limits'][] = 'Missing table: ' . $name; continue; }
 		$columns = $wpdb->get_col( "SHOW COLUMNS FROM `$table`", 0 );
 		$select = array_merge( array( 'id' ), $fields );
-		foreach ( array( 'currency','tax_rate_bps','public_post_id' ) as $extra ) { if ( in_array( $extra, $columns, true ) ) { $select[] = $extra; } }
+		foreach ( array( 'currency','currency_code','tax_rate_bps','public_post_id' ) as $extra ) { if ( in_array( $extra, $columns, true ) ) { $select[] = $extra; } }
 		if ( array_diff( $select, $columns ) ) { throw new RuntimeException( 'Financial schema mismatch: ' . $name ); }
 		$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `$table`" );
 		$rows = $wpdb->get_results( 'SELECT ' . implode( ',', $select ) . " FROM `$table` ORDER BY id LIMIT 10000", ARRAY_A );
 		if ( $wpdb->last_error || ! is_array( $rows ) ) { throw new RuntimeException( 'Financial audit read failed: ' . $name ); }
 		$rows_by_table[$name] = $rows;
-		$report['tables'][$name] = array( 'count'=>$count, 'checked'=>count( $rows ), 'invalid_integer_values'=>0, 'non_sar_rows'=>0 );
+		$report['tables'][$name] = array( 'count'=>$count, 'checked'=>count( $rows ), 'invalid_integer_values'=>0, 'non_base_currency_rows'=>0 );
 		if ( $count > count( $rows ) ) { $report['limits'][] = 'Audit sample truncated: ' . $name; }
 		foreach ( $rows as $row ) {
-			if ( isset( $row['currency'] ) && 'SAR' !== $row['currency'] ) { ++$report['tables'][$name]['non_sar_rows']; }
+			$row_currency = (string) ( $row['currency_code'] ?? $row['currency'] ?? '' );
+			if ( '' !== $currency && '' !== $row_currency && $currency !== strtoupper( $row_currency ) ) { ++$report['tables'][$name]['non_base_currency_rows']; }
 			foreach ( $fields as $field ) {
 				if ( null !== $row[$field] && null === Money::parse( $row[$field] ) ) {
 					++$report['tables'][$name]['invalid_integer_values'];
@@ -60,7 +65,7 @@ try {
 	foreach ( $rows_by_table['vehicles'] ?? array() as $row ) {
 		if ( empty( $row['public_post_id'] ) ) { continue; }
 		$raw = $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id=%d AND meta_key='_car_price' ORDER BY meta_id LIMIT 1", $row['public_post_id'] ) );
-		$legacy_minor = Money::from_sar( $raw );
+		$legacy_minor = Money::from_major( $raw );
 		if ( null === $legacy_minor ) { ++$report['legacy_price_comparison']['missing_or_invalid']; continue; }
 		++$report['legacy_price_comparison']['compared'];
 		if ( $legacy_minor === (int) $row['retail_price'] ) { ++$report['legacy_price_comparison']['equal']; }

@@ -154,9 +154,11 @@ add_filter( 'wp_nav_menu_args', function ( $args ) {
 function car_dealer_format_price( $price ) {
 	if ( ! $price ) { return ''; }
 	$amount = (float) $price;
+	$currency = class_exists( '\AutoDealership\\Core\\CurrencySettings' ) ? \AutoDealership\Core\CurrencySettings::base_code() : '';
+	if ( '' === $currency ) { return ''; }
 	return 'en' === car_dealer_catalog_language()
-		? 'SAR ' . number_format( $amount, floor( $amount ) === $amount ? 0 : 2 )
-		: number_format( $amount, floor( $amount ) === $amount ? 0 : 2 ) . ' ريال';
+		? $currency . ' ' . number_format( $amount, floor( $amount ) === $amount ? 0 : (int) \AutoDealership\Core\CurrencySettings::decimals( $currency ) )
+		: number_format( $amount, floor( $amount ) === $amount ? 0 : (int) \AutoDealership\Core\CurrencySettings::decimals( $currency ) ) . ' ' . \AutoDealership\Core\CurrencySettings::display_unit( $currency );
 }
 
 /** SVG fallback when a vehicle has no approved public image. */

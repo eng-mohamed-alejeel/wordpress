@@ -13,7 +13,7 @@ final class PrivacyTools {
 	 * @param mixed $value
 	 */
 	private static function export_value( $key, $value ): string {
-		return in_array( $key, \AutoDealership\API\CurrencyContract::FIELDS, true ) && null !== $value ? \AutoDealership\Pricing\Money::decimal( $value ) . ' SAR' : (string) $value;
+		return in_array( $key, \AutoDealership\API\CurrencyContract::FIELDS, true ) && null !== $value ? \AutoDealership\Pricing\Money::decimal( $value ) . ' ' . \AutoDealership\Core\CurrencySettings::base_code() : (string) $value;
 	}
 
 	public static function boot(): void {
@@ -131,17 +131,17 @@ final class PrivacyTools {
 				foreach ( $records as $record ) {
 					$value = implode( '; ', array_map( static fn( $key, $value ) => $key . ': ' . self::export_value( $key, $value ), array_keys( $record ), array_values( $record ) ) );
 					if ( in_array( $table_name, array( 'reservations', 'quotations', 'sales' ), true ) ) {
-						$value .= '; monetary values are expressed in SAR';
+						$value .= '; monetary values are expressed in ' . \AutoDealership\Core\CurrencySettings::base_code();
 					}
 					$items[] = array( 'name' => ucfirst( rtrim( $table_name, 's' ) ), 'value' => $value );
 					if ( 'reservations' === $table_name ) {
 						$evidence = $wpdb->get_results( $wpdb->prepare( 'SELECT amount,currency,source,reference,status,created_at,decided_at FROM ' . Schema::table( 'reservation_deposits' ) . ' WHERE reservation_id=%d ORDER BY id', (int) $record['id'] ), ARRAY_A ) ?: array();
 						foreach ( $evidence as $deposit ) {
-							$items[] = array( 'name'=>__( 'Reservation deposit evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . self::export_value( $key, $item ), array_keys( $deposit ), array_values( $deposit ) ) ) . '; monetary values are expressed in SAR' );
+							$items[] = array( 'name'=>__( 'Reservation deposit evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . self::export_value( $key, $item ), array_keys( $deposit ), array_values( $deposit ) ) ) . '; monetary values are expressed in ' . \AutoDealership\Core\CurrencySettings::base_code() );
 						}
 						$refunds = $wpdb->get_results( $wpdb->prepare( 'SELECT amount,currency,method,reference,status,created_at,decided_at FROM ' . Schema::table( 'payment_refunds' ) . ' WHERE reservation_id=%d ORDER BY id', (int) $record['id'] ), ARRAY_A ) ?: array();
 						foreach ( $refunds as $refund ) {
-							$items[] = array( 'name'=>__( 'Reservation deposit refund', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . self::export_value( $key, $item ), array_keys( $refund ), array_values( $refund ) ) ) . '; monetary values are expressed in SAR' );
+							$items[] = array( 'name'=>__( 'Reservation deposit refund', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . self::export_value( $key, $item ), array_keys( $refund ), array_values( $refund ) ) ) . '; monetary values are expressed in ' . \AutoDealership\Core\CurrencySettings::base_code() );
 						}
 					}
 					if ( 'sales' === $table_name ) {
@@ -151,11 +151,11 @@ final class PrivacyTools {
 						}
 						$receipts = $wpdb->get_results( $wpdb->prepare( 'SELECT amount,currency,source,reference,status,created_at,decided_at FROM ' . Schema::table( 'payment_confirmations' ) . ' WHERE sale_id=%d ORDER BY id', (int) $record['id'] ), ARRAY_A ) ?: array();
 						foreach ( $receipts as $receipt ) {
-							$items[] = array( 'name'=>__( 'Sale receipt evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . self::export_value( $key, $item ), array_keys( $receipt ), array_values( $receipt ) ) ) . '; monetary values are expressed in SAR' );
+							$items[] = array( 'name'=>__( 'Sale receipt evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . self::export_value( $key, $item ), array_keys( $receipt ), array_values( $receipt ) ) ) . '; monetary values are expressed in ' . \AutoDealership\Core\CurrencySettings::base_code() );
 						}
 						$refunds = $wpdb->get_results( $wpdb->prepare( 'SELECT amount,currency,method,reference,status,created_at,decided_at FROM ' . Schema::table( 'payment_refunds' ) . ' WHERE sale_id=%d ORDER BY id', (int) $record['id'] ), ARRAY_A ) ?: array();
 						foreach ( $refunds as $refund ) {
-							$items[] = array( 'name'=>__( 'Sale refund evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . self::export_value( $key, $item ), array_keys( $refund ), array_values( $refund ) ) ) . '; monetary values are expressed in SAR' );
+							$items[] = array( 'name'=>__( 'Sale refund evidence', 'auto-dealership-core' ), 'value'=>implode( '; ', array_map( static fn( $key, $item )=>$key . ': ' . self::export_value( $key, $item ), array_keys( $refund ), array_values( $refund ) ) ) . '; monetary values are expressed in ' . \AutoDealership\Core\CurrencySettings::base_code() );
 						}
 						$documents = $wpdb->get_results( $wpdb->prepare( 'SELECT dd.document_key,dd.reference,dd.confirmed_at FROM ' . Schema::table( 'delivery_documents' ) . ' dd INNER JOIN ' . Schema::table( 'deliveries' ) . ' d ON d.id=dd.delivery_id WHERE d.sale_id=%d ORDER BY dd.id', (int) $record['id'] ), ARRAY_A ) ?: array();
 						foreach ( $documents as $document ) {
@@ -166,7 +166,7 @@ final class PrivacyTools {
 			}
 			$versions = $wpdb->get_results( $wpdb->prepare( 'SELECT quotation_id,quote_number,version,customer_name,vehicle_stock_number,vehicle_description,base_amount,fee_amount,promotion_code,promotion_amount,discount_amount,subtotal_amount,tax_rate_bps,tax_amount,final_amount,valid_until,status,created_at FROM ' . Schema::table( 'quotation_versions' ) . ' WHERE customer_id = %d ORDER BY quotation_id,version', (int) $customer['id'] ), ARRAY_A ) ?: array();
 			foreach ( $versions as $version ) {
-				$items[] = array( 'name' => __( 'Quotation revision', 'auto-dealership-core' ), 'value' => implode( '; ', array_map( static fn( $key, $value ) => $key . ': ' . self::export_value( $key, $value ), array_keys( $version ), array_values( $version ) ) ) . '; monetary values are expressed in SAR' );
+				$items[] = array( 'name' => __( 'Quotation revision', 'auto-dealership-core' ), 'value' => implode( '; ', array_map( static fn( $key, $value ) => $key . ': ' . self::export_value( $key, $value ), array_keys( $version ), array_values( $version ) ) ) . '; monetary values are expressed in ' . \AutoDealership\Core\CurrencySettings::base_code() );
 			}
 			$archives = $wpdb->get_results( $wpdb->prepare( 'SELECT a.document_number,a.source_version,a.template_version,a.checksum,a.created_at FROM ' . Schema::table( 'document_archive' ) . ' a INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=a.quotation_id WHERE q.customer_id=%d ORDER BY a.id', (int) $customer['id'] ), ARRAY_A ) ?: array();
 			foreach ( $archives as $archive ) {

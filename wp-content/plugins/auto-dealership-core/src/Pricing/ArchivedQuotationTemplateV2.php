@@ -9,7 +9,8 @@ final class ArchivedQuotationTemplateV2 {
 	public static function render( array $quote, ?string $language = null ): string {
 		$language = \AutoDealership\Core\Localization::normalize_document_language( $language );
 		$t = static fn( string $ar, string $en ): string => 'en' === $language ? $en : $ar;
-		$money = static fn( $value ): string => esc_html( Money::format( (int) $value ) . ' SAR' );
+		$currency = (string) ( $quote['currency'] ?? $quote['currency_code'] ?? \AutoDealership\Core\CurrencySettings::base_code() );
+		$money = static fn( $value ): string => esc_html( Money::format( (int) $value, $currency ) . ' ' . \AutoDealership\Core\CurrencySettings::display_unit( $currency, $language ) );
 		$rate = null === $quote['tax_rate_bps'] ? $t( 'غير معروف تاريخيًا', 'Historically unknown' ) : number_format( (int) $quote['tax_rate_bps'] / 100, 2 ) . '%';
 		$vehicle_reference_label = 'en' === $language ? 'Vehicle reference' : 'مرجع السيارة';
 		$e = static fn( $value ): string => esc_html( (string) $value );

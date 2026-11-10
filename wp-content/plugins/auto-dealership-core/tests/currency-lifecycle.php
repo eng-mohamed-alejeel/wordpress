@@ -97,7 +97,7 @@ try {
 	$currency_export = AutoDealership\Reports\FinancialExport::create( gmdate( 'Y-m-d' ),gmdate( 'Y-m-d' ) );
 	$currency_operational = AutoDealership\Reports\OperationalReport::export( gmdate( 'Y-m-d' ),gmdate( 'Y-m-d' ) );
 	adc_check( ! is_wp_error( $currency_export ) && str_contains( $currency_export['csv'],'1419.74' ) && ! str_contains( $currency_export['csv'],'141974' ),'Settlement CSV exports the funded sale in SAR.' );
-	adc_check( ! is_wp_error( $currency_operational ) && str_contains( $currency_operational['csv'],'amount_sar' ) && str_contains( $currency_operational['csv'],'1419.74' ) && ! str_contains( $currency_operational['csv'],'141974' ),'Operational CSV exports actual aggregate amounts in SAR.' );
+	adc_check( ! is_wp_error( $currency_operational ) && str_contains( $currency_operational['csv'],'amount,currency' ) && str_contains( $currency_operational['csv'],'1419.74' ) && ! str_contains( $currency_operational['csv'],'141974' ),'Operational CSV exports actual aggregate amounts in SAR.' );
 	$currency_print_nonce = $currency_http( '/adc-test-nonce?action=adc_print_quote_' . $currency_quote['id'] . '_3',$currency_cookies['admin'] );
 	$currency_print_path = '/wp-admin/admin-post.php?action=adc_print_quote&quote_id=' . $currency_quote['id'] . '&version=3&_wpnonce=' . trim( $currency_print_nonce[1] );
 	$currency_print = $currency_http( $currency_print_path,$currency_cookies['admin'] );

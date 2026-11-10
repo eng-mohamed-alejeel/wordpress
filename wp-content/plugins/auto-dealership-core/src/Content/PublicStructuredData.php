@@ -226,7 +226,7 @@ final class PublicStructuredData {
 			$offers = array();
 			foreach ( $view['catalog_model']['options'] as $option ) {
 				if ( (int)$option['listed_price'] < 1 ) { continue; }
-				$offers[] = array( '@type'=>'Offer', 'name'=>implode( ' ', array( $option['brand'], $option['model'], $option['trim_name'], $option['exterior_color'], $option['model_year'] ) ), 'price'=>\AutoDealership\Pricing\Money::decimal( (string)$option['public_price'] ), 'priceCurrency'=>self::currency_code( 'SAR', $post_id, 'grouped_vehicle' ), 'availability'=>self::availability_url( 'available', $post_id, 'grouped_vehicle' ), 'url'=>$grouped_url );
+				$offers[] = array( '@type'=>'Offer', 'name'=>implode( ' ', array( $option['brand'], $option['model'], $option['trim_name'], $option['exterior_color'], $option['model_year'] ) ), 'price'=>\AutoDealership\Pricing\Money::decimal( (string)$option['public_price'] ), 'priceCurrency'=>self::currency_code( \AutoDealership\Core\CurrencySettings::base_code(), $post_id, 'grouped_vehicle' ), 'availability'=>self::availability_url( 'available', $post_id, 'grouped_vehicle' ), 'url'=>$grouped_url );
 			}
 			if ( $offers ) { $data['offers'] = $offers; }
 			$image = get_the_post_thumbnail_url( $post_id, 'full' );
@@ -244,7 +244,7 @@ final class PublicStructuredData {
 		$view = PublicVehicleView::for_post($post_id);
 		$price = (float)($view['price'] ?? 0);
 		if ( $price > 0 ) {
-			$data['offers'] = self::offer_value( $price, $record['currency'] ?? 'SAR', $url );
+			$data['offers'] = self::offer_value( $price, $record['currency'] ?? \AutoDealership\Core\CurrencySettings::base_code(), $url );
 		}
 		$year = $record['model_year'] ?? get_post_meta( $post_id, '_car_year', true );
 		if ( is_scalar( $year ) && preg_match( '/\A[0-9]{4}\z/', (string) $year ) ) {
@@ -327,7 +327,7 @@ final class PublicStructuredData {
 
 	private static function currency_code( string $currency, int $post_id, string $context ): string {
 		$value = strtoupper( trim( (string) apply_filters( 'adc_structured_data_currency', $currency, $post_id, $context ) ) );
-		return preg_match( '/\A[A-Z]{3}\z/', $value ) ? $value : 'SAR';
+		return preg_match( '/\A[A-Z]{3}\z/', $value ) ? $value : \AutoDealership\Core\CurrencySettings::base_code();
 	}
 
 	private static function availability_url( string $status, int $post_id, string $context ): string {

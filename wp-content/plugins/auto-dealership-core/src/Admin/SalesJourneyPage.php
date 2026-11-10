@@ -23,7 +23,7 @@ final class SalesJourneyPage {
 	}
 
 	private static function text( string $ar, string $en ): string {
-		return 'en' === \AutoDealership\Core\Localization::language() ? $en : $ar;
+		return \AutoDealership\Core\CurrencySettings::localize_unit_text( 'en' === \AutoDealership\Core\Localization::language() ? $en : $ar );
 	}
 
 	private static function scope( string $alias, bool $manage = false ): array {
@@ -45,13 +45,13 @@ final class SalesJourneyPage {
 	private static function form( string $operation, array $fields = array() ): void {
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_sales_journey_' . $operation );
-		foreach ( array_merge( array( 'action'=>'adc_sales_journey', 'operation'=>$operation, 'adc_money_unit'=>'SAR' ), $fields ) as $key => $value ) {
+		foreach ( array_merge( array( 'action'=>'adc_sales_journey', 'operation'=>$operation, 'adc_money_unit'=>\AutoDealership\Core\CurrencySettings::base_code() ), $fields ) as $key => $value ) {
 			echo '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( (string) $value ) . '">';
 		}
 	}
 
 	private static function input( string $name, string $label, string $type = 'text', string $value = '' ): void {
-		echo '<p><label>' . esc_html( $label ) . ' <input required name="' . esc_attr( $name ) . '" type="' . esc_attr( $type ) . '" value="' . esc_attr( $value ) . '"' . ( 'number' === $type ? ' min="0.01" step="0.01"' : '' ) . '></label></p>';
+		echo '<p><label>' . esc_html( $label ) . ' <input required name="' . esc_attr( $name ) . '" type="' . esc_attr( $type ) . '" value="' . esc_attr( $value ) . '"' . ( 'number' === $type ? ' min="0.01" step="' . esc_attr( \AutoDealership\Core\CurrencySettings::input_step() ) . '"' : '' ) . '></label></p>';
 	}
 
 	private static function button( string $ar, string $en ): void {
@@ -123,7 +123,7 @@ final class SalesJourneyPage {
 		foreach ( $discounts as $d ) { echo '<p>' . esc_html( self::text( 'طلب الخصم', 'Discount request' ) . ': ' . Money::display( $d['requested_amount'] ) . ' / ' . \AutoDealership\Core\Localization::label( $d['status'] ) . ' / ' . $d['reason'] . ' / ' . $d['decision_reason'] ) . '</p>'; }
 		$committed = (bool) self::rows( 'SELECT id FROM ' . Schema::table( 'sales' ) . ' WHERE quotation_id=%d LIMIT 1', array( $id ) );
 		if ( ! $committed && 'approved' === $q['status'] && ( current_user_can( 'adc_request_discounts' ) || current_user_can( 'manage_options' ) ) ) {
-			self::form( 'discount', array( 'quote_id'=>$id ) ); self::input( 'amount', self::text( 'الخصم المطلوب (ريال)', 'Requested discount (SAR)' ), 'number' ); self::input( 'reason', self::text( 'السبب', 'Reason' ) ); self::button( 'طلب الخصم', 'Request discount' );
+			self::form( 'discount', array( 'quote_id'=>$id ) ); self::input( 'amount', self::text( 'الخصم المطلوب (%s)', 'Requested discount (%s)' ), 'number' ); self::input( 'reason', self::text( 'السبب', 'Reason' ) ); self::button( 'طلب الخصم', 'Request discount' );
 		}
 		list( $scope, $args ) = self::scope( 'r', true );
 		$matches = self::rows( 'SELECT r.id,r.status,r.expires_at,r.deposit_required_amount,r.deposit_amount FROM ' . Schema::table( 'reservations' ) . ' r WHERE r.customer_id=%d AND r.vehicle_id=%d AND ' . $scope . ' ORDER BY r.id DESC LIMIT 50', array_merge( array( (int) $q['customer_id'], (int) $q['vehicle_id'] ), $args ) );
@@ -156,7 +156,7 @@ final class SalesJourneyPage {
 		foreach ( $page['rows'] as $r ) {
 			echo '<tr><td><a href="' . esc_url( add_query_arg( array( 'page'=>'adc-sales-journey', 'section'=>'reservations', 'reservation_id'=>$r['id'] ), admin_url( 'admin.php' ) ) ) . '">' . esc_html( '#' . $r['id'] . ' ' . $r['full_name'] . ' ' . $r['stock_number'] ) . '</a></td><td>' . esc_html( \AutoDealership\Core\Localization::label( $r['status'] ) . ' / ' . $r['expires_at'] . ' / ' . \AutoDealership\Core\Localization::label( $r['deposit_refund_status'] ) ) . '</td><td>' . esc_html( Money::display( $r['deposit_amount'] ) . ' / ' . Money::display( $r['deposit_required_amount'] ) ) . '</td><td>';
 			if ( 'confirmed' === $r['status'] && current_user_can( 'adc_manage_reservations' ) ) { self::form( 'cancel', array( 'reservation_id'=>$r['id'] ) ); self::input( 'reason', self::text( 'سبب الإلغاء', 'Cancellation reason' ) ); self::button( 'إلغاء الحجز', 'Cancel reservation' ); }
-			if ( 'confirmed' === $r['status'] && current_user_can( 'adc_record_payments' ) ) { self::form( 'deposit', array( 'reservation_id'=>$r['id'] ) ); self::input( 'amount', self::text( 'العربون (ريال)', 'Deposit (SAR)' ), 'number' ); self::input( 'reference', self::text( 'مرجع الإيصال', 'Receipt reference' ) ); echo '<select name="source"><option value="bank_transfer">' . esc_html( self::text( 'تحويل بنكي', 'Bank transfer' ) ) . '</option><option value="cash">' . esc_html( self::text( 'نقدي', 'Cash' ) ) . '</option></select>'; self::button( 'تسجيل العربون للمراجعة', 'Record deposit for review' ); }
+			if ( 'confirmed' === $r['status'] && current_user_can( 'adc_record_payments' ) ) { self::form( 'deposit', array( 'reservation_id'=>$r['id'] ) ); self::input( 'amount', self::text( 'العربون (%s)', 'Deposit (%s)' ), 'number' ); self::input( 'reference', self::text( 'مرجع الإيصال', 'Receipt reference' ) ); echo '<select name="source"><option value="bank_transfer">' . esc_html( self::text( 'تحويل بنكي', 'Bank transfer' ) ) . '</option><option value="cash">' . esc_html( self::text( 'نقدي', 'Cash' ) ) . '</option></select>'; self::button( 'تسجيل العربون للمراجعة', 'Record deposit for review' ); }
 			echo '</td></tr>';
 		}
 		if ( ! $page['rows'] ) { echo '<tr><td colspan="4">' . esc_html( self::text( 'لا توجد نتائج ضمن نطاق وصولك.', 'No results within your access scope.' ) ) . '</td></tr>'; }
@@ -197,8 +197,8 @@ final class SalesJourneyPage {
 		if ( 'preview' === $op ) { nocache_headers(); self::preview( $p ); exit; }
 		if ( 'create' === $op ) { $result = SalesService::create_quote( absint( $p['customer_id'] ?? 0 ), absint( $p['vehicle_id'] ?? 0 ), sanitize_text_field( $p['valid_until'] ?? '' ), sanitize_key( $p['promotion_code'] ?? '' ), sanitize_text_field( $p['idempotency_key'] ?? '' ), sanitize_text_field( $p['preview_signature'] ?? '' ), absint( $p['marketing_lead_id'] ?? 0 ) ); if ( ! is_wp_error( $result ) ) { $id = $result['id']; } }
 		elseif ( 'discount' === $op || 'deposit' === $op ) {
-			Money::require_sar_form(); $amount = Money::from_sar( $p['amount'] ?? '' );
-			if ( null === $amount ) { wp_die( 'Invalid SAR amount', '', array( 'response'=>400 ) ); }
+			Money::require_currency_form(); $amount = Money::from_major( $p['amount'] ?? '' );
+			if ( null === $amount ) { wp_die( 'Invalid amount in the configured base currency', '', array( 'response'=>400 ) ); }
 			$result = 'discount' === $op ? SalesService::request_discount( $id, $amount, sanitize_textarea_field( $p['reason'] ?? '' ) ) : ReservationService::record_deposit( absint( $p['reservation_id'] ?? 0 ), $amount, sanitize_key( $p['source'] ?? '' ), sanitize_text_field( $p['reference'] ?? '' ) );
 		}
 		elseif ( 'reserve' === $op ) { $result = ReservationService::create( array( 'customer_id'=>$q['customer_id'], 'vehicle_id'=>$q['vehicle_id'], 'deposit_amount'=>0, 'idempotency_key'=>$p['idempotency_key'] ?? '' ) ); }

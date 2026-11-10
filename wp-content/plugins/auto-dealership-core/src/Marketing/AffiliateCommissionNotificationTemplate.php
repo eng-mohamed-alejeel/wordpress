@@ -19,7 +19,8 @@ final class AffiliateCommissionNotificationTemplate {
 			'paid_sale_returned'=>array( 'ar'=>'الصفقة مرتجعة وتتطلب تسوية مالية', 'en'=>'Sale returned; financial reconciliation required' ),
 		);
 		$status_label = $status_labels[ $status ][ $ar ? 'ar' : 'en' ] ?? $status;
-		$amount = Money::decimal( (int) ( $commission['amount'] ?? 0 ) ) . ' SAR';
+		$currency_code = (string) ( $commission['currency_code'] ?? \AutoDealership\Core\CurrencySettings::base_code() );
+		$amount = Money::decimal( (int) ( $commission['amount'] ?? 0 ), $currency_code ) . ' ' . \AutoDealership\Core\CurrencySettings::display_unit( $currency_code, $ar ? 'ar' : 'en' );
 		$url = admin_url( 'admin.php?page=adc-affiliate-commissions&commission_id=' . absint( $commission['id'] ?? 0 ) );
 		if ( $ar ) {
 			$title = 'تحديث عمولة المسوق';

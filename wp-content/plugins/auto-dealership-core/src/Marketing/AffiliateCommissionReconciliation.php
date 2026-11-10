@@ -2,6 +2,7 @@
 namespace AutoDealership\Marketing;
 
 use AutoDealership\Audit\AuditLog;
+use AutoDealership\Core\CurrencySettings;
 use AutoDealership\Database\Schema;
 
 defined( 'ABSPATH' ) || exit;
@@ -35,12 +36,14 @@ final class AffiliateCommissionReconciliation {
 		global $wpdb;
 		if ( ! Schema::is_ready() ) { $state = self::failed( 'adc_affiliate_reconciliation_schema' ); return new \WP_Error( 'adc_affiliate_reconciliation_schema', 'Affiliate reconciliation requires a verified database schema.' ); }
 		$commissions = Schema::table( 'affiliate_commissions' ); $entries = Schema::table( 'affiliate_commission_entries' ); $issues = Schema::table( 'affiliate_commission_migration_issues' );
+		$currency = CurrencySettings::base_code();
+		if ( '' === $currency ) { return self::failed_result( 'adc_currency_required' ); }
 		$queries = array(
 			'commission_without_ledger'=>"SELECT COUNT(*) FROM $commissions c LEFT JOIN $entries e ON e.commission_id=c.id WHERE e.id IS NULL",
-			'invalid_commission'=>"SELECT COUNT(*) FROM $commissions c WHERE c.currency_code<>'SAR' OR c.status NOT IN ('pending_review','approved','paid','void','paid_sale_returned') OR c.amount<0 OR (c.amount<1 AND c.status NOT IN ('void','paid_sale_returned'))",
+			'invalid_commission'=>$wpdb->prepare("SELECT COUNT(*) FROM $commissions c WHERE c.currency_code<>%s OR c.status NOT IN ('pending_review','approved','paid','void','paid_sale_returned') OR c.amount<0 OR (c.amount<1 AND c.status NOT IN ('void','paid_sale_returned'))", $currency),
 			'migration_issues'=>"SELECT COUNT(*) FROM $issues WHERE status='open'",
 			'orphan_ledger_entries'=>"SELECT COUNT(*) FROM $entries e LEFT JOIN $commissions c ON c.id=e.commission_id WHERE c.id IS NULL",
-			'inconsistent_entries'=>"SELECT COUNT(*) FROM $entries e INNER JOIN $commissions c ON c.id=e.commission_id WHERE e.sale_id<>c.sale_id OR e.affiliate_user_id<>c.affiliate_user_id OR e.branch_id<>c.branch_id OR e.currency_code<>'SAR' OR e.entry_type NOT IN ('accrual','legacy_opening','void_reversal','return_reversal') OR (e.entry_type IN ('accrual','legacy_opening') AND e.amount<0) OR (e.entry_type IN ('void_reversal','return_reversal') AND e.amount>=0)",
+			'inconsistent_entries'=>$wpdb->prepare("SELECT COUNT(*) FROM $entries e INNER JOIN $commissions c ON c.id=e.commission_id WHERE e.sale_id<>c.sale_id OR e.affiliate_user_id<>c.affiliate_user_id OR e.branch_id<>c.branch_id OR e.currency_code<>%s OR e.entry_type NOT IN ('accrual','legacy_opening','void_reversal','return_reversal') OR (e.entry_type IN ('accrual','legacy_opening') AND e.amount<0) OR (e.entry_type IN ('void_reversal','return_reversal') AND e.amount>=0)", $currency),
 		);
 		$counts = array(); foreach ( $queries as $key=>$sql ) { $counts[ $key ] = (int) $wpdb->get_var( $sql ); if ( $wpdb->last_error ) { return self::failed_result( 'adc_affiliate_reconciliation_query' ); } }
 		$counts['total'] = array_sum( $counts ); $state = array_merge( array( 'status'=>$counts['total'] ? 'attention' : 'healthy', 'finished_at'=>current_time( 'mysql', true ), 'error'=>'' ), $counts );

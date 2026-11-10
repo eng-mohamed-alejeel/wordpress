@@ -44,7 +44,7 @@ final class PublicVehicleView {
 			$features = is_array( $raw_features ) ? $raw_features : explode( "\n", (string) $raw_features );
 		}
 		$features = array_values( array_unique( array_filter( array_map( 'trim', array_map( 'strval', array_filter( $features, 'is_scalar' ) ) ) ) ) );
-		$net = $vehicle ? (int)$vehicle['retail_price'] : (\AutoDealership\Pricing\Money::from_sar((string)$legacy('_car_price')) ?? 0);
+		$net = $vehicle ? (int)$vehicle['retail_price'] : (\AutoDealership\Pricing\Money::from_major((string)$legacy('_car_price')) ?? 0);
 		$amounts = \AutoDealership\Pricing\PublicVehiclePrice::calculate($net, $post_id);
 		return \AutoDealership\Inventory\VehicleTechnicalDetails::enrich(array(
 			'price_breakdown' => \AutoDealership\Pricing\PublicVehiclePrice::public_breakdown($amounts),

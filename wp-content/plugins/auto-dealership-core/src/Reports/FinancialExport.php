@@ -18,12 +18,12 @@ final class FinancialExport {
 			return new \WP_Error( 'adc_export_dates', __( 'Choose a valid date range of at most 366 days.', 'auto-dealership-core' ), array( 'status' => 400 ) );
 		}
 		list( $scope, $scope_args ) = BranchScope::predicate( 'v.branch_id' );
-		$sql = 'SELECT s.id AS sale_id,s.status,v.branch_id,v.stock_number,q.quote_number,q.final_amount,\'SAR\' AS currency,s.invoice_reference,s.created_at,MAX(r.deposit_amount)+COALESCE(SUM(CASE WHEN p.status=\'verified\' THEN p.amount ELSE 0 END),0) AS verified_amount FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=s.quotation_id INNER JOIN ' . Schema::table( 'reservations' ) . ' r ON r.id=s.reservation_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id LEFT JOIN ' . Schema::table( 'payment_confirmations' ) . ' p ON p.sale_id=s.id WHERE ' . $scope . ' AND s.created_at >= %s AND s.created_at < %s GROUP BY s.id,s.status,v.branch_id,v.stock_number,q.quote_number,q.final_amount,s.invoice_reference,s.created_at ORDER BY s.id ASC LIMIT 5001';
+		$sql = 'SELECT s.id AS sale_id,s.status,v.branch_id,v.stock_number,q.quote_number,q.final_amount,q.currency_code AS currency,s.invoice_reference,s.created_at,MAX(r.deposit_amount)+COALESCE(SUM(CASE WHEN p.status=\'verified\' AND p.currency=q.currency_code THEN p.amount ELSE 0 END),0) AS verified_amount FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=s.quotation_id INNER JOIN ' . Schema::table( 'reservations' ) . ' r ON r.id=s.reservation_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=s.vehicle_id LEFT JOIN ' . Schema::table( 'payment_confirmations' ) . ' p ON p.sale_id=s.id WHERE ' . $scope . ' AND s.created_at >= %s AND s.created_at < %s GROUP BY s.id,s.status,v.branch_id,v.stock_number,q.quote_number,q.final_amount,q.currency_code,s.invoice_reference,s.created_at ORDER BY s.id ASC LIMIT 5001';
 		$args = array_merge( $scope_args, array( $from . ' 00:00:00', $end->modify( '+1 day' )->format( 'Y-m-d 00:00:00' ) ) );
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) ?: array();
 		$truncated = count( $rows ) > 5000;
 		if ( $truncated ) { array_pop( $rows ); }
-		return array( 'from' => $from, 'to' => $to, 'generated_at' => current_time( 'mysql', true ), 'rows' => $rows, 'truncated' => $truncated, 'currency' => 'SAR' );
+		return array( 'from' => $from, 'to' => $to, 'generated_at' => current_time( 'mysql', true ), 'rows' => $rows, 'truncated' => $truncated, 'currency' => \AutoDealership\Core\CurrencySettings::base_code() );
 	}
 
 	public static function create( string $from, string $to ) {
@@ -42,8 +42,8 @@ final class FinancialExport {
 	private static function csv( array $rows ): string {
 		$stream = fopen( 'php://temp', 'w+' );
 		fwrite( $stream, "\xEF\xBB\xBF" );
-		fputcsv( $stream, array( 'sale_id','status','branch_id','stock_number','quote_number','final_amount_sar','currency','invoice_reference','created_at','verified_amount_sar' ) );
-		foreach ( $rows as $row ) { foreach ( array( 'final_amount','verified_amount' ) as $field ) { $row[$field] = \AutoDealership\Pricing\Money::decimal( (string) $row[$field] ); } fputcsv( $stream, array_map( array( self::class, 'safe_cell' ), array_values( $row ) ) ); }
+		fputcsv( $stream, array( 'sale_id','status','branch_id','stock_number','quote_number','final_amount','currency','invoice_reference','created_at','verified_amount' ) );
+		foreach ( $rows as $row ) { foreach ( array( 'final_amount','verified_amount' ) as $field ) { $row[$field] = \AutoDealership\Pricing\Money::decimal( (string) $row[$field], (string) $row['currency'] ); } fputcsv( $stream, array_map( array( self::class, 'safe_cell' ), array_values( $row ) ) ); }
 		rewind( $stream ); $csv = stream_get_contents( $stream ); fclose( $stream ); return (string) $csv;
 	}
 

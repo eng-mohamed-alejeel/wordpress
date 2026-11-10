@@ -3,6 +3,7 @@
   const config = window.adcComponentEditor;
   if (!config || !window.wp) return;
   const t = (ar, en) => config.ar ? ar : en;
+  const currencyLabel = config.currencyLabel || config.currencyCode || '';
   const items = config.items;
   const groups = {identity:t('الهوية','Identity'),vehicles:t('السيارات والأدوات','Vehicles and tools'),contact:t('التواصل والفروع','Contact and branches'),about:t('التعريف بالمعرض','About the dealership'),legal:t('السياسات','Policies'),legacy:t('أقسام مشروطة بالمحتوى','Content-dependent sections')};
   const code = item => '[' + item.tag + (item.parameters.includes('count') ? ' count="6"' : '') + (item.parameters.includes('price') ? ' price="0"' : '') + ']';
@@ -44,7 +45,7 @@
         const controls = el(PanelBody,{title:t('إعدادات المكوّن','Component settings'),initialOpen:true},
           el(SelectControl,{label:t('المكوّن','Component'),value:a.component,options:items.map(i=>({label:groups[i.group]+' · '+i.title,value:i.tag})),onChange:value=>setAttributes({component:value})}),
           item.parameters.includes('count') && el(TextControl,{label:t('عدد العناصر (1–48)','Item count (1–48)'),type:'number',min:1,max:48,value:a.count,onChange:value=>setAttributes({count:Math.min(48,Math.max(1,parseInt(value,10)||1))})}),
-          item.parameters.includes('price') && el(TextControl,{label:t('السعر الابتدائي بالريال','Initial price in SAR'),type:'number',min:0,max:100000000,value:a.price,onChange:value=>setAttributes({price:Math.min(100000000,Math.max(0,Number(value)||0))})}),
+          item.parameters.includes('price') && el(TextControl,{label:t('السعر الابتدائي','Initial price')+(currencyLabel?' ('+currencyLabel+')':''),type:'number',min:0,max:100000000,value:a.price,onChange:value=>setAttributes({price:Math.min(100000000,Math.max(0,Number(value)||0))})}),
           el(ToggleControl,{label:t('عرض المعاينة','Show preview'),checked:preview,onChange:setPreview}),
           el(SelectControl,{label:t('لغة المعاينة فقط','Preview language only'),value:language,options:[{label:'العربية',value:'ar'},{label:'English',value:'en'}],onChange:setLanguage}),
           el('p',null,item.description),item.availability && el('p',null,item.availability),el('a',{href:item.manageUrl,target:'_blank',rel:'noopener'},t('إدارة بيانات المكوّن','Manage component data')));

@@ -102,7 +102,7 @@ const assert = require('node:assert/strict');
                 fs.writeFileSync(path.join(artifacts,view+'-'+lang+'.png'),Buffer.from(shot.data,'base64'));
                 if(view==='settings') {
                     check(await evaluate('(() => { const input=document.querySelector("[data-currency-value]"); const select=input.closest("td").querySelector("select"); select.value="fixed";select.dispatchEvent(new Event("change"));return input.step==="0.01" && input.value==="0" && !input.disabled;})()'),'Fixed SAR setting resets safely and permits two decimals.');
-                    check(await evaluate('(() => { const input=document.querySelector("[data-currency-value]"); const select=input.closest("td").querySelector("select"); select.value="percentage";select.dispatchEvent(new Event("change"));return input.step==="1" && input.value==="0";})()'),'Percentage setting preserves basis points.');
+                    check(await evaluate('(() => { const input=document.querySelector("[data-currency-value]"); const select=input.closest("td").querySelector("select"); select.value="percentage";select.dispatchEvent(new Event("change"));return input.step==="0.01" && input.value==="0";})()'),'Percentage setting uses currency-independent hundredths of a percent.');
                 }
             }
             await navigate(input.print_path+'&lang='+lang,'body');

@@ -294,7 +294,7 @@ final class PublicSeo {
 			'year' => '',
 			'condition' => '',
 			'price' => '',
-			'currency' => 'SAR',
+			'currency' => \AutoDealership\Core\CurrencySettings::base_code(),
 			'offer_title' => '',
 			'offer_price' => '',
 		);
@@ -323,7 +323,7 @@ final class PublicSeo {
 			$tokens['vehicle_title'] = self::post_title( (int) $model['car_id'], $language );
 			$tokens['offer_price'] = self::format_price( (string) $model['price'] );
 			$tokens['price'] = $tokens['offer_price'];
-			$tokens['currency'] = self::plain( (string) $model['currency'] ) ?: 'SAR';
+			$tokens['currency'] = self::plain( (string) $model['currency'] ) ?: \AutoDealership\Core\CurrencySettings::base_code();
 		} elseif ( is_post_type_archive( 'car' ) ) {
 			$context = 'catalog';
 		} elseif ( is_post_type_archive( 'car_offer' ) ) {

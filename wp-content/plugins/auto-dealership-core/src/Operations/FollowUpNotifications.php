@@ -253,7 +253,7 @@ final class FollowUpNotifications {
 				$lang=\AutoDealership\Leads\NewsletterService::language((string)get_user_meta((int)$row['recipient_id'],'adc_preferred_language',true));$ar='ar'===$lang;
 				$title=$ar?'تحديث عمولة المسوق':'Affiliate commission update';$body='<p>'.esc_html($ar?'تم تحديث حالة عمولتك. راجع صفحة العمولات للاطلاع على التفاصيل.':'Your affiliate commission status was updated. Review the commission page for details.').'</p>';
 				$html=\AutoDealership\Accounts\BrandedMail::render($title,$body,$ar?'عرض العمولات':'View commissions',$url,'',$lang);
-				$template=\AutoDealership\Marketing\AffiliateCommissionNotificationTemplate::build($commission?:array('id'=>(int)$row['source_id'],'status'=>'pending_review','amount'=>0,'currency_code'=>'SAR'),$event,(int)$row['recipient_id']);
+				$template=\AutoDealership\Marketing\AffiliateCommissionNotificationTemplate::build($commission?:array('id'=>(int)$row['source_id'],'status'=>'pending_review','amount'=>0,'currency_code'=>\AutoDealership\Core\CurrencySettings::base_code()),$event,(int)$row['recipient_id']);
 				$subject=$template['subject'];$html=\AutoDealership\Accounts\BrandedMail::render($template['title'],$template['body'],$template['button'],$template['url'],'',$template['language']);
 				if(!\AutoDealership\Accounts\BrandedMail::send($user->user_email,$subject,$html)){return new \WP_Error('adc_affiliate_mail');}
 				$channel='email'; }

@@ -37,8 +37,8 @@ final class FinanceConfiguration {
     $p['tenure_assumed']=($key==='regular'&&in_array($id,['anb','enbd','aloula','emkan'],true))||($key==='half'&&in_array($id,['anb','enbd'],true));
     $p['payments_assumed']=$key==='half'&&$id==='alinma';
     if($id==='riyad') {
-     if($key==='regular') $p['rules'][]=self::verification(['salary_min'=>8000,'salary_max'=>8000],['راتب 8,000 بالضبط يحتاج تأكيد الشريحة.','Verify the salary band at exactly SAR 8,000.']);
-     $p['rules'][]=self::verification(['salary_min'=>5000,'salary_max'=>5000],['الملف يقول أعلى من 5,000؛ يلزم تأكيد قبول 5,000 بالضبط.','Source says above SAR 5,000; verify exactly SAR 5,000.']);
+     if($key==='regular') $p['rules'][]=self::verification(['salary_min'=>8000,'salary_max'=>8000],['راتب 8,000 بالضبط يحتاج تأكيد الشريحة.','Verify the salary band at exactly '.\AutoDealership\Core\CurrencySettings::ui_unit( 'en' ).' 8,000.']);
+     $p['rules'][]=self::verification(['salary_min'=>5000,'salary_max'=>5000],['الملف يقول أعلى من 5,000؛ يلزم تأكيد قبول 5,000 بالضبط.','Source says above '.\AutoDealership\Core\CurrencySettings::ui_unit( 'en' ).' 5,000; verify exactly '.\AutoDealership\Core\CurrencySettings::ui_unit( 'en' ).' 5,000.']);
      if($key==='regular') $p['notes']=['تستخدم المقارنة الحد الأعلى للدفعة الأخيرة: 45% للمحول و40% لغير المحول.','Comparison uses maximum balloon: 45% ST / 40% NST.'];
     }
     if($id==='raya') foreach(['private_approved','private_unapproved'] as $sector) $p['rules'][]=self::verification(['sector'=>$sector],['يلزم تأكيد مدة الخدمة: 3 أشهر للسعودي و6 للمقيم في القطاع الخاص.','Verify private-sector service: 3 months Saudi / 6 months expat.']);
@@ -96,9 +96,13 @@ final class FinanceConfiguration {
   $months=[];foreach(self::providers() as $p)foreach($p['programs'] as $program)if($program['active'])$months=array_merge($months,$program['months']);
   $months=array_values(array_unique($months));sort($months);return $months ?: [12,24,36,48,60];
  }
- private static function number($value,float $max,bool $nullable=true): ?float {
+ private static function number($value,float $max,bool $nullable=true,?int $decimals=null): ?float {
   if($nullable&&($value===''||$value===null))return null;
-  if(!is_scalar($value)||!preg_match('/\A[0-9]{1,10}(?:\.[0-9]{1,2})?\z/',(string)$value)||(float)$value>$max)throw new \InvalidArgumentException('قيمة رقمية غير صحيحة أو خارج النطاق.');return (float)$value;
+  $decimals=null===$decimals?2:max(0,$decimals);$fraction=$decimals>0?'(?:\.[0-9]{1,'.$decimals.'})?':'';
+  if(!is_scalar($value)||!preg_match('/\A[0-9]{1,10}'.$fraction.'\z/',(string)$value)||(float)$value>$max)throw new \InvalidArgumentException('قيمة رقمية غير صحيحة أو خارج النطاق.');return (float)$value;
+ }
+ private static function field_decimals(string $field,string $admin_mode='percent'): int {
+  return in_array($field,['min_salary','admin_cap','price_min'],true)||($field==='admin'&&$admin_mode==='fixed')?\AutoDealership\Core\CurrencySettings::decimals():2;
  }
  private static function plain($value,int $max=2000): string {
   if(!is_string($value)||strlen($value)>$max*4)throw new \InvalidArgumentException('نص غير صحيح أو أطول من الحد المسموح.');return sanitize_textarea_field($value);
@@ -114,8 +118,8 @@ final class FinanceConfiguration {
    $p['months']=[];foreach($months as $m){if(!in_array((string)$m,self::CONDITIONS['months'],true))throw new \InvalidArgumentException('مدة التمويل غير مدعومة.');$p['months'][]=(int)$m;}
    $p['months']=array_values(array_unique($p['months']));sort($p['months']);if($p['active']&&!$p['months'])throw new \InvalidArgumentException('اختر مدة واحدة على الأقل لكل برنامج مفعّل.');
    $p['admin_mode']=$r['admin_mode']??'percent';if(!in_array($p['admin_mode'],['percent','fixed'],true))throw new \InvalidArgumentException('نوع الرسوم غير صحيح.');
-   foreach(self::FIELDS as $field)$p['values'][$field]=self::number($r['values'][$field]??null,($field==='min_salary'||($field==='admin'&&$p['admin_mode']==='fixed'))?LoanCalculator::MAX_AMOUNT:100);
-   $p['admin_cap']=self::number($r['admin_cap']??null,LoanCalculator::MAX_AMOUNT);$p['price_min']=self::number($r['price_min']??0,LoanCalculator::MAX_AMOUNT,false);
+   foreach(self::FIELDS as $field)$p['values'][$field]=self::number($r['values'][$field]??null,($field==='min_salary'||($field==='admin'&&$p['admin_mode']==='fixed'))?LoanCalculator::MAX_AMOUNT:100,true,self::field_decimals($field,$p['admin_mode']));
+   $p['admin_cap']=self::number($r['admin_cap']??null,LoanCalculator::MAX_AMOUNT,true,self::field_decimals('admin_cap'));$p['price_min']=self::number($r['price_min']??0,LoanCalculator::MAX_AMOUNT,false,self::field_decimals('price_min'));
    foreach(['price_strict','approved_only','tenure_assumed','payments_assumed'] as $flag)$p[$flag]=!empty($r[$flag]);
    foreach(['sectors'=>self::SECTORS,'nationalities'=>['saudi','expat']] as $field=>$allowed){$values=$r[$field]??[];if(!is_array($values)||count($values)>20)throw new \InvalidArgumentException('شرائح العملاء غير صحيحة.');foreach($values as $value)if(!is_string($value)||!in_array($value,$allowed,true))throw new \InvalidArgumentException('شرائح العملاء غير صحيحة.');$p[$field]=array_values(array_unique($values));if($p['active']&&!$p[$field])throw new \InvalidArgumentException('اختر شرائح العملاء للبرنامج.');}
    $brands=$r['brands']??'';if(is_array($brands))$brands=implode(',',$brands);$p['brands']=array_values(array_unique(array_filter(array_map(static fn($s)=>strtolower(trim($s)),preg_split('/[,،\r\n]+/',self::plain($brands,4000))))));
@@ -124,9 +128,9 @@ final class FinanceConfiguration {
    $p['rules']=[];foreach($rules as $rule){
     if(!is_array($rule))throw new \InvalidArgumentException('شرط غير صحيح.');$when=[];
     foreach(self::CONDITIONS as $field=>$allowed){$value=$rule['when'][$field]??'';if($value==='')continue;if(!is_string($value)&&!is_int($value))throw new \InvalidArgumentException('قيمة شرط غير صحيحة.');if(!in_array((string)$value,$allowed,true))throw new \InvalidArgumentException('خيار شرط غير صحيح.');$when[$field]=(string)$value;}
-    foreach(['salary_min','salary_max'] as $field){$value=self::number($rule['when'][$field]??null,LoanCalculator::MAX_AMOUNT);if($value!==null)$when[$field]=$value;}
+    foreach(['salary_min','salary_max'] as $field){$value=self::number($rule['when'][$field]??null,LoanCalculator::MAX_AMOUNT,true,\AutoDealership\Core\CurrencySettings::decimals());if($value!==null)$when[$field]=$value;}
     if(isset($when['salary_min'],$when['salary_max'])&&$when['salary_min']>$when['salary_max'])throw new \InvalidArgumentException('بداية شريحة الراتب أكبر من نهايتها.');
-    $values=[];foreach(self::FIELDS as $field)if(array_key_exists($field,$rule['values']??[])&&$rule['values'][$field]!=='')$values[$field]=self::number($rule['values'][$field],($field==='min_salary'||($field==='admin'&&$p['admin_mode']==='fixed'))?LoanCalculator::MAX_AMOUNT:100);
+    $values=[];foreach(self::FIELDS as $field)if(array_key_exists($field,$rule['values']??[])&&$rule['values'][$field]!=='')$values[$field]=self::number($rule['values'][$field],($field==='min_salary'||($field==='admin'&&$p['admin_mode']==='fixed'))?LoanCalculator::MAX_AMOUNT:100,true,self::field_decimals($field,$p['admin_mode']));
     $notes=[self::plain($rule['notes'][0]??''),self::plain($rule['notes'][1]??'')];$verify=!empty($rule['verify']);
     if(!$values&&!$verify&&$notes===['',''])continue;
     if($verify&&($notes[0]===''||$notes[1]===''))throw new \InvalidArgumentException('اكتب سبب التحقق الإضافي بالعربية والإنجليزية.');

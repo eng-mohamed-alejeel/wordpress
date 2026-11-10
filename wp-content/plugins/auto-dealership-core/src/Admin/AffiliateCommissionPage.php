@@ -37,6 +37,7 @@ final class AffiliateCommissionPage {
 
 	private static function render_management(): void {
 		$amount = AffiliateCommissionService::configured_amount();
+		$money_step = \AutoDealership\Core\CurrencySettings::input_step();
 		echo '<h2>' . esc_html( self::text( 'إعداد ومراجعة المالية', 'Finance configuration and review' ) ) . '</h2>';
 		echo '<p>' . esc_html( self::text( 'قيمة ثابتة لكل صفقة مكتملة. تغيير القيمة لا يؤثر على العروض التي أُنشئت سابقًا. القيمة صفر توقف ربط إحالات جديدة.', 'A fixed amount per completed sale. Changes do not affect existing quotations. Zero disables new referral attribution.' ) ) . '</p>';
 		self::render_summary( AffiliateCommissionService::account_summary( 0 ), self::text( 'ملخص الفروع المتاحة', 'Accessible commission summary' ) );
@@ -47,7 +48,7 @@ final class AffiliateCommissionPage {
 		echo '<input type="hidden" name="action" value="adc_affiliate_commission_fingerprint"><label><input type="checkbox" name="enabled" value="1"' . checked( AffiliateCommissionService::fingerprint_enabled(), true, false ) . '> ' . esc_html( self::text( 'تفعيل البصمة الاختيارية للحركات المالية', 'Enable optional financial movement fingerprints' ) ) . '</label> <button class="button">' . esc_html( self::text( 'حفظ إعداد البصمة', 'Save fingerprint setting' ) ) . '</button></form>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_affiliate_commission_rate' );
-		echo '<input type="hidden" name="action" value="adc_affiliate_commission_rate"><input type="hidden" name="adc_money_unit" value="SAR"><label>' . esc_html( self::text( 'العمولة الثابتة (ريال)', 'Fixed commission (SAR)' ) ) . ' <input type="number" min="0" step="0.01" name="amount" value="' . esc_attr( Money::decimal( $amount ) ) . '" required></label> <button class="button button-primary">' . esc_html( self::text( 'حفظ الإعداد', 'Save setting' ) ) . '</button></form>';
+		echo '<input type="hidden" name="action" value="adc_affiliate_commission_rate"><input type="hidden" name="adc_money_unit" value="' . esc_attr( \AutoDealership\Core\CurrencySettings::base_code() ) . '"><label>' . esc_html( self::text( 'العمولة الثابتة (' . \AutoDealership\Core\CurrencySettings::ui_unit() . ')', 'Fixed commission (' . \AutoDealership\Core\CurrencySettings::ui_unit() . ')' ) ) . ' <input type="number" min="0" step="' . esc_attr( $money_step ) . '" name="amount" value="' . esc_attr( Money::decimal( $amount ) ) . '" required></label> <button class="button button-primary">' . esc_html( self::text( 'حفظ الإعداد', 'Save setting' ) ) . '</button></form>';
 		$page = max( 1, absint( $_GET['commission_page'] ?? 1 ) );
 		$filters = array( 'page'=>$page, 'per_page'=>25, 'status'=>sanitize_key( wp_unslash( $_GET['status'] ?? '' ) ), 'from'=>sanitize_text_field( wp_unslash( $_GET['from'] ?? '' ) ), 'to'=>sanitize_text_field( wp_unslash( $_GET['to'] ?? '' ) ) );
 		$data = AffiliateCommissionService::list_commissions( $filters );
@@ -164,7 +165,7 @@ final class AffiliateCommissionPage {
 			'returned'=>self::text( 'مبيعات مرتجعة', 'Returned sales' ),
 			'net_ledger'=>self::text( 'صافي الحركات', 'Net ledger' ),
 		);
-		echo '<h3>' . esc_html( $title ) . ' <small>(' . esc_html( (string) ( $summary['currency'] ?? AffiliateCommissionService::CURRENCY ) ) . ')</small></h3><div class="adc-affiliate-summary">';
+		echo '<h3>' . esc_html( $title ) . ' <small>(' . esc_html( (string) \AutoDealership\Core\CurrencySettings::ui_unit() ) . ')</small></h3><div class="adc-affiliate-summary">';
 		foreach ( $cards as $key=>$label ) { echo '<div class="card"><strong>' . esc_html( Money::display( (int) ( $summary[ $key ] ?? 0 ) ) ) . '</strong><br>' . esc_html( $label ) . '</div>'; }
 		echo '</div>';
 	}
@@ -192,9 +193,9 @@ final class AffiliateCommissionPage {
 
 	public static function save_rate(): void {
 		check_admin_referer( 'adc_affiliate_commission_rate' );
-		Money::require_sar_form();
-		$amount = Money::from_sar( wp_unslash( $_POST['amount'] ?? '' ) );
-		if ( null === $amount ) { wp_die( esc_html__( 'أدخل قيمة ريال صحيحة بمنزلتين عشريتين كحد أقصى.', 'auto-dealership-core' ), '', array( 'response'=>400 ) ); }
+		Money::require_currency_form();
+		$amount = Money::from_major( wp_unslash( $_POST['amount'] ?? '' ) );
+		if ( null === $amount ) { wp_die( esc_html__( 'أدخل قيمة صحيحة وفق دقة العملة المفعّلة.', 'auto-dealership-core' ), '', array( 'response'=>400 ) ); }
 		$result = AffiliateCommissionService::set_configured_amount( $amount );
 		if ( is_wp_error( $result ) ) { wp_die( esc_html( $result->get_error_message() ), '', array( 'response'=>(int) ( $result->get_error_data()['status'] ?? 400 ) ) ); }
 		wp_safe_redirect( add_query_arg( array( 'page'=>'adc-affiliate-commissions', 'saved'=>1 ), admin_url( 'admin.php' ) ) );

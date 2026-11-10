@@ -330,7 +330,7 @@ final class PublicCatalog {
 		if ( $major_price_units ) {
 			foreach ( array( 'min_price', 'max_price' ) as $key ) {
 				if ( isset( $filters[ $key ] ) ) {
-					$minor = \AutoDealership\Pricing\Money::from_sar( (string) $raw[$key] );
+					$minor = \AutoDealership\Pricing\Money::from_major( (string) $raw[$key] );
 					if ( null === $minor ) { unset( $filters[$key] ); }
 					else { $filters[$key] = $minor; }
 				}

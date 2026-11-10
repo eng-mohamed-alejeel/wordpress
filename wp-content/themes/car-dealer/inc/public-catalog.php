@@ -20,7 +20,8 @@ function car_dealer_catalog_is_request(): bool {
 function car_dealer_text( string $arabic, string $english ): string {
 	$lang = car_dealer_catalog_language();
 	$text = 'en' === $lang ? $english : $arabic;
-	return class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::copy( $text, $lang ) : strtr( $text, array( '{site_name}' => car_dealer_brand_name(), '{legal_name}' => car_dealer_brand_name() ) );
+	$text = class_exists( '\AutoDealership\Core\ProductSetup' ) ? \AutoDealership\Core\ProductSetup::copy( $text, $lang ) : strtr( $text, array( '{site_name}' => car_dealer_brand_name(), '{legal_name}' => car_dealer_brand_name() ) );
+	return class_exists( '\AutoDealership\Core\CurrencySettings' ) ? \AutoDealership\Core\CurrencySettings::localize_unit_text( $text ) : $text;
 }
 
 /** Keep the public brand name consistent with the selected site language. */
@@ -160,7 +161,7 @@ function car_dealer_catalog_english_copy(): array {
 		'بحث' => 'Search', 'الماركة أو الموديل' => 'Brand or model', 'الماركة أو الموديل أو الرقم المرجعي' => 'Brand, model or reference number',
 		'الماركة' => 'Brand', 'كل الماركات' => 'All brands', 'نوع السيارة' => 'Vehicle type', 'كل الأنواع' => 'All types',
 		'الموديل' => 'Model', 'الفئة' => 'Trim', 'السنة من' => 'Year from', 'السنة إلى' => 'Year to',
-		'السعر من (ريال)' => 'Price from (SAR)', 'السعر إلى (ريال)' => 'Price to (SAR)', 'السعر إلى' => 'Price to',
+		'السعر من (%s)' => 'Price from (%s)', 'السعر إلى (%s)' => 'Price to (%s)', 'السعر إلى' => 'Price to',
 		'الممشى من (كم)' => 'Mileage from (km)', 'الممشى إلى (كم)' => 'Mileage to (km)', 'نوع الهيكل' => 'Body type',
 		'الوقود' => 'Fuel', 'ناقل الحركة' => 'Transmission', 'المحرك' => 'Engine', 'نظام الدفع' => 'Drivetrain',
 		'اللون الخارجي' => 'Exterior color', 'اللون الداخلي' => 'Interior color', 'الحالة' => 'Condition',
@@ -286,7 +287,7 @@ function car_dealer_catalog_format_price( $price ): string {
 		return '';
 	}
 	$amount = (float) $price;
-	return 'en' === car_dealer_catalog_language() ? 'SAR ' . number_format( $amount, floor( $amount ) === $amount ? 0 : 2 ) : car_dealer_format_price( $price );
+	return 'en' === car_dealer_catalog_language() ? car_dealer_format_price( $price ) : car_dealer_format_price( $price );
 }
 
 /**

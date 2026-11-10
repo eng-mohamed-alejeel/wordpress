@@ -14,8 +14,8 @@ final class PurchaseOrderService {
 	public static function configure( array $input, string $reason ) {
 		global $wpdb;
 		if ( ! current_user_can( 'manage_options' ) ) { return self::error( 'forbidden', 403 ); }
-		$manager = Money::from_sar( $input['manager_limit'] ?? '' );
-		$general = Money::from_sar( $input['general_limit'] ?? '' );
+		$manager = Money::from_major( $input['manager_limit'] ?? '' );
+		$general = Money::from_major( $input['general_limit'] ?? '' );
 		$basis = $input['cost_basis'] ?? '';
 		$cancellation = $input['approved_cancellation'] ?? '';
 		if ( null === $manager || null === $general || $general < 1 || $general < $manager || ! in_array( $basis, array( 'net', 'gross' ), true ) || ! in_array( $cancellation, array( 'manager_only', 'authorised_staff' ), true ) || ! trim( $reason ) || mb_strlen( $reason ) > 2000 ) { return self::error( 'invalid_policy', 400 ); }
@@ -39,7 +39,7 @@ final class PurchaseOrderService {
 	public static function create( array $input ) {
 		global $wpdb;
 		if ( ! current_user_can( 'adc_create_purchase_orders' ) ) { return self::error( 'forbidden', 403 ); }
-		$purchase = Money::from_sar( $input['purchase_amount'] ?? '' ); $extra = Money::from_sar( $input['additional_amount'] ?? '0' );
+		$purchase = Money::from_major( $input['purchase_amount'] ?? '' ); $extra = Money::from_major( $input['additional_amount'] ?? '0' );
 		$rate = filter_var( $input['tax_rate_bps'] ?? '', FILTER_VALIDATE_INT, array( 'options'=>array( 'min_range'=>0, 'max_range'=>10000 ) ) );
 		$key = (string) ( $input['request_key'] ?? '' ); $reason = sanitize_textarea_field( $input['reason'] ?? '' );
 		if ( ! $purchase || null === $extra || false === $rate || $purchase > PHP_INT_MAX - $extra || ! preg_match( '/\A[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\z/i', $key ) || ! trim( $reason ) || mb_strlen( $reason ) > 2000 ) { return self::error( 'invalid_input', 400 ); }

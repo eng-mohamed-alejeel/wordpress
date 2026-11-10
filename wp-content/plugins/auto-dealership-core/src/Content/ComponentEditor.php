@@ -86,7 +86,7 @@ final class ComponentEditor {
 		if(!current_user_can('edit_pages')) { return; }
 		wp_enqueue_style('adc-component-editor',plugins_url('assets/css/component-editor.css',ADC_FILE),array(),ADC_VERSION);
 		wp_enqueue_script('adc-component-editor',plugins_url('assets/js/component-editor.js',ADC_FILE),array('wp-blocks','wp-element','wp-block-editor','wp-components','wp-data','wp-plugins','wp-editor','wp-rich-text','wp-server-side-render','wp-dom-ready'),ADC_VERSION,true);
-		wp_localize_script('adc-component-editor','adcComponentEditor',array('items'=>self::catalog(),'ar'=>str_starts_with(get_user_locale(),'ar')));
+		wp_localize_script('adc-component-editor','adcComponentEditor',array('items'=>self::catalog(),'ar'=>str_starts_with(get_user_locale(),'ar'),'currencyLabel'=>\AutoDealership\Core\CurrencySettings::display_unit(),'currencyCode'=>\AutoDealership\Core\CurrencySettings::base_code()));
 	}
 	public static function classic_box(): void {
 		echo '<div id="adc-classic-components"><p>' . esc_html(self::t('ابحث عن المكوّن وأدرجه في موضع المؤشر، أو انسخ الكود إلى أي نص أو ترجمة.','Find a component and insert it at the cursor, or copy its shortcode into text or translations.')) . '</p><input type="search" class="widefat" data-adc-search aria-label="' . esc_attr(self::t('بحث المكونات','Search components')) . '"><div data-adc-list></div><p data-adc-feedback role="status"></p></div>';

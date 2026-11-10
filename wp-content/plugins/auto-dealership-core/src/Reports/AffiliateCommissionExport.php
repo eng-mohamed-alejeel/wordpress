@@ -27,13 +27,14 @@ final class AffiliateCommissionExport {
 	}
 
 	private static function sheet( array $rows, array $filters ): string {
-		$headers = array( 'التصنيف','المعرّف','الوصف','الفترة','عدد العمولات','الإجمالي SAR','العكوسات SAR','صافي السجل SAR','قيد المراجعة SAR','معتمد SAR','مدفوع SAR','ملغى SAR','مرتجع SAR' );
+		$currency = \AutoDealership\Core\CurrencySettings::base_code();
+		$headers = array( 'التصنيف','المعرّف','الوصف','الفترة','عدد العمولات','الإجمالي ' . $currency,'العكوسات ' . $currency,'صافي السجل ' . $currency,'قيد المراجعة ' . $currency,'معتمد ' . $currency,'مدفوع ' . $currency,'ملغى ' . $currency,'مرتجع ' . $currency );
 		$xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
 		$line = 1; $xml .= '<row r="' . $line . '">' . self::cells( array( 'من','إلى','المنطقة الزمنية','العملة' ), array( false,false,false,false ) ) . '</row>';
-		++$line; $xml .= '<row r="' . $line . '">' . self::cells( array( $filters['from'], $filters['to'], $filters['timezone'], AffiliateCommissionService::CURRENCY ), array( false,false,false,false ) ) . '</row>';
+		++$line; $xml .= '<row r="' . $line . '">' . self::cells( array( $filters['from'], $filters['to'], $filters['timezone'], \AutoDealership\Core\CurrencySettings::base_code() ), array( false,false,false,false ) ) . '</row>';
 		++$line; $xml .= '<row r="' . $line . '">' . self::cells( $headers, array_fill( 0, count( $headers ), false ) ) . '</row>'; ++$line;
 		foreach ( $rows as $row ) {
-			$values = array( $row['group_type'], $row['group_id'], $row['group_label'], $row['period'], $row['commission_count'], number_format( (int) $row['gross'] / 100, 2, '.', '' ), number_format( (int) $row['reversals'] / 100, 2, '.', '' ), number_format( (int) $row['net_ledger'] / 100, 2, '.', '' ), number_format( (int) $row['pending_review'] / 100, 2, '.', '' ), number_format( (int) $row['approved'] / 100, 2, '.', '' ), number_format( (int) $row['paid'] / 100, 2, '.', '' ), number_format( (int) $row['voided'] / 100, 2, '.', '' ), number_format( (int) $row['returned'] / 100, 2, '.', '' ) );
+			$values = array( $row['group_type'], $row['group_id'], $row['group_label'], $row['period'], $row['commission_count'], \AutoDealership\Pricing\Money::decimal( (int) $row['gross'] ), \AutoDealership\Pricing\Money::decimal( (int) $row['reversals'] ), \AutoDealership\Pricing\Money::decimal( (int) $row['net_ledger'] ), \AutoDealership\Pricing\Money::decimal( (int) $row['pending_review'] ), \AutoDealership\Pricing\Money::decimal( (int) $row['approved'] ), \AutoDealership\Pricing\Money::decimal( (int) $row['paid'] ), \AutoDealership\Pricing\Money::decimal( (int) $row['voided'] ), \AutoDealership\Pricing\Money::decimal( (int) $row['returned'] ) );
 			$numeric = array( false,true,false,false,true,true,true,true,true,true,true,true,true ); $xml .= '<row r="' . $line . '">' . self::cells( $values, $numeric ) . '</row>'; ++$line;
 		}
 		return $xml . '</sheetData><autoFilter ref="A3:M' . max( 3, $line - 1 ) . '"/><sheetViews><sheetView workbookViewId="0" rightToLeft="1"/></sheetViews></worksheet>';

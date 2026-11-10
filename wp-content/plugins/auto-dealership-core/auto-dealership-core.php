@@ -21,6 +21,7 @@ if ( is_readable( ADC_PATH . 'vendor/autoload.php' ) ) {
 
 require_once ADC_PATH . 'src/Cache/CacheManager.php';
 require_once ADC_PATH . 'src/Core/ProductSetup.php';
+require_once ADC_PATH . 'src/Core/CurrencySettings.php';
 require_once ADC_PATH . 'src/Core/BranchLocations.php';
 \AutoDealership\Core\BranchLocations::boot();
 require_once ADC_PATH . 'src/Core/AboutPage.php';
@@ -37,6 +38,7 @@ require_once ADC_PATH . 'src/Core/UpdateCompatibility.php';
 require_once ADC_PATH . 'src/Mail/Transport.php';
 require_once ADC_PATH . 'src/Mail/PasswordReset.php';
 \AutoDealership\Core\ProductSetup::boot();
+\AutoDealership\Core\CurrencySettings::boot();
 
 require_once ADC_PATH . 'src/Core/Capabilities.php';
 require_once ADC_PATH . 'src/Core/Localization.php';

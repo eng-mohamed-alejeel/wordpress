@@ -237,7 +237,7 @@ T10 استندر	T10 Standard
 العرض الترويجي النشط	Active promotion
 إضافة مورد	Add supplier
 صلاحية مدير الموقع مطلوبة.	Administrator access is required.
-جميع المبالغ بالريال السعودي. تُدخل التكلفة الإجمالية صراحةً حتى تُعتمد معادلة العمل.	All monetary values use SAR. Total cost is entered explicitly until an approved business formula is configured.
+جميع المبالغ بوحدة %s. تُدخل التكلفة الإجمالية صراحةً حتى تُعتمد معادلة العمل.	All monetary values use %s. Total cost is entered explicitly until an approved business formula is configured.
 الفروع المسموح بها	Allowed branches
 المبلغ	Amount
 هناك عملية إعداد صفحات أخرى قيد التنفيذ. حاول بعد قليل.	Another page setup operation is running. Try again shortly.
@@ -329,9 +329,9 @@ T10 استندر	T10 Standard
 طلب التمويل	Finance request
 صلاحية عرض التمويل مطلوبة.	Finance viewing permission is required.
 التصدير المالي	Financial export
-رسوم عرض السعر الثابتة (ريال)	Fixed quote fee (SAR)
-المبالغ الثابتة بالريال، والنسب بنقاط الأساس.	Fixed amounts use SAR; percentage values use basis points.
-أعلى خصم للمدير العام (ريال)	General manager discount ceiling (SAR)
+رسوم عرض السعر الثابتة (%s)	Fixed quote fee (%s)
+المبالغ الثابتة بوحدة %s، وأدخل النسب مباشرة مثل 15%.	Fixed amounts use %s; enter percentage values directly, such as 15%.
+أعلى خصم للمدير العام (%s)	General manager discount ceiling (%s)
 غير معروف تاريخيًا	Historically unknown
 الاحتجاز والصيانة	Holds and maintenance
 غير نشط	Inactive
@@ -377,7 +377,7 @@ T10 استندر	T10 Standard
 تعذر إنشاء التقرير التشغيلي.	Operational report failed.
 تعذر تنفيذ عملية طابور الإرسال.	Outbox operation failed.
 يجب التحقق من إثبات العربون المعلق أو رفضه قبل إلغاء الحجز.	Pending deposit evidence must be verified or rejected before cancelling the reservation.
-النسب بنقاط الأساس؛ 1500 تعني 15%.	Percentage values use basis points; 1500 means 15%.
+أدخل النسب مباشرة مثل 15%.	Enter percentage values directly, such as 15%.
 السياسة	Policy
 رد العميل السابق	Previous customer reply
 سياسة التسعير أو الاعتماد أو العربون أو التاريخ غير صالحة.	Pricing, approval, deposit or date policy is invalid.
@@ -402,7 +402,7 @@ T10 استندر	T10 Standard
 رفض	Reject
 موضوع الطلب	Request subject
 الموعد المطلوب	Requested appointment
-المبلغ المطلوب (ريال)	Required amount (SAR)
+المبلغ المطلوب (%s)	Required amount (%s)
 مستندات التسليم المطلوبة	Required delivery documents
 مستندات التسليم المطلوبة غير مكتملة.	Required delivery documents are incomplete.
 الحجز	Reservation
@@ -538,7 +538,7 @@ T10 استندر	T10 Standard
 مستودع	warehouse
 ساحة	yard
 مركز خدمة	service
-المبلغ بالريال	Amount in SAR
+المبلغ (%s)	Amount (%s)
 مرجع الاسترداد	Refund reference
 عكس تمويل	finance reversal
 الرمز	code
@@ -556,9 +556,9 @@ T10 استندر	T10 Standard
 المرجع الجمركي	Customs reference
 معرّفات مرفقات الصور أو المستندات الموجودة، مفصولة بفواصل	Existing image/PDF attachment IDs, comma separated
 سبب التغيير	Reason for change
-الدفعة الأولى (ريال)	Down payment (SAR)
+الدفعة الأولى (%s)	Down payment (%s)
 المدة بالأشهر	Term months
-القسط الشهري (ريال)	Monthly payment (SAR)
+القسط الشهري (%s)	Monthly payment (%s)
 قيد المراجعة	under_review
 معتمد	approved
 مرفوض	rejected
@@ -571,7 +571,7 @@ T10 استندر	T10 Standard
 الصفحات:	Pages:
 كامري	Camry
 0 يعطل الإخفاء المجدول. أي قيمة مفعلة يجب أن تكون بين 30 و3650 يومًا وبعد اعتماد السياسة النظامية.	0 disables scheduled anonymization. Any enabled value must be between 30 and 3650 days and follow the approved retention policy.
-1500 تعني 15%. القيمة الافتراضية صفر حتى يعتمدها مسؤول الشركة.	1500 means 15%. The default is zero until approved by the company administrator.
+أدخل النسبة مباشرة مثل 15%. القيمة الافتراضية صفر حتى يعتمدها مسؤول الشركة.	Enter the percentage directly, such as 15%. The default is zero until approved by the company administrator.
 VIN الجديد	New VIN
 آخر تشغيل UTC	Last run (UTC)
 آخر تشغيل معروف (UTC)	Last known run (UTC)
@@ -582,7 +582,7 @@ VIN الجديد	New VIN
 أدخل اسمًا وبريدًا صحيحًا وكلمة مرور من 10 أحرف على الأقل مع تأكيد مطابق.	Enter a valid name and email, and a password of at least 10 characters with matching confirmation.
 أدخل رقم هاتف صحيحًا بصيغة محلية أو دولية.	Enter a valid local or international phone number.
 أضف أرقام التواصل والبريد الذي يمكن للعملاء مراسلتك عليه.	Add the phone numbers and email address customers can use to contact you.
-أعلى خصم لمدير المبيعات (ريال)	Sales manager discount ceiling (SAR)
+أعلى خصم لمدير المبيعات (%s)	Sales manager discount ceiling (%s)
 أعيدت المهمة إلى الطابور وسُجل الإجراء في سجل التدقيق.	The job was requeued and the action was recorded in the audit log.
 أي خصم أعلى من الحد يتطلب صلاحية المدير العام. صفر يحول كل طلب خصم للمدير العام.	Discounts above the limit require general manager permission. Zero sends every discount request to the general manager.
 أُنشئ في %s UTC. المخزون والاستثناءات لقطة حالية، وبقية الأقسام ضمن الفترة المختارة.	Generated at %s UTC. Inventory and exceptions reflect the current snapshot; other sections cover the selected period.
@@ -653,7 +653,7 @@ VIN الجديد	New VIN
 الأحداث	Events
 الأحداث الإدارية والتشغيلية للقراءة.	Read administrative and operational events.
 الإجراء المنفذ والنتيجة	Action taken and result
-الإجمالي (ريال)	Total (SAR)
+الإجمالي (%s)	Total (%s)
 الإرجاع	Return
 الاستردادات المالية	Financial refunds
 الاستلام والفحص	Intake and inspection
@@ -694,18 +694,18 @@ VIN الجديد	New VIN
 الحجز غير موجود أو لم يعد قابلًا للإلغاء.	The booking does not exist or can no longer be cancelled.
 الحدث	Event
 الخصائص الفنية المقيدة للمركبات.	Restricted technical vehicle specifications.
-الخصم (ريال)	Discount (SAR)
+الخصم (%s)	Discount (%s)
 الخصومات واعتماد المبيعات والإلغاءات.	Discounts, sale approvals and cancellations.
 الرد الظاهر للعميل	Customer-visible reply
 الرسائل	Messages
 الرسالة	Message
 السجل	History
 السعر	Price
-السعر (ريال)	Price (SAR)
+السعر (%s)	Price (%s)
 السعر أو الحد الأدنى المعتمد غير صالح.	The price or approved minimum is invalid.
 السعر أو نسبة الضريبة غير صالحين للحساب.	The price or tax rate is invalid for calculation.
 السعر المقترح أقل من الحد الأدنى المعتمد.	The proposed price is below the approved minimum.
-السعر بالريال	Price in SAR
+السعر (%s)	Price (%s)
 السعر بعد العرض	Offer price
 السعر قبل العرض	Original price
 السنة	Year
@@ -743,14 +743,14 @@ VIN الجديد	New VIN
 القرار	Decision
 القسط الشهري	Monthly payment
 القسط الشهري يبدأ من	Monthly payment from
-القيم المالية بالريال السعودي. راجع إعدادات الضرائب وسياسات الحجز والخصومات مع مسؤول الشركة قبل التشغيل.	Financial amounts use SAR. Review tax settings and reservation and discount policies with the company administrator before use.
+القيم المالية بوحدة %s. راجع إعدادات الضرائب وسياسات الحجز والخصومات مع مسؤول الشركة قبل التشغيل.	Financial amounts use %s. Review tax settings and reservation and discount policies with the company administrator before use.
 اللون الرئيسي	Primary color
 الماركات	Brands
 المبالغ المستردة	Refunds
-المبلغ (ريال)	Amount (SAR)
-المبلغ الأقصى (ريال)	Maximum amount (SAR)
-المبلغ المجمع (ريال)	Total amount (SAR)
-المبلغ المستلم (ريال سعودي)	Received amount (SAR)
+المبلغ (%s)	Amount (%s)
+المبلغ الأقصى (%s)	Maximum amount (%s)
+المبلغ المجمع (%s)	Total amount (%s)
+المبلغ المستلم (%s)	Received amount (%s)
 المبيعات وخدمة العملاء	Sales and customer service
 المتابعة التالية	Next follow up
 المحاولات	Attempts
@@ -1268,7 +1268,7 @@ VIN الجديد	New VIN
 موعد المتابعة غير صالح.	The follow-up appointment is invalid.
 موقع الاستلام	Intake location
 نتيجة المراجعة	Review result
-نسبة الضريبة (نقاط أساس)	Tax rate (basis points)
+نسبة الضريبة (%)	Tax rate (%)
 نسبة ضريبة العرض القديم غير محفوظة. أنشئ عرضًا جديدًا قبل طلب الخصم.	The historical quotation tax rate is missing. Create a new quotation before requesting a discount.
 نسخ العرض	Quotation revisions
 نسخة العرض غير موجودة أو خارج نطاق صلاحياتك.	The quotation revision does not exist or is outside your access scope.
@@ -1656,10 +1656,10 @@ VIN الجديد	New VIN
 السبب	Reason
 الإجراء المنفذ والنتيجة	Resolution
 
-أدخل مبلغًا صحيحًا بالريال السعودي بدقة منزلتين عشريتين كحد أقصى.	Enter a valid SAR amount with at most two decimal places.
-المبالغ الثابتة بالريال؛ النسب بنقاط الأساس؛ 1500 تعني 15%.	Fixed amounts use SAR; percentage values use basis points; 1500 means 15%.
+أدخل مبلغًا صحيحًا بوحدة %s بدقة العملة المفعّلة.	Enter a valid %s amount using the configured currency precision.
+المبالغ الثابتة بوحدة %s؛ أدخل النسب مباشرة مثل 15%.	Fixed amounts use %s; enter percentage values directly, such as 15%.
 
-أعد تحميل هذا النموذج قبل إدخال المبالغ بالريال السعودي.	Reload this form before entering amounts in SAR.
+أعد تحميل هذا النموذج قبل إدخال المبالغ بوحدة %s.	Reload this form before entering amounts in %s.
 
 العملاء والمبيعات	Customers and sales
 حجوزات تجربة القيادة	Test-drive bookings
@@ -1998,8 +1998,8 @@ VIN الجديد	New VIN
 شامل ضريبة القيمة المضافة (%s%%)	Includes VAT (%s%%)
 شامل رسوم اللوحات: %s	Includes plate fees: %s
 رسوم اللوحات المضافة إلى السعر المنشور	Plate fees added to the published price
-لوحات نقل خصوصي — 900 ريال	Private transport plates — SAR 900
-لوحات نقل تجاري — 1,200 ريال	Commercial transport plates — SAR 1,200
+لوحات نقل خصوصي — 900 %s	Private transport plates — 900 %s
+لوحات نقل تجاري — 1,200 %s	Commercial transport plates — 1,200 %s
 اختر نوعًا واحدًا فقط. تضاف رسوم اللوحات بعد ضريبة السيارة؛ اترك الخيارين دون تحديد لاستبعادها.	Select one type only. Plate fees are added after vehicle VAT; leave both unchecked to exclude them.
 اختر نوع لوحات واحدًا صالحًا فقط.	Select only one valid plate type.
 
@@ -2027,7 +2027,7 @@ VIN الجديد	New VIN
 
 لا يمكنك تعديل هذا العرض.	You cannot edit this offer.
 حقول العرض غير صالحة.	Invalid offer fields.
-أدخل الأسعار بالريال الصحيح ومعرّفات سجلات صالحة.	Enter whole SAR amounts and valid record identifiers.
+أدخل مبالغ صحيحة بوحدة %s ومعرّفات سجلات صالحة.	Enter valid %s amounts and record identifiers.
 اسم العرض أو حالته أو السيارة المرتبطة غير صالح.	Offer title, status or vehicle is invalid.
 لا تملك صلاحية نشر العروض.	You cannot publish offers.
 أدخل تاريخ انتهاء صالحًا.	Enter a valid expiry date.

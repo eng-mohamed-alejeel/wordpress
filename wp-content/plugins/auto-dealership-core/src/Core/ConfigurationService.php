@@ -37,9 +37,10 @@ final class ConfigurationService {
 	}
 
 	public static function update( array $input ) {
+		if ( ! CurrencySettings::is_configured() ) { return new \WP_Error( 'adc_currency_required', __( 'يجب اختيار العملة الأساسية من إعداد المنصة قبل حفظ إعدادات التسعير.', 'auto-dealership-core' ), array( 'status' => 409 ) ); }
 		if ( ! current_user_can( 'manage_options' ) ) { return new \WP_Error( 'adc_forbidden', __( 'لا تملك صلاحية حفظ الإعدادات.', 'auto-dealership-core' ), array( 'status' => 403 ) ); }
 		if ( array_key_exists( 'vat_percent', $input ) ) {
-			$rate = \AutoDealership\Pricing\Money::from_sar( $input['vat_percent'] );
+			$rate = \AutoDealership\Pricing\Money::from_percent( $input['vat_percent'] );
 			if ( null === $rate || $rate > 10000 ) { return new \WP_Error( 'adc_invalid_vat', __( 'Enter a VAT percentage between 0 and 100, with at most two decimal places.', 'auto-dealership-core' ), array( 'status'=>400 ) ); }
 			$input['vat_rate_bps'] = $rate;
 		}
@@ -55,8 +56,8 @@ final class ConfigurationService {
 		$archive_days = filter_var( $input['lead_archive_days'] ?? get_option( 'adc_lead_archive_days', 30 ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 0, 'max_range' => 3650 ) ) );
 		$stale_days = filter_var( $input['lead_stale_days'] ?? get_option( 'adc_lead_stale_days', 7 ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1, 'max_range' => 365 ) ) );
 		$employee_commission_type = sanitize_key( (string) ( $input['employee_commission_type'] ?? get_option( 'adc_employee_commission_type', 'none' ) ) );
-		$employee_commission_value = absint( $input['employee_commission_value'] ?? get_option( 'adc_employee_commission_value', 0 ) );
-		if ( ! is_string( $assignment_mode ) || ! in_array( $assignment_mode, array( 'manual', 'manager', 'round_robin' ), true ) || false === $claim_timeout || false === $daily_cap || false === $archive_days || false === $stale_days || ! in_array( $employee_commission_type, array( 'none', 'fixed', 'percentage' ), true ) || $employee_commission_value > ( 'percentage' === $employee_commission_type ? 10000 : 100000000 ) ) {
+		$employee_commission_value = 'percentage' === $employee_commission_type ? \AutoDealership\Pricing\Money::from_percent( $input['employee_commission_value'] ?? 0 ) : absint( $input['employee_commission_value'] ?? get_option( 'adc_employee_commission_value', 0 ) );
+		if ( ! is_string( $assignment_mode ) || ! in_array( $assignment_mode, array( 'manual', 'manager', 'round_robin' ), true ) || false === $claim_timeout || false === $daily_cap || false === $archive_days || false === $stale_days || ! in_array( $employee_commission_type, array( 'none', 'fixed', 'percentage' ), true ) || null === $employee_commission_value || $employee_commission_value > ( 'percentage' === $employee_commission_type ? 10000 : 100000000 ) ) {
 			return new \WP_Error( 'adc_invalid_lead_policy', __( 'Lead assignment mode or claim timeout is invalid.', 'auto-dealership-core' ), array( 'status' => 400 ) );
 		}
 		if ( PublicCatalog::MODE_MODELS === $catalog_mode && PublicCatalog::MODE_MODELS !== $current_catalog_mode ) {
@@ -70,8 +71,8 @@ final class ConfigurationService {
 		$promotion_end = self::date( $input['promotion_ends_at'] ?? '' );
 		$manager_limit = absint( $input['sales_manager_discount_limit'] ?? 0 );
 		$general_limit = absint( $input['general_manager_discount_limit'] ?? PHP_INT_MAX );
-		$promotion_value = absint( $input['promotion_value'] ?? 0 );
-		$deposit_value = absint( $input['reservation_deposit_value'] ?? 0 );
+		$promotion_value = 'percentage' === $promotion_type ? \AutoDealership\Pricing\Money::from_percent( $input['promotion_value'] ?? 0 ) : absint( $input['promotion_value'] ?? 0 );
+		$deposit_value = 'percentage' === $deposit_type ? \AutoDealership\Pricing\Money::from_percent( $input['reservation_deposit_value'] ?? 0 ) : absint( $input['reservation_deposit_value'] ?? 0 );
 		$promotion_code = sanitize_key( (string) ( $input['promotion_code'] ?? '' ) );
 		$seller_name = sanitize_text_field( (string) ( $input['seller_name'] ?? '' ) );
 		if ( '' === $seller_name ) { $seller_name = sanitize_text_field( get_bloginfo( 'name' ) ); }

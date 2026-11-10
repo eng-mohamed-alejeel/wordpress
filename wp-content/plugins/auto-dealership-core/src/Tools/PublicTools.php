@@ -38,7 +38,7 @@ final class PublicTools {
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 			'nonce' => wp_create_nonce( 'adc_public_tools' ),
 			'language' => \AutoDealership\Core\Localization::language(),
-			'currencyLabel' => __( 'SAR', 'auto-dealership-core' ),
+			'currencyLabel' => \AutoDealership\Core\CurrencySettings::display_unit(),
 			'addLabel' => __( 'أضف للمقارنة', 'auto-dealership-core' ),
 			'removeLabel' => __( 'إزالة من المقارنة', 'auto-dealership-core' ),
 			'comparisonError' => __( 'تعذر تحديث المقارنة.', 'auto-dealership-core' ),

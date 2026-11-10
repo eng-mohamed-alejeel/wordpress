@@ -12,7 +12,7 @@ final class OfferPublishingService {
 		global $wpdb;$id=absint($input['post_id']??0);$type=get_post_type_object('car_offer');
 		if(!$type||!current_user_can($type->cap->edit_posts)||($id&&(get_post_type($id)!=='car_offer'||!current_user_can('edit_post',$id)))||(!$id&&!current_user_can($type->cap->create_posts))){return self::error('You cannot edit this offer.');}
 		foreach(array('title','description','summary','status','expires','revision')as$key){if(isset($input[$key])&&!is_string($input[$key])){return self::error('Invalid offer fields.');}}
-		foreach(array('post_id','car_id','thumbnail_id','old_price','new_price','monthly_payment')as$key){if(isset($input[$key])&&(!is_scalar($input[$key])||!preg_match('/\A[0-9]{1,12}\z/',(string)$input[$key]))){return self::error('Enter whole SAR amounts and valid record identifiers.');}}
+		foreach(array('post_id','car_id','thumbnail_id','old_price','new_price','monthly_payment')as$key){if(isset($input[$key])&&(!is_scalar($input[$key])||!preg_match('/\A[0-9]{1,12}\z/',(string)$input[$key]))){return self::error('Enter whole amounts in the configured base currency and valid record identifiers.');}}
 		$title=sanitize_text_field($input['title']??'');$status=$input['status']??'draft';$car=absint($input['car_id']??0);$image=absint($input['thumbnail_id']??0);$expires=$input['expires']??'';$price=(int)($input['new_price']??0);$old=(int)($input['old_price']??0);
 		if(!$title||mb_strlen($title)>200||!in_array($status,array('draft','pending','publish','private','future'),true)||($car&&get_post_type($car)!=='car')||($car&&!current_user_can('read_post',$car))){return self::error('Offer title, status or vehicle is invalid.');}
 		if(in_array($status,array('publish','private','future'),true)&&!current_user_can($type->cap->publish_posts)){return self::error('You cannot publish offers.');}
@@ -38,7 +38,7 @@ final class OfferPublishingService {
 			$meta=array('_offer_car_id'=>$car,'_offer_old_price'=>$old,'_offer_new_price'=>$price,'_offer_monthly_payment'=>(int)($input['monthly_payment']??0),'_offer_expires'=>$expires,'_thumbnail_id'=>$image);
 			foreach($meta as$key=>$value){update_post_meta($id,$key,$value);if((string)get_post_meta($id,$key,true)!==(string)$value){throw new \RuntimeException('Unable to save offer details.');}}
 			if($claim&&1!==$wpdb->update($wpdb->options,array('option_value'=>wp_json_encode(array('id'=>$id,'signature'=>$signature))),array('option_name'=>$claim))){throw new \RuntimeException('Offer storage is unavailable.');}
-			if(!Transaction::commit(static fn()=>AuditLog::record('content.offer_saved','car_offer',$id,'Offer saved',null,array('car_id'=>$car,'status'=>$status,'price'=>$price,'currency'=>'SAR','expires'=>$expires)))){throw new \RuntimeException('Unable to audit the offer.');}clean_post_cache($id);return array('id'=>$id);
+			if(!Transaction::commit(static fn()=>AuditLog::record('content.offer_saved','car_offer',$id,'Offer saved',null,array('car_id'=>$car,'status'=>$status,'price'=>$price,'currency'=>\AutoDealership\Core\CurrencySettings::base_code(),'expires'=>$expires)))){throw new \RuntimeException('Unable to audit the offer.');}clean_post_cache($id);return array('id'=>$id);
 		}catch(\Throwable $error){$wpdb->query('ROLLBACK');if($id){clean_post_cache($id);wp_cache_delete($id,'post_meta');wp_cache_delete('alloptions','options');wp_cache_delete('cron','options');}return self::error($error->getMessage());}
 	}
 	public static function change_status(int $id,string $action,string $revision) {

@@ -9,7 +9,7 @@ use AutoDealership\Reference\ReferenceService;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Validated vehicle inventory operations. Prices are stored as SAR halalas. */
+/** Validated vehicle inventory operations. Prices are stored as minor units of the configured base currency. */
 final class VehicleService {
 	private const STATUSES = array( 'ordered', 'in_transit', 'received', 'inspection', 'available', 'reserved', 'sold', 'ready_for_delivery', 'delivered', 'maintenance', 'hold', 'returned', 'cancelled', 'transferred' );
 	private const TRANSITIONS = array(
@@ -102,7 +102,7 @@ final class VehicleService {
 				'gallery_media_ids' => '',
 				'document_media_ids' => '',
 				'internal_notes' => '',
-				'currency' => 'SAR',
+				'currency' => \AutoDealership\Core\CurrencySettings::base_code(),
 				'created_at' => $now,
 				'updated_at' => $now,
 			),

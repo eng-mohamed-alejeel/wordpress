@@ -13,13 +13,13 @@ final class QuoteHistory {
 
 	private static function insert_sql(): string {
 		$columns = implode( ',', array_map( static fn( $field ) => 'q.' . $field, explode( ',', self::FIELDS ) ) );
-		return 'INSERT INTO ' . Schema::table( 'quotation_versions' ) . ' (quotation_id,' . self::FIELDS . ',customer_name,vehicle_stock_number,vehicle_description,currency,event_key,actor_user_id,reason,created_at) SELECT q.id,' . $columns . ",c.full_name,v.stock_number,TRIM(CONCAT_WS(' ',v.model_year,v.brand,v.model,NULLIF(v.trim_name,''))),COALESCE(NULLIF(q.currency_code,''),'SAR'),%s,%d,%s,%s FROM " . Schema::table( 'quotations' ) . ' q INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=q.customer_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=q.vehicle_id';
+		return 'INSERT INTO ' . Schema::table( 'quotation_versions' ) . ' (quotation_id,' . self::FIELDS . ',customer_name,vehicle_stock_number,vehicle_description,currency,event_key,actor_user_id,reason,created_at) SELECT q.id,' . $columns . ",c.full_name,v.stock_number,TRIM(CONCAT_WS(' ',v.model_year,v.brand,v.model,NULLIF(v.trim_name,''))),COALESCE(NULLIF(q.currency_code,''),%s),%s,%d,%s,%s FROM " . Schema::table( 'quotations' ) . ' q INNER JOIN ' . Schema::table( 'customers' ) . ' c ON c.id=q.customer_id INNER JOIN ' . Schema::table( 'vehicles' ) . ' v ON v.id=q.vehicle_id';
 	}
 
 	public static function capture( int $quote_id, string $event, string $reason = '' ): bool {
 		global $wpdb;
 		if ( ! in_array( $event, array( 'quotation.created', 'discount.requested', 'discount.approved', 'discount.rejected' ), true ) ) { return false; }
-		return 1 === $wpdb->query( $wpdb->prepare( self::insert_sql() . ' WHERE q.id = %d', $event, get_current_user_id(), sanitize_textarea_field( $reason ), current_time( 'mysql', true ), $quote_id ) );
+		return 1 === $wpdb->query( $wpdb->prepare( self::insert_sql() . ' WHERE q.id = %d', \AutoDealership\Core\CurrencySettings::base_code(), $event, get_current_user_id(), sanitize_textarea_field( $reason ), current_time( 'mysql', true ), $quote_id ) );
 	}
 
 	/** Preserve only the current legacy revision; never invent missing historical states. */
@@ -39,7 +39,7 @@ final class QuoteHistory {
 		if ( null === $manager || null === $general || $general < $manager ) { $wpdb->query( 'ROLLBACK' ); return false; }
 		$discounts = $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::table( 'discount_requests' ) . ' d INNER JOIN ' . Schema::table( 'quotations' ) . ' q ON q.id=d.quotation_id INNER JOIN ' . Schema::table( 'vehicles' ) . " v ON v.id=q.vehicle_id SET d.approval_tier=CASE WHEN d.requested_amount<=%d THEN 'sales_manager' WHEN d.requested_amount<=%d THEN 'general_manager' ELSE 'blocked' END,d.margin_before=CAST(q.base_amount AS SIGNED)-CAST(q.promotion_amount AS SIGNED)-CAST(v.purchase_cost AS SIGNED),d.margin_after=CAST(q.base_amount AS SIGNED)-CAST(q.promotion_amount AS SIGNED)-CAST(v.purchase_cost AS SIGNED)-CAST(d.requested_amount AS SIGNED) WHERE d.approval_tier=''", $manager, $general ) );
 		if ( false === $discounts ) { $wpdb->query( 'ROLLBACK' ); return false; }
-		$count = $wpdb->query( $wpdb->prepare( self::insert_sql() . ' WHERE NOT EXISTS (SELECT 1 FROM ' . Schema::table( 'quotation_versions' ) . ' h WHERE h.quotation_id = q.id AND h.version = q.version)', 'legacy.captured', 0, 'Current legacy revision captured; earlier revisions and original tax rate may be unknown.', current_time( 'mysql', true ) ) );
+		$count = $wpdb->query( $wpdb->prepare( self::insert_sql() . ' WHERE NOT EXISTS (SELECT 1 FROM ' . Schema::table( 'quotation_versions' ) . ' h WHERE h.quotation_id = q.id AND h.version = q.version)', \AutoDealership\Core\CurrencySettings::base_code(), 'legacy.captured', 0, 'Current legacy revision captured; earlier revisions and original tax rate may be unknown.', current_time( 'mysql', true ) ) );
 		$changes = (int) $assigned + (int) $pricing + (int) $snapshots + (int) $version_pricing + (int) $discounts + (int) $count;
 		if ( false === $count || ( $changes > 0 && ! AuditLog::record( 'schema.quote_history_captured', 'schema', 0, 'Legacy current revisions and documentary identity preserved', null, array( 'quotes_assigned' => (int) $assigned, 'snapshots_enriched' => (int) $snapshots, 'discounts_classified' => (int) $discounts, 'revisions_captured' => (int) $count ) ) ) || false === $wpdb->query( 'COMMIT' ) ) {
 			$wpdb->query( 'ROLLBACK' );

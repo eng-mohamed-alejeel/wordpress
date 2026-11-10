@@ -36,7 +36,7 @@ final class AffiliateCommissionMigration {
 		$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $commissions c LEFT JOIN $entries e ON e.commission_id=c.id LEFT JOIN $issues i ON i.commission_id=c.id AND i.status='open' WHERE e.id IS NULL AND i.id IS NULL" );
 		$quarantined = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $issues WHERE status='open'" );
 		if ( $wpdb->last_error ) { return new \WP_Error( 'adc_commission_migration_read', 'Unable to inspect legacy commissions.', array( 'status'=>500 ) ); }
-		return array( 'pending'=>$count, 'quarantined'=>$quarantined, 'currency'=>AffiliateCommissionService::CURRENCY );
+		return array( 'pending'=>$count, 'quarantined'=>$quarantined, 'currency'=>AffiliateCommissionService::currency() );
 	}
 
 	public static function start() {
@@ -54,7 +54,7 @@ final class AffiliateCommissionMigration {
 		);
 		update_option( self::OPTION, $state, false );
 		wp_schedule_single_event( time() + 5, 'adc_migrate_affiliate_commissions' );
-		if ( ! AuditLog::record( 'affiliate_commission.migration_started', 'affiliate_commission_migration', 0, 'Initialize historical affiliate commission ledger', null, array( 'total'=>$state['total'], 'currency'=>AffiliateCommissionService::CURRENCY ) ) ) {
+		if ( ! AuditLog::record( 'affiliate_commission.migration_started', 'affiliate_commission_migration', 0, 'Initialize historical affiliate commission ledger', null, array( 'total'=>$state['total'], 'currency'=>AffiliateCommissionService::currency() ) ) ) {
 			$state['status'] = 'failed'; $state['error'] = 'audit_failed'; $state['finished_at'] = current_time( 'mysql', true ); update_option( self::OPTION, $state, false );
 			wp_clear_scheduled_hook( 'adc_migrate_affiliate_commissions' );
 			\AutoDealership\Operations\AdministrativeAlert::migration_failed( (string) $state['error'], $state );
@@ -109,13 +109,13 @@ final class AffiliateCommissionMigration {
 		foreach ( $rows as $row ) {
 			$last_id = max( $last_id, (int) $row['id'] );
 			$status = (string) $row['status'];
-			$currency = strtoupper( (string) ( $row['currency_code'] ?: AffiliateCommissionService::CURRENCY ) );
+			$currency = strtoupper( (string) ( $row['currency_code'] ?: AffiliateCommissionService::currency() ) );
 			$row_issues = array();
 			if ( empty( $row['quotation_exists'] ) ) { $row_issues['missing_quotation'] = 'Quotation reference does not resolve to a valid quotation.'; }
 			if ( empty( $row['sale_exists'] ) ) { $row_issues['missing_sale'] = 'Sale reference does not resolve to a valid sale.'; }
 			if ( empty( $row['affiliate_exists'] ) ) { $row_issues['missing_affiliate'] = 'Affiliate user reference does not resolve to a valid user.'; }
 			if ( empty( $row['branch_exists'] ) ) { $row_issues['missing_branch'] = 'Branch reference does not resolve to a valid branch.'; }
-			if ( ! AffiliateCommissionService::is_supported_currency( $currency ) ) { $row_issues['invalid_currency'] = 'Only SAR is supported by the configured single-currency ledger.'; }
+			if ( ! AffiliateCommissionService::is_supported_currency( $currency ) ) { $row_issues['invalid_currency'] = 'Only the configured base currency is supported by the ledger.'; }
 			if ( ! in_array( $status, AffiliateCommissionService::statuses(), true ) ) { $row_issues['invalid_status'] = 'Commission status is not supported by the state machine.'; }
 			if ( (int) $row['amount'] < 0 || ( (int) $row['amount'] < 1 && ! in_array( $status, array( 'void', 'paid_sale_returned' ), true ) ) ) { $row_issues['invalid_amount'] = 'Commission amount is negative or empty for a non-reversal status.'; }
 			if ( $row_issues ) {
@@ -186,7 +186,7 @@ final class AffiliateCommissionMigration {
 			case 'missing_sale': $fixed = ! empty( $commission['sale_exists'] ); break;
 			case 'missing_affiliate': $fixed = ! empty( $commission['affiliate_exists'] ); break;
 			case 'missing_branch': $fixed = ! empty( $commission['branch_exists'] ); break;
-			case 'invalid_currency': $fixed = AffiliateCommissionService::is_supported_currency( strtoupper( (string) ( $commission['currency_code'] ?: AffiliateCommissionService::CURRENCY ) ) ); break;
+			case 'invalid_currency': $fixed = AffiliateCommissionService::is_supported_currency( strtoupper( (string) ( $commission['currency_code'] ?: AffiliateCommissionService::currency() ) ) ); break;
 			case 'invalid_status': $fixed = in_array( (string) $commission['status'], AffiliateCommissionService::statuses(), true ); break;
 			case 'invalid_amount': $fixed = (int) $commission['amount'] >= 0 && ( (int) $commission['amount'] >= 1 || in_array( (string) $commission['status'], array( 'void', 'paid_sale_returned' ), true ) ); break;
 			default: $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_commission_migration_unknown_issue', 'This migration issue type is not supported for automatic review.', array( 'status'=>409 ) );

@@ -12,7 +12,7 @@ final class AffiliateCommissionHealth {
 		$reconciliation = AffiliateCommissionReconciliation::status(); $migration = AffiliateCommissionMigration::status(); $performance = AffiliateCommissionPerformance::snapshot();
 		$checks = array(
 			'schema'=>array( 'label'=>'Verified database schema', 'ok'=>Schema::is_ready(), 'value'=>Schema::VERSION ),
-			'currency'=>array( 'label'=>'Single supported currency', 'ok'=>AffiliateCommissionService::is_supported_currency( AffiliateCommissionService::CURRENCY ), 'value'=>AffiliateCommissionService::CURRENCY ),
+			'currency'=>array( 'label'=>'Configured base currency', 'ok'=>\AutoDealership\Core\CurrencySettings::is_configured(), 'value'=>\AutoDealership\Core\CurrencySettings::base_code() ),
 			'excel'=>array( 'label'=>'Excel export dependency', 'ok'=>class_exists( 'ZipArchive' ), 'value'=>class_exists( 'ZipArchive' ) ? 'ZIP enabled' : 'ZIP missing' ),
 			'admin_email'=>array( 'label'=>'Administrator email', 'ok'=>is_email( get_option( 'admin_email' ) ), 'value'=>is_email( get_option( 'admin_email' ) ) ? 'configured' : 'missing' ),
 			'outbox_schedule'=>array( 'label'=>'Outbox schedule', 'ok'=>false !== wp_next_scheduled( 'adc_process_outbox' ), 'value'=>self::scheduled_value( 'adc_process_outbox' ) ),

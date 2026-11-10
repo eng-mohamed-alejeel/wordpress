@@ -71,7 +71,7 @@ final class VehiclePostEditor {
 
 		$plate_type = get_post_meta( $post->ID, '_car_plate_type', true );
 		echo '<fieldset><legend>'.esc_html__( 'Plate fees added to the published price', 'auto-dealership-core' ).'</legend>';
-		foreach ( array( 'private_transport'=>__( 'Private transport plates — SAR 900', 'auto-dealership-core' ), 'commercial_transport'=>__( 'Commercial transport plates — SAR 1,200', 'auto-dealership-core' ) ) as $type=>$label ) {
+		foreach ( array( 'private_transport'=>sprintf( __( 'Private transport plates — 900 %s', 'auto-dealership-core' ), \AutoDealership\Core\CurrencySettings::ui_unit() ), 'commercial_transport'=>sprintf( __( 'Commercial transport plates — 1,200 %s', 'auto-dealership-core' ), \AutoDealership\Core\CurrencySettings::ui_unit() ) ) as $type=>$label ) {
 			echo '<p><label><input type="checkbox" name="_car_plate_types[]" value="'.esc_attr( $type ).'" '.checked( $plate_type, $type, false ).'> '.esc_html( $label ).'</label></p>';
 		}
 		echo '<p class="description">'.esc_html__( 'Select one type only. Plate fees are added after vehicle VAT; leave both unchecked to exclude them.', 'auto-dealership-core' ).'</p></fieldset>';

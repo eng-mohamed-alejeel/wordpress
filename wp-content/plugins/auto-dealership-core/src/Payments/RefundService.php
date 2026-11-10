@@ -34,7 +34,7 @@ final class RefundService {
 		$committed = self::refund_amount( $return_id, array( 'pending','verified' ) );
 		if ( null === $paid || null === $committed ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_refund_balance_failed', 500 ); }
 		if ( $paid < 1 || $amount > $paid - $committed ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_refund_exceeds_balance' ); }
-		$ok = $wpdb->insert( $table, array( 'return_id'=>$return_id, 'sale_id'=>(int)$return['sale_id'], 'amount'=>$amount, 'currency'=>'SAR', 'method'=>$method, 'reference'=>$reference, 'status'=>'pending', 'requested_by'=>get_current_user_id(), 'decision_reason'=>'', 'created_at'=>current_time('mysql',true) ), array( '%d','%d','%d','%s','%s','%s','%s','%d','%s','%s' ) );
+		$ok = $wpdb->insert( $table, array( 'return_id'=>$return_id, 'sale_id'=>(int)$return['sale_id'], 'amount'=>$amount, 'currency'=>\AutoDealership\Core\CurrencySettings::base_code(), 'method'=>$method, 'reference'=>$reference, 'status'=>'pending', 'requested_by'=>get_current_user_id(), 'decision_reason'=>'', 'created_at'=>current_time('mysql',true) ), array( '%d','%d','%d','%s','%s','%s','%s','%d','%s','%s' ) );
 		$id = (int) $wpdb->insert_id;
 		if ( 1 !== $ok || ! Transaction::commit( static fn()=>AuditLog::record( 'refund.requested', 'payment_refund', $id, '', null, array( 'return_id'=>$return_id, 'sale_id'=>(int)$return['sale_id'], 'amount'=>$amount, 'method'=>$method, 'status'=>'pending' ) ) ) ) { $wpdb->query('ROLLBACK'); return self::error( 'adc_refund_request_failed', 500 ); }
 		return array( 'id'=>$id, 'status'=>'pending' );
@@ -52,7 +52,7 @@ final class RefundService {
 		$paid=self::paid_amount((int)$c['sale_id']);$committed=self::refund_amount_for('cancellation_id',$cancellation_id,array('pending','verified'));
 		if(null===$paid||null===$committed){$wpdb->query('ROLLBACK');return self::error('adc_refund_balance_failed',500);}
 		if($paid<1||$amount>$paid-$committed){$wpdb->query('ROLLBACK');return self::error('adc_refund_exceeds_balance');}
-		$ok=$wpdb->insert($table,array('return_id'=>0,'cancellation_id'=>$cancellation_id,'sale_id'=>(int)$c['sale_id'],'amount'=>$amount,'currency'=>'SAR','method'=>$method,'reference'=>$reference,'status'=>'pending','requested_by'=>get_current_user_id(),'decision_reason'=>'','created_at'=>current_time('mysql',true)),array('%d','%d','%d','%d','%s','%s','%s','%s','%d','%s','%s'));$id=(int)$wpdb->insert_id;
+		$ok=$wpdb->insert($table,array('return_id'=>0,'cancellation_id'=>$cancellation_id,'sale_id'=>(int)$c['sale_id'],'amount'=>$amount,'currency'=>\AutoDealership\Core\CurrencySettings::base_code(),'method'=>$method,'reference'=>$reference,'status'=>'pending','requested_by'=>get_current_user_id(),'decision_reason'=>'','created_at'=>current_time('mysql',true)),array('%d','%d','%d','%d','%s','%s','%s','%s','%d','%s','%s'));$id=(int)$wpdb->insert_id;
 		if(1!==$ok||!Transaction::commit(static fn()=>AuditLog::record('refund.requested','payment_refund',$id,'',null,array('cancellation_id'=>$cancellation_id,'sale_id'=>(int)$c['sale_id'],'amount'=>$amount,'method'=>$method,'status'=>'pending')))){$wpdb->query('ROLLBACK');return self::error('adc_refund_request_failed',500);}return array('id'=>$id,'status'=>'pending');
 	}
 
@@ -70,7 +70,7 @@ final class RefundService {
 		if ( $existing ) { $wpdb->query( 'ROLLBACK' ); if ( (int) $existing['reservation_id'] === $reservation_id && (int) $existing['amount'] === $amount && (int) $existing['requested_by'] === get_current_user_id() ) { return array( 'id'=>(int) $existing['id'], 'status'=>$existing['status'] ); } return self::error( 'adc_refund_reference_conflict' ); }
 		$committed = self::refund_amount_for( 'reservation_id', $reservation_id, array( 'pending','verified' ) );
 		if ( null === $committed || $amount > (int) $reservation['deposit_amount'] - $committed ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_refund_exceeds_balance' ); }
-		$ok = $wpdb->insert( $table, array( 'return_id'=>0, 'cancellation_id'=>0, 'reservation_id'=>$reservation_id, 'sale_id'=>0, 'amount'=>$amount, 'currency'=>'SAR', 'method'=>$method, 'reference'=>$reference, 'status'=>'pending', 'requested_by'=>get_current_user_id(), 'decision_reason'=>'', 'created_at'=>current_time( 'mysql', true ) ) );
+		$ok = $wpdb->insert( $table, array( 'return_id'=>0, 'cancellation_id'=>0, 'reservation_id'=>$reservation_id, 'sale_id'=>0, 'amount'=>$amount, 'currency'=>\AutoDealership\Core\CurrencySettings::base_code(), 'method'=>$method, 'reference'=>$reference, 'status'=>'pending', 'requested_by'=>get_current_user_id(), 'decision_reason'=>'', 'created_at'=>current_time( 'mysql', true ) ) );
 		$id = (int) $wpdb->insert_id;
 		if ( 1 !== $ok || ! Transaction::commit( static fn()=>AuditLog::record( 'refund.requested', 'payment_refund', $id, '', null, array( 'reservation_id'=>$reservation_id, 'amount'=>$amount, 'method'=>$method, 'status'=>'pending' ) ) ) ) { $wpdb->query( 'ROLLBACK' ); return self::error( 'adc_refund_request_failed', 500 ); }
 		return array( 'id'=>$id, 'status'=>'pending' );
@@ -138,7 +138,7 @@ final class RefundService {
 	private static function reservation_row(int $id):?array{global $wpdb;return $wpdb->get_row($wpdb->prepare('SELECT * FROM '.Schema::table('reservations').' WHERE id=%d FOR UPDATE',$id),ARRAY_A)?:null;}
 	private static function paid_amount( int $sale_id ): ?int {
 		global $wpdb;
-		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(p.amount),0)+(SELECT COALESCE(r.deposit_amount,0) FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'reservations' ) . ' r ON r.id=s.reservation_id WHERE s.id=%d) FROM ' . Schema::table( 'payment_confirmations' ) . " p WHERE p.sale_id=%d AND p.status='verified' AND p.currency='SAR'", $sale_id, $sale_id ) );
+		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(p.amount),0)+(SELECT COALESCE(r.deposit_amount,0) FROM ' . Schema::table( 'sales' ) . ' s INNER JOIN ' . Schema::table( 'reservations' ) . ' r ON r.id=s.reservation_id WHERE s.id=%d) FROM ' . Schema::table( 'payment_confirmations' ) . " p WHERE p.sale_id=%d AND p.status='verified' AND p.currency=%s", $sale_id, $sale_id, \AutoDealership\Core\CurrencySettings::base_code() ) );
 		return \AutoDealership\Pricing\Money::parse( $value );
 	}
 	private static function refund_amount( int $return_id, array $statuses ): ?int {
@@ -150,7 +150,7 @@ final class RefundService {
 		$allowed = array_values( array_intersect( $statuses, array( 'pending','verified' ) ) );
 		if ( ! $allowed ) { return null; }
 		$marks = implode( ',', array_fill( 0, count( $allowed ), '%s' ) );
-		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(amount),0) FROM ' . Schema::table( 'payment_refunds' ) . " WHERE $column=%d AND currency='SAR' AND status IN ($marks)", array_merge( array( $id ), $allowed ) ) );
+		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT COALESCE(SUM(amount),0) FROM ' . Schema::table( 'payment_refunds' ) . " WHERE $column=%d AND currency=%s AND status IN ($marks)", array_merge( array( $id, \AutoDealership\Core\CurrencySettings::base_code() ), $allowed ) ) );
 		return \AutoDealership\Pricing\Money::parse( $value );
 	}
 	private static function error( string $code, int $status=409 ): \WP_Error { return new \WP_Error($code,__('Refund operation could not be completed.','auto-dealership-core'),array('status'=>$status)); }

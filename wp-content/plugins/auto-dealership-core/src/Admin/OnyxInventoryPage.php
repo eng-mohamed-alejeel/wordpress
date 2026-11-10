@@ -45,7 +45,7 @@ final class OnyxInventoryPage {
 		}
 		echo '</tbody></table></div>';
 	}
-	private static function t(string $ar,string $en):string{return \AutoDealership\Core\Localization::language()==='en'?$en:$ar;}
+	private static function t(string $ar,string $en):string{return \AutoDealership\Core\CurrencySettings::localize_unit_text(\AutoDealership\Core\Localization::language()==='en'?$en:$ar);}
 	public static function boot():void{add_action('admin_post_adc_onyx_drafts',array(self::class,'drafts'));add_action('admin_post_adc_onyx_upload',array(self::class,'upload'));add_action('admin_post_adc_onyx_apply',array(self::class,'apply'));add_action('admin_post_adc_onyx_model',array(self::class,'model'));add_action('admin_post_adc_onyx_mode',array(self::class,'mode'));}
 	public static function drafts():void{self::guard('adc_onyx_drafts');$result=OnyxImportService::complete_model_drafts();if(is_wp_error($result)){self::redirect($result);}wp_safe_redirect(add_query_arg(array('page'=>'adc-onyx','drafts_created'=>$result['created']),admin_url('admin.php')));exit;}
 	public static function model():void{
@@ -94,7 +94,7 @@ final class OnyxInventoryPage {
 			foreach($summary['errors']??array()as$error){echo '<p class="notice notice-error">'.esc_html(self::t('السطر','Row').' '.$error['line'].' | '.$error['identifier'].' | '.implode(', ',$error['fields'])).'</p>';}
 			$preview_rows = json_decode($batch['rows_json'], true) ?: array();
 			$preview_page = max(1, absint($_GET['preview_paged'] ?? 1));
-			echo '<p>'.esc_html(self::t('معاينة الحقول كما وردت في ملف أونكس. سعر البيع بالريال السعودي.', 'Preview of the original Onyx fields. Sale prices are in SAR.')).'</p>';
+			echo '<p>'.esc_html(self::t('معاينة الحقول كما وردت في ملف أونكس. سعر البيع بوحدة %s.', 'Preview of the original Onyx fields. Sale prices use %s.')).'</p>';
 			self::stock_table(array_slice($preview_rows, ($preview_page - 1) * 50, 50));
 			echo wp_kses_post(paginate_links(array('base'=>str_replace('99999999','%#%',add_query_arg(array('page'=>'adc-onyx','batch'=>$batch_id,'preview_paged'=>99999999),admin_url('admin.php'))),'format'=>'','current'=>$preview_page,'total'=>max(1,(int)ceil(count($preview_rows)/50)))));
 

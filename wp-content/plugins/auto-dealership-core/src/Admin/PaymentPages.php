@@ -30,6 +30,7 @@ final class PaymentPages {
 		$deposit_args = array_merge( array( current_time( 'mysql', true ) ), $args );
 		$deposit_reservations = current_user_can( 'adc_record_payments' ) ? ( $wpdb->get_results( $wpdb->prepare( $deposit_sql, $deposit_args ), ARRAY_A ) ?: array() ) : array();
 		$deposits = ReservationService::deposit_queue( absint( $_GET['deposit_id'] ?? 0 ) );
+		$money_step = \AutoDealership\Core\CurrencySettings::input_step();
 		?>
 		<div class="wrap" dir="<?php echo 'en' === \AutoDealership\Core\Localization::language() ? 'ltr' : 'rtl'; ?>">
 			<h1><?php esc_html_e( 'تأكيدات السداد', 'auto-dealership-core' ); ?></h1>
@@ -39,9 +40,9 @@ final class PaymentPages {
 			<h2><?php esc_html_e( 'Reservation deposits', 'auto-dealership-core' ); ?></h2>
 			<?php if ( current_user_can( 'adc_record_payments' ) && $deposit_reservations ) : ?>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="card">
-				<input type="hidden" name="action" value="adc_record_reservation_deposit"><input type="hidden" name="adc_money_unit" value="SAR"><?php wp_nonce_field( 'adc_record_reservation_deposit' ); ?>
+				<input type="hidden" name="action" value="adc_record_reservation_deposit"><input type="hidden" name="adc_money_unit" value="<?php echo esc_attr( \AutoDealership\Core\CurrencySettings::base_code() ); ?>"><?php wp_nonce_field( 'adc_record_reservation_deposit' ); ?>
 				<p><label><?php esc_html_e( 'Reservation', 'auto-dealership-core' ); ?> <select name="reservation_id" required><option value=""><?php esc_html_e( 'Select reservation', 'auto-dealership-core' ); ?></option><?php foreach ( $deposit_reservations as $reservation ) : ?><option value="<?php echo absint( $reservation['id'] ); ?>"><?php echo esc_html( '#' . $reservation['id'] . ' — ' . $reservation['stock_number'] . ' — ' . \AutoDealership\Pricing\Money::display( $reservation['deposit_required_amount'] ) ); ?></option><?php endforeach; ?></select></label></p>
-				<p><label><?php esc_html_e( 'Required amount (SAR)', 'auto-dealership-core' ); ?> <input step="0.01" name="amount" type="number" min="0.01" required></label></p>
+				<p><label><?php esc_html_e( 'Required amount (%s)', 'auto-dealership-core' ); ?> <input step="<?php echo esc_attr( $money_step ); ?>" name="amount" type="number" min="0.01" required></label></p>
 				<p><label><?php esc_html_e( 'Source', 'auto-dealership-core' ); ?> <select name="source"><option value="bank_transfer"><?php echo esc_html__( 'bank transfer', 'auto-dealership-core' ); ?></option><option value="cash"><?php echo esc_html__( 'cash', 'auto-dealership-core' ); ?></option><option value="card"><?php echo esc_html__( 'card', 'auto-dealership-core' ); ?></option><option value="finance"><?php echo esc_html__( 'finance', 'auto-dealership-core' ); ?></option></select></label></p>
 				<p><label><?php esc_html_e( 'External reference', 'auto-dealership-core' ); ?> <input name="reference" maxlength="100" required></label></p>
 				<button class="button button-primary"><?php esc_html_e( 'Submit deposit evidence', 'auto-dealership-core' ); ?></button>
@@ -53,15 +54,15 @@ final class PaymentPages {
 			<?php if ( current_user_can( 'adc_record_payments' ) ) : ?>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="card">
 				<h2><?php esc_html_e( 'تسجيل إيصال سداد', 'auto-dealership-core' ); ?></h2>
-				<input type="hidden" name="action" value="adc_record_payment"><input type="hidden" name="adc_money_unit" value="SAR"><?php wp_nonce_field( 'adc_record_payment' ); ?>
+				<input type="hidden" name="action" value="adc_record_payment"><input type="hidden" name="adc_money_unit" value="<?php echo esc_attr( \AutoDealership\Core\CurrencySettings::base_code() ); ?>"><?php wp_nonce_field( 'adc_record_payment' ); ?>
 				<p><label><?php esc_html_e( 'عملية البيع', 'auto-dealership-core' ); ?> <select name="sale_id" required><option value=""><?php esc_html_e( 'اختر البيع', 'auto-dealership-core' ); ?></option><?php foreach ( $sales as $sale ) : ?><option value="<?php echo absint( $sale['id'] ); ?>"><?php echo esc_html( '#' . $sale['id'] . ' — ' . \AutoDealership\Content\StoredTranslations::text( 'vehicles', (int) ( $sale['translation_vehicle_id'] ?? $sale['vehicle_id'] ?? $sale['id'] ), 'brand', (string) $sale['brand'] ) . ' ' . \AutoDealership\Content\StoredTranslations::text( 'vehicles', (int) ( $sale['translation_vehicle_id'] ?? $sale['vehicle_id'] ?? $sale['id'] ), 'model', (string) $sale['model'] ) ); ?></option><?php endforeach; ?></select></label></p>
-				<p><label><?php esc_html_e( 'المبلغ المستلم (ريال سعودي)', 'auto-dealership-core' ); ?> <input step="0.01" name="amount" type="number" min="0.01" required></label></p>
+				<p><label><?php esc_html_e( 'المبلغ المستلم (%s)', 'auto-dealership-core' ); ?> <input step="<?php echo esc_attr( $money_step ); ?>" name="amount" type="number" min="0.01" required></label></p>
 				<p><label><?php esc_html_e( 'نوع الإيصال', 'auto-dealership-core' ); ?> <select name="source"><option value="cash_receipt"><?php esc_html_e( 'إيصال نقدي', 'auto-dealership-core' ); ?></option><option value="bank_transfer"><?php esc_html_e( 'حوالة بنكية', 'auto-dealership-core' ); ?></option><option value="finance_disbursement"><?php esc_html_e( 'دفعة من جهة التمويل', 'auto-dealership-core' ); ?></option></select></label></p>
 				<p><label><?php esc_html_e( 'مرجع الإيصال', 'auto-dealership-core' ); ?> <input name="reference" maxlength="100" required></label></p>
 				<p><?php esc_html_e( 'استخدم رقم المرجع فقط. لا تدخل بيانات الحساب البنكي أو البطاقة.', 'auto-dealership-core' ); ?></p>
 				<button class="button button-primary"><?php esc_html_e( 'إرسال للمراجعة', 'auto-dealership-core' ); ?></button>
 			</form><?php endif; ?>
-			<table class="widefat striped"><thead><tr><th><?php esc_html_e( 'البيع', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المرجع', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المبلغ (ريال)', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المراجعة', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
+			<table class="widefat striped"><thead><tr><th><?php esc_html_e( 'البيع', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المرجع', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المبلغ (%s)', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'الحالة', 'auto-dealership-core' ); ?></th><th><?php esc_html_e( 'المراجعة', 'auto-dealership-core' ); ?></th></tr></thead><tbody>
 			<?php foreach ( $payments as $payment ) : ?>
 			<tr><td><?php echo absint( $payment['sale_id'] ); ?></td><td><?php echo esc_html( $payment['reference'] ); ?></td><td><?php echo esc_html( \AutoDealership\Pricing\Money::display( $payment['amount'] ) ); ?></td><td><?php echo esc_html( array( 'pending' => __( 'بانتظار التحقق', 'auto-dealership-core' ), 'verified' => __( 'تم التحقق', 'auto-dealership-core' ), 'rejected' => __( 'مرفوض', 'auto-dealership-core' ) )[ $payment['status'] ] ?? $payment['status'] ); ?></td><td>
 			<?php if ( current_user_can( 'adc_verify_payments' ) && 'pending' === $payment['status'] && (int) $payment['recorded_by'] !== get_current_user_id() ) : ?>
@@ -78,10 +79,10 @@ final class PaymentPages {
 	}
 
 	public static function record(): void {
-		\AutoDealership\Pricing\Money::require_sar_form();
+		\AutoDealership\Pricing\Money::require_currency_form();
 		check_admin_referer( 'adc_record_payment' );
 		$sale = filter_var( self::input( 'sale_id' ), FILTER_VALIDATE_INT );
-		$amount = \AutoDealership\Pricing\Money::from_sar( self::input( 'amount' ) );
+		$amount = \AutoDealership\Pricing\Money::from_major( self::input( 'amount' ) );
 		self::redirect( PaymentService::record( false === $sale ? 0 : $sale, null === $amount ? 0 : $amount, self::input( 'source' ), self::input( 'reference' ) ) );
 	}
 
@@ -94,10 +95,10 @@ final class PaymentPages {
 	}
 
 	public static function record_deposit(): void {
-		\AutoDealership\Pricing\Money::require_sar_form();
+		\AutoDealership\Pricing\Money::require_currency_form();
 		check_admin_referer( 'adc_record_reservation_deposit' );
 		$reservation_id = filter_var( self::input( 'reservation_id' ), FILTER_VALIDATE_INT );
-		$amount = \AutoDealership\Pricing\Money::from_sar( self::input( 'amount' ) );
+		$amount = \AutoDealership\Pricing\Money::from_major( self::input( 'amount' ) );
 		self::redirect( ReservationService::record_deposit( false === $reservation_id ? 0 : $reservation_id, null === $amount ? 0 : $amount, self::input( 'source' ), self::input( 'reference' ) ) );
 	}
 

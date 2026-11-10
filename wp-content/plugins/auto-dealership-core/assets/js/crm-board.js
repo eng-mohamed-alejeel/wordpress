@@ -178,7 +178,7 @@
 				comparativePrice.type = 'number';
 				comparativePrice.min = '0';
 				comparativePrice.step = '0.01';
-				field('السعر المقارن بالريال (اختياري)', comparativePrice);
+				field('السعر المقارن'+(cfg.currencyLabel?' ('+cfg.currencyLabel+')':'')+' (اختياري)', comparativePrice);
 				field('سبب الخسارة', category);
 			}
 			var notes = document.createElement('textarea');

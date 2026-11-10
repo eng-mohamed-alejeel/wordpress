@@ -2,6 +2,7 @@
 namespace AutoDealership\Marketing;
 
 use AutoDealership\Audit\AuditLog;
+use AutoDealership\Core\CurrencySettings;
 use AutoDealership\Database\Schema;
 use AutoDealership\Database\Transaction;
 use AutoDealership\Payments\PaymentService;
@@ -12,7 +13,6 @@ defined( 'ABSPATH' ) || exit;
 
 final class AffiliateCommissionService {
 	private const MAX_AMOUNT = 1000000000;
-	public const CURRENCY = 'SAR';
 	private const ENTRY_ACCRUAL = 'accrual';
 	private const ENTRY_VOID_REVERSAL = 'void_reversal';
 	private const ENTRY_RETURN_REVERSAL = 'return_reversal';
@@ -28,7 +28,8 @@ final class AffiliateCommissionService {
 	}
 
 	public static function statuses(): array { return self::STATUSES; }
-	public static function is_supported_currency( string $currency ): bool { return self::CURRENCY === strtoupper( trim( $currency ) ); }
+	public static function currency(): string { return CurrencySettings::base_code(); }
+	public static function is_supported_currency( string $currency ): bool { return self::currency() === strtoupper( trim( $currency ) ); }
 
 	public static function fingerprint_enabled(): bool {
 		return (bool) get_option( self::FINGERPRINT_OPTION, true );
@@ -53,13 +54,13 @@ final class AffiliateCommissionService {
 			return new \WP_Error( 'adc_commission_forbidden', __( 'لا تملك صلاحية إعداد العمولات.', 'auto-dealership-core' ), array( 'status'=>403 ) );
 		}
 		if ( $amount < 0 || $amount > self::MAX_AMOUNT ) {
-			return new \WP_Error( 'adc_commission_amount_invalid', __( 'قيمة العمولة يجب أن تكون بين صفر و10,000,000 ريال.', 'auto-dealership-core' ), array( 'status'=>400 ) );
+			return new \WP_Error( 'adc_commission_amount_invalid', sprintf( __( 'قيمة العمولة يجب أن تكون بين صفر و10,000,000 %s.', 'auto-dealership-core' ), self::currency() ), array( 'status'=>400 ) );
 		}
 		$before = self::configured_amount();
 		if ( ! update_option( 'adc_affiliate_commission_amount', $amount, false ) && $before !== $amount ) {
 			return new \WP_Error( 'adc_commission_setting_failed', __( 'تعذر حفظ قيمة العمولة.', 'auto-dealership-core' ), array( 'status'=>500 ) );
 		}
-		if ( ! AuditLog::record( 'affiliate_commission.rate_changed', 'affiliate_commission', 0, '', array( 'amount'=>$before, 'currency'=>self::CURRENCY ), array( 'amount'=>$amount, 'currency'=>self::CURRENCY ) ) ) {
+		if ( ! AuditLog::record( 'affiliate_commission.rate_changed', 'affiliate_commission', 0, '', array( 'amount'=>$before, 'currency'=>self::currency() ), array( 'amount'=>$amount, 'currency'=>self::currency() ) ) ) {
 			update_option( 'adc_affiliate_commission_amount', $before, false );
 			if ( self::configured_amount() !== $before ) {
 				error_log( 'Auto Dealership Core: failed to restore affiliate commission rate after audit failure.' );
@@ -67,7 +68,7 @@ final class AffiliateCommissionService {
 			}
 			return new \WP_Error( 'adc_commission_setting_audit_failed', __( 'تعذر توثيق الإعداد؛ أُعيدت القيمة السابقة.', 'auto-dealership-core' ), array( 'status'=>500 ) );
 		}
-		return array( 'amount'=>$amount, 'currency'=>'SAR' );
+		return array( 'amount'=>$amount, 'currency'=>self::currency() );
 	}
 
 	/** Called inside the delivery release transaction; null means the sale is not attributed. */
@@ -81,7 +82,7 @@ final class AffiliateCommissionService {
 		$lead_id = (int) $row['marketing_lead_id'];
 		$affiliate_id = (int) $row['affiliate_user_id'];
 		$amount = (int) $row['affiliate_commission_amount'];
-		$currency = strtoupper( (string) ( $row['currency_code'] ?: self::CURRENCY ) );
+		$currency = strtoupper( (string) ( $row['currency_code'] ?: self::currency() ) );
 		if ( 0 === $lead_id && 0 === $affiliate_id && 0 === $amount ) { return null; }
 		if ( $lead_id < 1 || $affiliate_id < 1 || $amount < 1 || ! self::is_supported_currency( $currency ) || $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . Schema::table( 'affiliate_commissions' ) . ' WHERE sale_id=%d', $sale_id ) ) ) { return false; }
 		$now = current_time( 'mysql', true );
@@ -121,7 +122,7 @@ final class AffiliateCommissionService {
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT id,sale_id,affiliate_user_id,branch_id,amount,currency_code,status FROM $table WHERE sale_id=%d FOR UPDATE", $sale_id ), ARRAY_A );
 		if ( $wpdb->last_error ) { return false; }
 		if ( ! $row || ! in_array( $row['status'], array( 'pending_review', 'approved', 'paid' ), true ) ) { return null; }
-		if ( ! self::is_supported_currency( (string) ( $row['currency_code'] ?: self::CURRENCY ) ) || (int) $row['amount'] < 1 ) { return false; }
+		if ( ! self::is_supported_currency( (string) ( $row['currency_code'] ?: self::currency() ) ) || (int) $row['amount'] < 1 ) { return false; }
 		$next = 'paid' === $row['status'] ? 'paid_sale_returned' : 'void';
 		$now = current_time( 'mysql', true );
 		$changes = array( 'status'=>$next, 'updated_at'=>$now );
@@ -136,12 +137,12 @@ final class AffiliateCommissionService {
 			'branch_id'=>(int) $row['branch_id'],
 			'entry_type'=>self::ENTRY_RETURN_REVERSAL,
 			'amount'=>-(int) $row['amount'],
-			'currency_code'=>(string) ( $row['currency_code'] ?: self::CURRENCY ),
+			'currency_code'=>(string) ( $row['currency_code'] ?: self::currency() ),
 			'event_key'=>hash( 'sha256', 'return:' . $sale_id ),
 			'reason'=>'Commission reversed because the delivered sale was returned.',
 		) ) ) { return false; }
 		if ( ! \AutoDealership\Operations\FollowUpNotifications::queue_affiliate_commission( (int) $row['id'], 'returned' ) ) { return false; }
-		return array( 'id'=>(int) $row['id'], 'before'=>$row['status'], 'after'=>$next, 'amount'=>(int) $row['amount'], 'currency'=>(string) ( $row['currency_code'] ?: self::CURRENCY ) );
+		return array( 'id'=>(int) $row['id'], 'before'=>$row['status'], 'after'=>$next, 'amount'=>(int) $row['amount'], 'currency'=>(string) ( $row['currency_code'] ?: self::currency() ) );
 	}
 
 	public static function transition( int $commission_id, string $target, string $reason = '', string $payment_reference = '' ) {
@@ -164,7 +165,7 @@ final class AffiliateCommissionService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_commission_transition_denied', __( 'حالة العمولة لا تسمح بهذا القرار أو لا يجوز اعتماد عمولتك بنفسك.', 'auto-dealership-core' ), array( 'status'=>409 ) );
 		}
-		if ( ! self::is_supported_currency( (string) ( $row['currency_code'] ?: self::CURRENCY ) ) || (int) $row['amount'] < 1 || ! in_array( $row['status'], self::STATUSES, true ) ) {
+		if ( ! self::is_supported_currency( (string) ( $row['currency_code'] ?: self::currency() ) ) || (int) $row['amount'] < 1 || ! in_array( $row['status'], self::STATUSES, true ) ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_commission_data_invalid', 'The commission contains an unsupported currency, amount or status.', array( 'status'=>409 ) );
 		}
@@ -196,7 +197,7 @@ final class AffiliateCommissionService {
 			'branch_id'=>(int) $row['branch_id'],
 			'entry_type'=>self::ENTRY_VOID_REVERSAL,
 			'amount'=>-(int) $row['amount'],
-			'currency_code'=>(string) ( $row['currency_code'] ?: self::CURRENCY ),
+			'currency_code'=>(string) ( $row['currency_code'] ?: self::currency() ),
 			'event_key'=>hash( 'sha256', 'void:' . $commission_id ),
 			'reason'=>$reason,
 		) ) ) {
@@ -207,7 +208,7 @@ final class AffiliateCommissionService {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_commission_notification_failed', 'Unable to queue the commission notification.', array( 'status'=>500 ) );
 		}
-		if ( ! Transaction::commit( static fn(): bool => AuditLog::record( 'affiliate_commission.' . $target, 'affiliate_commission', $commission_id, $reason, array( 'status'=>$expected, 'amount'=>(int) $row['amount'], 'currency'=>(string) ( $row['currency_code'] ?: self::CURRENCY ) ), array( 'status'=>$target, 'amount'=>(int) $row['amount'], 'currency'=>(string) ( $row['currency_code'] ?: self::CURRENCY ), 'payment_reference'=>'paid' === $target ? $payment_reference : '' ) ) ) ) {
+		if ( ! Transaction::commit( static fn(): bool => AuditLog::record( 'affiliate_commission.' . $target, 'affiliate_commission', $commission_id, $reason, array( 'status'=>$expected, 'amount'=>(int) $row['amount'], 'currency'=>(string) ( $row['currency_code'] ?: self::currency() ) ), array( 'status'=>$target, 'amount'=>(int) $row['amount'], 'currency'=>(string) ( $row['currency_code'] ?: self::currency() ), 'payment_reference'=>'paid' === $target ? $payment_reference : '' ) ) ) ) {
 			return new \WP_Error( 'adc_commission_update_failed', __( 'تعذر حفظ أو توثيق قرار العمولة.', 'auto-dealership-core' ), array( 'status'=>500 ) );
 		}
 		return array( 'id'=>$commission_id, 'status'=>$target );
@@ -234,7 +235,7 @@ final class AffiliateCommissionService {
 		$sql = "SELECT q.id quotation_id,q.quote_number,q.status quote_status,q.currency_code,q.created_at,s.id sale_id,s.status sale_status,c.status commission_status,c.amount commission_amount,c.currency_code commission_currency FROM $quotes q LEFT JOIN $sales s ON s.quotation_id=q.id LEFT JOIN $commissions c ON c.sale_id=s.id WHERE $where ORDER BY q.id DESC LIMIT %d OFFSET %d";
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $args, array( $per_page, ( $page - 1 ) * $per_page ) ) ), ARRAY_A );
 		if ( $wpdb->last_error ) { return new \WP_Error( 'adc_commission_query_failed', 'Unable to load referred sales.', array( 'status'=>500 ) ); }
-		return array( 'items'=>$rows ?: array(), 'page'=>$page, 'per_page'=>$per_page, 'total'=>$total, 'pages'=>(int) ceil( $total / $per_page ), 'currency'=>self::CURRENCY );
+		return array( 'items'=>$rows ?: array(), 'page'=>$page, 'per_page'=>$per_page, 'total'=>$total, 'pages'=>(int) ceil( $total / $per_page ), 'currency'=>self::currency() );
 	}
 
 	public static function all_commissions() {
@@ -261,7 +262,7 @@ final class AffiliateCommissionService {
 		$currency_sql = "SELECT DISTINCT c.currency_code FROM $commissions c WHERE $affiliate_where AND $scope";
 		$currency_rows = $wpdb->get_col( $args ? $wpdb->prepare( $currency_sql, $args ) : $currency_sql );
 		if ( $wpdb->last_error ) { return new \WP_Error( 'adc_commission_query_failed', __( 'تعذر التحقق من عملة ملخص العمولات.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
-		if ( count( $currency_rows ) > 1 || ( $currency_rows && self::CURRENCY !== strtoupper( (string) $currency_rows[0] ) ) ) { return new \WP_Error( 'adc_commission_currency_mixed', __( 'لا يمكن عرض ملخص SAR لأن بيانات الحساب تحتوي على عملات مختلطة أو غير مدعومة.', 'auto-dealership-core' ), array( 'status'=>409 ) ); }
+		if ( count( $currency_rows ) > 1 || ( $currency_rows && self::currency() !== strtoupper( (string) $currency_rows[0] ) ) ) { return new \WP_Error( 'adc_commission_currency_mixed', sprintf( __( 'لا يمكن عرض ملخص %s لأن بيانات الحساب تحتوي على عملات مختلطة أو غير مدعومة.', 'auto-dealership-core' ), self::currency() ), array( 'status'=>409 ) ); }
 		$sql = "SELECT
 			COALESCE(SUM(CASE WHEN c.status='pending_review' THEN c.amount ELSE 0 END),0) pending_review,
 			COALESCE(SUM(CASE WHEN c.status='approved' THEN c.amount ELSE 0 END),0) approved,
@@ -277,8 +278,8 @@ final class AffiliateCommissionService {
 		$entry_sql = "SELECT COALESCE(SUM(e.amount),0) net_ledger FROM $entries e INNER JOIN $commissions c ON c.id=e.commission_id WHERE $affiliate_where AND $scope";
 		$entry = $wpdb->get_row( $args ? $wpdb->prepare( $entry_sql, $args ) : $entry_sql, ARRAY_A );
 		if ( $wpdb->last_error || ! $entry ) { return new \WP_Error( 'adc_commission_query_failed', __( 'تعذر تحميل حركات العمولات.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
-		$summary = array( 'currency'=>self::CURRENCY, 'commission_count'=>(int) $row['commission_count'], 'pending_review'=>(int) $row['pending_review'], 'approved'=>(int) $row['approved'], 'paid'=>(int) $row['paid'], 'voided'=>(int) $row['voided'], 'returned'=>(int) $row['returned'], 'net_ledger'=>(int) $entry['net_ledger'] );
-		foreach ( array( 'pending_review','approved','paid','voided','returned','net_ledger' ) as $field ) { $summary[ $field . '_sar' ] = Money::decimal( $summary[ $field ] ); }
+		$summary = array( 'currency'=>self::currency(), 'commission_count'=>(int) $row['commission_count'], 'pending_review'=>(int) $row['pending_review'], 'approved'=>(int) $row['approved'], 'paid'=>(int) $row['paid'], 'voided'=>(int) $row['voided'], 'returned'=>(int) $row['returned'], 'net_ledger'=>(int) $entry['net_ledger'] );
+		foreach ( array( 'pending_review','approved','paid','voided','returned','net_ledger' ) as $field ) { $summary[ $field . '_amount' ] = Money::decimal( $summary[ $field ] ); }
 		return $summary;
 	}
 
@@ -325,7 +326,7 @@ final class AffiliateCommissionService {
 		$sql = "SELECT c.id,c.sale_id,c.quotation_id,c.lead_id,c.affiliate_user_id,c.branch_id,c.amount,c.currency_code,c.status,c.payment_reference,c.reviewed_by,c.reviewed_at,c.paid_by,c.paid_at,c.created_at,u.display_name,(SELECT GROUP_CONCAT(e.entry_reference ORDER BY e.id ASC SEPARATOR ', ') FROM $entries e WHERE e.commission_id=c.id AND e.entry_reference<>'') entry_references FROM $from c LEFT JOIN {$wpdb->users} u ON u.ID=c.affiliate_user_id WHERE " . implode( ' AND ', $where ) . ' ORDER BY c.id DESC LIMIT %d OFFSET %d';
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $args, array( $limit, $offset ) ) ), ARRAY_A );
 		if ( $wpdb->last_error ) { return new \WP_Error( 'adc_commission_query_failed', __( 'تعذر تحميل سجل العمولات.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
-		return array( 'items'=>$rows ?: array(), 'page'=>$page, 'per_page'=>$per_page, 'total'=>$total, 'pages'=>(int) ceil( $total / $per_page ), 'currency'=>self::CURRENCY, 'timezone'=>$timezone->getName() );
+		return array( 'items'=>$rows ?: array(), 'page'=>$page, 'per_page'=>$per_page, 'total'=>$total, 'pages'=>(int) ceil( $total / $per_page ), 'currency'=>self::currency(), 'timezone'=>$timezone->getName() );
 	}
 
 	public static function run_metadata_backfill(): void {
@@ -366,7 +367,7 @@ final class AffiliateCommissionService {
 				'id'=>(int) $entry_id, 'commission_id'=>(int) ( $entry['commission_id'] ?? 0 ), 'sale_id'=>(int) ( $entry['sale_id'] ?? 0 ),
 				'affiliate_user_id'=>(int) ( $entry['affiliate_user_id'] ?? 0 ), 'branch_id'=>(int) ( $entry['branch_id'] ?? 0 ),
 				'entry_type'=>(string) ( $entry['entry_type'] ?? '' ), 'amount'=>(int) ( $entry['amount'] ?? 0 ),
-				'currency_code'=>(string) ( $entry['currency_code'] ?? self::CURRENCY ), 'event_key'=>(string) ( $entry['event_key'] ?? '' ),
+				'currency_code'=>(string) ( $entry['currency_code'] ?? self::currency() ), 'event_key'=>(string) ( $entry['event_key'] ?? '' ),
 				'reason'=>(string) ( $entry['reason'] ?? '' ), 'actor_user_id'=>(int) ( $entry['actor_user_id'] ?? 0 ), 'created_at'=>(string) ( $entry['created_at'] ?? '' ),
 			), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
 			$formats[] = '%s';
@@ -378,7 +379,7 @@ final class AffiliateCommissionService {
 		global $wpdb;
 		$entry_type = (string) ( $entry['entry_type'] ?? '' );
 		$amount = (int) ( $entry['amount'] ?? 0 );
-		$currency = strtoupper( (string) ( $entry['currency_code'] ?? self::CURRENCY ) );
+		$currency = strtoupper( (string) ( $entry['currency_code'] ?? self::currency() ) );
 		$valid_type = in_array( $entry_type, array( self::ENTRY_ACCRUAL, self::ENTRY_VOID_REVERSAL, self::ENTRY_RETURN_REVERSAL ), true );
 		$valid_sign = self::ENTRY_ACCRUAL === $entry_type ? $amount > 0 : $amount < 0;
 		if ( ! $valid_type || ! self::is_supported_currency( $currency ) || ! $valid_sign ) { return false; }

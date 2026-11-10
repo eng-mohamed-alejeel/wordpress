@@ -12,7 +12,7 @@ final class ProductSetup {
 	private const PROFILE = 'adc_product_profile';
 	private const MAIL = 'adc_product_mail';
 	private const SECTIONS = array( 'identity', 'appearance', 'policy', 'mail', 'pages', 'readiness' );
-	private const PROFILE_KEYS = array( 'brand_ar', 'brand_en', 'legal_ar', 'legal_en', 'country_ar', 'country_en', 'description_ar', 'description_en', 'hero_ar', 'hero_en', 'language', 'timezone' );
+	private const PROFILE_KEYS = array( 'brand_ar', 'brand_en', 'legal_ar', 'legal_en', 'country_ar', 'country_en', 'description_ar', 'description_en', 'hero_ar', 'hero_en', 'language', 'timezone', 'currency_code' );
 	private const THEME_KEYS = array( 'primary_color', 'accent_color', 'description_en', 'phone', 'email', 'address', 'address_en', 'facebook', 'instagram', 'whatsapp', 'x', 'tiktok', 'snapchat', 'youtube', 'linkedin' );
 	private const POLICY_KEYS = array( 'vat_percent', 'reservation_hours', 'reservation_refund_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'privacy_retention_days' );
 	private const MAIL_KEYS = array( 'ADC_MAIL_MODE', 'ADC_SMTP_HOST', 'ADC_SMTP_PORT', 'ADC_SMTP_ENCRYPTION', 'ADC_SMTP_USERNAME', 'ADC_SMTP_PASSWORD', 'ADC_MAIL_FROM', 'ADC_MAIL_FROM_NAME' );
@@ -119,7 +119,7 @@ final class ProductSetup {
 	}
 	private static function profile_defaults(): array {
 		$appearance = (array) get_option( 'car_dealer_theme_settings', array() );
-		return array( 'brand_ar'=>self::brand(), 'brand_en'=>self::brand( 'en' ), 'country_ar'=>'', 'country_en'=>'', 'description_ar'=>(string) get_option( 'blogdescription', '' ), 'description_en'=>(string) ( $appearance['description_en'] ?? '' ), 'hero_ar'=>self::hero_description( 'ar' ), 'hero_en'=>self::hero_description( 'en' ), 'language'=>'ar', 'timezone'=>wp_timezone_string() );
+		return array( 'brand_ar'=>self::brand(), 'brand_en'=>self::brand( 'en' ), 'country_ar'=>'', 'country_en'=>'', 'description_ar'=>(string) get_option( 'blogdescription', '' ), 'description_en'=>(string) ( $appearance['description_en'] ?? '' ), 'hero_ar'=>self::hero_description( 'ar' ), 'hero_en'=>self::hero_description( 'en' ), 'language'=>'ar', 'timezone'=>wp_timezone_string(), 'currency_code'=>CurrencySettings::base_code() );
 	}
 
 	public static function mail_setting( string $name, string $default ): string {
@@ -156,11 +156,15 @@ final class ProductSetup {
 					if ( ! in_array( $value, array( 'ar', 'en' ), true ) ) { return new \WP_Error( 'adc_setup_language', 'Invalid language.' ); }
 				} elseif ( 'timezone' === $key ) {
 					if ( ! in_array( $value, timezone_identifiers_list(), true ) && 'UTC' !== $value ) { return new \WP_Error( 'adc_setup_timezone', self::t( 'المنطقة الزمنية غير صالحة.', 'Invalid timezone.' ) ); }
+				} elseif ( 'currency_code' === $key ) {
+					$value = strtoupper( sanitize_key( $value ) );
+					if ( '' !== $value && ! CurrencySettings::is_valid( $value ) ) { return new \WP_Error( 'adc_setup_currency', self::t( 'اختر عملة أساسية صالحة.', 'Choose a valid base currency.' ) ); }
 				} else { $value = in_array( $key, array( 'description_ar', 'description_en', 'hero_ar', 'hero_en', 'address', 'address_en' ), true ) ? sanitize_textarea_field( $value ) : sanitize_text_field( $value ); }
 				$clean[$section][$key] = $value;
 			}
 		}
 		if ( isset( $clean['profile']['brand_ar'] ) && '' === trim( $clean['profile']['brand_ar'] ) ) { return new \WP_Error( 'adc_setup_brand', self::t( 'اسم المنشأة مطلوب.', 'Business name is required.' ) ); }
+		if ( ! CurrencySettings::is_configured() && ( ! isset( $clean['profile']['currency_code'] ) || '' === $clean['profile']['currency_code'] ) ) { return new \WP_Error( 'adc_setup_currency_required', self::t( 'يجب اختيار العملة الأساسية قبل إكمال إعداد المنصة.', 'Choose the base currency before completing platform setup.' ) ); }
 		return $clean;
 	}
 
@@ -169,11 +173,16 @@ final class ProductSetup {
 		$data = self::normalize( $data ); if ( is_wp_error( $data ) ) { return $data; }
 		global $wpdb;
 		if ( ! \AutoDealership\Database\Transaction::begin() ) { return new \WP_Error( 'adc_setup_storage', 'Storage unavailable.' ); }
-		$changed = array( self::PROFILE, 'car_dealer_theme_settings', 'blogname', 'blogdescription', 'timezone_string' );
+		$changed = array( self::PROFILE, 'car_dealer_theme_settings', 'blogname', 'blogdescription', 'timezone_string', CurrencySettings::option_name() );
 		foreach ( array( 'vat_rate_bps', 'reservation_hours', 'reservation_refund_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'privacy_retention_days' ) as $key ) { $changed[] = 'adc_' . $key; }
 		// Serialize all product saves so profile merges cannot overwrite another administrator.
 		$wpdb->get_results( "SELECT option_id FROM {$wpdb->options} WHERE option_name IN ('adc_product_profile','car_dealer_theme_settings','blogname') FOR UPDATE" );
 		self::clear_cache( $changed );
+		if ( isset( $data['profile']['currency_code'] ) ) {
+			$currency = CurrencySettings::set_base( (string) $data['profile']['currency_code'] );
+			if ( is_wp_error( $currency ) ) { $wpdb->query( 'ROLLBACK' ); self::clear_cache( $changed ); return $currency; }
+			unset( $data['profile']['currency_code'] );
+		}
 		if ( isset( $data['policy'] ) ) {
 			$result = ConfigurationService::update_section( $data['policy'], self::POLICY_KEYS );
 			if ( is_wp_error( $result ) ) { $wpdb->query( 'ROLLBACK' ); self::clear_cache( $changed ); return $result; }
@@ -194,7 +203,12 @@ final class ProductSetup {
 
 	public static function export(): array {
 		$policy = array();
-		foreach ( self::POLICY_KEYS as $key ) { $policy[$key] = 'vat_percent' === $key ? ( (int) get_option( 'adc_vat_rate_bps', 1500 ) / 100 ) : get_option( 'adc_' . $key, in_array( $key, array( 'reservation_deposit_type' ), true ) ? 'none' : ( 'reservation_hours' === $key ? 24 : ( 'reservation_refund_hours' === $key ? 72 : 0 ) ) ); }
+		$deposit_type = (string) get_option( 'adc_reservation_deposit_type', 'none' );
+		foreach ( self::POLICY_KEYS as $key ) {
+			if ( 'vat_percent' === $key ) { $policy[$key] = \AutoDealership\Pricing\Money::percent( (int) get_option( 'adc_vat_rate_bps', 1500 ) ); }
+			elseif ( 'reservation_deposit_value' === $key && 'percentage' === $deposit_type ) { $policy[$key] = \AutoDealership\Pricing\Money::percent( (int) get_option( 'adc_reservation_deposit_value', 0 ) ); }
+			else { $policy[$key] = get_option( 'adc_' . $key, in_array( $key, array( 'reservation_deposit_type' ), true ) ? 'none' : ( 'reservation_hours' === $key ? 24 : ( 'reservation_refund_hours' === $key ? 72 : 0 ) ) ); }
+		}
 		return array( 'product'=>'auto-dealership', 'format'=>1, 'settings'=>array( 'profile'=>array_intersect_key( array_replace( self::profile_defaults(), self::profile() ), array_flip( self::PROFILE_KEYS ) ), 'appearance'=>array_intersect_key( (array) get_option( 'car_dealer_theme_settings', array() ), array_flip( self::THEME_KEYS ) ), 'policy'=>$policy ) );
 	}
 	public static function import_preview( string $json ) {
@@ -325,6 +339,7 @@ final class ProductSetup {
 		foreach ( self::blueprints() as $row ) { $p = get_page_by_path( $row['slug'], OBJECT, 'page' ); if ( ! $p || 'publish' !== $p->post_status ) { if ( ! empty( $row['legal'] ) ) { $legal = false; } else { $pages = false; } } }
 		$theme = wp_get_theme();
 		return array(
+			self::t( 'العملة الأساسية للنظام', 'System base currency' ) => CurrencySettings::is_configured(),
 			self::t( 'هوية المنشأة', 'Business identity' )=>! empty( self::profile()['brand_ar'] ) || self::legacy(),
 			self::t( 'الثيم المتوافق وإصداره', 'Matching theme version' )=>'car-dealer' === get_template() && ADC_VERSION === $theme->get( 'Version' ),
 			self::t( 'مخطط قاعدة البيانات', 'Database schema' )=>Schema::is_ready(),
@@ -483,8 +498,8 @@ final class ProductSetup {
 			$input = wp_unslash( $_POST['settings'] ?? array() );
 			if ( ! is_array( $input ) ) { $input = array(); }
 			$invalid_amount = false;
-			if ( 'policy' === $section && isset( $input['reservation_deposit_value'] ) ) {
-				$amount = \AutoDealership\Pricing\Money::from_sar( $input['reservation_deposit_value'] );
+			if ( 'policy' === $section && isset( $input['reservation_deposit_value'] ) && 'fixed' === (string) ( $input['reservation_deposit_type'] ?? get_option( 'adc_reservation_deposit_type', 'none' ) ) ) {
+				$amount = \AutoDealership\Pricing\Money::from_major( $input['reservation_deposit_value'] );
 				$invalid_amount = null === $amount;
 				$input['reservation_deposit_value'] = $amount;
 			}
@@ -535,6 +550,7 @@ final class ProductSetup {
 		if ( in_array( $section, array( 'identity', 'appearance', 'mail' ), true ) ) {
 			self::form( $section ); echo '<table class="form-table" role="presentation">';
 			if ( 'identity' === $section ) {
+				self::field( 'currency_code', self::t( 'العملة الأساسية للنظام', 'System base currency' ), CurrencySettings::base_code(), 'text', CurrencySettings::choices() );
 				$p = array_replace( self::profile_defaults(), self::profile() ); $fields = array( 'brand_ar'=>array( 'اسم المنشأة بالعربية', 'Business name (Arabic)' ), 'brand_en'=>array( 'اسم المنشأة بالإنجليزية', 'Business name (English)' ), 'legal_ar'=>array( 'الاسم القانوني بالعربية (اختياري)', 'Legal name (Arabic, optional)' ), 'legal_en'=>array( 'الاسم القانوني بالإنجليزية (اختياري)', 'Legal name (English, optional)' ), 'description_ar'=>array( 'وصف الموقع بالعربية', 'Site description (Arabic)' ), 'description_en'=>array( 'وصف الموقع بالإنجليزية', 'Site description (English)' ), 'hero_ar'=>array( 'وصف الواجهة بالعربية', 'Homepage description (Arabic)' ), 'hero_en'=>array( 'وصف الواجهة بالإنجليزية', 'Homepage description (English)' ), 'language'=>array( 'اللغة الافتراضية', 'Default language' ), 'timezone'=>array( 'المنطقة الزمنية، مثل Asia/Riyadh', 'Timezone, e.g. Asia/Riyadh' ) );
 				$fields['country_ar'] = array( 'الدولة بالعربية', 'Country (Arabic)' ); $fields['country_en'] = array( 'الدولة بالإنجليزية', 'Country (English)' );
 				foreach ( $fields as $key=>$label ) { $default = 'brand_ar' === $key ? self::brand() : ( 'brand_en' === $key ? self::brand( 'en' ) : ( 'country_ar' === $key ? self::country( 'ar' ) : ( 'country_en' === $key ? self::country( 'en' ) : ( 'timezone' === $key ? wp_timezone_string() : ( 'language' === $key ? 'ar' : '' ) ) ) ) ); self::field( $key, self::t( ...$label ), (string) ( $p[$key] ?? $default ), 'text', 'language' === $key ? array( 'ar'=>'العربية', 'en'=>'English' ) : ( 'timezone' === $key ? array_combine( timezone_identifiers_list(), timezone_identifiers_list() ) : array() ) ); }

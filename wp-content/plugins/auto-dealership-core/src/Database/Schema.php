@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.42.0';
+	public const VERSION = '1.43.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;
@@ -173,7 +173,7 @@ final class Schema {
 				gallery_media_ids text NOT NULL,
 				document_media_ids text NOT NULL,
 				internal_notes text NOT NULL,
-				currency char(3) NOT NULL DEFAULT 'SAR',
+				currency char(3) NOT NULL DEFAULT '',
 				public_post_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				created_at datetime NOT NULL,
 				updated_at datetime NOT NULL,
@@ -423,7 +423,7 @@ final class Schema {
 				marketing_lead_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				affiliate_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				affiliate_commission_amount bigint(20) unsigned NOT NULL DEFAULT 0,
-				currency_code char(3) NOT NULL DEFAULT 'SAR',
+				currency_code char(3) NOT NULL DEFAULT '',
 				base_amount bigint(20) unsigned NOT NULL,
 				source_base_amount bigint(20) unsigned NOT NULL DEFAULT 0,
 				margin_amount bigint(20) unsigned NOT NULL DEFAULT 0,
@@ -478,7 +478,7 @@ final class Schema {
 				tax_rate_bps smallint(5) unsigned NULL,
 				tax_amount bigint(20) unsigned NOT NULL,
 				final_amount bigint(20) unsigned NOT NULL,
-				currency char(3) NOT NULL DEFAULT 'SAR',
+				currency char(3) NOT NULL DEFAULT '',
 				valid_until date NOT NULL,
 				status varchar(24) NOT NULL,
 				seller_name varchar(190) NOT NULL DEFAULT '',
@@ -573,7 +573,7 @@ final class Schema {
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				sale_id bigint(20) unsigned NOT NULL,
 				amount bigint(20) unsigned NOT NULL,
-				currency char(3) NOT NULL DEFAULT 'SAR',
+				currency char(3) NOT NULL DEFAULT '',
 				source varchar(32) NOT NULL,
 				reference varchar(100) NOT NULL,
 				status varchar(24) NOT NULL DEFAULT 'pending',
@@ -590,7 +590,7 @@ final class Schema {
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				reservation_id bigint(20) unsigned NOT NULL,
 				amount bigint(20) unsigned NOT NULL,
-				currency char(3) NOT NULL DEFAULT 'SAR',
+				currency char(3) NOT NULL DEFAULT '',
 				source varchar(32) NOT NULL,
 				reference varchar(100) NOT NULL,
 				status varchar(24) NOT NULL DEFAULT 'pending',
@@ -611,7 +611,7 @@ final class Schema {
 				reservation_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				sale_id bigint(20) unsigned NOT NULL,
 				amount bigint(20) unsigned NOT NULL,
-				currency char(3) NOT NULL DEFAULT 'SAR',
+				currency char(3) NOT NULL DEFAULT '',
 				method varchar(32) NOT NULL,
 				reference varchar(100) NOT NULL,
 				status varchar(16) NOT NULL DEFAULT 'pending',

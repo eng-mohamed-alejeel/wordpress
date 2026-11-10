@@ -7,9 +7,9 @@
     unit.setAttribute('aria-live', 'polite');
     input.after(unit);
     function update(reset) {
-      input.step = type.value === 'fixed' ? '0.01' : '1';
+      input.step = type.value === 'fixed' ? ((window.adcCurrencySettings && window.adcCurrencySettings.step) || '0.01') : '0.01';
       input.max = type.value === 'percentage' ? '9999' : '';
-      unit.textContent = type.value === 'percentage' ? ' (0.01%)' : type.value === 'fixed' ? ' (SAR)' : '';
+      unit.textContent = type.value === 'percentage' ? ' (0.01%)' : type.value === 'fixed' ? ' (' + ((window.adcCurrencySettings && window.adcCurrencySettings.code) || '—') + ')' : '';
       input.disabled = type.value === 'none';
       if (reset) input.value = '0';
     }

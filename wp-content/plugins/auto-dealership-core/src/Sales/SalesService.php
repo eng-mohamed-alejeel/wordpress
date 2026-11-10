@@ -30,7 +30,7 @@ final class SalesService {
 			if ( $existing ) {
 				$allowed = $vehicle && CustomerScope::allows( $customer_id, (int) $vehicle['branch_id'] ) && (int) $existing['owner_user_id'] === get_current_user_id() && (int) $existing['customer_id'] === $customer_id && (int) $existing['vehicle_id'] === $vehicle_id && $existing['valid_until'] === $valid_until && $existing['promotion_code'] === sanitize_key( $promotion_code ) && (int) $existing['marketing_lead_id'] === $marketing_lead_id;
 				$wpdb->query( 'ROLLBACK' );
-				return $allowed ? array( 'id'=>(int) $existing['id'], 'quote_number'=>$quote_number, 'version'=>(int) $existing['version'], 'status'=>$existing['status'], 'currency'=>'SAR' ) : new \WP_Error( 'adc_quote_replay_conflict', 'Quotation request does not match the original submission.', array( 'status'=>409 ) );
+				return $allowed ? array( 'id'=>(int) $existing['id'], 'quote_number'=>$quote_number, 'version'=>(int) $existing['version'], 'status'=>$existing['status'], 'currency'=>\AutoDealership\Core\CurrencySettings::base_code() ) : new \WP_Error( 'adc_quote_replay_conflict', 'Quotation request does not match the original submission.', array( 'status'=>409 ) );
 			}
 		}
 		$date = \DateTimeImmutable::createFromFormat( '!Y-m-d', $valid_until, new \DateTimeZone( 'UTC' ) );
@@ -73,16 +73,16 @@ final class SalesService {
 			return new \WP_Error( 'adc_quote_preview_changed', __( 'Pricing changed. Preview the quotation again before saving.', 'auto-dealership-core' ), array( 'status'=>409 ) );
 		}
 		$now = current_time( 'mysql', true );
-		$ok = $wpdb->insert( Schema::table( 'quotations' ), array_merge( $amounts, PricingPolicy::seller_snapshot(), array( 'quote_number' => $quote_number, 'customer_id' => $customer_id, 'vehicle_id' => $vehicle_id, 'branch_id' => (int) $vehicle['branch_id'], 'owner_user_id' => get_current_user_id(), 'marketing_lead_id' => $marketing_lead_id, 'affiliate_user_id' => $affiliate_user_id, 'affiliate_commission_amount' => $affiliate_commission_amount, 'currency_code' => 'SAR', 'valid_until' => $valid_until, 'status' => 'approved', 'version' => 1, 'created_at' => $now ) ) );
+		$ok = $wpdb->insert( Schema::table( 'quotations' ), array_merge( $amounts, PricingPolicy::seller_snapshot(), array( 'quote_number' => $quote_number, 'customer_id' => $customer_id, 'vehicle_id' => $vehicle_id, 'branch_id' => (int) $vehicle['branch_id'], 'owner_user_id' => get_current_user_id(), 'marketing_lead_id' => $marketing_lead_id, 'affiliate_user_id' => $affiliate_user_id, 'affiliate_commission_amount' => $affiliate_commission_amount, 'currency_code' => \AutoDealership\Core\CurrencySettings::base_code(), 'valid_until' => $valid_until, 'status' => 'approved', 'version' => 1, 'created_at' => $now ) ) );
 		if ( false === $ok ) {
 			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error( 'adc_quote_failed', __( 'تعذر إنشاء عرض السعر.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		$id = (int) $wpdb->insert_id;
-		if ( ! Transaction::commit( static fn() => QuoteHistory::capture( $id, 'quotation.created' ) && AuditLog::record( 'quotation.created', 'quotation', $id, '', null, array_merge( $amounts, array( 'vehicle_id' => $vehicle_id, 'customer_id' => $customer_id, 'version' => 1, 'currency' => 'SAR', 'marketing_lead_id'=>$marketing_lead_id, 'affiliate_user_id'=>$affiliate_user_id, 'affiliate_commission_amount'=>$affiliate_commission_amount ) ) ) ) ) {
+		if ( ! Transaction::commit( static fn() => QuoteHistory::capture( $id, 'quotation.created' ) && AuditLog::record( 'quotation.created', 'quotation', $id, '', null, array_merge( $amounts, array( 'vehicle_id' => $vehicle_id, 'customer_id' => $customer_id, 'version' => 1, 'currency' => \AutoDealership\Core\CurrencySettings::base_code(), 'marketing_lead_id'=>$marketing_lead_id, 'affiliate_user_id'=>$affiliate_user_id, 'affiliate_commission_amount'=>$affiliate_commission_amount ) ) ) ) ) {
 			return new \WP_Error( 'adc_quote_failed', __( 'تعذر توثيق عرض السعر.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
-		return array_merge( $amounts, array( 'id' => $id, 'quote_number' => $quote_number, 'version' => 1, 'currency' => 'SAR', 'status' => 'approved' ) );
+		return array_merge( $amounts, array( 'id' => $id, 'quote_number' => $quote_number, 'version' => 1, 'currency' => \AutoDealership\Core\CurrencySettings::base_code(), 'status' => 'approved' ) );
 	}
 
 	public static function request_discount( int $quote_id, int $amount, string $reason ) {

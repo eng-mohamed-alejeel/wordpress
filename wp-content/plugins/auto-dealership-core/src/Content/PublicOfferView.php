@@ -141,7 +141,7 @@ final class PublicOfferView {
 			'price' => $price,
 			'old_price' => $old > $price ? $old : 0,
 			'monthly_payment' => $monthly,
-			'currency' => 'SAR', // Legacy offer price fields are whole SAR, not vehicle minor units.
+			'currency' => \AutoDealership\Core\CurrencySettings::base_code(),
 			'expires' => $expires,
 			'is_expired' => $is_expired,
 			'image_url' => get_the_post_thumbnail_url( $post_id, 'full' ) ?: get_the_post_thumbnail_url( $car_id, 'full' ) ?: '',

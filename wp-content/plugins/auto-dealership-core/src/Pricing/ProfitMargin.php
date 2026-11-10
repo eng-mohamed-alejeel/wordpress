@@ -18,7 +18,7 @@ final class ProfitMargin {
  public static function amount(int $base,?array $policy=null):int { $p=$policy??self::policy();return $p['type']==='fixed'?(int)$p['value']:($p['type']==='percentage'?self::ratio($base,(int)$p['value']):0); }
  public static function save(array $input) {
   if(!current_user_can('manage_options')){return new \WP_Error('forbidden','Forbidden');}
-  $type=$input['type']??'';$stage=$input['stage']??'';$value=Money::from_sar($input['value']??'0');$revision=Money::parse($input['revision']??null);
+  $type=$input['type']??'';$stage=$input['stage']??'';$value='percentage'===$type?Money::from_percent($input['value']??'0'):Money::from_major($input['value']??'0');$revision=Money::parse($input['revision']??null);
   if(!in_array($type,array('none','fixed','percentage'),true)||!in_array($stage,array('before_tax','after_tax'),true)||$value===null||$revision===null||($type==='percentage'&&$value>100000)){return new \WP_Error('invalid_margin','Invalid margin policy.');}
   global $wpdb;
   if($wpdb->get_var($wpdb->prepare('SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s',$wpdb->options))!=='InnoDB'||!Transaction::begin()){return new \WP_Error('margin_storage','Margin storage is unavailable.');}
