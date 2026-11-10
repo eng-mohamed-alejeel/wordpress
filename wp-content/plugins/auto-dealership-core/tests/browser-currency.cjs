@@ -95,19 +95,19 @@ const assert = require('node:assert/strict');
             for (const view of ['inventory','settings','payments','refunds','acquisition','finance']) {
                 await navigate('/adc-test-currency?view='+view+'&lang='+lang,'h1');
                 check(await evaluate('document.documentElement.lang === '+JSON.stringify(lang)+' && document.documentElement.dir === '+JSON.stringify(lang==='ar'?'rtl':'ltr')),view+' declares correct '+lang+' direction.');
-                check(await evaluate('Array.from(document.querySelectorAll("input[name=adc_money_unit]")).every(input=>input.value==="SAR")'),view+' forms identify SAR.');
+                check(await evaluate('Array.from(document.querySelectorAll("input[name=adc_money_unit]")).every(input=>input.value==='+JSON.stringify(input.currency)+')'),view+' forms identify '+input.currency+'.');
                 const expected = {inventory:['1234.56','2345.67'],payments:['100.25','1319.49'],refunds:['0.01','1419.73'],acquisition:['1012.59'],finance:['1319.49']}[view];
-                if (expected) check(await evaluate(JSON.stringify(expected)+'.every(value=>document.body.innerText.includes(value))'),view+' displays the recorded SAR fractions in '+lang+'.');
+                if (expected) check(await evaluate(JSON.stringify(expected)+'.every(value=>document.body.innerText.includes(value))'),view+' displays the recorded '+input.currency+' fractions in '+lang+'.');
                 const shot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true});
                 fs.writeFileSync(path.join(artifacts,view+'-'+lang+'.png'),Buffer.from(shot.data,'base64'));
                 if(view==='settings') {
-                    check(await evaluate('(() => { const input=document.querySelector("[data-currency-value]"); const select=input.closest("td").querySelector("select"); select.value="fixed";select.dispatchEvent(new Event("change"));return input.step==="0.01" && input.value==="0" && !input.disabled;})()'),'Fixed SAR setting resets safely and permits two decimals.');
+                    check(await evaluate('(() => { const input=document.querySelector("[data-currency-value]"); const select=input.closest("td").querySelector("select"); select.value="fixed";select.dispatchEvent(new Event("change"));return input.step==="0.01" && input.value==="0" && !input.disabled;})()'),'Fixed currency setting resets safely and permits two decimals.');
                     check(await evaluate('(() => { const input=document.querySelector("[data-currency-value]"); const select=input.closest("td").querySelector("select"); select.value="percentage";select.dispatchEvent(new Event("change"));return input.step==="0.01" && input.value==="0";})()'),'Percentage setting uses currency-independent hundredths of a percent.');
                 }
             }
             await navigate(input.print_path+'&lang='+lang,'body');
-            await wait('document.body.innerText.includes("1419.74")','printed SAR total');
-            check(await evaluate('document.body.innerText.includes("185.18") && !document.body.innerText.includes("141974")'),'Print total and tax retain SAR precision in '+lang+'.');
+            await wait('document.body.innerText.includes("1419.74")','printed '+input.currency+' total');
+            check(await evaluate('document.body.innerText.includes("185.18") && !document.body.innerText.includes("141974")'),'Print total and tax retain '+input.currency+' precision in '+lang+'.');
             const screenshot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true});
             fs.writeFileSync(path.join(artifacts,'quote-'+lang+'.png'),Buffer.from(screenshot.data,'base64'));
             const pdf=await call('Page.printToPDF',{printBackground:true,preferCSSPageSize:true});

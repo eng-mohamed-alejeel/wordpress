@@ -11,9 +11,17 @@ final class CurrencyContract {
 
 	public static function input( array $input ) {
 		foreach ( self::FIELDS as $field ) {
+			$minor_alias = $field . '_minor';
 			$alias = $field . '_major';
+			if ( array_key_exists( $minor_alias, $input ) ) {
+				if ( array_key_exists( $field, $input ) || array_key_exists( $alias, $input ) ) { return new \WP_Error( 'adc_currency_conflict', 'Provide only one of the minor-unit, major-unit, or legacy monetary fields.', array( 'status'=>400 ) ); }
+				$minor = Money::parse( $input[$minor_alias] );
+				if ( null === $minor ) { return new \WP_Error( 'adc_currency_invalid', 'Provide a non-negative integer minor-unit amount.', array( 'status'=>400 ) ); }
+				$input[$field] = $minor;
+				unset( $input[$minor_alias] );
+			}
 			if ( ! array_key_exists( $alias, $input ) ) { continue; }
-			if ( array_key_exists( $field, $input ) ) { return new \WP_Error( 'adc_currency_conflict', 'Provide either the major-unit field or the minor-unit field, never both.', array( 'status'=>400 ) ); }
+			if ( array_key_exists( $field, $input ) ) { return new \WP_Error( 'adc_currency_conflict', 'Provide only one of the minor-unit, major-unit, or legacy monetary fields.', array( 'status'=>400 ) ); }
 			$minor = Money::from_major( $input[$alias] );
 			if ( null === $minor ) { return new \WP_Error( 'adc_currency_invalid', 'Provide a decimal amount with the precision supported by the configured currency.', array( 'status'=>400 ) ); }
 			$input[$field] = $minor;
@@ -30,7 +38,9 @@ final class CurrencyContract {
 		foreach ( $data as $key=>$value ) {
 			if ( is_array( $value ) ) { $data[$key] = self::output( $value ); }
 			elseif ( in_array( $key, self::FIELDS, true ) && ( null === $value || is_int( $value ) || ( is_string( $value ) && preg_match( '/\A-?[0-9]+\z/', $value ) ) ) ) {
+				$data[$key . '_minor'] = null === $value ? null : (int) $value;
 				$data[$key . '_major'] = null === $value ? null : Money::decimal( $value );
+				if ( ! isset( $data['currency'] ) && ! isset( $data['currency_code'] ) ) { $data['currency'] = \AutoDealership\Core\CurrencySettings::base_code(); }
 			}
 		}
 		return $data;
@@ -41,8 +51,9 @@ final class CurrencyContract {
 		foreach ( self::FIELDS as $field ) {
 			if ( ! isset( $original[$field] ) ) { continue; }
 			$endpoint['args'][$field]['required'] = false;
-			$endpoint['args'][$field]['description'] = 'Integer minor units for the configured base currency. Alternatively provide ' . $field . '_major; never both.';
+			$endpoint['args'][$field]['description'] = 'Legacy integer minor units for the configured base currency. Prefer ' . $field . '_minor or ' . $field . '_major; never provide more than one.';
 			unset( $endpoint['args'][$field]['default'] );
+			$endpoint['args'][$field . '_minor'] = array( 'type'=>'integer', 'minimum'=>0, 'description'=>'Integer minor units for the configured base currency.' );
 			$endpoint['args'][$field . '_major'] = array( 'type'=>'string', 'description'=>'Amount in the configured base currency using major units and the currency-supported precision.' );
 		}
 		$callback = $endpoint['callback'];
@@ -63,13 +74,14 @@ final class CurrencyContract {
 			}
 			if ( isset( $input['acquisition'] ) ) { $request->set_param( 'acquisition', $input['acquisition'] ); }
 			foreach ( self::FIELDS as $field ) { if ( array_key_exists( $field, $input ) ) { $request->set_param( $field, $input[$field] ); } }
-			foreach ( self::FIELDS as $field ) { unset( $request[$field . '_major'] ); }
+			foreach ( self::FIELDS as $field ) { unset( $request[$field . '_minor'], $request[$field . '_major'] ); }
 			$result = call_user_func( $callback, $request );
 			if ( is_wp_error( $result ) ) { return $result; }
 			$response = rest_ensure_response( $result );
 			$data = $response->get_data();
 			if ( is_array( $data ) ) { $response->set_data( self::output( $data ) ); }
 			$response->header( 'X-ADC-Currency', \AutoDealership\Core\CurrencySettings::base_code() );
+			$response->header( 'X-ADC-Currency-Decimals', (string) \AutoDealership\Core\CurrencySettings::decimals() );
 			$response->header( 'X-ADC-Money-Unit', 'minor; *_major=major' );
 			return $response;
 		};

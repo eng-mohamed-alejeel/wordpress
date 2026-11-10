@@ -37,7 +37,7 @@ final class LoanCalculator {
   $choices=['months'=>FinanceConfiguration::CONDITIONS['months'],'sector'=>['government','military','private_approved','private_unapproved','retired','self_employed'],'nationality'=>['saudi','expat'],'transfer'=>['st','nst'],'provider'=>array_merge(['all'],array_keys(self::rules())),'campaign'=>['regular','half','leasing'],'category'=>['A','B','C','D'],'chinese'=>['yes','no'],'employer'=>['approved','unapproved']];
   foreach($choices as $key=>$allowed) if(!is_scalar($input[$key])||!in_array((string)$input[$key],$allowed,true)) return self::invalid();
   if($price===null||$price<=0||$price>self::MAX_AMOUNT*$factor||$salary===null||$salary<=0||$salary>self::MAX_AMOUNT*$factor||$obligations===null||$obligations>self::MAX_AMOUNT*$factor||$insurance===null||$insurance<$settings['insurance_min']||$insurance>$settings['insurance_max']||!is_string($input['brand'])||strlen($input['brand'])>80) return self::invalid();
-  $input['price']=$price/$factor; $input['salary']=$salary/$factor; $input['months']=(int)$input['months']; $input['insurance_rate']=$insurance; $input['obligations']=$obligations/$factor; $input['brand']=strtolower(trim($input['brand']));
+  $input['price']=$price/$factor; $input['price_minor']=$price; $input['salary']=$salary/$factor; $input['salary_minor']=$salary; $input['months']=(int)$input['months']; $input['insurance_rate']=$insurance; $input['obligations']=$obligations/$factor; $input['brand']=strtolower(trim($input['brand']));
   $rows=[];
   foreach(self::rules() as $id=>$bank) { if($input['provider']!=='all'&&$input['provider']!==$id) continue; $rows[]=self::quote($id,$bank,$input,$price,$salary,$obligations); }
   $ranked=array_filter($rows,static fn($r)=>$r['status']==='eligible');
@@ -62,13 +62,14 @@ final class LoanCalculator {
   if($balloon===null&&$i['assumed_balloon']!=='') { $balloon=(float)$i['assumed_balloon'];$assumptions[]=self::text('دفعة أخيرة أدخلها المستخدم: ','User-supplied balloon: ').$balloon.'%'; }
   if($admin===null&&$i['assumed_admin']!=='') { $fixedFee=self::money($i['assumed_admin']);$admin=0;$assumptions[]=self::text('رسوم أدخلها المستخدم: ','User-supplied administrative fee: ').$i['assumed_admin'].' '.\AutoDealership\Core\CurrencySettings::ui_unit(); }
   foreach(['rate'=>$rate,'down'=>$down,'balloon'=>$balloon,'admin'=>$admin,'min_salary'=>$minimum] as $field=>$value)if($value===null)$unknown[]=self::text(['rate'=>'نسبة الربح غير متوفرة.','down'=>'نسبة الدفعة الأولى غير متوفرة.','balloon'=>'نسبة الدفعة الأخيرة غير متوفرة.','admin'=>'الرسوم الإدارية غير متوفرة.','min_salary'=>'الحد الأدنى للراتب غير متوفر لهذه الشريحة.'][$field],['rate'=>'Profit rate is missing.','down'=>'Down payment percentage is missing.','balloon'=>'Balloon percentage is missing.','admin'=>'Administrative fees are missing.','min_salary'=>'Minimum salary for this segment is missing.'][$field]);
-  if($minimum!==null&&$salary<(int)round($minimum*\AutoDealership\Core\CurrencySettings::minor_factor()))$row['reasons'][]=self::text('الراتب أقل من الحد الأدنى: ','Salary is below the minimum: ').$minimum.' '.\AutoDealership\Core\CurrencySettings::ui_unit();
+  $minimum_minor=self::configured_money($minimum);
+  if($minimum_minor!==null&&$salary<$minimum_minor)$row['reasons'][]=self::text('الراتب أقل من الحد الأدنى: ','Salary is below the minimum: ').\AutoDealership\Pricing\Money::decimal($minimum_minor).' '.\AutoDealership\Core\CurrencySettings::ui_unit();
   if(!in_array($i['sector'],$p['sectors'],true))$row['reasons'][]=self::text('قطاع العمل غير مشمول في هذا البرنامج.','Employment sector is excluded from this program.');
   if(!in_array($i['nationality'],$p['nationalities'],true))$row['reasons'][]=self::text('الجنسية غير مشمولة في هذا البرنامج.','Nationality is excluded from this program.');
   $approved=$i['sector']==='private_unapproved'||$i['employer']==='unapproved'?'unapproved':'approved';
   if($p['approved_only']&&$approved==='unapproved')$row['reasons'][]=self::text('البرنامج مخصص للجهات المعتمدة.','Program is limited to approved employers.');
-  $minimum_price=(int)round($p['price_min']*\AutoDealership\Core\CurrencySettings::minor_factor());
-  if($price<$minimum_price||($p['price_strict']&&$price<=$minimum_price))$row['reasons'][]=self::text('سعر السيارة لا يستوفي الحد المطلوب: ','Car price does not meet the required minimum: ').$p['price_min'].' '.\AutoDealership\Core\CurrencySettings::ui_unit();
+  $minimum_price=self::configured_money($p['price_min'])??0;
+  if($price<$minimum_price||($p['price_strict']&&$price<=$minimum_price))$row['reasons'][]=self::text('سعر السيارة لا يستوفي الحد المطلوب: ','Car price does not meet the required minimum: ').\AutoDealership\Pricing\Money::decimal($minimum_price).' '.\AutoDealership\Core\CurrencySettings::ui_unit();
   if($p['brands']) { if($i['brand']==='')$unknown[]=self::text('أدخل العلامة للتحقق من شمولها في البرنامج.','Enter the brand to check program coverage.');elseif(!in_array($i['brand'],$p['brands'],true))$row['reasons'][]=self::text('العلامة غير مشمولة في هذا البرنامج.','Brand is excluded from this program.'); }
   $row=array_merge($row,['annual_rate'=>$rate===null?null:(float)$rate,'minimum_salary'=>$minimum,'down_percent'=>$down,'balloon_percent'=>$balloon,'rebate_percent'=>$v['rebate'],'notes'=>array_merge($unknown,$assumptions,$notes),'assumptions'=>$assumptions]);
   if($rate===null||$down===null||$balloon===null||$admin===null){$row['status']=$row['reasons']?'ineligible':'incomplete';return $row;}
@@ -76,7 +77,7 @@ final class LoanCalculator {
   $dp=(int)round($price*$down/100); $bp=(int)round($price*$balloon/100); $principal=$price-$dp;
   // Two independently rounded payments must not exceed the price by a halala.
   $bp=min($bp,$principal);
-  $profit=(int)round($principal*$rate/100*$i['months']/12); $fee=$fixedFee??($p['admin_mode']==='fixed'?(int)round($admin*\AutoDealership\Core\CurrencySettings::minor_factor()):(int)round($principal*$admin/100)); if($p['admin_cap']!==null)$fee=min($fee,(int)round($p['admin_cap']*\AutoDealership\Core\CurrencySettings::minor_factor())); $installments=$principal-$bp+$profit+$fee;
+  $profit=(int)round($principal*$rate/100*$i['months']/12); $fee=$fixedFee??($p['admin_mode']==='fixed'?(self::configured_money($admin)??0):(int)round($principal*$admin/100)); if($p['admin_cap']!==null)$fee=min($fee,self::configured_money($p['admin_cap'])??0); $installments=$principal-$bp+$profit+$fee;
   $insuranceTotal=(int)round($price*$i['insurance_rate']/100*$i['months']/12); $base=$installments/$i['months']; $insuranceMonth=$insuranceTotal/$i['months']; $payment=$base+$insuranceMonth;
   $ratio=($payment+$obligations)/$salary*100;
   if($ratio>$settings['debt_limit']) $row['reasons'][]=self::text('القسط والتأمين والالتزامات القائمة تتجاوز الحد المسموح: ','Payment, insurance and obligations exceed the configured limit: ').$settings['debt_limit'].'%';
@@ -95,5 +96,6 @@ final class LoanCalculator {
   * @param mixed $value
   */
  private static function money($value): ?int { return self::decimal($value)===null?null:\AutoDealership\Pricing\Money::from_major((string)$value); }
+ private static function configured_money($value): ?int { return $value===null||$value===''?null:\AutoDealership\Pricing\Money::from_currency((string)$value,\AutoDealership\Core\CurrencySettings::base_code()); }
  private static function invalid(): \WP_Error { return new \WP_Error('adc_loan_invalid',self::text('راجع السعر والراتب وخيارات التمويل.','Check price, salary and financing selections.'),['status'=>400]); }
 }

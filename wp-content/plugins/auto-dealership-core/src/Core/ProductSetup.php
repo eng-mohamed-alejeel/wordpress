@@ -172,6 +172,8 @@ final class ProductSetup {
 		if ( ! current_user_can( 'manage_options' ) ) { return new \WP_Error( 'adc_setup_forbidden', 'Forbidden.' ); }
 		$data = self::normalize( $data ); if ( is_wp_error( $data ) ) { return $data; }
 		global $wpdb;
+		$currency_before = CurrencySettings::base_code();
+		$currency_changed = false;
 		if ( ! \AutoDealership\Database\Transaction::begin() ) { return new \WP_Error( 'adc_setup_storage', 'Storage unavailable.' ); }
 		$changed = array( self::PROFILE, 'car_dealer_theme_settings', 'blogname', 'blogdescription', 'timezone_string', CurrencySettings::option_name() );
 		foreach ( array( 'vat_rate_bps', 'reservation_hours', 'reservation_refund_hours', 'reservation_deposit_type', 'reservation_deposit_value', 'privacy_retention_days' ) as $key ) { $changed[] = 'adc_' . $key; }
@@ -181,6 +183,7 @@ final class ProductSetup {
 		if ( isset( $data['profile']['currency_code'] ) ) {
 			$currency = CurrencySettings::set_base( (string) $data['profile']['currency_code'] );
 			if ( is_wp_error( $currency ) ) { $wpdb->query( 'ROLLBACK' ); self::clear_cache( $changed ); return $currency; }
+			$currency_changed = $currency_before !== CurrencySettings::base_code();
 			unset( $data['profile']['currency_code'] );
 		}
 		if ( isset( $data['policy'] ) ) {
@@ -195,7 +198,11 @@ final class ProductSetup {
 			if ( isset( $data['profile']['description_en'] ) ) { $data['appearance']['description_en'] = $data['profile']['description_en']; }
 		}
 		if ( isset( $data['appearance'] ) ) { update_option( 'car_dealer_theme_settings', array_replace( (array) get_option( 'car_dealer_theme_settings', array() ), $data['appearance'] ), false ); }
-		$ok = ! $wpdb->last_error && AuditLog::record( 'platform.settings_updated', 'settings', 0, 'Product settings saved', null, array( 'sections'=>array_keys( $data ) ) );
+		$currency_audit = true;
+		if ( $currency_changed ) {
+			$currency_audit = AuditLog::record( 'platform.currency_configured', 'currency', 0, 'Base currency configured during platform setup', array( 'currency_code'=>$currency_before ), array( 'currency_code'=>CurrencySettings::base_code(), 'decimals'=>CurrencySettings::decimals() ) );
+		}
+		$ok = ! $wpdb->last_error && $currency_audit && AuditLog::record( 'platform.settings_updated', 'settings', 0, 'Product settings saved', null, array( 'sections'=>array_keys( $data ), 'currency_code'=>CurrencySettings::base_code() ) );
 		if ( ! $ok || false === $wpdb->query( 'COMMIT' ) ) { $wpdb->query( 'ROLLBACK' ); self::clear_cache( $changed ); return new \WP_Error( 'adc_setup_storage', self::t( 'تعذر حفظ الإعدادات.', 'Could not save settings.' ) ); }
 		return true;
 	}
@@ -513,11 +520,11 @@ final class ProductSetup {
 	private static function form( string $section, string $operation = 'save', bool $upload = false ): void {
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"' . ( $upload ? ' enctype="multipart/form-data"' : '' ) . '><input type="hidden" name="action" value="adc_platform_setup"><input type="hidden" name="operation" value="' . esc_attr( $operation ) . '"><input type="hidden" name="section" value="' . esc_attr( $section ) . '">'; wp_nonce_field( 'adc_platform_setup' );
 	}
-	private static function field( string $key, string $label, string $value, string $type = 'text', array $choices = array() ): void {
+	private static function field( string $key, string $label, string $value, string $type = 'text', array $choices = array(), bool $disabled = false ): void {
 		if ( $choices ) {
-			echo '<tr><th><label for="setup-' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td><select id="setup-' . esc_attr( $key ) . '" name="settings[' . esc_attr( $key ) . ']">';
+			echo '<tr><th><label for="setup-' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td>' . ( $disabled ? '<input type="hidden" name="settings[' . esc_attr( $key ) . ']" value="' . esc_attr( $value ) . '">' : '' ) . '<select id="setup-' . esc_attr( $key ) . '" name="settings[' . esc_attr( $key ) . ']"' . ( $disabled ? ' disabled aria-disabled="true"' : '' ) . '>';
 			foreach ( $choices as $choice=>$text ) { echo '<option value="' . esc_attr( (string) $choice ) . '"' . selected( (string) $choice, $value, false ) . '>' . esc_html( $text ) . '</option>'; }
-			echo '</select></td></tr>'; return;
+			echo '</select>' . ( $disabled ? '<p class="description">' . esc_html( self::t( 'تُقفل العملة بعد اعتمادها لحماية السجلات المالية التاريخية.', 'The currency is locked after activation to protect historical financial records.' ) ) . '</p>' : '' ) . '</td></tr>'; return;
 		}
 		echo '<tr><th><label for="setup-' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td><input class="regular-text" id="setup-' . esc_attr( $key ) . '" name="settings[' . esc_attr( $key ) . ']" type="' . esc_attr( $type ) . '"' . ( str_ends_with( $key, '_en' ) || in_array( $key, array( 'phone', 'email' ), true ) ? ' dir="ltr"' : '' ) . ' value="' . esc_attr( $value ) . '"' . ( 'password' === $type ? ' autocomplete="new-password"' : '' ) . '></td></tr>';
 	}
@@ -550,7 +557,7 @@ final class ProductSetup {
 		if ( in_array( $section, array( 'identity', 'appearance', 'mail' ), true ) ) {
 			self::form( $section ); echo '<table class="form-table" role="presentation">';
 			if ( 'identity' === $section ) {
-				self::field( 'currency_code', self::t( 'العملة الأساسية للنظام', 'System base currency' ), CurrencySettings::base_code(), 'text', CurrencySettings::choices() );
+				self::field( 'currency_code', self::t( 'العملة الأساسية للنظام', 'System base currency' ), CurrencySettings::base_code(), 'text', CurrencySettings::choices(), CurrencySettings::is_configured() );
 				$p = array_replace( self::profile_defaults(), self::profile() ); $fields = array( 'brand_ar'=>array( 'اسم المنشأة بالعربية', 'Business name (Arabic)' ), 'brand_en'=>array( 'اسم المنشأة بالإنجليزية', 'Business name (English)' ), 'legal_ar'=>array( 'الاسم القانوني بالعربية (اختياري)', 'Legal name (Arabic, optional)' ), 'legal_en'=>array( 'الاسم القانوني بالإنجليزية (اختياري)', 'Legal name (English, optional)' ), 'description_ar'=>array( 'وصف الموقع بالعربية', 'Site description (Arabic)' ), 'description_en'=>array( 'وصف الموقع بالإنجليزية', 'Site description (English)' ), 'hero_ar'=>array( 'وصف الواجهة بالعربية', 'Homepage description (Arabic)' ), 'hero_en'=>array( 'وصف الواجهة بالإنجليزية', 'Homepage description (English)' ), 'language'=>array( 'اللغة الافتراضية', 'Default language' ), 'timezone'=>array( 'المنطقة الزمنية، مثل Asia/Riyadh', 'Timezone, e.g. Asia/Riyadh' ) );
 				$fields['country_ar'] = array( 'الدولة بالعربية', 'Country (Arabic)' ); $fields['country_en'] = array( 'الدولة بالإنجليزية', 'Country (English)' );
 				foreach ( $fields as $key=>$label ) { $default = 'brand_ar' === $key ? self::brand() : ( 'brand_en' === $key ? self::brand( 'en' ) : ( 'country_ar' === $key ? self::country( 'ar' ) : ( 'country_en' === $key ? self::country( 'en' ) : ( 'timezone' === $key ? wp_timezone_string() : ( 'language' === $key ? 'ar' : '' ) ) ) ) ); self::field( $key, self::t( ...$label ), (string) ( $p[$key] ?? $default ), 'text', 'language' === $key ? array( 'ar'=>'العربية', 'en'=>'English' ) : ( 'timezone' === $key ? array_combine( timezone_identifiers_list(), timezone_identifiers_list() ) : array() ) ); }

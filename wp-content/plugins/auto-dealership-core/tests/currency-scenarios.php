@@ -6,37 +6,38 @@ function adc_check( bool $condition, string $message ): void {
 	if ( ! $condition ) { throw new RuntimeException( $message ); }
 	++$GLOBALS['checks']; echo "PASS: $message\n";
 }
-$currency_setup = \AutoDealership\Core\CurrencySettings::set_base( 'SAR' );
-adc_check( is_array( $currency_setup ), 'Currency fixture activates SAR as the configured base currency.' );
+$currency_code = strtoupper( (string) ( getenv( 'ADC_CURRENCY_CODE' ) ?: 'SAR' ) );
+$currency_setup = \AutoDealership\Core\CurrencySettings::set_base( $currency_code );
+adc_check( is_array( $currency_setup ), 'Currency fixture activates the selected base currency.' );
 adc_check( count( \AutoDealership\Core\CurrencySettings::currencies() ) >= 155 && isset( \AutoDealership\Core\CurrencySettings::currencies()['AFN'], \AutoDealership\Core\CurrencySettings::currencies()['ARS'], \AutoDealership\Core\CurrencySettings::currencies()['ZWG'] ), 'Currency registry includes the active ISO 4217 currency catalog.' );
 adc_check( '1' === \AutoDealership\Core\CurrencySettings::input_step( 'JPY' ) && '0.001' === \AutoDealership\Core\CurrencySettings::input_step( 'IQD' ), 'ISO minor-unit precision is applied to zero- and three-decimal currencies.' );
 require __DIR__ . '/increment-currency.php';
-$currency_branch = AutoDealership\Branches\BranchService::create( array( 'name'=>'Currency fixture','code'=>'SAR-TEST' ) );
+$currency_branch = AutoDealership\Branches\BranchService::create( array( 'name'=>'Currency fixture','code'=>$currency_code . '-TEST' ) );
 adc_check( is_array( $currency_branch ), 'Currency fixture branch is created.' );
 $currency_request = new WP_REST_Request( 'POST', '/auto-dealership/v1/vehicles' );
-$currency_request->set_body_params( array( 'vin'=>'TESTSAR0000000001','stock_number'=>'SAR-1','brand'=>'Test','model'=>'SAR fixture','model_year'=>2026,'condition'=>'new','branch_id'=>$currency_branch['id'],'retail_price_major'=>'1234.56' ) );
+$currency_request->set_body_params( array( 'vin'=>'TEST' . $currency_code . '0000000001','stock_number'=>$currency_code . '-1','brand'=>'Test','model'=>$currency_code . ' fixture','model_year'=>2026,'condition'=>'new','branch_id'=>$currency_branch['id'],'retail_price_major'=>'1234.56' ) );
 $currency_response = rest_do_request( $currency_request );
 $currency_vehicle = $currency_response->get_data();
-adc_check( 200 === $currency_response->get_status() && isset( $currency_vehicle['id'] ), 'Real registered inventory REST endpoint accepts SAR input.' );
+adc_check( 200 === $currency_response->get_status() && isset( $currency_vehicle['id'] ), 'Real registered inventory REST endpoint accepts selected-currency input.' );
 $currency_record = AutoDealership\Inventory\VehicleService::get( $currency_vehicle['id'] );
-adc_check( is_array( $currency_record ) && 123456 === (int) $currency_record['retail_price'], 'SAR API input is stored as exact integer minor units.' );
+adc_check( is_array( $currency_record ) && 123456 === (int) $currency_record['retail_price'], $currency_code . ' API input is stored as exact integer minor units.' );
 $currency_acquisition = new WP_REST_Request( 'PATCH', '/auto-dealership/v1/vehicles/' . $currency_vehicle['id'] . '/acquisition' );
 $currency_acquisition->set_body_params( array( 'acquisition'=>array( 'purchase_cost_major'=>'1000.25','additional_cost_major'=>'0.01','total_cost_major'=>'1000.26','wholesale_price_major'=>'1100.00' ),'reason'=>'Synthetic currency verification' ) );
 $currency_cost_response = rest_do_request( $currency_acquisition );
-adc_check( 200 === $currency_cost_response->get_status(), 'Real acquisition REST endpoint accepts nested SAR fields.' );
+adc_check( 200 === $currency_cost_response->get_status(), 'Real acquisition REST endpoint accepts nested ' . $currency_code . ' fields.' );
 $currency_get = rest_do_request( new WP_REST_Request( 'GET', '/auto-dealership/v1/vehicles/' . $currency_vehicle['id'] . '/acquisition' ) );
-adc_check( '1000.25' === ( $currency_get->get_data()['purchase_cost_major'] ?? '' ) && 100025 === (int) ( $currency_get->get_data()['purchase_cost'] ?? 0 ), 'Real acquisition output exposes explicit SAR alongside compatible minor units.' );
+adc_check( '1000.25' === ( $currency_get->get_data()['purchase_cost_major'] ?? '' ) && 100025 === (int) ( $currency_get->get_data()['purchase_cost'] ?? 0 ), 'Real acquisition output exposes explicit ' . $currency_code . ' alongside compatible minor units.' );
 ob_start(); AutoDealership\Admin\VehicleAcquisitionPage::render(); $currency_html = ob_get_clean();
-adc_check( str_contains( $currency_html, '1000.25' ) && ! str_contains( $currency_html, '100025' ) && str_contains( $currency_html, 'step="0.01"' ), 'Acquisition form and table render actual SAR values.' );
+adc_check( str_contains( $currency_html, '1000.25' ) && ! str_contains( $currency_html, '100025' ) && str_contains( $currency_html, 'step="0.01"' ), 'Acquisition form and table render actual ' . $currency_code . ' values.' );
 $currency_previous_get=$_GET;$_GET['legacy']='1';
 try { ob_start(); AutoDealership\Admin\OperationsPages::render(); $currency_html = ob_get_clean(); } finally { $_GET=$currency_previous_get; }
-adc_check( str_contains( $currency_html, '1234.56' ) && ! str_contains( $currency_html, '123456' ), 'Inventory view renders SAR without exposing raw minor units.' );
+adc_check( str_contains( $currency_html, '1234.56' ) && ! str_contains( $currency_html, '123456' ), 'Inventory view renders ' . $currency_code . ' without exposing raw minor units.' );
 $currency_filters = AutoDealership\Inventory\PublicCatalog::normalize_filters( array( 'min_price'=>'12.34','max_price'=>'56.78' ), true );
-adc_check( 1234 === $currency_filters['min_price'] && 5678 === $currency_filters['max_price'], 'Public price filters preserve halala fractions in SAR input.' );
+adc_check( 1234 === $currency_filters['min_price'] && 5678 === $currency_filters['max_price'], 'Public price filters preserve minor-unit fractions in ' . $currency_code . ' input.' );
 $currency_request = new WP_REST_Request( 'GET', '/auto-dealership/v2/vehicles/' . $currency_vehicle['id'] . '/acquisition' );
 $currency_response = rest_do_request( $currency_request );
 $currency_response = apply_filters( 'rest_post_dispatch', $currency_response, rest_get_server(), $currency_request );
-adc_check( true === $currency_response->get_data()['success'] && '1000.25' === $currency_response->get_data()['data']['purchase_cost_major'], 'V2 envelope retains explicit SAR amounts.' );
+adc_check( true === $currency_response->get_data()['success'] && '1000.25' === $currency_response->get_data()['data']['purchase_cost_major'], 'V2 envelope retains explicit ' . $currency_code . ' amounts.' );
 $currency_request = new WP_REST_Request( 'POST', '/auto-dealership/v1/vehicles' );
 $currency_request->set_body_params( array( 'retail_price'=>123456,'retail_price_major'=>'1234.56' ) );
 adc_check( 400 === rest_do_request( $currency_request )->get_status(), 'Registered REST rejects mixed units before inventory creation.' );
@@ -45,22 +46,22 @@ update_option( 'adc_promotion_type', 'fixed' ); update_option( 'adc_promotion_va
 update_option( 'adc_reservation_deposit_type', 'percentage' ); update_option( 'adc_reservation_deposit_value', 1500 );
 $currency_previous_get=$_GET;$currency_html='';
 try { foreach(array('pricing','reservations') as $currency_section){$_GET['section']=$currency_section;ob_start();AutoDealership\Admin\SettingsPage::render();$currency_html.=ob_get_clean();} } finally { $_GET=$currency_previous_get; }
-adc_check( str_contains( $currency_html, 'value="50.25"' ) && str_contains( $currency_html, 'value="1234.56"' ) && str_contains( $currency_html, 'value="15"' ), 'Settings render fixed amounts in SAR and display percentages independently of currency precision.' );
-adc_check( str_contains( $currency_html, 'name="adc_money_unit" value="SAR"' ), 'Money forms declare their unit explicitly.' );
+adc_check( str_contains( $currency_html, 'value="50.25"' ) && str_contains( $currency_html, 'value="1234.56"' ) && str_contains( $currency_html, 'value="15"' ), 'Settings render fixed amounts and display percentages independently of currency precision.' );
+adc_check( str_contains( $currency_html, 'name="adc_money_unit" value="' . $currency_code . '"' ), 'Money forms declare their selected unit explicitly.' );
 $currency_die_handler = static fn()=>static function($message){ throw new RuntimeException( (string) $message ); };
 add_filter( 'wp_die_handler', $currency_die_handler );
 try {
-	$_POST = array( 'adc_money_unit'=>'USD' ); $currency_rejected = false;
+	$_POST = array( 'adc_money_unit'=> $currency_code === 'USD' ? 'SAR' : 'USD' ); $currency_rejected = false;
 	try { AutoDealership\Pricing\Money::require_currency_form(); } catch ( RuntimeException $error ) { $currency_rejected = true; }
 	adc_check( $currency_rejected, 'Stale forms opened before the currency change are rejected.' );
-	$_POST = array( 'adc_money_unit'=>'SAR' ); AutoDealership\Pricing\Money::require_currency_form();
-	adc_check( true, 'Current SAR forms pass the unit guard.' );
+	$_POST = array( 'adc_money_unit'=>$currency_code ); AutoDealership\Pricing\Money::require_currency_form();
+	adc_check( true, 'Current selected-currency forms pass the unit guard.' );
 	$currency_rejected = false;
 	try { AutoDealership\Pricing\Money::form_values( array( 'amount'=>'1.001' ), array( 'amount' ) ); } catch ( RuntimeException $error ) { $currency_rejected = true; }
 	adc_check( $currency_rejected, 'Invalid monetary form precision cannot reach business services.' );
 } finally { remove_filter( 'wp_die_handler', $currency_die_handler ); $_POST = array(); }
 $currency_privacy = new ReflectionMethod( AutoDealership\Privacy\PrivacyTools::class, 'export_value' );
 if ( PHP_VERSION_ID < 80100 ) { $currency_privacy->setAccessible( true ); }
-adc_check( '1234.56 SAR' === $currency_privacy->invoke( null, 'amount', '123456' ) && '123456' === $currency_privacy->invoke( null, 'id', '123456' ), 'Privacy export converts money while preserving identifiers.' );
+adc_check( '1234.56 ' . $currency_code === $currency_privacy->invoke( null, 'amount', '123456' ) && '123456' === $currency_privacy->invoke( null, 'id', '123456' ), 'Privacy export converts money while preserving identifiers.' );
 require __DIR__ . '/currency-lifecycle.php';
 echo "Completed $checks currency integration checks.\n";

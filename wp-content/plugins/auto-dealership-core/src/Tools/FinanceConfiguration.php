@@ -78,8 +78,8 @@ final class FinanceConfiguration {
  public static function matches(array $when,array $input): bool {
   $employer=$input['sector']==='private_unapproved'||$input['employer']==='unapproved'?'unapproved':'approved';
   foreach($when as $key=>$value) {
-   if($key==='salary_min') { if($input['salary']<$value) return false; }
-   elseif($key==='salary_max') { if($input['salary']>$value) return false; }
+   if($key==='salary_min') { $salary=(int)($input['salary_minor']??(\AutoDealership\Pricing\Money::from_currency((string)($input['salary']??''),\AutoDealership\Core\CurrencySettings::base_code())??-1));$threshold=\AutoDealership\Pricing\Money::from_currency((string)$value,\AutoDealership\Core\CurrencySettings::base_code());if($threshold===null||$salary<$threshold)return false; }
+   elseif($key==='salary_max') { $salary=(int)($input['salary_minor']??(\AutoDealership\Pricing\Money::from_currency((string)($input['salary']??''),\AutoDealership\Core\CurrencySettings::base_code())??-1));$threshold=\AutoDealership\Pricing\Money::from_currency((string)$value,\AutoDealership\Core\CurrencySettings::base_code());if($threshold===null||$salary>$threshold)return false; }
    elseif((string)($key==='employer'?$employer:$input[$key])!==(string)$value) return false;
   }return true;
  }

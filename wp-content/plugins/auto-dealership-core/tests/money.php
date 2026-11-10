@@ -40,6 +40,9 @@ try { Money::calculate( PHP_INT_MAX, 0, 10000 ); } catch ( OverflowException $er
 $check( $thrown, 'Final amount overflow is rejected.' );
 
 $check( 123456 === Money::from_major( '1234.56' ), 'Configured currency input converts exactly to minor units.' );
+$check( 1234567 === Money::from_currency( '1234.567', 'KWD' ) && '1234.567' === Money::decimal( 1234567, 'KWD' ), 'Three-decimal currencies preserve their exact minor units.' );
+$check( 1234 === Money::from_currency( '1234', 'JPY' ) && null === Money::from_currency( '1234.5', 'JPY' ), 'Zero-decimal currencies reject unsupported fractions.' );
+$check( 123456 === Money::from_currency( '1234.56', 'USD' ) && '1234.56' === Money::decimal( 123456, 'USD' ), 'Two-decimal currencies round trip independently of the configured base.' );
 $check( 100000 === Money::from_major( '1000' ), 'Integer user input uses the configured currency.' );
 $check( 1 === Money::from_major( '0.01' ), 'One halala is accepted as 0.01 SAR.' );
 $check( 12345 === Money::from_major( '١٢٣٫٤٥' ), 'Arabic digits and decimal separator normalize exactly.' );

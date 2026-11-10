@@ -229,6 +229,8 @@ const { spawn } = require('node:child_process');
         for(const page of other) await admin('admin.php?page='+page);
         await admin('admin.php?page=adc-platform-setup');
         check(await evaluate('(()=>{const notice=document.querySelector("#adc-verification-origin-notice");return !!notice&&!!notice.closest("#wpbody-content > .wrap")&&document.querySelectorAll("#adc-verification-origin-notice").length===1;})()'),'Platform setup shows one inline HTTPS deployment warning without a duplicate admin notice');
+        await admin('admin.php?page=adc-platform-setup&section=identity');
+        check(await evaluate('(()=>{const select=document.querySelector(\'select[name="settings[currency_code]"]\');const hidden=document.querySelector(\'input[type=hidden][name="settings[currency_code]"]\');return !!select&&select.disabled&&!!hidden&&hidden.value===select.value;})()'),'Configured currency is visibly locked while preserving the submitted ISO code');
         await admin('admin.php?page=adc-platform-setup&section=mail');
         check(await evaluate('(()=>{const notice=document.querySelector("#adc-mail-configuration-notice");return !notice||(!!notice.closest("#wpbody-content > .wrap")&&document.querySelectorAll("#adc-mail-configuration-notice").length===1);})()'),'Mail configuration warning has one inline owner and no duplicate global notice');
         await admin('admin.php?page=adc-platform-setup&section=readiness');
