@@ -73,6 +73,7 @@ $wpdb->query( "ALTER TABLE `$vehicles` ENGINE=InnoDB" );
 $wpdb->query( "ALTER TABLE `$customers` ALTER consent_marketing SET DEFAULT 0" );
 Schema::install();
 adc_check( array() === Schema::verify() && Schema::VERSION === get_option( 'adc_db_version' ), 'Verified repair restores the version marker.' );
+update_option( 'adc_base_currency_code', 'SAR', false );
 
 $admin = get_current_user_id();
 require __DIR__ . '/policy-profile-scenarios.php';
@@ -698,7 +699,7 @@ wp_set_current_user( $affiliate_user );
 $affiliate_sales = AffiliateCommissionService::own_sales();
 adc_check( is_array( $affiliate_sales ) && 1 === count( $affiliate_sales ) && (int) $affiliate_sales[0]['sale_id'] === (int) $sale['id'] && 'pending_review' === $affiliate_sales[0]['commission_status'] && array() === AffiliateCommissionService::all_commissions(), 'Affiliate sees only the attributed sale and cannot view the administrative ledger.' );
 $affiliate_summary = AffiliateCommissionService::account_summary();
-adc_check( is_array( $affiliate_summary ) && 250000 === $affiliate_summary['pending_review'] && '2500.00' === $affiliate_summary['pending_review_sar'] && 250000 === $affiliate_summary['net_ledger'], 'Affiliate account summary exposes exact SAR pending and net ledger amounts.' );
+adc_check( is_array( $affiliate_summary ) && 250000 === $affiliate_summary['pending_review'] && '2500.00' === $affiliate_summary['pending_review_amount'] && 250000 === $affiliate_summary['net_ledger'], 'Affiliate account summary exposes exact SAR pending and net ledger amounts.' );
 adc_check( is_wp_error( AffiliateCommissionService::transition( (int) $commission['id'], 'approved' ) ), 'Affiliate cannot approve own commission.' );
 wp_set_current_user( $finance_other );
 adc_check( array() === AffiliateCommissionService::all_commissions() && is_wp_error( AffiliateCommissionService::transition( (int) $commission['id'], 'approved' ) ), 'Finance staff in another branch cannot see or review the commission.' );
@@ -707,6 +708,8 @@ adc_check( is_array( AffiliateCommissionService::transition( (int) $commission['
 adc_check( is_wp_error( AffiliateCommissionService::transition( (int) $commission['id'], 'paid', '', 'PAYOUT-SELF-REVIEW' ) ), 'The commission reviewer cannot also register its payout.' );
 wp_set_current_user( $finance_recorder );
 adc_check( is_array( AffiliateCommissionService::transition( (int) $commission['id'], 'paid', '', 'PAYOUT-SYNTHETIC-1' ) ), 'A separate finance employee records commission payout with a reference.' );
+ $paid_commission_row = $wpdb->get_row( $wpdb->prepare( "SELECT payment_reference,payment_reference_hash FROM $commission_table WHERE id=%d", $commission['id'] ), ARRAY_A );
+ adc_check( 'PAYOUT-SYNTHETIC-1' === $paid_commission_row['payment_reference'] && hash( 'sha256', 'PAYOUT-SYNTHETIC-1' ) === $paid_commission_row['payment_reference_hash'], 'Paid commissions persist a verifiable, normalized payment-reference fingerprint.' );
 adc_check( is_wp_error( AffiliateCommissionService::transition( (int) $commission['id'], 'paid', '', 'PAYOUT-SYNTHETIC-2' ) ), 'Paid commission cannot be paid twice.' );
 wp_set_current_user( $inventory );
 $return_input = array( 'location_id' => $location_reference['id'], 'condition' => 'good', 'odometer' => 120, 'document_reference' => 'RETURN-SYNTHETIC-1', 'reason' => 'Customer return accepted for synthetic verification' );
@@ -722,9 +725,11 @@ adc_check( 'delivered' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $
 $vehicle_return = VehicleReturnService::receive( $delivery['id'], $return_input );
 adc_check( is_array( $vehicle_return ) && 'pending_refund' === $vehicle_return['financial_status'] && 'returned' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $vehicles WHERE id=%d", $vehicle ) ), 'Authorized return records the pending refund obligation and returned inventory.' );
 adc_check( 'paid_sale_returned' === $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $commission_table WHERE id=%d", $commission['id'] ) ), 'A later vehicle return flags an already-paid affiliate commission for financial reconciliation without silently deleting payout history.' );
+ $return_entry = $wpdb->get_row( $wpdb->prepare( "SELECT reverses_entry_id FROM $commission_entries WHERE commission_id=%d AND entry_type='return_reversal'", $commission['id'] ), ARRAY_A );
+ adc_check( (int) ( $return_entry['reverses_entry_id'] ?? 0 ) === (int) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $commission_entries WHERE commission_id=%d AND entry_type='accrual' LIMIT 1", $commission['id'] ) ), 'Return reversal keeps an explicit link to the original accrual entry.' );
 wp_set_current_user( $affiliate_user );
 $affiliate_summary = AffiliateCommissionService::account_summary();
-adc_check( is_array( $affiliate_summary ) && 0 === $affiliate_summary['net_ledger'] && 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $commission_entries WHERE commission_id=%d AND entry_type='return_reversal'", $commission['id'] ) ), 'A returned paid sale posts one SAR reversal entry and brings the net affiliate ledger to zero.' );
+adc_check( is_array( $affiliate_summary ) && 0 === $affiliate_summary['net_ledger'] && true === $affiliate_summary['payout_ready'] && 0 === $affiliate_summary['integrity_issues'] && 1 === (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $commission_entries WHERE commission_id=%d AND entry_type='return_reversal'", $commission['id'] ) ), 'A returned paid sale posts one SAR reversal entry, keeps the account payout-ready, and brings the net affiliate ledger to zero.' );
 wp_set_current_user( $manager_a );
  $legacy_now = current_time( 'mysql', true );
  $wpdb->insert( $commission_table, array( 'sale_id'=>991001, 'quotation_id'=>991001, 'lead_id'=>991001, 'affiliate_user_id'=>$affiliate_user, 'branch_id'=>$branch_a['id'], 'amount'=>125000, 'currency_code'=>'SAR', 'status'=>'approved', 'created_at'=>$legacy_now, 'updated_at'=>$legacy_now ), array( '%d','%d','%d','%d','%d','%d','%s','%s','%s','%s' ) );

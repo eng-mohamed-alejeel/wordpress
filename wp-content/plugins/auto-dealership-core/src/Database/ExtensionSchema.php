@@ -76,6 +76,7 @@ final class ExtensionSchema {
 				currency_code char(3) NOT NULL DEFAULT '',
 				status varchar(24) NOT NULL DEFAULT 'pending_review',
 				payment_reference varchar(190) NOT NULL DEFAULT '',
+				payment_reference_hash char(64) NULL,
 				reviewed_by bigint(20) unsigned NOT NULL DEFAULT 0,
 				reviewed_at datetime NULL,
 				paid_by bigint(20) unsigned NOT NULL DEFAULT 0,
@@ -92,7 +93,8 @@ final class ExtensionSchema {
 				KEY branch_status (branch_id,status),
 				KEY report_created_status_branch (created_at,status,branch_id),
 				KEY report_affiliate_created_status (affiliate_user_id,created_at,status),
-				KEY report_branch_created_status (branch_id,created_at,status)
+				KEY report_branch_created_status (branch_id,created_at,status),
+				UNIQUE KEY payment_reference_hash (payment_reference_hash)
 			) $collate ENGINE=InnoDB;"
 			,
 			"CREATE TABLE " . Schema::table( 'affiliate_commission_entries' ) . " (
@@ -105,6 +107,7 @@ final class ExtensionSchema {
 				amount bigint(20) NOT NULL,
 				currency_code char(3) NOT NULL DEFAULT '',
 				event_key char(64) NOT NULL,
+				reverses_entry_id bigint(20) unsigned NOT NULL DEFAULT 0,
 				entry_reference varchar(40) NOT NULL DEFAULT '',
 				fingerprint char(64) NULL,
 				reason text NOT NULL,
@@ -113,6 +116,7 @@ final class ExtensionSchema {
 				PRIMARY KEY  (id),
 				UNIQUE KEY event_key (event_key),
 				KEY commission_created (commission_id,created_at),
+				KEY reversal_source (reverses_entry_id),
 				KEY affiliate_created (affiliate_user_id,created_at),
 				KEY type_created (entry_type,created_at),
 				KEY entry_reference (entry_reference),

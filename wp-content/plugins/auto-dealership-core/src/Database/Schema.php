@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 /** Installs versioned operational tables using WordPress dbDelta. */
 final class Schema {
-	public const VERSION = '1.43.0';
+	public const VERSION = '1.44.0';
 
 	public static function table( string $name ): string {
 		global $wpdb;

@@ -168,6 +168,9 @@ final class AffiliateCommissionPage {
 		echo '<h3>' . esc_html( $title ) . ' <small>(' . esc_html( (string) \AutoDealership\Core\CurrencySettings::ui_unit() ) . ')</small></h3><div class="adc-affiliate-summary">';
 		foreach ( $cards as $key=>$label ) { echo '<div class="card"><strong>' . esc_html( Money::display( (int) ( $summary[ $key ] ?? 0 ) ) ) . '</strong><br>' . esc_html( $label ) . '</div>'; }
 		echo '</div>';
+		if ( ! empty( $summary['integrity_issues'] ) || false === ( $summary['payout_ready'] ?? true ) ) {
+			echo '<div class="notice notice-warning inline"><p>' . esc_html( self::text( 'توجد فروقات في السجل المالي؛ تم إيقاف اعتبار الحساب جاهزًا للصرف حتى تكتمل التسوية.', 'Ledger differences were detected; payout readiness is blocked until reconciliation is complete.' ) ) . ' ' . esc_html( self::text( 'عدد الحالات', 'Findings' ) ) . ': ' . absint( $summary['integrity_issues'] ?? 0 ) . '</p></div>';
+		}
 	}
 
 	private static function action_form( int $id, string $target, string $label, bool $reason = false, bool $reference = false ): void {

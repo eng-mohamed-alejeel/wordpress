@@ -195,6 +195,22 @@ final class AffiliateCommissionMigration {
 		$updated = $wpdb->update( $table, array( 'status'=>'resolved', 'resolved_by'=>get_current_user_id(), 'resolved_at'=>current_time( 'mysql', true ), 'updated_at'=>current_time( 'mysql', true ) ), array( 'id'=>$issue_id ), array( '%s','%d','%s','%s' ), array( '%d' ) );
 		if ( false === $updated ) { $wpdb->query( 'ROLLBACK' ); return new \WP_Error( 'adc_commission_migration_issue_write', 'Unable to resolve migration issue.', array( 'status'=>500 ) ); }
 		if ( ! Transaction::commit( static fn(): bool => AuditLog::record( 'affiliate_commission.migration_issue_resolved', 'affiliate_commission_migration_issue', $issue_id, 'Historical commission migration issue resolved', $row, array( 'status'=>'resolved', 'resolved_by'=>get_current_user_id() ) ) ) ) { return new \WP_Error( 'adc_commission_migration_issue_write', 'Unable to resolve migration issue.', array( 'status'=>500 ) ); }
+		self::queue_retry_after_resolution();
 		return true;
+	}
+
+	/** Re-evaluate corrected source records from the beginning without inventing a balance. */
+	private static function queue_retry_after_resolution(): void {
+		$preview = self::dry_run();
+		if ( is_wp_error( $preview ) ) { error_log( 'Auto Dealership Core: unable to queue affiliate migration retry after issue resolution.' ); return; }
+		$state = array(
+			'status'=>'running', 'last_id'=>0, 'total'=>(int) $preview['pending'], 'processed'=>0,
+			'created'=>0, 'skipped'=>0, 'quarantined'=>0, 'zero_balance'=>0, 'issue_count'=>(int) $preview['quarantined'], 'error'=>'',
+			'started_at'=>current_time( 'mysql', true ), 'finished_at'=>'',
+		);
+		update_option( self::OPTION, $state, false );
+		if ( function_exists( 'wp_clear_scheduled_hook' ) ) { wp_clear_scheduled_hook( 'adc_migrate_affiliate_commissions' ); }
+		if ( function_exists( 'wp_schedule_single_event' ) ) { wp_schedule_single_event( time() + 5, 'adc_migrate_affiliate_commissions' ); }
+		AuditLog::record( 'affiliate_commission.migration_retry_queued', 'affiliate_commission_migration', 0, 'Retry historical migration after source correction', null, array( 'total'=>$state['total'], 'quarantined'=>$state['issue_count'], 'currency'=>AffiliateCommissionService::currency() ) );
 	}
 }
