@@ -2,6 +2,11 @@
 /**
  * Plugin Name: Auto Dealership Core
  * Description: Shared business capabilities and audit foundation for the dealership platform.
+	 * Author: Mohamed Alejeel
+	 * Author URI: https://mohamedalejeel.odoo.com/
+	 * Copyright: Copyright (c) 2026 Mohamed Alejeel
+	 * License: GPL-2.0-or-later
+	 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 	 * Version: 1.67.0
  * Requires at least: 6.7
  * Requires PHP: 8.0

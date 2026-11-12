@@ -2,6 +2,12 @@
 Requires at least: 6.7
 Requires PHP: 8.0
 Stable tag: 1.67.0
+Author: Mohamed Alejeel
+Author URI: https://mohamedalejeel.odoo.com/
+License: GPL-2.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Copyright (c) 2026 Mohamed Alejeel.
 
 Modular dealership core for branch-aware vehicle inventory, leads, reservations, quotations, approvals, sales, finance and delivery workflows. The Car Dealer theme is a presentation adapter for this plugin.
 

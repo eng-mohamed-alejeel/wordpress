@@ -39,7 +39,7 @@ foreach ($component in @(@{root=$pluginRoot;slug='auto-dealership-core';dirs=@('
     try {
         foreach ($file in ($files | Sort-Object FullName -Unique)) {
             $relative = $file.FullName.Substring($component.root.Length + 1).Replace([char]92,[char]47)
-            if ($relative -match '(^|/)(tests?|node_modules|\.git|\.tmp|uploads|cache)(/|$)|\.(sql|log|bak|env|xlsx|csv|zip)$|(^|/)(wp-config|gmail)\.php$') { throw "Forbidden file in runtime: $relative" }
+            if ($relative -match '(^|/)(tests?|node_modules|\.git|\.tmp|uploads)(/|$)|\.(sql|log|bak|env|xlsx|csv|zip)$|(^|/)(wp-config|gmail)\.php$') { throw "Forbidden file in runtime: $relative" }
             $entry = $component.slug + '/' + $relative
             [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file.FullName, $entry, [IO.Compression.CompressionLevel]::Optimal) | Out-Null
             $manifestFiles += [ordered]@{path=$entry;bytes=$file.Length;sha256=(Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}

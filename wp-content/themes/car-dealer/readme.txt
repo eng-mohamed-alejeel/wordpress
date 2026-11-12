@@ -1,7 +1,12 @@
 === Car Dealer ===
-Version: 1.66.0
+Version: 1.67.0
 Requires WordPress: 6.7 or newer
 Requires PHP: 8.0 or newer
+Author: Mohamed Alejeel
+Author URI: https://mohamedalejeel.odoo.com/
+License: GPL-2.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Copyright: Copyright (c) 2026 Mohamed Alejeel.
 Companion plugin: Auto Dealership Core 1.31.0 or newer
 
 This theme owns layout, public styles, navigation, forms and page templates. The companion plugin owns dealership content types, vehicle and offer read models, shortcodes, public request handlers, accounts, permissions and staff operations.

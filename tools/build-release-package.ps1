@@ -62,6 +62,8 @@ foreach ($path in $trackedFiles) { $runtimeSet[$path] = $true }
 foreach ($path in $allFiles) {
     if ($runtimeSet.ContainsKey($path)) { continue }
     if ($path -match '^wp-content/plugins/auto-dealership-core/tests/' -or
+        $path -match '^wp-content/plugins/auto-dealership-core/vendor/' -or
+        $path -in @('wp-content/plugins/auto-dealership-core/composer.json', 'wp-content/plugins/auto-dealership-core/composer.lock') -or
         $path -in @('wp-content/themes/car-dealer/build-css.js', 'wp-content/themes/car-dealer/merge-css.ps1')) { continue }
     throw "Unclassified file in release roots: $path"
 }
