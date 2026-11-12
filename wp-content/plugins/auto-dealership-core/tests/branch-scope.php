@@ -21,6 +21,7 @@ function get_user_meta( $id, $key, $single = false ) { return 'adc_branch_ids' =
 function __( $text, $domain = '' ) { return $text; }
 function do_action( ...$args ) {}
 function sanitize_key( $text ) { return $text; }
+function sanitize_text_field( $text ) { return trim( strip_tags( (string) $text ) ); }
 function sanitize_textarea_field( $text ) { return $text; }
 function wp_unslash( $text ) { return $text; }
 function wp_verify_nonce( $nonce, $action ) { return $nonce === 'valid-' . $action; }

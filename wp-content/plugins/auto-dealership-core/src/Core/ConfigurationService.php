@@ -33,6 +33,9 @@ final class ConfigurationService {
 	public static function update_section( array $input, array $fields ) {
 		$current = array();
 		foreach ( self::values() as $key => $value ) { $current[substr( $key, 4 )] = $value; }
+		if ( 'percentage' === ( $current['promotion_type'] ?? '' ) ) { $current['promotion_value'] = \AutoDealership\Pricing\Money::percent( $current['promotion_value'] ?? 0 ); }
+		if ( 'percentage' === ( $current['reservation_deposit_type'] ?? '' ) ) { $current['reservation_deposit_value'] = \AutoDealership\Pricing\Money::percent( $current['reservation_deposit_value'] ?? 0 ); }
+		if ( 'percentage' === ( $current['employee_commission_type'] ?? '' ) ) { $current['employee_commission_value'] = \AutoDealership\Pricing\Money::percent( $current['employee_commission_value'] ?? 0 ); }
 		return self::update( array_replace( $current, array_intersect_key( $input, array_flip( $fields ) ) ) );
 	}
 

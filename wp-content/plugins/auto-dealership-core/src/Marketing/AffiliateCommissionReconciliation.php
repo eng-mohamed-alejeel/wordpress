@@ -18,7 +18,7 @@ final class AffiliateCommissionReconciliation {
 		return wp_parse_args( (array) get_option( self::OPTION, array() ), array(
 			'status'=>'never_run', 'finished_at'=>'', 'error'=>'', 'total'=>0,
 			'commission_without_ledger'=>0, 'invalid_commission'=>0, 'migration_issues'=>0,
-			'orphan_ledger_entries'=>0, 'inconsistent_entries'=>0, 'duplicate_payment_references'=>0,
+			'orphan_ledger_entries'=>0, 'inconsistent_ledger_entries'=>0, 'duplicate_payment_references'=>0,
 		) );
 	}
 
@@ -43,7 +43,7 @@ final class AffiliateCommissionReconciliation {
 			'invalid_commission'=>$wpdb->prepare("SELECT COUNT(*) FROM $commissions c WHERE c.currency_code<>%s OR c.status NOT IN ('pending_review','approved','paid','void','paid_sale_returned') OR c.amount<0 OR (c.amount<1 AND c.status NOT IN ('void','paid_sale_returned'))", $currency),
 			'migration_issues'=>"SELECT COUNT(*) FROM $issues WHERE status='open'",
 			'orphan_ledger_entries'=>"SELECT COUNT(*) FROM $entries e LEFT JOIN $commissions c ON c.id=e.commission_id WHERE c.id IS NULL",
-			'inconsistent_entries'=>$wpdb->prepare("SELECT COUNT(*) FROM $entries e INNER JOIN $commissions c ON c.id=e.commission_id WHERE e.sale_id<>c.sale_id OR e.affiliate_user_id<>c.affiliate_user_id OR e.branch_id<>c.branch_id OR e.currency_code<>%s OR e.entry_type NOT IN ('accrual','legacy_opening','void_reversal','return_reversal') OR (e.entry_type IN ('accrual','legacy_opening') AND e.amount<0) OR (e.entry_type IN ('void_reversal','return_reversal') AND (e.amount>=0 OR e.reverses_entry_id=0 OR NOT EXISTS (SELECT 1 FROM $entries source WHERE source.id=e.reverses_entry_id AND source.commission_id=e.commission_id AND source.amount>0)))", $currency),
+			'inconsistent_ledger_entries'=>$wpdb->prepare("SELECT COUNT(*) FROM $entries e INNER JOIN $commissions c ON c.id=e.commission_id WHERE e.sale_id<>c.sale_id OR e.affiliate_user_id<>c.affiliate_user_id OR e.branch_id<>c.branch_id OR e.currency_code<>%s OR e.entry_type NOT IN ('accrual','legacy_opening','void_reversal','return_reversal') OR (e.entry_type IN ('accrual','legacy_opening') AND (e.amount<0 OR (e.amount<1 AND c.status NOT IN ('void','paid_sale_returned')))) OR (e.entry_type IN ('void_reversal','return_reversal') AND (e.amount>=0 OR e.reverses_entry_id=0 OR NOT EXISTS (SELECT 1 FROM $entries source WHERE source.id=e.reverses_entry_id AND source.commission_id=e.commission_id AND source.entry_type IN ('accrual','legacy_opening') AND source.amount>0)))", $currency),
 			'duplicate_payment_references'=>"SELECT COUNT(*) FROM (SELECT payment_reference FROM $commissions WHERE payment_reference<>'' GROUP BY payment_reference HAVING COUNT(*)>1) duplicate_references",
 		);
 		$counts = array(); foreach ( $queries as $key=>$sql ) { $counts[ $key ] = (int) $wpdb->get_var( $sql ); if ( $wpdb->last_error ) { return self::failed_result( 'adc_affiliate_reconciliation_query' ); } }

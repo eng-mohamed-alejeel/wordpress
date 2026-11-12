@@ -188,7 +188,7 @@ final class OperationsPages {
 			?>
 						<?php
 						$mode_labels = array(
-							'manual' => array( __( 'استلام ذاتي', 'auto-dealership-core' ), __( 'يستلم موظف المبيعات الفرص الجديدة 							بسحبها إلى «مُسندة».', 'auto-dealership-core' ) ),
+							'manual' => array( __( 'استلام ذاتي', 'auto-dealership-core' ), __( 'يستلم موظف المبيعات الفرص الجديدة بسحبها إلى «مُسندة».', 'auto-dealership-core' ) ),
 							'manager' => array( __( 'إسناد عبر مدير المبيعات', 'auto-dealership-core' ), __( 'يسند مدير المبيعات كل فرصة جديدة بسحبها إلى «مُسندة» واختيار الموظف، ولا يستلم الموظفون الفرص بأنفسهم.', 'auto-dealership-core' ) ),
 							'round_robin' => array( __( 'توزيع آلي متوازن', 'auto-dealership-core' ), __( 'تُوزَّع الفرص الجديدة تلقائيًا على الموظف الأقل فرصًا اليوم.', 'auto-dealership-core' ) ),
 						);

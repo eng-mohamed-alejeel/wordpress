@@ -53,7 +53,7 @@ try {
 	$changed_preview = PolicyProfileService::preview( $policy_profile_draft, array( 'number'=>3, 'decisions'=>$changed_preview_baseline ) );
 	adc_check( array( 'statement' ) === array_keys( $changed_preview['changed_decisions']['P-01'] ), 'Impact preview pinpoints only fields that differ from the approved policy record.' );
 	ob_start(); PolicyProfilePage::render(); $draft_preview_page = ob_get_clean();
-	adc_check( str_contains( $draft_preview_page, 'Impact preview' ) && str_contains( $draft_preview_page, 'No runtime permissions' ), 'Draft dashboard presents impact preview with a clear non-enforcement boundary.' );
+	adc_check( ( str_contains( $draft_preview_page, 'Impact preview' ) || str_contains( $draft_preview_page, 'معاينة الأثر' ) ) && ( str_contains( $draft_preview_page, 'No runtime permissions' ) || str_contains( $draft_preview_page, 'الصلاحيات الفعلية' ) ), 'Draft dashboard presents impact preview with a clear non-enforcement boundary.' );
 	$stale_draft_revision = $policy_profile_draft['revision'];
 	$missing_external_reference = $policy_profile_decisions;
 	$missing_external_reference['P-03']['external_reference'] = '';
@@ -100,10 +100,11 @@ try {
 	adc_check( str_contains( PolicyProfileService::review_status( $policy_profile_state['current'] ), $policy_review_due_date ), 'Published policy displays its scheduled review date.' );
 	$overdue_record = $policy_profile_state['current'];
 	$overdue_record['review_due_date'] = '2000-01-01';
-	adc_check( str_contains( PolicyProfileService::review_status( $overdue_record ), 'overdue' ), 'Past review dates are visibly marked overdue.' );
+	$overdue_status = PolicyProfileService::review_status( $overdue_record );
+	adc_check( str_contains( $overdue_status, 'overdue' ) || str_contains( $overdue_status, 'متأخرة' ), 'Past review dates are visibly marked overdue.' );
 	adc_check( 0 === (int) get_option( 'adc_sales_manager_discount_limit', 0 ), 'Publishing policy evidence does not change runtime financial thresholds.' );
 	ob_start(); PolicyProfilePage::render(); $policy_profile_page = ob_get_clean();
-	adc_check( str_contains( $policy_profile_page, 'does not change role grants' ) && str_contains( $policy_profile_page, 'Current approved record' ), 'Policy dashboard clearly distinguishes approved governance evidence from enforced runtime settings.' );
+	adc_check( ( str_contains( $policy_profile_page, 'does not change role grants' ) || str_contains( $policy_profile_page, 'لا يؤدي نشر هذا السجل' ) ) && ( str_contains( $policy_profile_page, 'Current approved record' ) || str_contains( $policy_profile_page, 'السجل المعتمد الحالي' ) ), 'Policy dashboard clearly distinguishes approved governance evidence from enforced runtime settings.' );
 	$previous_record = $policy_profile_state['current'];
 	$previous_record['number'] = 1;
 	$policy_profile_state['current']['number'] = 2;
@@ -111,14 +112,14 @@ try {
 	$policy_profile_state['next_number'] = 3;
 	update_option( PolicyProfileService::OPTION, $policy_profile_state, false );
 	ob_start(); PolicyProfilePage::render(); $history_page = ob_get_clean();
-	adc_check( str_contains( $history_page, 'Restore as draft for re-approval' ), 'Policy history offers restoration only as a draft for fresh review.' );
+	adc_check( str_contains( $history_page, 'Restore as draft for re-approval' ) || str_contains( $history_page, 'استعادة كمسودة لإعادة الاعتماد' ), 'Policy history offers restoration only as a draft for fresh review.' );
 	adc_check( true === PolicyProfileService::restore_previous( 1, 'Restore previous approved baseline' ), 'An available previous version can be restored into a draft.' );
 	$restored_state = PolicyProfileService::state();
 	$restored_draft = $restored_state['draft'];
 	adc_check( 2 === $restored_state['current']['number'] && 1 === $restored_draft['restored_from'] && '' === $restored_draft['review_due_date'], 'Restoring history does not replace the current record and requires a new review date.' );
 	adc_check( null === $restored_draft['decisions']['P-01']['internal_approval'] && 0 === $restored_draft['decisions']['P-01']['internal_reviewer_id'], 'Restored policy clears previous approvals and reviewer assignments.' );
 	ob_start(); PolicyProfilePage::render(); $restored_page = ob_get_clean();
-	adc_check( str_contains( $restored_page, 'must be reviewed and approved again' ) && str_contains( $restored_page, 'Next policy review date' ), 'Restored draft warns that approvals and date must be renewed.' );
+	adc_check( ( str_contains( $restored_page, 'must be reviewed and approved again' ) || str_contains( $restored_page, 'يجب مراجعتها واعتمادها مجددًا' ) ) && ( str_contains( $restored_page, 'Next policy review date' ) || str_contains( $restored_page, 'تاريخ مراجعة السياسة التالي' ) ), 'Restored draft warns that approvals and date must be renewed.' );
 	adc_check( is_wp_error( PolicyProfileService::restore_previous( 99, 'Restore unavailable previous baseline' ) ), 'Unavailable history versions cannot be restored.' );
 	adc_check( is_wp_error( PolicyProfileService::restore_previous( 1, 'Try second restore while draft exists' ) ), 'A second history restoration cannot overwrite an existing draft.' );
 

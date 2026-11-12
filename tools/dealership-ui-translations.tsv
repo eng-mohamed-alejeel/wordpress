@@ -952,6 +952,7 @@ VIN الجديد	New VIN
 الفرع الافتراضي	Default branch
 الحملة	Campaign
 المنصة	Platform
+إسناد لاحقاً	Assign later
 إسناد لاحقًا	Assign later
 رابط الإعلان	Ad URL
 تم الحصول على موافقة العميل للتواصل	Customer consent to be contacted has been obtained
@@ -1126,6 +1127,7 @@ VIN الجديد	New VIN
 غير مجدولة	Not scheduled
 غير محددة	Unspecified
 غير مسموح.	Not allowed.
+التصنيف	Category
 فئة	Category
 فتح الحالة	Open issue
 فتح مساحة مطابقة الكتالوج	Open catalog reconciliation workspace
@@ -1303,6 +1305,7 @@ VIN الجديد	New VIN
 %s سيارة مطابقة	%s matching vehicles
 مقبول	Accepted
 تم الإقرار	Acknowledged
+معتمدة	Approved
 معتمد	Approved
 معتمد تشغيليًا	Authoritative
 إيصال تحويل بنكي	Bank transfer receipt
@@ -1340,6 +1343,7 @@ VIN الجديد	New VIN
 لم يبدأ	Not started
 ملاحظة	Note
 مفتوح	Open
+مصروفة	Paid
 مسدد	Paid
 مسدد جزئيًا	Partially paid
 ناجح	Pass
@@ -1399,6 +1403,7 @@ VIN الجديد	New VIN
 العودة إلى الرئيسية	Back to home
 القوة بالحصان	Horsepower
 الماركات النشطة	Active brands
+مبيعات	Sales
 المبيعات	Sales
 المخزون الحالي	Current inventory
 الملفان غير متوافقين للدمج. أبقِ الملف المرتبط بالحساب وجهةً للدمج، وتحقق من تطابق البريد والجوال.	The records cannot be merged. Keep the account-linked record as the destination and check that email and mobile numbers match.
@@ -1475,6 +1480,7 @@ VIN الجديد	New VIN
 حجز تجربة قيادة	Test drive booking
 طلب شراء	Purchase request
 مفعّل	Enabled
+معطلة	Disabled
 معطّل	Disabled
 الإنتاج	Production
 بيئة الاختبار	Sandbox
@@ -2110,3 +2116,397 @@ VIN الجديد	New VIN
 الصلاحيات المرتبطة المحددة يدويًا: %1$d؛ المرتبطة غير المحددة: %2$d؛ المحددة خارج الوظائف المختارة: %3$d.	Related capabilities selected manually: %1$d; related but not selected: %2$d; selected outside the chosen functions: %3$d.
 الصلاحيات المحددة خارج الوظائف المختارة	Selected permissions outside the selected functions
 مراجع الوظائف معلوماتية فقط. راجع الصلاحيات المختارة يدويًا في معاينة الأثر.	The function references are informational only. Review the manually selected permissions in this impact preview.
+الحد اليومي لكل موظف: %d فرصة جديدة.	Daily limit per employee: %d new opportunities.
+PHP	PHP
+الدور	Role
+كل الأدوار	All roles
+الفرع النشط	Active branch
+تصفية الحسابات	Filter accounts
+لا يوجد فرع نشط	No active branch
+ملخص الحساب	Account summary
+لا يوجد دور	No role
+نطاق الفرع الفعلي بعد تصفية الفروع النشطة.	Effective branch scope after active-branch filtering.
+الصلاحيات الممنوحة	Granted permissions
+الصلاحيات الفعلية بعد التحقق من الأدوار والسياسات.	Permissions effective after roles and policy checks.
+المنح أو المنع الصريح لكل حساب.	Explicit per-account grants or denials.
+منح مؤقتة	Temporary grants
+المنح النشطة ذات تاريخ الانتهاء المستقبلي.	Active grants with a future expiration time.
+لا تملك صلاحية عرض تنبيهات الإدارة.	You do not have permission to view administrative alerts.
+لا تملك صلاحية عرض العمولات.	You do not have permission to view commissions.
+أدخل قيمة صحيحة وفق دقة العملة المفعّلة.	Enter a valid amount using the configured currency precision.
+لا تملك صلاحية عرض تقرير العمولات.	You do not have permission to view the commission report.
+لا تملك صلاحية تصدير تقرير العمولات.	You do not have permission to export the commission report.
+لا تملك صلاحية تعديل إعدادات الحركات المالية.	You do not have permission to change financial movement settings.
+لا يمكن تعطيل بصمة الحركات المالية؛ فهي جزء من سلامة السجل المالي.	Financial movement fingerprints cannot be disabled because they are part of ledger integrity.
+تعذر حفظ إعداد بصمة الحركات المالية.	Unable to save the financial movement fingerprint setting.
+لا تملك صلاحية إعداد العمولات.	You do not have permission to configure commissions.
+قيمة العمولة يجب أن تكون بين صفر و10,000,000 %s.	The commission amount must be between zero and 10,000,000 %s.
+تعذر حفظ قيمة العمولة.	Unable to save the commission amount.
+تعذر توثيق الإعداد أو استعادة القيمة السابقة. أوقفوا معالجة العمولات وافحصوا سجل قاعدة البيانات.	The setting could not be audited or restored. Stop commission processing and inspect the database log.
+تعذر توثيق الإعداد؛ أُعيدت القيمة السابقة.	The setting could not be audited; the previous value was restored.
+لا تملك صلاحية مراجعة العمولات.	You do not have permission to review commissions.
+بيانات قرار العمولة غير مكتملة.	The commission decision data is incomplete.
+حالة العمولة لا تسمح بهذا القرار أو لا يجوز اعتماد عمولتك بنفسك.	The commission status does not allow this decision, or you cannot approve your own commission.
+يجب أن يسجل الصرف موظف مختلف عن معتمد الاستحقاق.	The payout must be recorded by someone different from the person who approved the commission.
+لا يمكن اعتماد أو صرف عمولة لصفقة غير مسلّمة أو غير مسددة بالكامل.	A commission cannot be approved or paid for a sale that is not delivered or fully settled.
+تعذر تسجيل التسوية المالية للعمولة.	Unable to record the commission financial settlement.
+تعذر حفظ أو توثيق قرار العمولة.	Unable to save or audit the commission decision.
+تعذر تحميل صفقاتك وعمولاتك.	Unable to load your sales and commissions.
+تعذر تحميل سجل العمولات.	Unable to load the commission ledger.
+لا تملك صلاحية عرض ملخص العمولات.	You do not have permission to view the commission summary.
+تعذر التحقق من عملة ملخص العمولات.	Unable to validate the commission-summary currency.
+لا يمكن عرض ملخص %s لأن بيانات الحساب تحتوي على عملات مختلطة أو غير مدعومة.	The %s summary cannot be displayed because the account contains mixed or unsupported currencies.
+تعذر تحميل ملخص العمولات.	Unable to load the commission summary.
+تعذر تحميل حركات العمولات.	Unable to load commission movements.
+تواريخ تصفية العمولات غير صالحة.	The commission filter dates are invalid.
+تاريخ البداية يجب أن يسبق تاريخ النهاية.	The start date must be before the end date.
+حالة العمولة غير معروفة.	The commission status is unknown.
+لا تملك صلاحية تعديل إعدادات التشخيص.	You do not have permission to change diagnostic settings.
+لا تملك صلاحية تصدير التقارير.	You do not have permission to export reports.
+لا تملك صلاحية عرض التقارير.	You do not have permission to view reports.
+تقارير CRM التفصيلية	Detailed CRM reports
+تحليل أداء الفرص حسب الموظف والفرع والمصدر وأسباب الخسارة.	Analyze opportunity performance by employee, branch, source and loss reason.
+حالة العمولة	Commission status
+كل الحالات	All statuses
+بانتظار المراجعة	Pending review
+ملغاة	Voided
+تطبيق التقرير	Apply report
+تصدير الموظفين CSV	Export employees CSV
+تصدير الفروع CSV	Export branches CSV
+تصدير المصادر CSV	Export sources CSV
+تصدير الحملات CSV	Export campaigns CSV
+تصدير أسباب الخسارة CSV	Export loss reasons CSV
+تصدير التكرارات CSV	Export duplicates CSV
+تصدير التحويل حسب نوع الطلب CSV	Export conversion by request type CSV
+تعذر تحميل التقرير.	Unable to load the report.
+تعذر تحميل تحليل الطلبات المكررة.	Unable to load the duplicate-request analysis.
+تعذر تحميل تحليل أنواع الطلبات.	Unable to load the request-type analysis.
+تعذر تحميل تحليل خسائر المنافسة.	Unable to load competitive loss analysis.
+مقارنة الفترة السابقة	Previous-period comparison
+مقابل الفترة السابقة	Compared with the previous period
+مؤشرات مرئية	Visible indicators
+الفوز حسب الموظف	Wins by employee
+المصادر حسب نسبة الفوز	Sources by win rate
+أداء الحملات والمنصات	Campaign and platform performance
+الفرص	Opportunities
+نسبة الفوز	Win rate
+لا توجد بيانات ضمن الفترة المحددة.	No data is available for the selected period.
+تحليل الطلبات المكررة	Duplicate-request analysis
+يعرض الإعادات المسجلة برقم خارجي صريح، مع إبقاء الطلبات المختلفة فرصًا مستقلة.	Shows repeats recorded with an explicit external identifier while keeping different requests as separate opportunities.
+عدد الإعادات	Repeat count
+الفرص المتأثرة	Affected opportunities
+لا توجد إعادات مسجلة ضمن الفترة المحددة.	No repeats are recorded for the selected period.
+تحليل التحويل حسب نوع الطلب	Conversion analysis by request type
+مقارنة أداء طلبات السعر والتمويل والشراء وتجربة القيادة وغيرها.	Compare the performance of price, finance, purchase, test-drive and other requests.
+إجمالي الطلبات	Total requests
+متوسط الإغلاق	Average close
+يوم	Day
+تحليل المنافسة والأسعار المقارنة	Competitive and comparison-price analysis
+المنافس	Competitor
+متوسط السعر المقارن	Average comparison price
+لا توجد بيانات منافسة ضمن الفترة المحددة.	No competitive data is available for the selected period.
+أدوار فريق التسويق وCRM	Marketing and CRM team roles
+استحقاقات المسوقين بالعمولة	Affiliate entitlements
+تعذر إكمال ترحيل صلاحيات: %s. قد تكون بعض الإضافات قد حُفظت جزئيًا؛ سيُعاد التحقق والمحاولة تلقائيًا في الطلب التالي. افحص سجل أخطاء PHP وصلاحية الكتابة في قاعدة البيانات، ولا تعدّل المنح يدويًا قبل مراجعة الحالة.	Capability migration could not be completed: %s. Some additions may have been saved partially; the next request will verify and retry automatically. Check the PHP error log and database write access, and do not edit grants manually before reviewing the state.
+يجب اختيار العملة الأساسية من إعداد المنصة قبل حفظ إعدادات التسعير.	Choose the system base currency before saving pricing settings.
+اختر عملة أساسية صحيحة قبل متابعة الإعداد.	Choose a valid base currency before continuing setup.
+العملة الأساسية مقفلة بعد اعتمادها. أنشئ إجراء تغيير مالي موثق قبل استبدالها.	The base currency is locked after approval. Create a documented financial-change procedure before replacing it.
+تعذر حفظ العملة الأساسية.	Unable to save the base currency.
+العملة الأساسية غير مفعلة.	The base currency is not configured.
+يجب اختيار العملة من إعداد المنصة قبل إنشاء الأسعار أو العروض أو تسجيل أي عملية مالية.	Choose a currency in platform settings before creating prices or offers or recording any financial transaction.
+تفعيل العملة الآن	Configure the currency now
+لا تملك صلاحية عرض صحة الإدارة.	You do not have permission to view administration health.
+صحة الإدارة والتدقيق التشغيلي	Administration health and operational audit
+عرض تشخيصي محدود يساعد على تحديد الصفحة والطلب والوقت عند المشكلة. لا تُحفظ الروابط أو الاستعلامات أو الرسائل الخام أو بيانات العملاء.	A limited diagnostic view helps identify the page, request and time when a problem occurs. URLs, queries, raw messages and customer data are not stored.
+ملخص صحة الإدارة	Administration health summary
+المؤشر	Indicator
+المعنى	Meaning
+القياس التشخيصي	Diagnostic measurement
+مفعّل اختياريًا	Optionally enabled
+متوقف افتراضيًا	Off by default
+لا يبدأ حفظ الأزمنة إلا بعد تفعيله من مسؤول النظام.	Timing records are not saved until enabled by a system administrator.
+أخطاء PHP	PHP errors
+أخطاء/تحذيرات مرتبطة بطلبات الإدارة خلال مدة الاحتفاظ.	Errors and warnings associated with admin requests during the retention period.
+أخطاء قاعدة البيانات	Database errors
+يُحفظ بصمة أحادية فقط دون SQL أو نص الخطأ.	Only a one-way fingerprint is retained; SQL and error text are not stored.
+صفحات بطيئة	Slow pages
+الحد الحالي: %d مللي ثانية.	Current threshold: %d milliseconds.
+فشل حفظ/تصدير مرصود	Observed save/export failure
+إعادة توجيه إدارية تحمل حالة فشل، مع حفظ بصمة الرمز فقط.	An administrative redirect carrying a failure state; only a code fingerprint is retained.
+المهام الفاشلة	Failed jobs
+من حالة العامل المرصودة دون تغيير طريقة تشغيل المهام.	From the observed worker state without changing how jobs run.
+إشارات فشل مدققة	Audited failure signals
+أحداث رفض/فشل مسجلة أصلًا في سجل التدقيق؛ لا تمثل عمليات غير مدققة.	Rejection and failure events already recorded in the audit log; they do not represent unaudited operations.
+التقارير القابلة للطباعة	Printable reports
+تُعرض التقارير والمستندات كصفحات HTML مستقلة من المتصفح، ويمكن حفظها كملف PDF عبر نافذة الطباعة. لا يعتمد هذا المسار على مكتبة PDF أو امتداد PHP إضافي.	Reports and documents are rendered as standalone HTML pages in the browser and can be saved as PDF through the print dialog. This path does not depend on a PDF library or additional PHP extension.
+إعداد القياس الاختياري	Optional measurement settings
+الاحتفاظ: %d أيام، والحد الأقصى: %d سجل. لا يتم تسجيل بيانات العملاء أو كلمات المرور أو الرموز أو SQL.	Retention: %d days, maximum: %d records. Customer data, passwords, tokens and SQL are not recorded.
+هذا الإعداد مقفول من إعدادات الخادم عبر ADC_ADMIN_DIAGNOSTICS.	This setting is locked by the server configuration through ADC_ADMIN_DIAGNOSTICS.
+تفعيل قياس أزمنة طلبات الإدارة وحفظ البصمات التشخيصية المنقّحة	Enable admin-request timing and retain redacted diagnostic fingerprints
+حفظ إعداد القياس	Save measurement settings
+آخر القياسات التشخيصية	Latest diagnostic measurements
+لا توجد قياسات محفوظة. فعّل القياس عند الحاجة ثم أعد تحميل صفحات الإدارة المراد فحصها.	No measurements are stored. Enable measurement when needed, then reload the admin pages to inspect.
+المدة	Duration
+معرّف الطلب	Request ID
+إشارة	Signal
+لا توجد سجلات ضمن مدة الاحتفاظ.	No records exist within the retention period.
+حالة التشغيل الحالية	Current operational state
+الوقت أو التفاصيل الآمنة	Time or safe details
+العامل المجدول	Scheduled worker
+لم يُرصد تشغيل بعد	No run has been observed yet
+طابور البريد والأحداث	Mail and event queue
+معلّق قديم: %d، مهام فاشلة: %d	Stale pending: %d, failed jobs: %d
+آخر طلب تشخيصي	Latest diagnostic request
+آخر إشارات الفشل المدققة	Latest audited failure signals
+تُعرض المفاتيح والوقت ومعرّف الارتباط فقط. التفاصيل والبيانات الوصفية محجوبة.	Only keys, time and correlation ID are shown. Details and metadata are redacted.
+لا توجد إشارات فشل مدققة حديثة.	No recent audited failure signals exist.
+تم حفظ إعداد القياس التشخيصي.	Diagnostic measurement settings were saved.
+إعداد القياس مقفول من إعدادات الخادم ولم يتغير.	Measurement settings are locked by the server configuration and were not changed.
+تعذر حفظ إعداد القياس التشخيصي.	Unable to save diagnostic measurement settings.
+بطيء	Slow
+قاعدة البيانات	Database
+فشل حفظ/تصدير	Save/export failure
+طبيعي	Normal
+تقرير التسويات المالية	Financial settlement report
+عرض تفصيلي لعمليات البيع والتسوية ضمن فروعك فقط، دون بيانات اتصال العميل أو VIN أو مراجع مزودي التمويل.	Detailed sales and settlement activity for your branches only, without customer contact data, VINs or finance-provider references.
+عرض التقرير	View report
+عدد المبيعات	Sales count
+إجمالي العقود	Total contracts
+المبلغ المتحقق	Collected amount
+المتبقي	Remaining
+مقارنة العقود والتحصيل	Contracts and collections comparison
+الفترة: %1$s إلى %2$s · المنطقة الزمنية: UTC · العملة: %3$s · أُنشئ في: %4$s UTC.	Period: %1$s to %2$s · timezone: UTC · currency: %3$s · generated: %4$s UTC.
+تم عرض أول 5000 سجل فقط وفق الحد الفني للتقرير.	Only the first 5,000 records are shown according to the report technical limit.
+الفاتورة	Invoice
+التاريخ UTC	UTC date
+لا توجد مبيعات ضمن الفترة المحددة.	No sales exist for the selected period.
+يعرض الجدول أول 100 سجل فقط؛ يبقى التصدير المدقق متاحًا لكامل الحد الفني.	The table shows only the first 100 records; audited export remains available up to the full technical limit.
+الاستلام الذاتي غير مفعّل؛ تُسند الفرص عبر مدير المبيعات أو التوزيع الآلي.	Self-claiming is disabled; opportunities are assigned by the sales manager or automatic distribution.
+بلغت الحد اليومي للفرص الجديدة.	You have reached the daily limit for new opportunities.
+لا يوجد فرع نشط مرتبط بحسابك لاستلام الفرص.	No active branch is linked to your account for claiming opportunities.
+الفرصة لم تعد متاحة للاستلام.	The opportunity is no longer available to claim.
+تعذر التحقق من الفرع.	Unable to verify the branch.
+تعذر تسجيل تنبيه الفرصة.	Unable to record the opportunity notification.
+يجب أن يكون موعد إعادة التواصل في المستقبل.	The recontact time must be in the future.
+مبلغ البيع وطريقة الدفع والمركبة مطلوبة لإغلاق الفرصة.	The sale amount, payment method and vehicle are required to close the opportunity.
+اختر مركبة متاحة من مخزون فرع الفرصة.	Choose an available vehicle from the opportunity branch inventory.
+المركبة محجوزة لعميل آخر أو لا يملك النظام حجزًا صالحًا لها.	The vehicle is reserved for another customer or the system has no valid reservation for it.
+تعذر إنشاء سجل البيع وتحديث المخزون.	Unable to create the sale record and update inventory.
+لا تملك صلاحية إضافة نشاط للفرصة.	You do not have permission to add activity to the opportunity.
+لا تملك صلاحية إضافة هذا النوع من النشاط.	You do not have permission to add this type of activity.
+فعّل العملة الأساسية من إعداد المنصة قبل إدخال أي مبلغ.	Configure the system base currency before entering an amount.
+أعد تحميل النموذج قبل إدخال المبالغ بعملة النظام الحالية.	Reload the form before entering amounts in the current system currency.
+إنشاء طلب النقل واعتماده وإرساله واستلامه في مكان واحد.	Create, approve, dispatch and receive a transfer request in one place.
+متابعة الصفقات المحالة ومراجعة استحقاقات المسوقين بالعمولة.	Track referred sales and review affiliate entitlements.
+ملخص مؤشرات CRM الحالية والوصول السريع للتقارير.	A summary of current CRM metrics with quick access to reports.
+أداء فرص العملاء حسب الموظف والفرع والمصدر والحملة وأسباب الخسارة.	Opportunity performance by employee, branch, source, campaign and loss reason.
+صحة صفحات الإدارة، المهام، والأخطاء المنقحة.	Health of admin pages, jobs and redacted errors.
+إجمالي المؤشرات	Total indicators
+استثناءات تحتاج متابعة	Exceptions requiring follow-up
+حجم المؤشرات حسب القسم	Indicator volume by section
+مبيعات الشهر	Monthly sales
+نسبة التحويل	Conversion rate
+قيمة الفرص المفتوحة	Open opportunity value
+الأهداف الشهرية	Monthly targets
+استلام ذاتي	Self-claiming
+يستلم موظف المبيعات الفرص الجديدة بسحبها إلى «مُسندة».	The sales employee claims new opportunities by dragging them to “Assigned”.
+إسناد عبر مدير المبيعات	Sales-manager assignment
+يسند مدير المبيعات كل فرصة جديدة بسحبها إلى «مُسندة» واختيار الموظف، ولا يستلم الموظفون الفرص بأنفسهم.	The sales manager assigns each new opportunity by dragging it to “Assigned” and choosing the employee; employees cannot claim opportunities themselves.
+توزيع آلي متوازن	Balanced automatic distribution
+تُوزَّع الفرص الجديدة تلقائيًا على الموظف الأقل فرصًا اليوم.	New opportunities are automatically assigned to the employee with the fewest opportunities today.
+طريقة الإسناد الحالية:	Current assignment method:
+الحد الأقصى للفرص الجديدة لكل موظف يوميًا: %d فرصة جديدة.	Daily maximum per employee: %d new opportunities.
+استلمت اليوم: %1$d من %2$d.	Claimed today: %1$d of %2$d.
+تغيير الإعداد	Change setting
+لا توجد فرص	No opportunities
+متابعة متأخرة	Overdue follow-up
+منذ %s	Since %s
+اسحب البطاقة إلى المرحلة المناسبة	Drag the card to the appropriate stage
+النظرة العامة للتقارير	Reports overview
+ملخص سريع لأداء CRM الحالي. استخدم التقارير التفصيلية للتحليل حسب الموظف والفرع والمصدر.	A quick summary of current CRM performance. Use detailed reports for analysis by employee, branch and source.
+مؤشرات CRM الأساسية	Core CRM metrics
+الوصول السريع	Quick access
+فتح تقارير CRM التفصيلية	Open detailed CRM reports
+فتح لوحة الفرص	Open the opportunity board
+تنبيهات CRM	CRM alerts
+تصعيد للمدير	Escalate to manager
+فتح صندوق التنبيهات والإقرار	Open the alert inbox and acknowledge
+كل أنواع الطلبات	All request types
+مصدر UTM	UTM source
+السجلات المؤرشفة	Archived records
+النشطة فقط	Active only
+المؤرشفة فقط	Archived only
+قيمة المبيعات	Sales value
+عمولات الموظفين	Employee commissions
+الفرص الناجحة حسب الفرع	Won opportunities by branch
+متوسط مدة الإغلاق: %s دقيقة	Average close time: %s minutes
+حجم الفرص حسب الحملة والمنصة	Opportunity volume by campaign and platform
+مصدر الطلب	Request source
+وسيط UTM	UTM medium
+محتوى UTM	UTM content
+المعرّف الخارجي	External identifier
+هذه فرصة جديدة غير مسندة؛ تتاح إجراءات المتابعة بعد إسنادها إليك.	This is a new unassigned opportunity; follow-up actions become available after it is assigned to you.
+أدخل مبلغ البيع لإغلاق الفرصة كناجحة.	Enter the sale amount to close the opportunity as won.
+الإسناد بالسحب متاح فقط عند تفعيل «الإسناد عبر مدير المبيعات».	Drag-and-drop assignment is available only when “Sales-manager assignment” is enabled.
+تعذر تسجيل عملية التصدير؛ لم يتم إنشاء الملف.	The export could not be recorded; no file was created.
+تنبيهات المتابعة	Follow-up alerts
+صيانة حدود الطلبات	Request-limit maintenance
+صيانة تأكيد البريد	Email-confirmation maintenance
+مراجعة صلاحيات الوصول	Access-permission review
+فحص تحديثات القوالب	Theme update check
+فحص تحديثات الإضافات	Plugin update check
+فحص إصدار ووردبريس	WordPress version check
+معلّقة للمراجعة: أقدم من 24 ساعة ولن تُرسل تلقائيًا.	Pending review: older than 24 hours and will not be sent automatically.
+هذه الرسالة قديمة ولا تُعاد تلقائيًا. راجع سببها واستخدم طلبًا جديدًا من المسار المخصص إذا لزم.	This message is stale and will not be retried automatically. Review the reason and use a new request from the dedicated path if needed.
+فتح المستند القابل للطباعة	Open printable document
+طباعة التقرير	Print report
+لا توجد بيانات كافية لعرض الرسم.	There is not enough data to display the chart.
+القيمة	Value
+فتح الفرصة في CRM	Open opportunity in CRM
+ملخص الدور	Role summary
+المستخدمون على هذا الدور	Users on this role
+المستخدمون المتأثرون بتغيير افتراضيات الدور.	Users affected by a role-default change.
+صلاحيات الدور الفعلية	Active role permissions
+صلاحيات الوكالة الصريحة المفعّلة حاليًا.	Explicit dealership permissions currently enabled.
+الصلاحيات المتاحة	Available permissions
+الصلاحيات القابلة للإسناد في الكتالوج الحالي.	Assignable permissions in the current catalog.
+المعرّف الثابت المستخدم في سجلات الوصول والتدقيق.	Stable identifier used by access and audit records.
+توثّق هذه الاختيارات مواءمة الدور فقط. لا تحدد الصلاحيات ولا تمنحها. اختر القدرات المطلوبة للمهام الفعلية فقط؛ والمراجع المرتبطة سياقية.	These selections document role alignment only. They do not select or grant permissions. Select only capabilities required for actual tasks; mapped capabilities are contextual references.
+لا يمكنك تغيير مفضلات مساحة العمل.	You cannot change workspace favorites.
+وجهة مساحة العمل هذه غير متاحة لحسابك.	This workspace destination is not available to your account.
+طريقة إسناد الفرص	Opportunity assignment method
+استلام ذاتي: الموظف يستلم من قائمة الفرع المشتركة (ويمكن للمدير الإسناد)	Self-claiming: the employee claims from the shared branch queue (the manager can also assign)
+إسناد عبر مدير المبيعات فقط	Sales-manager assignment only
+توزيع آلي متوازن حسب عدد فرص كل موظف اليوم	Balanced automatic distribution by each employee’s opportunity count today
+في التوزيع الآلي تُسند الفرصة إلى الموظف الأقل فرصًا اليوم داخل الفرع ثم الأقدم استلامًا، وتبقى الفرص الزائدة في القائمة حتى يتوفر موظف دون الحد اليومي. يستطيع مدير المبيعات الإسناد يدويًا في كل الأوضاع.	With automatic distribution, the opportunity goes to the employee with the fewest opportunities today in the branch, then the earliest claimant. Excess opportunities remain in the queue until an employee is below the daily limit. The sales manager can assign manually in every mode.
+الحد الأقصى للفرص الجديدة لكل موظف يوميًا	Maximum new opportunities per employee per day
+يُطبَّق على التوزيع الآلي والاستلام الذاتي؛ صفر يعني بلا حد. اليوم بحسب توقيت الموقع.	Applies to automatic distribution and self-claiming; zero means no limit. The day follows the site timezone.
+فرص اليوم	Today’s opportunities
+عمولة موظف المبيعات	Sales employee commission
+مبلغ ثابت لكل بيع	Fixed amount per sale
+نسبة من مبلغ البيع	Percentage of sale amount
+المبلغ (%s)، أو النسبة مباشرة مثل 15%. تحفظ العمولة وقت إغلاق البيع ولا تتغير بتغيير الإعداد لاحقًا.	Amount (%s), or enter the percentage directly such as 15%. The commission is saved when the sale closes and does not change when the setting changes later.
+مدة أرشفة الفرص المغلقة (يوم)	Closed-opportunity archive period (days)
+تُخفى الفرص الناجحة والخاسرة الأقدم من هذه المدة من العرض الافتراضي، مع إمكانية عرضها من فلتر «المؤرشفة». الصفر يعطل الأرشفة.	Won and lost opportunities older than this period are hidden from the default view and can be shown with the “Archived” filter. Zero disables archiving.
+مدة اعتبار الفرصة راكدة (يوم)	Opportunity stale period (days)
+يرسل النظام تنبيهًا عند عدم وجود نشاط أو متابعة للفرصة خلال هذه المدة، مع تصعيد التنبيه للمدير.	The system sends an alert when an opportunity has no activity or follow-up during this period, and escalates the alert to the manager.
+المبالغ الثابتة تستخدم %s؛ أدخل قيم النسب مباشرة.	Fixed amounts use %s; enter percentage values directly.
+عمولات موظفي المبيعات	Sales employee commissions
+إدارة قاعدة العمولة ومراجعة واعتماد وصرف استحقاقات موظفي المبيعات.	Manage the commission rule and review, approve and pay sales employee entitlements.
+قاعدة العمولة	Commission rule
+أدخل النسبة مباشرة مثل 15%. تحفظ العمولة عند إغلاق البيع.	Enter the percentage directly such as 15%. The commission is saved when the sale closes.
+حفظ سياسة العمولة	Save commission policy
+حدد قيمة المبيعات المستهدفة لكل موظف. يظهر الإنجاز تلقائيًا في لوحة CRM ويُحتسب من المبيعات المغلقة في الشهر الحالي.	Set the target sales value for each employee. Achievement appears automatically in the CRM dashboard and is calculated from closed sales in the current month.
+الهدف الشهري (%s)	Monthly target (%s)
+لا يوجد موظفو مبيعات حاليًا.	There are no sales employees currently.
+حفظ الأهداف	Save targets
+سجل عمولات موظفي المبيعات	Sales employee commission ledger
+تُحسب العمولة عند إغلاق البيع وفق الإعداد الحالي، وتبقى قيمة البيع القديمة ثابتة عند تغيير الإعداد.	The commission is calculated when the sale closes using the current setting, and the historical sale value remains fixed when the setting changes.
+لا توجد عمولات مسجلة حتى الآن.	No commissions have been recorded yet.
+العمولة	Commission
+مرجع الصرف	Payout reference
+عملية العمولة غير مسموحة.	The commission operation is not allowed.
+حالة العمولة لا تسمح بهذا الإجراء.	The commission status does not allow this action.
+تعذر حفظ قرار العمولة.	Unable to save the commission decision.
+أدخل نسبة صحيحة مع منزلتين عشريتين كحد أقصى.	Enter a valid percentage with up to two decimal places.
+لا تملك صلاحية حفظ الأهداف.	You do not have permission to save targets.
+تعذر التحقق من الإحالة؛ أعد المحاولة.	Unable to validate the referral; please try again.
+الإحالة غير صالحة أو لم تُضبط قيمة العمولة بعد.	The referral is invalid or the commission amount has not been configured yet.
+إجراء ملف السياسات غير صالح.	Invalid policy-profile action.
+ملف سياسات الشركة	Company policy profile
+تسجل هذه الصفحة قرارات السياسة المعتمدة لهذا التثبيت من WordPress. لا يؤدي نشر هذا السجل إلى تغيير منح الأدوار أو الحدود المالية أو التصدير أو التقارير أو إعدادات الاحتفاظ. يجب ربط كل سياسة بإعداد مدعوم من الخادم واختبارها قبل التفعيل التشغيلي.	This page records this WordPress installation’s approved policy decisions. Publishing this record does not change role grants, financial thresholds, exports, reports, or retention settings. Each policy must be mapped to a supported server-side setting and tested before operational activation.
+تم تحديث سجل ملف السياسات.	Policy-profile record updated.
+السجل المعتمد الحالي	Current approved record
+لم تتم الموافقة على ملف سياسات لهذا التثبيت.	No policy profile has been approved for this installation.
+السجل %1$d — نُشر في %2$s بواسطة المستخدم رقم %3$d.	Record %1$d — published %2$s by user #%3$d.
+بدء مراجعة السياسات	Start a policy review
+غرض المراجعة	Review purpose
+إنشاء مسودة	Create draft
+مسودة السياسة	Policy draft
+الحالة: %1$s — أنشأها المستخدم رقم %2$d؛ وآخر تعديل بواسطة المستخدم رقم %3$d.	Status: %1$s — created by user #%2$d; last edited by user #%3$d.
+تمت الاستعادة من السجل المعتمد %d. هذه مسودة جديدة ويجب مراجعتها واعتمادها مجددًا.	Restored from approved record %d. This is a new draft and must be reviewed and approved again.
+معاينة الأثر	Impact preview
+لا يوجد ملف معتمد سابقًا	No previously approved profile
+مقارنة بملف السياسات المعتمد %d	Compared with approved profile %d
+تصف هذه المعاينة التغييرات في سجل الحوكمة فقط. لا يتم تغيير أو تفعيل الصلاحيات الفعلية أو الحدود المالية أو التقارير أو التصدير أو إعدادات الاحتفاظ.	This preview describes changes to the governance record only. No runtime permissions, financial thresholds, reports, exports, or retention settings are changed or activated.
+تاريخ استحقاق المراجعة:	Review due date:
+لا توجد فروق في قرارات السياسة مقارنة بالملف المعتمد.	No policy decision differences from the approved profile.
+بيان السياسة	Policy statement
+المبرر	Rationale
+الوظيفة المالكة	Owner function
+طريقة الاعتماد	Approval method
+مرجع الدليل الخارجي	External evidence reference
+مرجع الصلاحية	Authority reference
+الشروط	Conditions
+مجال القرار	Decision area
+الفروق	Differences
+أكمل مجالات القرار الثمانية. القرارات سجلات حوكمة فقط؛ ولا يجوز اعتبار الإعدادات غير المدعومة مطبقة تشغيليًا.	Complete all eight decision areas. Decisions are governance records only; unsupported settings must not be treated as operationally enforced.
+تاريخ مراجعة السياسة التالي	Next policy review date
+نص القرار أو السياسة المختارة	Decision text / selected policy
+المبرر التجاري	Business rationale
+الوظيفة المالكة (وليست اعتمادًا شخصيًا)	Owner function (not a personal credential)
+دليل الاعتماد	Approval evidence
+المراجع الداخلي المعيّن	Assigned internal reviewer
+مدقق الدليل الخارجي المعيّن	Assigned external-evidence verifier
+مرجع التفويض أو الصلاحية	Delegation / authority reference
+مرجع الاعتماد الخارجي (مطلوب للقرار الخارجي أو المختلط)	External approval reference (required for external/hybrid)
+الشروط المفتوحة (يجب إغلاقها قبل الإرسال)	Open conditions (must be closed before submission)
+حفظ المسودة	Save draft
+إرسال للمراجعة المستقلة	Submit for independent review
+حذف هذه المسودة	Discard this draft
+تُقفل المسودة أثناء المراجعة. يجب إكمال كل طريقة مراجعة مختارة بواسطة مسؤول غير الكاتب وآخر محرر. تتطلب القرارات المختلطة مراجع داخليًا ومدقق دليل مختلفين.	The draft is locked while under review. Each selected review method must be completed by an administrator other than the author and last editor. Hybrid decisions require different internal and evidence reviewers.
+الإجراءات	Actions
+الوظيفة المالكة:	Owner function:
+مرجع الصلاحية:	Authority reference:
+اعتماد داخلي	Approve internally
+المراجع الداخلي: المستخدم رقم %d	Internal reviewer: user #%d
+التحقق من المرجع الخارجي	Verify external reference
+مدقق الدليل: المستخدم رقم %d	Evidence verifier: user #%d
+معلق:	Pending:
+نشر سجل الحوكمة المعتمد	Publish approved governance record
+السجلات المعتمدة السابقة	Previous approved records
+السجل %1$d — %2$s — نُشر بواسطة المستخدم رقم %3$d. %4$s	Record %1$d — %2$s — published by user #%3$d. %4$s
+احذف المسودة الحالية أو أكملها قبل استعادة إصدار سابق.	Discard or complete the current draft before restoring a previous version.
+سبب الاستعادة كمسودة	Reason for restoring as draft
+استعادة كمسودة لإعادة الاعتماد	Restore as draft for re-approval
+سجل السياسة المعتمد	Approved policy record
+الدليل	Evidence
+المبرر:	Rationale:
+اعتماد داخلي بواسطة المستخدم رقم %d	Internal approval by user #%d
+تم التحقق من الدليل الخارجي بواسطة المستخدم رقم %d	External evidence verified by user #%d
+ملف السياسة المخزن غير صالح. لم تُطبّق أي تغييرات على السياسة.	The stored policy profile is invalid. No policy changes were applied.
+توجد مسودة سياسة بالفعل. أكملها أو احذفها أولًا.	A policy draft already exists. Complete or discard it first.
+لا يمكن تغيير إلا مسودة سياسة قابلة للتحرير.	Only an editable policy draft can be changed.
+لا يمكن إرسال إلا مسودة سياسة قابلة للتحرير.	Only an editable policy draft can be submitted.
+حدد تاريخ مراجعة مستقبليًا صالحًا قبل إرسال ملف السياسة.	Set a valid future review date before submitting the policy profile.
+أكمل القرار وبيان السياسة والمبرر والمالك لـ %s.	Complete the decision, policy statement, rationale, and owner for %s.
+أدخل مرجع التفويض أو الصلاحية لـ %s.	Provide the delegation or authority reference for %s.
+عيّن مراجعًا داخليًا مستقلًا ومخوّلًا لـ %s.	Assign an independent authorized internal reviewer for %s.
+عيّن مدقق دليل مستقلًا وأدخل مرجعًا خارجيًا لـ %s.	Assign an independent evidence verifier and provide an external reference for %s.
+استخدم مراجعين مختلفين للاعتماد الداخلي والتحقق من الدليل الخارجي لـ %s.	Use different assigned reviewers for internal approval and external evidence verification for %s.
+أغلق الشروط المعلقة أو أزلها لـ %s قبل الإرسال.	Close or remove pending conditions for %s before submission.
+مسودة السياسة لا تنتظر المراجعة.	The policy draft is not awaiting review.
+طريقة المراجعة هذه غير مطلوبة للقرار المحدد.	This review method is not required for the selected decision.
+مرجع الدليل الخارجي مطلوب.	An external evidence reference is required.
+لا يجوز لكاتب المسودة أو آخر محرر اعتماد قراراتها.	The draft author or last editor cannot approve its policy decisions.
+أُسند هذا القرار إلى مراجع مخول آخر.	This decision is assigned to a different authorized reviewer.
+يتطلب الاعتماد الداخلي والتحقق من الدليل الخارجي مراجعين مختلفين.	Internal approval and external evidence verification require different reviewers.
+تم تسجيل هذه المراجعة بالفعل للمسودة الحالية.	This review has already been recorded for the current draft.
+لا يمكن نشر إلا مسودة سياسة تمت مراجعتها.	Only a reviewed policy draft can be published.
+انقضى تاريخ المراجعة. أنشئ مسودة بتاريخ مراجعة مستقبلي وراجعها قبل النشر.	The review date has passed. Create and review a draft with a future review date before publishing.
+لا يجوز لكاتب المسودة أو آخر محرر نشر الملف.	The draft author or last editor cannot publish the profile.
+الاعتماد الداخلي المستقل مفقود لـ %s.	Independent internal approval is missing for %s.
+لم يتم التحقق المستقل من الدليل الخارجي لـ %s.	External evidence has not been independently verified for %s.
+أكمل المسودة الحالية أو احذفها قبل استعادة إصدار سابق.	Complete or discard the current draft before restoring a previous version.
+إصدار السياسة السابق المطلوب غير متاح في السجل.	The requested previous policy version is not available in history.
+لم يُسجل تاريخ مراجعة صالح	No valid review date recorded
+المراجعة متأخرة منذ %s	Review overdue since %s
+موعد المراجعة اليوم	Review due today
+موعد المراجعة بحلول %s	Review due by %s
+لا يمكن تغيير قرارات السياسة حتى تتوفر المعاملة وقيد التدقيق.	Policy decisions cannot be changed until transactional storage and audit logging are available.
+تعذر قراءة ملف السياسة بأمان.	The policy profile could not be read safely.
+تعذر التحقق من تغيير السياسة بعد الحفظ.	The policy change could not be verified after saving.
+تم التراجع عن تغيير السياسة لتعذر تسجيل حدث التدقيق.	The policy change was rolled back because its audit event could not be recorded.
+تتطلب إدارة ملف السياسة وصول مسؤول نظام مخولًا.	Policy-profile administration requires authorized system-administrator access.
+تغيرت مسودة السياسة. أعد التحميل وراجع الإصدار الحالي.	The policy draft changed. Reload and review the current revision.
+يحتوي قرار السياسة على حقول غير صالحة أو غير مكتملة.	The policy decision contains invalid or incomplete fields.

@@ -32,14 +32,17 @@ final class AffiliateCommissionService {
 	public static function is_supported_currency( string $currency ): bool { return self::currency() === strtoupper( trim( $currency ) ); }
 
 	public static function fingerprint_enabled(): bool {
-		return (bool) get_option( self::FINGERPRINT_OPTION, true );
+		return true;
 	}
 
 	public static function set_fingerprint_enabled( bool $enabled ) {
 		if ( ! current_user_can( 'adc_manage_affiliate_commissions' ) && ! current_user_can( 'manage_options' ) ) {
 			return new \WP_Error( 'adc_commission_forbidden', __( 'لا تملك صلاحية تعديل إعدادات الحركات المالية.', 'auto-dealership-core' ), array( 'status' => 403 ) );
 		}
-		if ( ! update_option( self::FINGERPRINT_OPTION, $enabled, false ) && self::fingerprint_enabled() !== $enabled ) {
+		if ( ! $enabled ) {
+			return new \WP_Error( 'adc_commission_fingerprint_required', __( 'لا يمكن تعطيل بصمة الحركات المالية؛ فهي جزء من سلامة السجل المالي.', 'auto-dealership-core' ), array( 'status' => 409 ) );
+		}
+		if ( ! update_option( self::FINGERPRINT_OPTION, true, false ) && ! self::fingerprint_enabled() ) {
 			return new \WP_Error( 'adc_commission_fingerprint_setting_failed', __( 'تعذر حفظ إعداد بصمة الحركات المالية.', 'auto-dealership-core' ), array( 'status' => 500 ) );
 		}
 		return $enabled;
@@ -155,7 +158,7 @@ final class AffiliateCommissionService {
 		}
 		$target = sanitize_key( $target );
 		$reason = sanitize_textarea_field( $reason );
-		$payment_reference = sanitize_text_field( $payment_reference );
+		$payment_reference = preg_replace( '/\s+/u', ' ', trim( sanitize_text_field( $payment_reference ) ) );
 		if ( ! in_array( $target, array( 'approved', 'paid', 'void' ), true ) || ( 'paid' === $target && '' === $payment_reference ) || ( 'void' === $target && '' === $reason ) ) {
 			return new \WP_Error( 'adc_commission_action_invalid', __( 'بيانات قرار العمولة غير مكتملة.', 'auto-dealership-core' ), array( 'status'=>400 ) );
 		}
@@ -200,6 +203,9 @@ final class AffiliateCommissionService {
 		$updated = $wpdb->update( $table, $changes, array( 'id'=>$commission_id, 'status'=>$expected ), $formats, array( '%d','%s' ) );
 		if ( 1 !== $updated ) {
 			$wpdb->query( 'ROLLBACK' );
+			if ( 'paid' === $target && self::is_duplicate_key_error( (string) $wpdb->last_error ) ) {
+				return new \WP_Error( 'adc_commission_payment_reference_duplicate', 'Payment reference is already used by another commission.', array( 'status'=>409 ) );
+			}
 			return new \WP_Error( 'adc_commission_update_failed', __( 'تعذر حفظ قرار العمولة.', 'auto-dealership-core' ), array( 'status'=>500 ) );
 		}
 		$source_entry_id = 0;
@@ -304,8 +310,14 @@ final class AffiliateCommissionService {
 		$entry_sql = "SELECT COALESCE(SUM(e.amount),0) net_ledger FROM $entries e INNER JOIN $commissions c ON c.id=e.commission_id WHERE $affiliate_where AND $scope";
 		$entry = $wpdb->get_row( $args ? $wpdb->prepare( $entry_sql, $args ) : $entry_sql, ARRAY_A );
 		if ( $wpdb->last_error || ! $entry ) { return new \WP_Error( 'adc_commission_query_failed', __( 'تعذر تحميل حركات العمولات.', 'auto-dealership-core' ), array( 'status'=>500 ) ); }
-		$integrity_sql = "SELECT COUNT(*) FROM (SELECT c.id FROM $commissions c LEFT JOIN $entries e ON e.commission_id=c.id WHERE $affiliate_where AND $scope GROUP BY c.id HAVING COUNT(e.id)=0 OR SUM(CASE WHEN e.sale_id<>c.sale_id OR e.affiliate_user_id<>c.affiliate_user_id OR e.branch_id<>c.branch_id OR e.currency_code<>c.currency_code THEN 1 ELSE 0 END)>0) integrity_rows";
-		$integrity_issues = (int) $wpdb->get_var( $args ? $wpdb->prepare( $integrity_sql, $args ) : $integrity_sql );
+		$integrity_sql = "SELECT COUNT(*) FROM $commissions c WHERE $affiliate_where AND $scope AND (
+			c.currency_code<>%s OR c.status NOT IN ('pending_review','approved','paid','void','paid_sale_returned') OR c.amount<0 OR (c.amount<1 AND c.status NOT IN ('void','paid_sale_returned'))
+			OR NOT EXISTS (SELECT 1 FROM $entries missing WHERE missing.commission_id=c.id)
+			OR EXISTS (SELECT 1 FROM $entries e WHERE e.commission_id=c.id AND (e.sale_id<>c.sale_id OR e.affiliate_user_id<>c.affiliate_user_id OR e.branch_id<>c.branch_id OR e.currency_code<>%s OR e.entry_type NOT IN ('accrual','legacy_opening','void_reversal','return_reversal') OR (e.entry_type IN ('accrual','legacy_opening') AND (e.amount<0 OR (e.amount<1 AND c.status NOT IN ('void','paid_sale_returned')))) OR (e.entry_type IN ('void_reversal','return_reversal') AND (e.amount>=0 OR e.reverses_entry_id=0 OR NOT EXISTS (SELECT 1 FROM $entries src WHERE src.id=e.reverses_entry_id AND src.commission_id=e.commission_id AND src.entry_type IN ('accrual','legacy_opening') AND src.amount>0)))))
+			OR (c.payment_reference<>'' AND EXISTS (SELECT 1 FROM $commissions dupe WHERE dupe.id<>c.id AND dupe.payment_reference=c.payment_reference))
+		)";
+		$integrity_args = array_merge( $args, array( self::currency(), self::currency() ) );
+		$integrity_issues = (int) $wpdb->get_var( $wpdb->prepare( $integrity_sql, $integrity_args ) );
 		if ( $wpdb->last_error ) { return new \WP_Error( 'adc_commission_query_failed', 'Unable to validate affiliate ledger integrity.', array( 'status'=>500 ) ); }
 		$summary = array( 'currency'=>self::currency(), 'commission_count'=>(int) $row['commission_count'], 'pending_review'=>(int) $row['pending_review'], 'approved'=>(int) $row['approved'], 'paid'=>(int) $row['paid'], 'voided'=>(int) $row['voided'], 'returned'=>(int) $row['returned'], 'net_ledger'=>(int) $entry['net_ledger'], 'integrity_issues'=>$integrity_issues, 'payout_ready'=>0 === $integrity_issues );
 		foreach ( array( 'pending_review','approved','paid','voided','returned','net_ledger' ) as $field ) { $summary[ $field . '_amount' ] = Money::decimal( $summary[ $field ] ); }
@@ -372,7 +384,7 @@ final class AffiliateCommissionService {
 		global $wpdb;
 		if ( ! Schema::is_ready() ) { return 0; }
 		$table = Schema::table( 'affiliate_commission_entries' );
-		$condition = self::fingerprint_enabled() ? 'fingerprint IS NULL' : '0=1';
+		$condition = 'fingerprint IS NULL';
 		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id,commission_id,sale_id,affiliate_user_id,branch_id,entry_type,amount,currency_code,event_key,reverses_entry_id,reason,actor_user_id,created_at,entry_reference,fingerprint FROM $table WHERE entry_reference='' OR ($condition) ORDER BY id ASC LIMIT %d", min( 1000, max( 1, $limit ) ) ), ARRAY_A );
 		if ( $wpdb->last_error || ! $rows ) { return 0; }
 		$count = 0;
@@ -391,17 +403,15 @@ final class AffiliateCommissionService {
 		$reference = 'ADC-LE-' . str_pad( (string) $entry_id, 12, '0', STR_PAD_LEFT );
 		$data = array( 'entry_reference' => $reference );
 		$formats = array( '%s' );
-		if ( self::fingerprint_enabled() ) {
-			$data['fingerprint'] = hash( 'sha256', (string) wp_json_encode( array(
+		$data['fingerprint'] = hash( 'sha256', (string) wp_json_encode( array(
 				'id'=>(int) $entry_id, 'commission_id'=>(int) ( $entry['commission_id'] ?? 0 ), 'sale_id'=>(int) ( $entry['sale_id'] ?? 0 ),
 				'affiliate_user_id'=>(int) ( $entry['affiliate_user_id'] ?? 0 ), 'branch_id'=>(int) ( $entry['branch_id'] ?? 0 ),
 				'entry_type'=>(string) ( $entry['entry_type'] ?? '' ), 'amount'=>(int) ( $entry['amount'] ?? 0 ),
 				'reverses_entry_id'=>(int) ( $entry['reverses_entry_id'] ?? 0 ),
 				'currency_code'=>(string) ( $entry['currency_code'] ?? self::currency() ), 'event_key'=>(string) ( $entry['event_key'] ?? '' ),
 				'reason'=>(string) ( $entry['reason'] ?? '' ), 'actor_user_id'=>(int) ( $entry['actor_user_id'] ?? 0 ), 'created_at'=>(string) ( $entry['created_at'] ?? '' ),
-			), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
-			$formats[] = '%s';
-		}
+		), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
+		$formats[] = '%s';
 		return 1 === $wpdb->update( $table, $data, array( 'id' => $entry_id ), $formats, array( '%d' ) );
 	}
 
@@ -416,6 +426,10 @@ final class AffiliateCommissionService {
 		$event_key = (string) ( $entry['event_key'] ?? '' );
 		if ( ! $valid_type || ! self::is_supported_currency( $currency ) || ! $valid_sign || ( self::ENTRY_ACCRUAL !== $entry_type && $reverses_entry_id < 1 ) || ! preg_match( '/\A[a-f0-9]{64}\z/', $event_key ) ) { return false; }
 		$table = Schema::table( 'affiliate_commission_entries' );
+		if ( self::ENTRY_ACCRUAL !== $entry_type ) {
+			$source = $wpdb->get_row( $wpdb->prepare( "SELECT commission_id,entry_type,amount FROM $table WHERE id=%d", $reverses_entry_id ), ARRAY_A );
+			if ( ! $source || (int) $source['commission_id'] !== (int) $entry['commission_id'] || ! in_array( (string) $source['entry_type'], array( self::ENTRY_ACCRUAL, 'legacy_opening' ), true ) || (int) $source['amount'] < 1 ) { return false; }
+		}
 		$created_at = current_time( 'mysql', true );
 		$inserted = $wpdb->insert( $table, array(
 			'commission_id'=>(int) $entry['commission_id'], 'sale_id'=>(int) $entry['sale_id'], 'affiliate_user_id'=>(int) $entry['affiliate_user_id'], 'branch_id'=>(int) $entry['branch_id'], 'entry_type'=>$entry_type, 'amount'=>$amount, 'currency_code'=>$currency, 'event_key'=>$event_key, 'reverses_entry_id'=>$reverses_entry_id, 'reason'=>(string) ( $entry['reason'] ?? '' ), 'actor_user_id'=>get_current_user_id(), 'created_at'=>$created_at,
@@ -429,5 +443,9 @@ final class AffiliateCommissionService {
 		$matches = (int) $existing['commission_id'] === (int) $entry['commission_id'] && (int) $existing['sale_id'] === (int) $entry['sale_id'] && (int) $existing['affiliate_user_id'] === (int) $entry['affiliate_user_id'] && (int) $existing['branch_id'] === (int) $entry['branch_id'] && (string) $existing['entry_type'] === $entry_type && (int) $existing['amount'] === $amount && strtoupper( (string) $existing['currency_code'] ) === $currency && (int) $existing['reverses_entry_id'] === $reverses_entry_id;
 		if ( ! $matches ) { error_log( 'Auto Dealership Core: affiliate ledger event key collision detected.' ); }
 		return $matches;
+	}
+
+	private static function is_duplicate_key_error( string $error ): bool {
+		return false !== stripos( $error, 'duplicate' ) || false !== stripos( $error, '1062' );
 	}
 }

@@ -25,15 +25,18 @@ namespace {
  function sanitize_textarea_field($value) { return trim(strip_tags($value)); }
  function get_bloginfo($key) { return 'Test seller'; }
  function check($value,$message) { if(!$value)throw new \RuntimeException($message); echo "PASS $message\n"; }
+ require dirname(__DIR__).'/src/Core/CurrencySettings.php';
+ require dirname(__DIR__).'/src/Pricing/Money.php';
  require dirname(__DIR__).'/src/Core/ConfigurationService.php';
  require dirname(__DIR__).'/src/Admin/SettingsPage.php';
  use AutoDealership\Core\ConfigurationService as Config;
+ $options['adc_base_currency_code'] = 'SAR';
  // Initialize through the public contract; do not depend on private defaults via Reflection.
  $seed = Config::update(array(
   'vat_rate_bps'=>1500, 'pricing_fee_amount'=>4321,
   'promotion_type'=>'fixed', 'promotion_code'=>'season', 'promotion_value'=>2345,
   'promotion_starts_at'=>'2026-10-01','promotion_ends_at'=>'2026-12-01',
-  'reservation_hours'=>36, 'reservation_deposit_type'=>'percentage', 'reservation_deposit_value'=>1500,
+  'reservation_hours'=>36, 'reservation_deposit_type'=>'percentage', 'reservation_deposit_value'=>15,
   'sales_manager_discount_limit'=>20000,'general_manager_discount_limit'=>40000,
   'seller_name'=>'Preserved seller','seller_tax_number'=>'123','seller_phone'=>'555','seller_address'=>'Address',
   'default_branch_id'=>3,'privacy_retention_days'=>365,'delivery_required_documents'=>array('invoice','insurance'),

@@ -43,9 +43,7 @@ final class AffiliateCommissionPage {
 		self::render_summary( AffiliateCommissionService::account_summary( 0 ), self::text( 'ملخص الفروع المتاحة', 'Accessible commission summary' ) );
 		self::render_operations_health();
 		self::render_migration();
-		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin:12px 0">';
-		wp_nonce_field( 'adc_affiliate_commission_fingerprint' );
-		echo '<input type="hidden" name="action" value="adc_affiliate_commission_fingerprint"><label><input type="checkbox" name="enabled" value="1"' . checked( AffiliateCommissionService::fingerprint_enabled(), true, false ) . '> ' . esc_html( self::text( 'تفعيل البصمة الاختيارية للحركات المالية', 'Enable optional financial movement fingerprints' ) ) . '</label> <button class="button">' . esc_html( self::text( 'حفظ إعداد البصمة', 'Save fingerprint setting' ) ) . '</button></form>';
+		echo '<p class="description">' . esc_html( self::text( 'بصمة الحركات المالية مفعّلة إلزاميًا لحماية سلامة دفتر العمولات.', 'Financial movement fingerprints are mandatory to protect commission-ledger integrity.' ) ) . '</p>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'adc_affiliate_commission_rate' );
 		echo '<input type="hidden" name="action" value="adc_affiliate_commission_rate"><input type="hidden" name="adc_money_unit" value="' . esc_attr( \AutoDealership\Core\CurrencySettings::base_code() ) . '"><label>' . esc_html( self::text( 'العمولة الثابتة (' . \AutoDealership\Core\CurrencySettings::ui_unit() . ')', 'Fixed commission (' . \AutoDealership\Core\CurrencySettings::ui_unit() . ')' ) ) . ' <input type="number" min="0" step="' . esc_attr( $money_step ) . '" name="amount" value="' . esc_attr( Money::decimal( $amount ) ) . '" required></label> <button class="button button-primary">' . esc_html( self::text( 'حفظ الإعداد', 'Save setting' ) ) . '</button></form>';

@@ -54,9 +54,51 @@ final class AffiliateCommissionReport {
 	}
 
 	private static function reconciliation( array $filters ) {
-		global $wpdb; $currency=CurrencySettings::base_code(); $commissions=Schema::table('affiliate_commissions');$entries=Schema::table('affiliate_commission_entries');$issues=Schema::table('affiliate_commission_migration_issues');$args=array();$where=self::where($filters,$args,'c');$items=array();$missing=$wpdb->get_results($wpdb->prepare("SELECT c.id,'commission_without_ledger' issue_type,'Commission has no ledger entry.' reason FROM $commissions c LEFT JOIN $entries e ON e.commission_id=c.id WHERE $where GROUP BY c.id HAVING COUNT(e.id)=0 LIMIT 100",$args),ARRAY_A);$invalid_args=array_merge($args,array($currency));$invalid=$wpdb->get_results($wpdb->prepare("SELECT c.id,'invalid_commission' issue_type,'Commission has an invalid state, amount, or currency.' reason FROM $commissions c WHERE $where AND (c.currency_code<>%s OR c.status NOT IN ('pending_review','approved','paid','void','paid_sale_returned') OR c.amount<0) LIMIT 100",$invalid_args),ARRAY_A);foreach(array_merge($missing?:array(),$invalid?:array()) as $item){$items[]=$item;}$issue_args=array();$issue_where=self::where($filters,$issue_args,'c');$migration=$wpdb->get_results($wpdb->prepare("SELECT i.commission_id id,CONCAT('migration_',i.issue_type) issue_type,i.reason FROM $issues i INNER JOIN $commissions c ON c.id=i.commission_id WHERE i.status='open' AND $issue_where ORDER BY i.id DESC LIMIT 100",$issue_args),ARRAY_A);foreach($migration?:array() as $item){$items[]=$item;}$orphan_args=array();list($orphan_scope,$orphan_scope_args)=BranchScope::predicate('e.branch_id');$orphan_args=array_merge($orphan_args,$orphan_scope_args);$orphan_sql="SELECT e.commission_id id,'orphan_ledger_entry' issue_type,'Ledger entry has no commission record.' reason FROM $entries e LEFT JOIN $commissions c ON c.id=e.commission_id WHERE c.id IS NULL AND $orphan_scope LIMIT 100";$orphan=$wpdb->get_results($orphan_args?$wpdb->prepare($orphan_sql,$orphan_args):$orphan_sql,ARRAY_A);foreach($orphan?:array() as $item){$items[]=$item;}$inconsistent_args=array_merge($args,array($currency));$inconsistent=$wpdb->get_results($wpdb->prepare("SELECT c.id,'inconsistent_ledger_entry' issue_type,'Ledger movement does not match its commission or reversal source.' reason FROM $entries e INNER JOIN $commissions c ON c.id=e.commission_id WHERE $where AND (e.sale_id<>c.sale_id OR e.affiliate_user_id<>c.affiliate_user_id OR e.branch_id<>c.branch_id OR e.currency_code<>%s OR (e.entry_type IN ('void_reversal','return_reversal') AND (e.reverses_entry_id=0 OR NOT EXISTS (SELECT 1 FROM $entries source WHERE source.id=e.reverses_entry_id AND source.commission_id=e.commission_id AND source.amount>0)))) LIMIT 100",$inconsistent_args),ARRAY_A);foreach($inconsistent?:array() as $item){$items[]=$item;}return array('summary'=>array('total'=>count($items),'commission_without_ledger'=>count($missing?:array()),'invalid_commission'=>count($invalid?:array()),'migration_issues'=>count($migration?:array()),'orphan_ledger_entries'=>count($orphan?:array()),'inconsistent_ledger_entries'=>count($inconsistent?:array())),'items'=>$items);
-	}
+		global $wpdb;
+		$currency = CurrencySettings::base_code();
+		$commissions = Schema::table( 'affiliate_commissions' );
+		$entries = Schema::table( 'affiliate_commission_entries' );
+		$issues = Schema::table( 'affiliate_commission_migration_issues' );
+		$args = array();
+		$where = self::where( $filters, $args, 'c' );
+		$items = array();
 
+		$missing = $wpdb->get_results( $wpdb->prepare( "SELECT c.id,'commission_without_ledger' issue_type,'Commission has no ledger entry.' reason FROM $commissions c LEFT JOIN $entries e ON e.commission_id=c.id WHERE $where GROUP BY c.id HAVING COUNT(e.id)=0 LIMIT 100", $args ), ARRAY_A );
+		$invalid_args = array_merge( $args, array( $currency ) );
+		$invalid = $wpdb->get_results( $wpdb->prepare( "SELECT c.id,'invalid_commission' issue_type,'Commission has an invalid state, amount, or currency.' reason FROM $commissions c WHERE $where AND (c.currency_code<>%s OR c.status NOT IN ('pending_review','approved','paid','void','paid_sale_returned') OR c.amount<0 OR (c.amount<1 AND c.status NOT IN ('void','paid_sale_returned'))) LIMIT 100", $invalid_args ), ARRAY_A );
+
+		$issue_args = array();
+		$issue_where = self::where( $filters, $issue_args, 'c' );
+		$migration = $wpdb->get_results( $wpdb->prepare( "SELECT i.commission_id id,CONCAT('migration_',i.issue_type) issue_type,i.reason FROM $issues i INNER JOIN $commissions c ON c.id=i.commission_id WHERE i.status='open' AND $issue_where ORDER BY i.id DESC LIMIT 100", $issue_args ), ARRAY_A );
+
+		list( $orphan_scope, $orphan_scope_args ) = BranchScope::predicate( 'e.branch_id' );
+		$orphan_sql = "SELECT e.commission_id id,'orphan_ledger_entry' issue_type,'Ledger entry has no commission record.' reason FROM $entries e LEFT JOIN $commissions c ON c.id=e.commission_id WHERE c.id IS NULL AND $orphan_scope LIMIT 100";
+		$orphan = $wpdb->get_results( $orphan_scope_args ? $wpdb->prepare( $orphan_sql, $orphan_scope_args ) : $orphan_sql, ARRAY_A );
+
+		$inconsistent_args = array_merge( $args, array( $currency ) );
+		$inconsistent = $wpdb->get_results( $wpdb->prepare( "SELECT c.id,'inconsistent_ledger_entry' issue_type,'Ledger movement does not match its commission or reversal source.' reason FROM $entries e INNER JOIN $commissions c ON c.id=e.commission_id WHERE $where AND (e.sale_id<>c.sale_id OR e.affiliate_user_id<>c.affiliate_user_id OR e.branch_id<>c.branch_id OR e.currency_code<>%s OR e.entry_type NOT IN ('accrual','legacy_opening','void_reversal','return_reversal') OR (e.entry_type IN ('accrual','legacy_opening') AND (e.amount<0 OR (e.amount<1 AND c.status NOT IN ('void','paid_sale_returned')))) OR (e.entry_type IN ('void_reversal','return_reversal') AND (e.amount>=0 OR e.reverses_entry_id=0 OR NOT EXISTS (SELECT 1 FROM $entries source WHERE source.id=e.reverses_entry_id AND source.commission_id=e.commission_id AND source.entry_type IN ('accrual','legacy_opening') AND source.amount>0)))) LIMIT 100", $inconsistent_args ), ARRAY_A );
+
+		$duplicate_args = array();
+		$duplicate_where = self::where( $filters, $duplicate_args, 'c' );
+		$duplicates = $wpdb->get_results( $wpdb->prepare( "SELECT c.id,'duplicate_payment_reference' issue_type,'Payment reference is used by more than one commission.' reason FROM $commissions c WHERE $duplicate_where AND c.payment_reference<>'' AND EXISTS (SELECT 1 FROM $commissions duplicate WHERE duplicate.id<>c.id AND duplicate.payment_reference=c.payment_reference) LIMIT 100", $duplicate_args ), ARRAY_A );
+
+		foreach ( array( $missing, $invalid, $migration, $orphan, $inconsistent, $duplicates ) as $group ) {
+			foreach ( $group ?: array() as $item ) {
+				$items[ (string) $item['issue_type'] . ':' . (int) $item['id'] ] = $item;
+			}
+		}
+		$items = array_values( $items );
+		$summary = array(
+			'total'=>count( $items ),
+			'commission_without_ledger'=>count( $missing ?: array() ),
+			'invalid_commission'=>count( $invalid ?: array() ),
+			'migration_issues'=>count( $migration ?: array() ),
+			'orphan_ledger_entries'=>count( $orphan ?: array() ),
+			'inconsistent_ledger_entries'=>count( $inconsistent ?: array() ),
+			'duplicate_payment_references'=>count( $duplicates ?: array() ),
+		);
+		return array( 'summary'=>$summary, 'items'=>$items );
+	}
 	private static function normalize( array $filters ) { $range=ReportDateRange::normalize($filters);if(is_wp_error($range)){return $range;}$status=sanitize_key((string)($filters['status']??''));if(''!==$status&&!in_array($status,AffiliateCommissionService::statuses(),true)){return new \WP_Error('adc_affiliate_report_status','Invalid commission status.',array('status'=>400));}$period=sanitize_key((string)($filters['period']??'month'));if(!in_array($period,array('day','month'),true)){return new \WP_Error('adc_affiliate_report_period','Invalid report period.',array('status'=>400));}return array_merge($range,array('status'=>$status,'period'=>$period,'affiliate_user_id'=>absint($filters['affiliate_user_id']??0),'branch_id'=>absint($filters['branch_id']??0))); }
 	private static function where(array $filters,array &$args,string $alias):string{$where=array("$alias.created_at >= %s","$alias.created_at < %s");$args[]=$filters['from_utc'];$args[]=$filters['to_utc'];if(''!==$filters['status']){$where[]="$alias.status=%s";$args[]=$filters['status'];}if($filters['affiliate_user_id']>0){$where[]="$alias.affiliate_user_id=%d";$args[]=$filters['affiliate_user_id'];}if($filters['branch_id']>0){$where[]="$alias.branch_id=%d";$args[]=$filters['branch_id'];}list($scope,$scope_args)=BranchScope::predicate("$alias.branch_id");$where[]=$scope;$args=array_merge($args,$scope_args);return implode(' AND ',$where);}
 	private static function money_fields(array &$row):void{foreach(array('gross','pending_review','approved','paid','voided','returned','net_ledger','reversals') as $field){$row[$field.'_amount']=Money::decimal((int)($row[$field]??0));}}
