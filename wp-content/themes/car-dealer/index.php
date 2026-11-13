@@ -18,7 +18,7 @@ $whatsapp_url = car_dealer_whatsapp_url( car_dealer_text( 'مرحباً {site_na
 $catalog_url = car_dealer_archive_url( 'car' );
 $offers_url = car_dealer_archive_url( 'car_offer' );
 $home_scroll_target = '';
-foreach(array('featured'=>'featured-vehicles','why'=>'why-auto-brands','latest'=>'latest-vehicles','offers'=>'current-offers','demand'=>'selected-vehicles','cta'=>'browse-inventory') as $section=>$anchor) {
+foreach(array('featured'=>'featured-vehicles','why'=>'why-us','latest'=>'latest-vehicles','offers'=>'current-offers','demand'=>'selected-vehicles','cta'=>'browse-inventory') as $section=>$anchor) {
  if ($manage_content && !$content_class::home_enabled($section)) { continue; }
  $home_scroll_target=$anchor; break;
 }
@@ -94,7 +94,7 @@ foreach(array('featured'=>'featured-vehicles','why'=>'why-auto-brands','latest'=
 <?php $home_parts['featured'] = ob_get_clean(); ?>
 <!-- ═══════════════ WHY CHOOSE US ═══════════════ -->
 <?php ob_start(); ?>
-<section id="why-auto-brands" class="ab-section ab-why ab-why-v2">
+<section id="why-us" class="ab-section ab-why ab-why-v2">
 	<div class="container">
 		<div class="section-heading section-heading-v2 section-heading-center">
 			<div>

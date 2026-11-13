@@ -6,8 +6,9 @@ const root = path.resolve(__dirname, '..');
 const pairs = new Map();
 const unquote = s => s.replace(/\\'/g, "'").replace(/\\\\/g, '\\');
 const source = fs.readFileSync(path.join(root, 'wp-content/themes/car-dealer/inc/public-catalog.php'), 'utf8');
-for (const match of source.slice(0, source.indexOf('function car_dealer_catalog_gettext')).matchAll(/'((?:\\.|[^'\\])*)'\s*=>\s*'((?:\\.|[^'\\])*)'/g)) {
+for (const match of source.slice(0, source.indexOf('function car_dealer_catalog_gettext')).matchAll(/'((?:\\.|[^'\\])*)'\s*=>\s*'((?:\\.|[^'\\])*)'\s*(?=[,)])/g)) {
  const ar = unquote(match[1]), en = unquote(match[2]);
+ if (/auto\s*brands|أوتو\s*براندز/iu.test(`${ar} ${en}`)) continue;
  if (/[\u0600-\u06ff]/u.test(ar) && !/[\u0600-\u06ff]/u.test(en)) pairs.set(ar + '\0' + en, [ar, en]);
 }
 for (const line of fs.readFileSync(path.join(__dirname, 'dealership-ui-translations.tsv'), 'utf8').split(/\r?\n/)) {
@@ -16,6 +17,7 @@ for (const line of fs.readFileSync(path.join(__dirname, 'dealership-ui-translati
  if (split < 1) throw new Error(`Invalid translation pair: ${line}`);
  const ar = line.slice(0, split).replace(/\\u0020/g, ' '), en = line.slice(split + 1).replace(/\\u0020/g, ' ');
  if (!ar || !en) throw new Error('Both translations are required');
+ if (/auto\s*brands|أوتو\s*براندز/iu.test(`${ar} ${en}`)) continue;
  // Preserve printf placeholders, including their argument positions.
  const placeholders = s => [...s.matchAll(/%(?:\d+\$)?[sdf]/g)].map(x=>x[0]).sort().join(',');
  if (placeholders(ar) !== placeholders(en)) throw new Error(`Placeholder mismatch: ${line}`);

@@ -6,7 +6,7 @@ require_once ABSPATH . 'wp-includes/PHPMailer/Exception.php';
 require_once ABSPATH . 'wp-includes/PHPMailer/SMTP.php';
 require_once ABSPATH . 'wp-includes/PHPMailer/PHPMailer.php';
 putenv( 'ADC_MAIL_MODE=mailpit' );
-require_once ABSPATH . 'wp-content/mu-plugins/autobrands-mail.php';
+require_once ABSPATH . 'wp-content/mu-plugins/adc-mail.php';
 $arabic_mail = null;
 foreach ( $captured as $candidate ) { if ( str_contains( $candidate['subject'], 'تأكيد الاشتراك' ) ) { $arabic_mail = $candidate; break; } }
 $marker = 'ADC verification local ' . wp_generate_uuid4();

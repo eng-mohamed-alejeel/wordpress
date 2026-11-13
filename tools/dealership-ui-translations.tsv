@@ -563,8 +563,6 @@ T10 استندر	T10 Standard
 معتمد	approved
 مرفوض	rejected
 سبب القرار	Decision reason
-مخزون أوتو براندز	AUTO BRANDS INVENTORY
-أوتو براندز	AUTO BRANDS
 سيارات متميزة	Premium Automotive
 متابعة القراءة<span class="screen-reader-text"> "%s"</span>	Continue reading<span class="screen-reader-text"> "%s"</span>
 تحرير	Edit
@@ -1441,7 +1439,6 @@ VIN الجديد	New VIN
 سعة المحرك (مع الوحدة)	Engine size (including unit)
 سيارات تشغيلية غير مرتبطة	Unmapped operational vehicles
 سيارة واحدة مطابقة	One matching vehicle
-سيارتك الجديدة تبدأ من أوتو براندز	Your next car starts at AUTO BRANDS
 صورة السيارة قيد الإضافة	Vehicle image coming soon
 عدد الأبواب	Doors
 عدد المقاعد	Seats
@@ -1451,10 +1448,7 @@ VIN الجديد	New VIN
 لا يمكن الانتقال إلى هذه الحالة أو تعديل موعد طلب مغلق.	This status transition is not allowed, and a closed request appointment cannot be changed.
 لغة الموقع	Website language
 للملف المصدر حجوزات أو مستندات تشغيلية؛ لا يمكن دمجه بهذه الأداة.	The source record has reservations or operational documents and cannot be merged with this tool.
-مبيعات السيارات الجديدة في جدة، حي الجوهرة، وخدمات ما بعد البيع والتلميع والتظليل. استعرض الخيارات وتواصل مع فريقنا.	New vehicle sales in Al-Jawharah, Jeddah, with after-sales, detailing and tinting services. Browse available options and contact our team.
 محظور	Blocked
-مرحباً AUTO BRANDS، أريد الاستفسار عن %s	Hello AUTO BRANDS, I would like to enquire about %s
-مرحباً AUTO BRANDS، أريد الاستفسار عن السيارات المتاحة.	Hello AUTO BRANDS, I would like to enquire about available vehicles.
 مرحباً، أود الاستفسار عن السيارات المتاحة.	Hello, I would like to enquire about available vehicles.
 مرحباً، أود الاستفسار عن سيارة.	Hello, I would like to enquire about a vehicle.
 معلومات مهمة	Important information

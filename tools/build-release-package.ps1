@@ -3,11 +3,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
-$paths = @('wp-content/plugins/auto-dealership-core', 'wp-content/themes/car-dealer', 'wp-content/mu-plugins/autobrands-typography.php', 'wp-content/mu-plugins/autobrands-mail.php', 'wp-content/mu-plugins/autobrands-password-email.php')
+$paths = @('wp-content/plugins/auto-dealership-core', 'wp-content/themes/car-dealer', 'wp-content/mu-plugins/adc-typography.php', 'wp-content/mu-plugins/adc-mail.php', 'wp-content/mu-plugins/adc-password-email.php')
 $runtimePaths = @(
-    'wp-content/mu-plugins/autobrands-password-email.php',
-    'wp-content/mu-plugins/autobrands-mail.php',
-    'wp-content/mu-plugins/autobrands-typography.php',
+    'wp-content/mu-plugins/adc-password-email.php',
+    'wp-content/mu-plugins/adc-mail.php',
+    'wp-content/mu-plugins/adc-typography.php',
     'wp-content/plugins/auto-dealership-core/assets',
     'wp-content/plugins/auto-dealership-core/auto-dealership-core.php',
     'wp-content/plugins/auto-dealership-core/readme.txt',
@@ -117,7 +117,7 @@ $required = @(
     'wp-content/plugins/auto-dealership-core/src/Operations/FollowUpNotifications.php',
     'wp-content/themes/car-dealer/page-comparison.php',
     'wp-content/themes/car-dealer/languages/ui.php',
-    'wp-content/mu-plugins/autobrands-typography.php',
+    'wp-content/mu-plugins/adc-typography.php',
     'wp-content/themes/car-dealer/style.css'
 )
 $seen = @{}
@@ -125,7 +125,7 @@ try {
     foreach ($entry in $archive.Entries) {
         $path = $entry.FullName
         if ($path.EndsWith('/')) { continue }
-        if (($path -notmatch '^wp-content/(plugins/auto-dealership-core|themes/car-dealer)/' -and $path -notin @('wp-content/mu-plugins/autobrands-typography.php','wp-content/mu-plugins/autobrands-mail.php','wp-content/mu-plugins/autobrands-password-email.php')) -or
+        if (($path -notmatch '^wp-content/(plugins/auto-dealership-core|themes/car-dealer)/' -and $path -notin @('wp-content/mu-plugins/adc-typography.php','wp-content/mu-plugins/adc-mail.php','wp-content/mu-plugins/adc-password-email.php')) -or
             $path -match '(^|/)\.\.(/|$)' -or $path -match '(^|/)wp-config\.php$' -or
             $path -match '^wp-content/plugins/auto-dealership-core/tests/' -or
             $path -in @('wp-content/themes/car-dealer/build-css.js', 'wp-content/themes/car-dealer/merge-css.ps1') -or

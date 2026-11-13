@@ -1,4 +1,4 @@
-/* AUTO BRANDS: shared identity. Component styles must consume semantic tokens. */
+/* Shared identity tokens. Component styles must consume semantic tokens. */
 :root {
   --ab-brand-navy: #0E2A4A;
   --ab-brand-blue: #2563EB;

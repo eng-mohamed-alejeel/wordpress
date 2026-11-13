@@ -14,7 +14,7 @@
   --cd-color-line: var(--ab-border);          /* حدود */
   --cd-color-text: var(--ab-text);          /* نص أساسي */
 
-  /* ── ألوان AUTO BRANDS (ab-color-) ── */
+  /* ── ألوان الهوية (ab-color-) ── */
   --ab-color-blue: var(--ab-action);
   --ab-color-red: var(--ab-action);
   --ab-color-black: var(--ab-hero);

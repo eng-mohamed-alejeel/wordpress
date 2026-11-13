@@ -23,7 +23,7 @@ const files = [
   'pages/_cars.css',
   'pages/_account.css',
   'pages/_page.css',
-  'themes/_auto-brands.css',
+  'themes/_brand-defaults.css',
 ];
 
 const sections = files.map(file => {

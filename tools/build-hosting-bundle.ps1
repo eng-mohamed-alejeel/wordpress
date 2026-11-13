@@ -15,9 +15,9 @@ if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
 $pluginRoot = 'wp-content/plugins/auto-dealership-core'
 $themeRoot = 'wp-content/themes/car-dealer'
 $muFiles = @(
-    'wp-content/mu-plugins/autobrands-typography.php',
-    'wp-content/mu-plugins/autobrands-mail.php',
-    'wp-content/mu-plugins/autobrands-password-email.php'
+    'wp-content/mu-plugins/adc-typography.php',
+    'wp-content/mu-plugins/adc-mail.php',
+    'wp-content/mu-plugins/adc-password-email.php'
 )
 $releaseRoots = @($pluginRoot, $themeRoot) + $muFiles
 
@@ -72,7 +72,7 @@ foreach ($path in $files) {
 
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $stage = Join-Path $repo ('.tmp/hosting-bundle-' + [guid]::NewGuid().ToString('N'))
-$name = 'autobrands-hosting-bundle-plugin-{0}-theme-{1}-{2}.zip' -f $pluginVersion, $themeVersion, $head.Substring(0, 12)
+$name = 'dealership-hosting-bundle-plugin-{0}-theme-{1}-{2}.zip' -f $pluginVersion, $themeVersion, $head.Substring(0, 12)
 $archivePath = Join-Path $OutputDirectory $name
 $manifestPath = Join-Path $OutputDirectory ($name + '.manifest.json')
 if ((Test-Path -LiteralPath $archivePath) -or (Test-Path -LiteralPath $manifestPath)) {

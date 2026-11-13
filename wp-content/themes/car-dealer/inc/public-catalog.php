@@ -50,8 +50,7 @@ add_filter( 'wp_get_attachment_image_attributes', static function ( array $attr,
 /** Text from the theme's editorial shortcode sections, translated after rendering. */
 function car_dealer_editorial_english_copy(): array {
 	return array(
-		'من نحن' => 'About us', 'أوتو براندز للسيارات' => 'AUTO BRANDS Automotive',
-		'إحدى شركات ناصر مطر المطيري للسيارات' => 'A Nasser Matar Al-Mutairi Automotive company',
+		'من نحن' => 'About us',
 		'نقدّم معلومات السيارات المنشورة ووسائل التواصل مع فريق المعرض. تتحدد أي خدمات إضافية وشروطها بحسب الاتفاق المتاح لكل سيارة.' => 'We provide published vehicle information and ways to reach our dealership team. Additional services and terms depend on the agreement available for each vehicle.',
 		'استكشف سياراتنا' => 'Explore our vehicles', 'تواصل معنا' => 'Contact us',
 		'رسالتنا ورؤيتنا' => 'Our mission and vision', 'نحن هنا لنوفر لك أفضل تجربة' => 'A clearer way to choose your car',
@@ -65,15 +64,6 @@ function car_dealer_editorial_english_copy(): array {
 		'خدمة عملاء ممتازة' => 'Customer support', 'يمكنك إرسال استفسارك عبر قنوات التواصل المتاحة وسيتابعه فريق المعرض.' => 'Send an enquiry through the available contact channels for our team to review.',
 		'تسليم سريع' => 'Delivery arrangements', 'تُحدد خطوات التسليم ومستنداته في اتفاق البيع المعتمد.' => 'Delivery steps and documents are set out in the approved sale agreement.',
 		'تفاصيل مكتوبة' => 'Written details', 'راجع مستندات البيع والضمان والشروط المتاحة قبل الموافقة النهائية.' => 'Review the sale documents, warranty, and available terms before final approval.',
-		'الإدارة العليا' => 'Leadership', 'خبراء في المجال' => 'Our team', 'إدارة مؤسسة وكفاءات عالية' => 'Meet the people behind the dealership.',
-		'الاستاذ/ ناصر مطر المطيري' => 'Mr. Nasser Matar Al-Mutairi', 'الرئيس المؤسس ' => 'Founding President',
-		'خبرة 30 سنة في تجارة السيارات' => '30 years in the automotive trade',
-		'الاستاذ/ محمد مطر المطيري' => 'Mr. Mohammed Matar Al-Mutairi', 'المدير التنفيذي' => 'Executive Director',
-		'خبرة 25 سنة في معارض السيارات' => '25 years in car dealerships',
-		'الاستاذ/ عاطف يوسف الشافعي' => 'Mr. Atef Youssef Al-Shafei', 'المدير العام' => 'General Manager',
-		'خبرة 40 سنة في مجال السيارات' => '40 years in the automotive sector',
-		'الاستاذة/ نجلاء ناصر المطيري' => 'Ms. Najla Nasser Al-Mutairi', 'مدير الموارد البشرية' => 'Human Resources Manager',
-		'خبرة 6 سنوات في مجال السيارات' => '6 years in the automotive sector',
 		'جاهز لتجربة سيارة جديدة؟' => 'Ready to explore a new car?',
 		'تواصل مع فريق المعرض للاستفسار عن السيارات والشروط المتاحة.' => 'Contact our team about available vehicles and terms.',
 		'تواصل معنا الآن' => 'Contact us now', 'تواصل عبر واتساب' => 'Message us on WhatsApp',
@@ -155,7 +145,6 @@ function car_dealer_catalog_english_copy(): array {
 		return $copy;
 	}
 	$copy = array(
-		'استعرض سيارات أوتو براندز' => 'Browse AUTO BRANDS Vehicles',
 		'فلترة دقيقة حسب الماركة، الموديل، السنة، السعر، نوع السيارة، الوقود وناقل الحركة.' => 'Filter by brand, model, year, price, body type, fuel and transmission.',
 		'السابق' => 'Previous', 'التالي' => 'Next', 'لا توجد سيارات مطابقة للبحث.' => 'No vehicles match your search.',
 		'بحث' => 'Search', 'الماركة أو الموديل' => 'Brand or model', 'الماركة أو الموديل أو الرقم المرجعي' => 'Brand, model or reference number',
@@ -197,7 +186,7 @@ function car_dealer_catalog_english_copy(): array {
 		'استعرض السيارات' => 'Browse vehicles', 'سيارة منشورة' => 'Published vehicles', 'تصفح الآن' => 'Browse now', 'اكتشف المزيد' => 'Discover more',
 		'مختارة بعناية' => 'Selected for you', 'السيارات المميزة' => 'Featured vehicles',
 		'أفضل السيارات التي نرشحها لك بعناية فائقة' => 'Explore vehicles selected for this section.', 'عرض الكل' => 'View all',
-		'ثقة وخبرة' => 'Clear information', 'لماذا أوتو براندز؟' => 'Why AUTO BRANDS?',
+		'ثقة وخبرة' => 'Clear information',
 		'نقدم لك تجربة شراء لا مثيل لها' => 'Explore vehicles and contact our team with confidence.',
 		'اختيار متنوع' => 'Vehicle selection',
 		'استعرض السيارات المنشورة وقارن بين مواصفاتها لاختيار ما يناسب احتياجك.' => 'Compare published vehicle specifications to find the right fit.',
@@ -222,12 +211,11 @@ function car_dealer_catalog_english_copy(): array {
 		'لا توجد طلبات في هذه الصفحة حاليًا.' => 'There are no requests on this page.',
 		'مرّر الجدول أفقيًا لعرض بقية التفاصيل.' => 'Scroll the table horizontally to see all details.',
 		'الموقع' => 'Location', 'عرض الموقع على الخريطة' => 'View on map',
-		'عروض أوتو براندز' => 'AUTO BRANDS Offers',
 		'عروض مختارة، أقساط مرنة، وفرص محدودة على سيارات تناسب رحلتك القادمة.' => 'Explore currently published offers and review the terms for each vehicle.',
 		'العروض غير متاحة حاليًا. يرجى المحاولة لاحقًا.' => 'Offers are temporarily unavailable. Please try again later.',
 		'لا توجد عروض منشورة حالياً.' => 'There are no published offers at the moment.',
 		'بيانات العرض غير متاحة حاليًا.' => 'Offer details are temporarily unavailable.',
-		'عرض أوتو براندز' => 'AUTO BRANDS Offer', 'احصل على العرض' => 'Ask about this offer',
+		'احصل على العرض' => 'Ask about this offer',
 	);
 	return $copy;
 }

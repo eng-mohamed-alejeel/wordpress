@@ -41,6 +41,14 @@ $active = $stored_array( $option( 'active_plugins' ) );
 $plugin_active = is_array( $active ) && in_array( 'auto-dealership-core/auto-dealership-core.php', $active, true );
 $theme_active = 'car-dealer' === $option( 'stylesheet' ) && 'car-dealer' === $option( 'template' );
 $add( 'release_pair', $plugin_active && $theme_active && '' !== $plugin_version && $plugin_version === $theme_version ? 'pass' : 'fail', 'Expected plugin and theme must be active, readable and on the same release version.', array( 'plugin_version' => $plugin_version, 'theme_version' => $theme_version ) );
+$obsolete_runtime_files = array(
+	ABSPATH . 'wp-content/mu-plugins/autobrands-mail.php',
+	ABSPATH . 'wp-content/mu-plugins/autobrands-password-email.php',
+	ABSPATH . 'wp-content/mu-plugins/autobrands-typography.php',
+	ABSPATH . 'wp-content/themes/car-dealer/assets/css/themes/_auto-brands.css',
+);
+$present_obsolete_files = array_values( array_filter( $obsolete_runtime_files, 'is_file' ) );
+$add( 'obsolete_runtime_files', array() === $present_obsolete_files ? 'pass' : 'fail', 'Obsolete tenant-specific runtime filenames must be removed after the new generic files are installed; the package does not delete files left by copy-only uploads.', array( 'present' => array_map( static fn( string $path ): string => str_replace( ABSPATH, '', $path ), $present_obsolete_files ) ) );
 $installed_schema = $option( 'adc_db_version' );
 $add( 'schema_marker', '' !== $schema_version && $schema_version === $installed_schema ? 'pass' : 'fail', 'Installed schema marker must match the release contract.', array( 'expected' => $schema_version, 'installed' => $installed_schema ) );
 require_once ABSPATH . 'wp-content/plugins/auto-dealership-core/src/Audit/AuditLog.php';

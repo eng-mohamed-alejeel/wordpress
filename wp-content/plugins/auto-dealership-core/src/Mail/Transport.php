@@ -1,13 +1,15 @@
 <?php
 /**
- * Plugin Name: AutoBrands Mail Transport
+ * Plugin Name: Auto Dealership Mail Transport
  * Description: Environment-specific SMTP transport for all WordPress mail.
  */
 defined( 'ABSPATH' ) || exit;
 if ( defined( 'ADC_MAIL_TRANSPORT_LOADED' ) ) { return; }
 define( 'ADC_MAIL_TRANSPORT_LOADED', true );
 require_once __DIR__ . '/LegacyHooks.php';
-adc_product_remove_legacy_mail_hooks( 'autobrands-mail.php', array( 'pre_wp_mail', 'wp_mail_from', 'wp_mail_from_name', 'phpmailer_init', 'wp_mail_failed', 'admin_notices' ) );
+foreach ( array( 'adc-mail.php', 'autobrands-mail.php' ) as $legacy_mail_file ) {
+	adc_product_remove_legacy_mail_hooks( $legacy_mail_file, array( 'pre_wp_mail', 'wp_mail_from', 'wp_mail_from_name', 'phpmailer_init', 'wp_mail_failed', 'admin_notices' ) );
+}
 
 function adc_product_mail_setting( string $name, string $default = '' ): string {
 	if ( get_option( 'adc_product_mail_dashboard', false ) && class_exists( '\AutoDealership\Core\ProductSetup' ) ) { return \AutoDealership\Core\ProductSetup::mail_setting( $name, $default ); }
@@ -22,7 +24,7 @@ function adc_product_mail_config(): array {
 	$local = in_array( wp_get_environment_type(), array( 'local', 'development' ), true );
 	$config = array( 'mode' => $mode, 'valid' => false );
 	if ( 'mailpit' === $mode ) {
-		return $config + array( 'host' => '127.0.0.1', 'port' => 1025, 'encryption' => '', 'username' => '', 'password' => '', 'from' => 'wordpress@autobrands.test', 'name' => wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) , 'local' => $local );
+		return $config + array( 'host' => '127.0.0.1', 'port' => 1025, 'encryption' => '', 'username' => '', 'password' => '', 'from' => 'wordpress@example.invalid', 'name' => wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES ) , 'local' => $local );
 	}
 	if ( 'smtp' !== $mode ) { return $config; }
 	$config['host'] = adc_product_mail_setting( 'ADC_SMTP_HOST' );
@@ -93,6 +95,6 @@ add_action( 'wp_mail_failed', static function ( $error ) {
 	elseif(preg_match('/connect|timed out|network|resolve|unreachable/',$message)){$kind='connection';}
 	elseif(preg_match('/quota|rate limit|too many|daily.*limit/',$message)){$kind='limit';}
 	update_option('adc_product_mail_result',array('status'=>'failed','kind'=>$kind,'time'=>gmdate('Y-m-d H:i:s')),false);
-	error_log( '[AutoBrands mail] failed code=' . sanitize_key( (string) $error->get_error_code() ) );
+	error_log( '[Auto Dealership mail] failed code=' . sanitize_key( (string) $error->get_error_code() ) );
 } );
 add_action('wp_mail_succeeded',static function(): void { update_option('adc_product_mail_result',array('status'=>'accepted','kind'=>'','time'=>gmdate('Y-m-d H:i:s')),false); });

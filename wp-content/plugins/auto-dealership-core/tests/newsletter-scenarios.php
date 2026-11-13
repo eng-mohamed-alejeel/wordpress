@@ -229,7 +229,7 @@ $check( str_contains($english_composer,'Create a bilingual campaign') && str_con
 update_user_meta($customer,'adc_preferred_language','en'); delete_user_meta($customer,'adc_welcome_sent_at');
 Newsletter::welcome(array('subject_id'=>$customer,'locale'=>'ar'));
 $check( str_contains(end($captured)['subject'],'Welcome to') && str_contains(end($captured)['message'],'lang=en'), 'Welcome emails use saved preference rather than worker language' );
-require_once dirname(__DIR__,3).'/mu-plugins/autobrands-password-email.php';
+require_once dirname(__DIR__,3).'/mu-plugins/adc-password-email.php';
 $reset = apply_filters('retrieve_password_notification_email',array('to'=>'welcome@example.invalid','subject'=>'default','message'=>'default','headers'=>''),'synthetic-reset',get_userdata($customer)->user_login,get_userdata($customer));
 $check( str_contains($reset['subject'],'Reset your password') && str_contains($reset['message'],'wp_lang=en_US'), 'Password reset emails also respect the saved email language' );
 $source_before=Newsletter::campaign($bilingual);$source_stats=Newsletter::stats($bilingual);$before=count($captured);

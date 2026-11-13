@@ -1,4 +1,4 @@
-/* AUTO BRANDS form controls. Structural layout remains owned by each surface. */
+/* Shared form controls. Structural layout remains owned by each surface. */
 
 :where(.site, .adc-admin, .adc-admin-native, .login) {
   --ab-local-field-height: var(--ab-field-height);

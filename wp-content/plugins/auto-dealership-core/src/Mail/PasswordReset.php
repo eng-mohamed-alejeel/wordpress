@@ -1,13 +1,15 @@
 <?php
 /**
- * Plugin Name: AutoBrands Password Reset Email
+ * Plugin Name: Auto Dealership Password Reset Email
  * Description: Branded, bilingual password reset email with a plain-text alternative.
  */
 defined( 'ABSPATH' ) || exit;
 if ( defined( 'ADC_PASSWORD_MAIL_LOADED' ) ) { return; }
 define( 'ADC_PASSWORD_MAIL_LOADED', true );
 require_once __DIR__ . '/LegacyHooks.php';
-adc_product_remove_legacy_mail_hooks( 'autobrands-password-email.php', array( 'retrieve_password_notification_email', 'phpmailer_init' ) );
+foreach ( array( 'adc-password-email.php', 'autobrands-password-email.php' ) as $legacy_password_file ) {
+	adc_product_remove_legacy_mail_hooks( $legacy_password_file, array( 'retrieve_password_notification_email', 'phpmailer_init' ) );
+}
 
 add_filter( 'retrieve_password_notification_email', static function ( array $email, string $key, string $login, $user ): array {
 	$preference = get_user_meta( (int) $user->ID, 'adc_preferred_language', true );

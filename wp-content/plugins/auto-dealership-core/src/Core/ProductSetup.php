@@ -114,7 +114,7 @@ final class ProductSetup {
 	public static function hero_description( string $lang ): string {
 		$p = self::profile();
 		if ( ! empty( $p['hero_' . $lang] ) ) { return self::template( $p['hero_' . $lang], $lang ); }
-		if ( self::legacy() ) { return 'en' === $lang ? 'New vehicle sales in Al Jawharah, Jeddah, with after-sales services, polishing and window tinting. Explore your options and contact our team.' : 'مبيعات السيارات الجديدة في جدة، حي الجوهرة، وخدمات ما بعد البيع والتلميع والتظليل. استعرض الخيارات وتواصل مع فريقنا.'; }
+		if ( self::legacy() ) { return 'en' === $lang ? 'Explore available vehicles, compare your options and contact our team.' : 'استعرض السيارات المتاحة وقارن الخيارات وتواصل مع فريقنا.'; }
 		return 'en' === $lang ? 'Explore available vehicles, compare your options and contact our team.' : 'استعرض السيارات المتاحة وقارن الخيارات وتواصل مع فريقنا.';
 	}
 	private static function profile_defaults(): array {

@@ -75,7 +75,7 @@ function car_dealer_shortcode_ab_hero() {
 			<div class="ab-about-hero-text">
 				<p class="eyebrow"><?php echo esc_html__( 'من نحن', 'car-dealer' ); ?></p>
 				<h1><?php echo esc_html( car_dealer_text( '{site_name} للسيارات', '{site_name} Automotive' ) ); ?></h1>
-				<?php if ( class_exists( '\AutoDealership\Core\ProductSetup' ) && \AutoDealership\Core\ProductSetup::legacy() ) : ?><p><?php echo esc_html__( 'إحدى شركات ناصر مطر المطيري للسيارات', 'car-dealer' ); ?></p><?php endif; ?>
+				<?php if ( class_exists( '\AutoDealership\Core\ProductSetup' ) && \AutoDealership\Core\ProductSetup::legacy() ) : ?><p><?php echo esc_html( car_dealer_text( '{site_name} للسيارات', '{site_name} Automotive' ) ); ?></p><?php endif; ?>
 				<p class="ab-about-hero-desc"><?php echo esc_html__( 'نقدّم معلومات السيارات المنشورة ووسائل التواصل مع فريق المعرض. تتحدد أي خدمات إضافية وشروطها بحسب الاتفاق المتاح لكل سيارة.', 'car-dealer' ); ?></p>
 				<div class="ab-actions">
 					<?php if ( $catalog_url ) : ?><a href="<?php echo esc_url( $catalog_url ); ?>" class="btn btn-primary btn-lg">
@@ -213,52 +213,8 @@ car_dealer_register_shortcode_adapter( 'ab_values_section', 'car_dealer_shortcod
    Shortcode: [ab_team_section] - الفريق
    ═══════════════════════════════════════════════════════ */
 function car_dealer_shortcode_ab_team() {
-	if ( class_exists( '\AutoDealership\Core\ProductSetup' ) && ! \AutoDealership\Core\ProductSetup::legacy() ) { return ''; }
-	$team_members = array(
-		array(
-			'name' => 'الاستاذ/ ناصر مطر المطيري',
-			'role' => 'الرئيس المؤسس ',
-			'experience' => 'خبرة 30 سنة في تجارة السيارات',
-			'bg' => 'var(--ab-brand-gradient)',
-		),
-		array(
-			'name' => 'الاستاذ/ محمد مطر المطيري',
-			'role' => 'المدير التنفيذي',
-			'experience' => 'خبرة 25 سنة في معارض السيارات',
-			'bg' => 'var(--ab-brand-gradient)',
-		),
-		array(
-			'name' => 'الاستاذ/ عاطف يوسف الشافعي',
-			'role' => 'المدير العام',
-			'experience' => 'خبرة 40 سنة في مجال السيارات',
-			'bg' => 'var(--ab-brand-gradient)',
-		),
-		array(
-			'name' => 'الاستاذة/ نجلاء ناصر المطيري',
-			'role' => 'مدير الموارد البشرية',
-			'experience' => 'خبرة 6 سنوات في مجال السيارات',
-			'bg' => 'var(--ab-brand-gradient)',
-		),
-	);
-
-	$output = '<section class="ab-team-section ab-section"><div class="container">';
-	$output .= ( '<div class="section-heading section-heading-center"><div><p class="eyebrow">' . esc_html__( 'الإدارة العليا', 'car-dealer' ) . '</p><h2>' . esc_html__( 'خبراء في المجال', 'car-dealer' ) . '</h2><p class="section-subtitle">' . esc_html__( 'إدارة مؤسسة وكفاءات عالية', 'car-dealer' ) . '</p></div></div>' );
-	$output .= '<div class="ab-team-grid">';
-
-	foreach ( $team_members as $member ) {
-		$output .= '
-		<div class="ab-team-card">
-			<div class="ab-team-avatar" style="background:' . esc_attr( $member['bg'] ) . ';">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-			</div>
-			<h3>' . esc_html__( $member['name'], 'car-dealer' ) . '</h3>
-			<p class="ab-team-role">' . esc_html__( $member['role'], 'car-dealer' ) . '</p>
-			<p class="ab-team-experience">' . esc_html__( $member['experience'], 'car-dealer' ) . '</p>
-		</div>';
-	}
-
-	$output .= '</div></div></section>';
-	return $output;
+	if ( ! class_exists( '\AutoDealership\Content\SiteContent' ) ) { return ''; }
+	return \AutoDealership\Content\SiteContent::render( 'team' );
 }
 car_dealer_register_shortcode_adapter( 'ab_team_section', 'car_dealer_shortcode_ab_team' );
 

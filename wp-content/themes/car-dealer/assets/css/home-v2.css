@@ -126,7 +126,7 @@ body.admin-bar .ab-hero-v2 { --ab-hero-offset: 114px; }
 }
 
 #featured-vehicles,
-#why-auto-brands { scroll-margin-block-start: 7rem; }
+#why-us { scroll-margin-block-start: 7rem; }
 
 /* Hero Eyebrow */
 .ab-hero-eyebrow {
